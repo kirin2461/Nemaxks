@@ -43,7 +43,7 @@ impl AuditService for MyAuditService {
 
         match result {
             Ok(record) => {
-                println!("[AuditService] Logged event: {} -> {} (id={})", req.user_id, req.action, record.id);
+                println!("[AuditService] Logged event with id={}", record.id);
                 Ok(Response::new(LogEventResponse {
                     success: true,
                     id: record.id as u64,
