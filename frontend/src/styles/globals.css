@@ -1,0 +1,1474 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --primary: 263 70% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 263 70% 60%;
+    --radius: 0.75rem;
+  }
+
+  [data-theme="light"] {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 263 70% 95%;
+    --accent-foreground: 263 70% 50%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 263 70% 50%;
+  }
+
+  [data-theme="cosmic"] {
+    --background: 263 25% 8%;
+    --foreground: 0 0% 98%;
+    --card: 263 20% 12%;
+    --card-foreground: 0 0% 98%;
+    --primary: 280 80% 65%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 263 15% 18%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 263 15% 18%;
+    --muted-foreground: 263 10% 70%;
+    --accent: 320 80% 60%;
+    --accent-foreground: 0 0% 98%;
+    --border: 263 20% 20%;
+    --input: 263 20% 20%;
+    --ring: 280 80% 65%;
+  }
+
+  [data-theme="nebula-winter"] {
+    --background: 210 30% 12%;
+    --foreground: 210 20% 98%;
+    --card: 210 25% 16%;
+    --card-foreground: 210 20% 98%;
+    --primary: 200 90% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 210 20% 22%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 210 20% 22%;
+    --muted-foreground: 210 15% 70%;
+    --accent: 180 70% 55%;
+    --accent-foreground: 0 0% 98%;
+    --border: 210 25% 25%;
+    --input: 210 25% 25%;
+    --ring: 200 90% 60%;
+  }
+
+  [data-theme="glass"] {
+    --background: 240 10% 8%;
+    --foreground: 0 0% 98%;
+    --card: 240 5% 12%;
+    --card-foreground: 0 0% 98%;
+    --primary: 263 70% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 3% 18%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3% 18%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 0 0% 98%;
+    --border: 240 5% 20%;
+    --input: 240 5% 20%;
+    --ring: 263 70% 60%;
+  }
+
+  [data-theme="midnight-ocean"] {
+    --background: 220 30% 6%;
+    --foreground: 200 20% 98%;
+    --card: 220 25% 10%;
+    --card-foreground: 200 20% 98%;
+    --primary: 200 80% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 200 20% 98%;
+    --muted: 220 20% 15%;
+    --muted-foreground: 200 15% 65%;
+    --accent: 180 70% 45%;
+    --accent-foreground: 0 0% 98%;
+    --border: 220 25% 18%;
+    --input: 220 25% 18%;
+    --ring: 200 80% 50%;
+  }
+
+  [data-theme="forest-night"] {
+    --background: 150 25% 6%;
+    --foreground: 120 15% 95%;
+    --card: 150 20% 10%;
+    --card-foreground: 120 15% 95%;
+    --primary: 140 60% 45%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 150 15% 15%;
+    --secondary-foreground: 120 15% 95%;
+    --muted: 150 15% 15%;
+    --muted-foreground: 140 10% 60%;
+    --accent: 100 50% 50%;
+    --accent-foreground: 0 0% 98%;
+    --border: 150 20% 18%;
+    --input: 150 20% 18%;
+    --ring: 140 60% 45%;
+  }
+
+  [data-theme="sunset-glow"] {
+    --background: 20 30% 8%;
+    --foreground: 30 20% 95%;
+    --card: 20 25% 12%;
+    --card-foreground: 30 20% 95%;
+    --primary: 25 90% 55%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 20 20% 18%;
+    --secondary-foreground: 30 20% 95%;
+    --muted: 20 20% 18%;
+    --muted-foreground: 25 15% 60%;
+    --accent: 350 70% 55%;
+    --accent-foreground: 0 0% 98%;
+    --border: 20 25% 20%;
+    --input: 20 25% 20%;
+    --ring: 25 90% 55%;
+  }
+
+  [data-theme="neon-tokyo"] {
+    --background: 270 30% 5%;
+    --foreground: 300 20% 95%;
+    --card: 270 25% 9%;
+    --card-foreground: 300 20% 95%;
+    --primary: 330 90% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 270 20% 14%;
+    --secondary-foreground: 300 20% 95%;
+    --muted: 270 20% 14%;
+    --muted-foreground: 300 15% 60%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 0 0% 5%;
+    --border: 270 25% 18%;
+    --input: 270 25% 18%;
+    --ring: 330 90% 60%;
+  }
+
+  [data-theme="arctic-aurora"] {
+    --background: 200 35% 8%;
+    --foreground: 180 20% 95%;
+    --card: 200 30% 12%;
+    --card-foreground: 180 20% 95%;
+    --primary: 160 80% 50%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 200 25% 16%;
+    --secondary-foreground: 180 20% 95%;
+    --muted: 200 25% 16%;
+    --muted-foreground: 180 15% 60%;
+    --accent: 280 70% 60%;
+    --accent-foreground: 0 0% 98%;
+    --border: 200 30% 20%;
+    --input: 200 30% 20%;
+    --ring: 160 80% 50%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Animated background effects for each theme */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+    background: radial-gradient(circle at 50% 50%, hsl(263, 70%, 40%) 0%, transparent 60%);
+    animation: pulse-dark 8s ease-in-out infinite;
+  }
+
+  /* Dark theme - subtle pulse */
+  :root[data-theme="dark"] body::before,
+  :root:not([data-theme]) body::before {
+    background: radial-gradient(circle at 50% 50%, hsl(263, 70%, 40%) 0%, transparent 60%);
+    animation: pulse-dark 8s ease-in-out infinite;
+    opacity: 0.4;
+  }
+
+  /* Light theme - gentle glow */
+  :root[data-theme="light"] body::before {
+    background: radial-gradient(circle at 30% 30%, hsl(263, 80%, 75%) 0%, transparent 40%),
+                radial-gradient(circle at 70% 70%, hsl(200, 80%, 70%) 0%, transparent 40%);
+    animation: glow-light 6s ease-in-out infinite;
+    opacity: 0.35;
+  }
+
+  /* Cosmic theme - stars and nebula */
+  :root[data-theme="cosmic"] body::before {
+    background: 
+      radial-gradient(2px 2px at 20% 30%, white, transparent),
+      radial-gradient(2px 2px at 40% 70%, white, transparent),
+      radial-gradient(1px 1px at 50% 40%, white, transparent),
+      radial-gradient(2px 2px at 60% 20%, white, transparent),
+      radial-gradient(1px 1px at 70% 60%, white, transparent),
+      radial-gradient(1px 1px at 80% 10%, white, transparent),
+      radial-gradient(2px 2px at 90% 80%, white, transparent),
+      radial-gradient(1px 1px at 10% 90%, white, transparent),
+      radial-gradient(1px 1px at 30% 50%, white, transparent),
+      radial-gradient(2px 2px at 85% 45%, white, transparent),
+      radial-gradient(ellipse at 30% 80%, hsla(280, 80%, 50%, 0.6) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 20%, hsla(320, 80%, 60%, 0.5) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% 50%, hsla(260, 70%, 40%, 0.4) 0%, transparent 60%);
+    animation: cosmic-nebula 20s ease-in-out infinite;
+    opacity: 0.7;
+  }
+  :root[data-theme="cosmic"] body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      hsla(280, 80%, 50%, 0.3),
+      hsla(320, 80%, 50%, 0.2),
+      hsla(260, 80%, 50%, 0.3),
+      hsla(280, 80%, 50%, 0.3)
+    );
+    animation: rotate-cosmic 30s linear infinite;
+    opacity: 0.4;
+  }
+
+  /* Nebula winter - aurora ice crystals */
+  :root[data-theme="nebula-winter"] body::before {
+    background: 
+      radial-gradient(2px 2px at 15% 25%, hsla(200, 100%, 90%, 0.8), transparent),
+      radial-gradient(3px 3px at 35% 65%, hsla(180, 100%, 85%, 0.7), transparent),
+      radial-gradient(2px 2px at 55% 35%, hsla(210, 100%, 90%, 0.8), transparent),
+      radial-gradient(1px 1px at 75% 75%, hsla(200, 100%, 95%, 0.9), transparent),
+      radial-gradient(2px 2px at 85% 15%, hsla(190, 100%, 85%, 0.7), transparent),
+      radial-gradient(ellipse at 20% 80%, hsla(200, 90%, 60%, 0.5) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 30%, hsla(180, 80%, 55%, 0.4) 0%, transparent 35%),
+      linear-gradient(180deg, hsla(210, 50%, 20%, 0.3) 0%, transparent 50%);
+    animation: nebula-shimmer 8s ease-in-out infinite;
+    opacity: 0.6;
+  }
+  :root[data-theme="nebula-winter"] body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      45deg,
+      hsla(200, 90%, 60%, 0.3) 0%,
+      hsla(180, 70%, 55%, 0.2) 25%,
+      hsla(210, 80%, 65%, 0.3) 50%,
+      hsla(200, 90%, 60%, 0.2) 75%,
+      hsla(180, 70%, 55%, 0.3) 100%
+    );
+    background-size: 400% 400%;
+    animation: aurora-wave 12s ease infinite;
+    opacity: 0.5;
+  }
+
+  /* Glass theme - shimmer effect */
+  :root[data-theme="glass"] body::before {
+    background: linear-gradient(
+      135deg,
+      transparent 0%,
+      hsl(263, 70%, 60%) 50%,
+      transparent 100%
+    );
+    background-size: 200% 200%;
+    animation: shimmer-glass 10s ease-in-out infinite;
+    opacity: 0.25;
+  }
+
+  /* Ocean theme - deep sea with bioluminescence */
+  :root[data-theme="midnight-ocean"] body::before {
+    background: 
+      radial-gradient(3px 3px at 10% 85%, hsla(180, 100%, 70%, 0.8), transparent),
+      radial-gradient(2px 2px at 25% 75%, hsla(200, 100%, 60%, 0.7), transparent),
+      radial-gradient(4px 4px at 40% 90%, hsla(190, 100%, 65%, 0.6), transparent),
+      radial-gradient(2px 2px at 60% 80%, hsla(170, 100%, 70%, 0.8), transparent),
+      radial-gradient(3px 3px at 75% 95%, hsla(200, 100%, 60%, 0.7), transparent),
+      radial-gradient(2px 2px at 90% 70%, hsla(180, 100%, 65%, 0.6), transparent),
+      linear-gradient(180deg, 
+        hsla(220, 70%, 15%, 0.9) 0%, 
+        hsla(210, 80%, 25%, 0.7) 30%,
+        hsla(200, 90%, 35%, 0.5) 60%,
+        hsla(190, 100%, 40%, 0.3) 100%);
+    animation: ocean-bioluminescence 6s ease-in-out infinite;
+    opacity: 0.7;
+  }
+  :root[data-theme="midnight-ocean"] body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: 
+      radial-gradient(ellipse 120% 60% at 50% 100%, hsla(200, 80%, 50%, 0.4) 0%, transparent 70%);
+    animation: ocean-deep-wave 8s ease-in-out infinite;
+    opacity: 0.6;
+  }
+
+  /* Forest theme - fireflies effect */
+  :root[data-theme="forest-night"] body::before {
+    background: 
+      radial-gradient(circle at 10% 20%, hsl(140, 60%, 45%) 0%, transparent 20%),
+      radial-gradient(circle at 90% 80%, hsl(100, 50%, 50%) 0%, transparent 20%),
+      radial-gradient(circle at 30% 70%, hsl(120, 55%, 40%) 0%, transparent 18%),
+      radial-gradient(circle at 70% 30%, hsl(150, 60%, 35%) 0%, transparent 22%);
+    animation: fireflies-float 8s ease-in-out infinite;
+    opacity: 0.5;
+  }
+
+  /* Sunset theme - sea and setting sun */
+  :root[data-theme="sunset-glow"] body::before {
+    background: 
+      radial-gradient(ellipse 80% 60% at 50% 20%, hsla(35, 100%, 60%, 0.9) 0%, hsla(25, 100%, 55%, 0.6) 30%, transparent 60%),
+      radial-gradient(ellipse 100% 40% at 50% 25%, hsla(45, 100%, 70%, 0.4) 0%, transparent 50%),
+      linear-gradient(180deg, 
+        hsla(25, 100%, 65%, 0.8) 0%,
+        hsla(350, 80%, 55%, 0.7) 20%,
+        hsla(15, 90%, 50%, 0.6) 40%,
+        hsla(280, 40%, 40%, 0.5) 60%,
+        hsla(220, 50%, 25%, 0.7) 80%,
+        hsla(210, 60%, 20%, 0.9) 100%);
+    animation: sunset-sky 20s ease-in-out infinite;
+    opacity: 0.8;
+  }
+  :root[data-theme="sunset-glow"] body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: 
+      linear-gradient(180deg, transparent 50%, hsla(210, 70%, 30%, 0.6) 70%, hsla(200, 80%, 25%, 0.8) 100%),
+      radial-gradient(ellipse 200% 30% at 50% 105%, hsla(200, 90%, 50%, 0.4) 0%, transparent 60%);
+    animation: sunset-waves 4s ease-in-out infinite;
+    opacity: 0.7;
+  }
+
+  /* Neon theme - cyberpunk pulse */
+  :root[data-theme="neon-tokyo"] body::before {
+    background: 
+      linear-gradient(90deg, transparent 49%, hsl(330, 90%, 60%) 49%, hsl(330, 90%, 60%) 51%, transparent 51%),
+      linear-gradient(0deg, transparent 49%, hsl(180, 100%, 50%) 49%, hsl(180, 100%, 50%) 51%, transparent 51%),
+      radial-gradient(circle at 50% 50%, hsl(270, 80%, 40%) 0%, transparent 70%);
+    background-size: 80px 80px, 80px 80px, 100% 100%;
+    animation: neon-grid 3s linear infinite, neon-pulse 2s ease-in-out infinite;
+    opacity: 0.35;
+  }
+
+  /* Aurora theme - northern lights */
+  :root[data-theme="arctic-aurora"] body::before {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      hsl(160, 80%, 50%) 20%,
+      hsl(280, 70%, 60%) 40%,
+      hsl(200, 75%, 55%) 60%,
+      hsl(160, 80%, 50%) 80%,
+      transparent 100%
+    );
+    background-size: 100% 300%;
+    animation: aurora-dance 10s ease-in-out infinite;
+    opacity: 0.45;
+  }
+
+  /* Ensure content is above animated background */
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}
+
+/* Keyframe animations */
+@keyframes pulse-dark {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes glow-light {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes rotate-cosmic {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes aurora-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shimmer-glass {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+@keyframes ocean-waves {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-5%) translateY(3%);
+  }
+  50% {
+    transform: translateX(0) translateY(-3%);
+  }
+  75% {
+    transform: translateX(5%) translateY(2%);
+  }
+}
+
+@keyframes fireflies-float {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1) translateY(0);
+  }
+  25% {
+    opacity: 0.5;
+    transform: scale(1.1) translateY(-10px);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(0.9) translateY(5px);
+  }
+  75% {
+    opacity: 0.6;
+    transform: scale(1.15) translateY(-5px);
+  }
+}
+
+@keyframes sunset-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes cosmic-nebula {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes nebula-shimmer {
+  0%, 100% {
+    opacity: 0.5;
+    filter: blur(0px);
+  }
+  50% {
+    opacity: 0.7;
+    filter: blur(1px);
+  }
+}
+
+@keyframes ocean-bioluminescence {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+  25% {
+    opacity: 0.8;
+    transform: translateY(-2%);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(1%);
+  }
+  75% {
+    opacity: 0.7;
+    transform: translateY(-1%);
+  }
+}
+
+@keyframes ocean-deep-wave {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-3%) scaleY(1.1);
+  }
+}
+
+@keyframes sunset-sky {
+  0%, 100% {
+    opacity: 0.75;
+    filter: saturate(1);
+  }
+  50% {
+    opacity: 0.85;
+    filter: saturate(1.1);
+  }
+}
+
+@keyframes sunset-waves {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  25% {
+    transform: translateY(-1%) scaleY(1.02);
+  }
+  50% {
+    transform: translateY(0) scaleY(0.98);
+  }
+  75% {
+    transform: translateY(-0.5%) scaleY(1.01);
+  }
+}
+
+@keyframes neon-grid {
+  0% {
+    background-position: 0 0, 0 0, center center;
+  }
+  100% {
+    background-position: 100px 0, 0 100px, center center;
+  }
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes aurora-dance {
+  0%, 100% {
+    background-position: 0% 0%;
+    transform: skewY(0deg);
+  }
+  33% {
+    background-position: 0% 100%;
+    transform: skewY(2deg);
+  }
+  66% {
+    background-position: 0% 50%;
+    transform: skewY(-2deg);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@layer components {
+  .cosmic-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--accent)) 100%
+    );
+  }
+
+  .cosmic-border {
+    @apply border border-border relative overflow-hidden;
+  }
+
+  .cosmic-border::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary) / 0.3) 0%,
+      hsl(var(--accent) / 0.3) 100%
+    );
+    pointer-events: none;
+  }
+
+  .cosmic-border:hover::before {
+    @apply opacity-100;
+  }
+
+  .glow-effect {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--accent)) 100%
+    );
+  }
+
+  /* Glass effect for glass theme */
+  [data-theme="glass"] .card {
+    backdrop-filter: blur(12px);
+    background: hsl(var(--card) / 0.8);
+    border: 1px solid hsl(var(--border) / 0.3);
+  }
+
+  [data-theme="glass"] .cosmic-border {
+    backdrop-filter: blur(16px);
+  }
+
+  /* Special effects for nebula-winter */
+  [data-theme="nebula-winter"] .cosmic-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(200, 90%, 60%) 0%,
+      hsl(180, 70%, 55%) 100%
+    );
+    animation: pulse-slow 4s ease-in-out infinite;
+  }
+
+  [data-theme="nebula-winter"] .gradient-text {
+    background-image: linear-gradient(
+      135deg,
+      hsl(200, 90%, 70%) 0%,
+      hsl(180, 70%, 65%) 100%
+    );
+  }
+}
+
+/* Additional cosmic animations */
+@keyframes shimmer-cosmic {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes stars-twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes orb-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+@keyframes pulse-call {
+  0% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 20px hsl(var(--primary) / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+  }
+}
+
+@keyframes gradient-aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradient-rainbow {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Cosmic UI utility classes */
+  .shimmer-cosmic {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.3) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-cosmic 2s linear infinite;
+  }
+
+  .stars-cosmic {
+    position: relative;
+  }
+
+  .stars-cosmic::before,
+  .stars-cosmic::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: hsl(var(--primary));
+    border-radius: 50%;
+    animation: stars-twinkle 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .stars-cosmic::before {
+    top: 20%;
+    left: 20%;
+    animation-delay: 0.5s;
+  }
+
+  .stars-cosmic::after {
+    top: 60%;
+    right: 30%;
+    animation-delay: 1.5s;
+  }
+
+  @keyframes highlight-fade {
+  0% { background-color: rgba(var(--primary), 0.2); }
+  100% { background-color: transparent; }
+}
+
+.highlight-message {
+  animation: highlight-fade 2s ease-out;
+  border-radius: 8px;
+}
+.orb-glow {
+    position: relative;
+    animation: orb-float 4s ease-in-out infinite;
+  }
+
+  .orb-glow::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    background: radial-gradient(
+      circle,
+      hsl(var(--primary) / 0.3) 0%,
+      transparent 70%
+    );
+    border-radius: inherit;
+    z-index: -1;
+    filter: blur(15px);
+    pointer-events: none;
+  }
+
+  .pulse-call {
+    animation: pulse-call 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .gradient-aurora-animated {
+    background: linear-gradient(
+      135deg,
+      hsl(200, 90%, 60%),
+      hsl(180, 70%, 55%),
+      hsl(260, 80%, 65%),
+      hsl(200, 90%, 60%)
+    );
+    background-size: 300% 300%;
+    animation: gradient-aurora 8s ease infinite;
+  }
+
+  .gradient-cosmic-rainbow-animated {
+    background: linear-gradient(
+      135deg,
+      hsl(280, 80%, 65%),
+      hsl(320, 80%, 60%),
+      hsl(260, 80%, 70%)
+    );
+    animation: gradient-rainbow 10s linear infinite;
+  }
+
+  .skeleton-cosmic {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted-foreground) / 0.1) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-cosmic 1.5s ease-in-out infinite;
+    border-radius: var(--radius);
+  }
+
+  .card-cosmic {
+    @apply bg-card rounded-lg border border-border p-6 transition-all duration-300;
+    @apply hover:shadow-xl hover:-translate-y-1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-cosmic::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary) / 0.1) 0%,
+      transparent 50%,
+      hsl(var(--accent) / 0.1) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .card-cosmic:hover::before {
+    opacity: 1;
+  }
+
+  .btn-cosmic {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
+    @apply bg-gradient-to-r from-primary to-accent text-primary-foreground;
+    @apply hover:shadow-lg hover:scale-105 active:scale-95;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-cosmic::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary-foreground) / 0.2) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-cosmic 3s linear infinite;
+    pointer-events: none;
+  }
+
+  .glass-cosmic {
+    @apply bg-card/40 backdrop-blur-xl border border-border/50;
+    box-shadow:
+      0 8px 32px 0 hsl(var(--primary) / 0.1),
+      inset 0 1px 0 0 hsl(var(--foreground) / 0.1);
+  }
+
+  .glow-cosmic {
+    box-shadow:
+      0 0 20px hsl(var(--primary) / 0.3),
+      0 0 40px hsl(var(--accent) / 0.2);
+  }
+
+  .badge-cosmic {
+    @apply px-3 py-1 rounded-full text-xs font-medium;
+    @apply bg-gradient-to-r from-primary/20 to-accent/20;
+    @apply border border-primary/30;
+    @apply transition-all duration-300;
+  }
+
+  .badge-cosmic:hover {
+    @apply from-primary/30 to-accent/30 scale-105;
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.4);
+  }
+
+  .divider-cosmic {
+    @apply h-px w-full my-6 relative;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.3) 50%,
+      transparent 100%
+    );
+  }
+
+  .divider-cosmic::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: hsl(var(--primary));
+    border-radius: 50%;
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.5);
+    pointer-events: none;
+  }
+
+  .bg-nebula {
+    background: radial-gradient(
+      ellipse at top,
+      hsl(210, 30%, 12%) 0%,
+      hsl(240, 10%, 8%) 50%,
+      hsl(240, 10%, 3.9%) 100%
+    );
+  }
+
+  .cosmic-bg {
+    background: radial-gradient(
+      ellipse at center,
+      hsl(263, 25%, 8%) 0%,
+      hsl(240, 10%, 3.9%) 100%
+    );
+  }
+
+  /* Telegram-style messages */
+  .telegram-message {
+    @apply rounded-2xl px-4 py-3 max-w-md;
+    @apply transition-all duration-300 hover:scale-[1.02];
+    word-wrap: break-word;
+  }
+
+  .telegram-message.sent {
+    @apply bg-gradient-to-br from-primary to-accent text-primary-foreground;
+    @apply rounded-br-sm ml-auto;
+  }
+
+  .telegram-message.received {
+    @apply bg-muted text-foreground;
+    @apply rounded-bl-sm mr-auto;
+  }
+
+  /* Discord-style sidebar */
+  .discord-sidebar {
+    @apply w-80 bg-card/95 backdrop-blur-lg border-l border-border/50;
+    @apply flex flex-col overflow-hidden;
+  }
+
+  /* Gradient border */
+  .gradient-border {
+    position: relative;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--accent)) 50%,
+      hsl(var(--primary)) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .border-aurora {
+    border: 2px solid transparent;
+    background: linear-gradient(var(--background), var(--background)) padding-box,
+                linear-gradient(135deg, hsl(200, 90%, 60%), hsl(180, 70%, 55%), hsl(260, 80%, 65%)) border-box;
+    animation: gradient-aurora 8s ease infinite;
+  }
+
+  /* Input cosmic */
+  .input-cosmic {
+    @apply px-4 py-3 rounded-lg;
+    @apply bg-background/50 border-2 border-border;
+    @apply text-foreground placeholder:text-muted-foreground;
+    @apply focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30;
+    @apply transition-all duration-300;
+  }
+
+  .input-cosmic:focus {
+    @apply shadow-lg;
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+
+  /* Message animations */
+  @keyframes message-in {
+    0% {
+      opacity: 0;
+      transform: translateY(10px) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .message-in {
+    animation: message-in 0.3s ease-out;
+  }
+
+  /* Slide panel animations */
+  @keyframes slide-in-right {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-out-right {
+    0% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+
+  .slide-in-right {
+    animation: slide-in-right 0.4s ease-out;
+  }
+
+  .slide-out-right {
+    animation: slide-out-right 0.4s ease-in;
+  }
+
+  /* Gradient neon */
+  .gradient-neon {
+    background: linear-gradient(
+      135deg,
+      hsl(280, 100%, 60%),
+      hsl(320, 100%, 50%),
+      hsl(180, 100%, 50%)
+    );
+  }
+
+  /* Pill card for chapters */
+  .pill-card {
+    @apply px-4 py-2 rounded-full cursor-pointer;
+    @apply transition-all duration-300;
+    @apply hover:scale-105 hover:shadow-lg;
+  }
+
+  /* Glass cosmic dark variant */
+  .glass-cosmic-dark {
+    @apply bg-card/60 backdrop-blur-2xl border border-border/30;
+    box-shadow:
+      0 8px 32px 0 hsl(var(--primary) / 0.15),
+      inset 0 1px 0 0 hsl(var(--foreground) / 0.05);
+  }
+
+  /* Logo theme animations */
+  .logo-image {
+    transition: filter 0.3s ease, transform 0.3s ease;
+  }
+
+  .logo-overlay {
+    pointer-events: none;
+    transition: all 0.3s ease;
+  }
+
+  /* Dark theme - subtle purple pulse */
+  .logo-dark {
+    box-shadow: 0 0 20px hsla(263, 70%, 50%, 0.4);
+    animation: logo-pulse-dark 3s ease-in-out infinite;
+  }
+  .logo-dark .logo-overlay {
+    background: linear-gradient(135deg, hsla(263, 70%, 50%, 0.2), transparent);
+  }
+
+  @keyframes logo-pulse-dark {
+    0%, 100% { box-shadow: 0 0 20px hsla(263, 70%, 50%, 0.4); }
+    50% { box-shadow: 0 0 35px hsla(263, 70%, 50%, 0.6); }
+  }
+
+  /* Light theme - soft glow */
+  .logo-light {
+    box-shadow: 0 0 25px hsla(263, 80%, 60%, 0.3);
+    animation: logo-glow-light 4s ease-in-out infinite;
+  }
+  .logo-light .logo-overlay {
+    background: linear-gradient(135deg, hsla(263, 80%, 70%, 0.3), hsla(200, 80%, 60%, 0.2));
+  }
+  .logo-light .logo-image {
+    filter: brightness(1.1) saturate(0.9);
+  }
+
+  @keyframes logo-glow-light {
+    0%, 100% { box-shadow: 0 0 25px hsla(263, 80%, 60%, 0.3); transform: scale(1); }
+    50% { box-shadow: 0 0 40px hsla(263, 80%, 60%, 0.5); transform: scale(1.02); }
+  }
+
+  /* Cosmic theme - rotating border glow */
+  .logo-cosmic {
+    animation: logo-cosmic-rotate 6s linear infinite;
+  }
+  .logo-cosmic::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 14px;
+    background: conic-gradient(from 0deg, hsl(280, 80%, 65%), hsl(320, 80%, 60%), hsl(260, 80%, 70%), hsl(280, 80%, 65%));
+    z-index: -1;
+    animation: logo-cosmic-spin 4s linear infinite;
+    pointer-events: none;
+  }
+  .logo-cosmic .logo-overlay {
+    background: radial-gradient(circle at center, transparent 40%, hsla(280, 80%, 50%, 0.3));
+  }
+
+  @keyframes logo-cosmic-rotate {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+  @keyframes logo-cosmic-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Nebula winter - icy shimmer */
+  .logo-nebula {
+    box-shadow: 0 0 25px hsla(200, 90%, 60%, 0.5);
+    animation: logo-nebula-shimmer 5s ease-in-out infinite;
+  }
+  .logo-nebula .logo-overlay {
+    background: linear-gradient(45deg, hsla(200, 90%, 60%, 0.3), hsla(180, 70%, 55%, 0.2), transparent);
+    animation: logo-nebula-overlay 3s ease infinite;
+  }
+
+  @keyframes logo-nebula-shimmer {
+    0%, 100% { box-shadow: 0 0 25px hsla(200, 90%, 60%, 0.5); }
+    25% { box-shadow: 0 0 35px hsla(180, 70%, 55%, 0.6); }
+    50% { box-shadow: 0 0 30px hsla(210, 80%, 65%, 0.5); }
+    75% { box-shadow: 0 0 40px hsla(200, 90%, 60%, 0.6); }
+  }
+  @keyframes logo-nebula-overlay {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Glass theme - glass reflection */
+  .logo-glass {
+    box-shadow: 0 0 20px hsla(263, 70%, 60%, 0.3);
+    animation: logo-glass-shine 8s ease-in-out infinite;
+  }
+  .logo-glass .logo-overlay {
+    background: linear-gradient(135deg, transparent 30%, hsla(0, 0%, 100%, 0.2) 50%, transparent 70%);
+    background-size: 200% 200%;
+    animation: logo-glass-sweep 4s ease-in-out infinite;
+  }
+
+  @keyframes logo-glass-shine {
+    0%, 100% { box-shadow: 0 0 20px hsla(263, 70%, 60%, 0.3); }
+    50% { box-shadow: 0 0 30px hsla(263, 70%, 60%, 0.5); }
+  }
+  @keyframes logo-glass-sweep {
+    0% { background-position: -100% -100%; }
+    50% { background-position: 200% 200%; }
+    100% { background-position: -100% -100%; }
+  }
+
+  /* Ocean theme - wave pulse */
+  .logo-ocean {
+    box-shadow: 0 0 25px hsla(200, 80%, 50%, 0.5);
+    animation: logo-ocean-wave 4s ease-in-out infinite;
+  }
+  .logo-ocean .logo-overlay {
+    background: linear-gradient(180deg, transparent, hsla(200, 80%, 50%, 0.3), transparent);
+    animation: logo-ocean-flow 3s ease infinite;
+  }
+
+  @keyframes logo-ocean-wave {
+    0%, 100% { box-shadow: 0 0 25px hsla(200, 80%, 50%, 0.5); transform: translateY(0); }
+    50% { box-shadow: 0 0 35px hsla(180, 70%, 45%, 0.6); transform: translateY(-2px); }
+  }
+  @keyframes logo-ocean-flow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  /* Forest theme - firefly glow */
+  .logo-forest {
+    box-shadow: 0 0 20px hsla(140, 60%, 45%, 0.5);
+    animation: logo-forest-firefly 5s ease-in-out infinite;
+  }
+  .logo-forest .logo-overlay {
+    background: radial-gradient(circle at 20% 30%, hsla(140, 60%, 50%, 0.4) 0%, transparent 30%),
+                radial-gradient(circle at 80% 70%, hsla(100, 50%, 50%, 0.3) 0%, transparent 25%);
+    animation: logo-forest-overlay 4s ease infinite alternate;
+  }
+
+  @keyframes logo-forest-firefly {
+    0%, 100% { box-shadow: 0 0 20px hsla(140, 60%, 45%, 0.5); }
+    33% { box-shadow: 0 0 30px hsla(100, 50%, 50%, 0.6); }
+    66% { box-shadow: 0 0 25px hsla(120, 55%, 40%, 0.5); }
+  }
+  @keyframes logo-forest-overlay {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+
+  /* Sunset theme - warm gradient */
+  .logo-sunset {
+    box-shadow: 0 0 25px hsla(25, 90%, 55%, 0.5);
+    animation: logo-sunset-glow 4s ease-in-out infinite;
+  }
+  .logo-sunset .logo-overlay {
+    background: linear-gradient(135deg, hsla(25, 90%, 55%, 0.3), hsla(350, 70%, 55%, 0.2), hsla(40, 85%, 55%, 0.3));
+    animation: logo-sunset-shift 6s ease infinite;
+  }
+  .logo-sunset .logo-image {
+    filter: hue-rotate(-20deg) saturate(1.2);
+  }
+
+  @keyframes logo-sunset-glow {
+    0%, 100% { box-shadow: 0 0 25px hsla(25, 90%, 55%, 0.5); }
+    33% { box-shadow: 0 0 35px hsla(350, 70%, 55%, 0.6); }
+    66% { box-shadow: 0 0 30px hsla(40, 85%, 55%, 0.5); }
+  }
+  @keyframes logo-sunset-shift {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  /* Neon Tokyo theme - cyberpunk flicker */
+  .logo-neon {
+    box-shadow: 0 0 30px hsla(320, 100%, 50%, 0.7), 0 0 60px hsla(180, 100%, 50%, 0.3);
+    animation: logo-neon-flicker 2s ease-in-out infinite;
+  }
+  .logo-neon .logo-overlay {
+    background: linear-gradient(45deg, hsla(320, 100%, 50%, 0.2), transparent, hsla(180, 100%, 50%, 0.2));
+    animation: logo-neon-pulse 1.5s ease infinite;
+  }
+
+  @keyframes logo-neon-flicker {
+    0%, 100% { box-shadow: 0 0 30px hsla(320, 100%, 50%, 0.7), 0 0 60px hsla(180, 100%, 50%, 0.3); }
+    25% { box-shadow: 0 0 35px hsla(320, 100%, 50%, 0.8), 0 0 70px hsla(180, 100%, 50%, 0.4); }
+    50% { box-shadow: 0 0 25px hsla(320, 100%, 50%, 0.6), 0 0 50px hsla(180, 100%, 50%, 0.25); }
+    75% { box-shadow: 0 0 40px hsla(320, 100%, 50%, 0.9), 0 0 80px hsla(180, 100%, 50%, 0.5); }
+  }
+  @keyframes logo-neon-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* Arctic Aurora theme - northern lights */
+  .logo-aurora {
+    box-shadow: 0 0 25px hsla(160, 80%, 50%, 0.5), 0 0 50px hsla(280, 70%, 60%, 0.3);
+    animation: logo-aurora-dance 6s ease-in-out infinite;
+  }
+  .logo-aurora .logo-overlay {
+    background: linear-gradient(135deg, hsla(160, 80%, 50%, 0.3), hsla(200, 70%, 55%, 0.2), hsla(280, 70%, 60%, 0.3));
+    animation: logo-aurora-shift 4s ease infinite;
+  }
+
+  @keyframes logo-aurora-dance {
+    0%, 100% { box-shadow: 0 0 25px hsla(160, 80%, 50%, 0.5), 0 0 50px hsla(280, 70%, 60%, 0.3); }
+    33% { box-shadow: 0 0 35px hsla(200, 70%, 55%, 0.6), 0 0 60px hsla(160, 80%, 50%, 0.4); }
+    66% { box-shadow: 0 0 30px hsla(280, 70%, 60%, 0.5), 0 0 55px hsla(200, 70%, 55%, 0.35); }
+  }
+  @keyframes logo-aurora-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+}
+
+/* Mobile-safe area utilities */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Hide scrollbar on mobile filter tabs */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch-friendly tap targets */
+@media (pointer: coarse) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Improved mobile transitions */
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-slide-in {
+    animation: mobileSlideIn 0.2s ease-out;
+  }
+}
+
+@keyframes mobileSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

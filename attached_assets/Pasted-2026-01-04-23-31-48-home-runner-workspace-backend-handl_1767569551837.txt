@@ -1,0 +1,27 @@
+2026/01/04 23:31:48 /home/runner/workspace/backend/handlers_friends.go:112 record not found
+[1.174ms] [rows:0] SELECT * FROM "users" WHERE username = 'eblan228' ORDER BY "users"."id" LIMIT 1
+[GIN] 2026/01/04 - 23:31:48 | 404 |    1.490895ms |  85.198.105.198 | POST     "/api/friends/request"
+[GIN] 2026/01/04 - 23:31:48 | 200 |      1.3361ms |  85.198.105.198 | GET      "/api/users/search?q=eblan228"
+
+2026/01/04 23:31:50 /home/runner/workspace/backend/handlers_friends.go:112 record not found
+[0.971ms] [rows:0] SELECT * FROM "users" WHERE username = 'eblan228' ORDER BY "users"."id" LIMIT 1
+[GIN] 2026/01/04 - 23:31:50 | 404 |    1.212323ms |  85.198.105.198 | POST     "/api/friends/request"
+
+2026/01/04 23:31:52 /home/runner/workspace/backend/handlers_friends.go:112 record not found
+[2.551ms] [rows:0] SELECT * FROM "users" WHERE username = 'eblan228' ORDER BY "users"."id" LIMIT 1
+[GIN] 2026/01/04 - 23:31:52 | 404 |     2.77044ms |  85.198.105.198 | POST     "/api/friends/request"
+
+2026/01/04 23:31:52 /home/runner/workspace/backend/handlers_friends.go:112 record not found
+[0.548ms] [rows:0] SELECT * FROM "users" WHERE username = 'eblan228' ORDER BY "users"."id" LIMIT 1
+[GIN] 2026/01/04 - 23:31:52 | 404 |     773.924µs |  85.198.105.198 | POST     "/api/friends/request"
+
+2026/01/04 23:32:01 /home/runner/workspace/backend/main.go:477 record not found
+[1.050ms] [rows:0] SELECT * FROM "users" WHERE username = 'eblan228' AND password = '123456' ORDER BY "users"."id" LIMIT 1
+[GIN] 2026/01/04 - 23:32:01 | 401 |    1.254148ms |  85.198.105.198 | POST     "/api/auth/login"
+
+2026/01/04 23:32:04 /home/runner/workspace/backend/main.go:410 ERROR: duplicate key value violates unique constraint "uni_users_email" (SQLSTATE 23505)
+[2.049ms] [rows:0] INSERT INTO "users" ("username","email","password","avatar","status","bio","created_at","updated_at","role") VALUES ('eblan228','','123456',NULL,'offline',NULL,'2026-01-04 23:32:04.996','2026-01-04 23:32:04.996','user') RETURNING "id"
+[GIN] 2026/01/04 - 23:32:04 | 409 |    2.471163ms |  85.198.105.198 | POST     "/api/auth/register"
+
+2026/01/04 23:32:10 /home/runner/workspace/backend/main.go:477 record not found
+[0.876ms] [rows:0] SELECT * FROM "users" WHERE username = 'eblan228' AND password = '123456' ORDER BY "users"."id" LIMIT 1

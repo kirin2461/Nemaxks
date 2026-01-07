@@ -1,0 +1,123 @@
+cd ~/workspace/backend && mkdir -p cmd/api && cat > cmd/api/main.go << 'EOF'
+package main
+
+import (
+    "fmt"
+    "log"
+    "net/http"
+    "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
+)
+
+// Friend types and structures
+type Friend struct {
+    ID            int    `json:"id"`
+    Username      string `json:"username"`
+    Discriminator string `json:"discriminator"`
+    Status        string `json:"status"` // online, idle, dnd, offline
+    Type          int    `json:"type"`   // 1: friend, 2: blocked, 3: incoming, 4: outgoing
+}
+
+type FriendResponse struct {
+    Friends []Friend `json:"friends"`
+}
+
+// In-memory storage for demo
+var friends = []Friend{
+    {ID: 1, Username: "Alice", Discriminator: "0001", Status: "online", Type: 1},
+    {ID: 2, Username: "Bob", Discriminator: "0002", Status: "idle", Type: 1},
+}
+
+func main() {
+    r := gin.Default()
+
+    // CORS configuration
+    config := cors.DefaultConfig()
+    config.AllowAllOrigins = true
+    config.AllowCredentials = true
+    r.Use(cors.New(config))
+
+    // Friends API routes
+    friends := r.Group("/api/users/me/relationships")
+    {
+        friends.GET("", handleGetFriends)
+        friends.POST("", handleSendFriendRequest)
+        friends.PUT("/:userId", handleAcceptFriend)
+        friends.DELETE("/:userId", handleRemoveFriend)
+    }
+
+    port := "5000"
+    log.Printf("Friends API running on port %s", port)
+    r.Run("0.0.0.0:" + port)
+}
+
+func handleGetFriends(c *gin.Context) {
+    c.JSON(http.StatusOK, FriendResponse{
+        Friends: friends,
+    })
+}
+
+func handleSendFriendRequest(c *gin.Context) {
+    var req struct {
+        Username      string `json:"username" binding:"required"`
+        Discriminator string `json:"discriminator" binding:"required"`
+    }
+
+    if err := c.BindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    newFriend := Friend{
+        ID:            len(friends) + 1,
+        Username:      req.Username,
+        Discriminator: req.Discriminator,
+        Status:        "offline",
+        Type:          4, // outgoing request
+    }
+
+    friends = append(friends, newFriend)
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Friend request sent",
+        "user": gin.H{
+            "username":      req.Username,
+            "discriminator": req.Discriminator,
+        },
+    })
+}
+
+func handleAcceptFriend(c *gin.Context) {
+    userId := c.Param("userId")
+
+    // Update friend status
+    for i, f := range friends {
+        if fmt.Sprintf("%d", f.ID) == userId {
+            friends[i].Type = 1 // accepted friend
+            break
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Friend added",
+        "userId":  userId,
+    })
+}
+
+func handleRemoveFriend(c *gin.Context) {
+    userId := c.Param("userId")
+
+    // Remove friend
+    for i, f := range friends {
+        if fmt.Sprintf("%d", f.ID) == userId {
+            friends = append(friends[:i], friends[i+1:]...)
+            break
+        }
+    }
+
+    c.JSON(http.StatusNoContent, gin.H{
+        "message": "Friend removed",
+        "userId":  userId,
+    })
+}
+EOF

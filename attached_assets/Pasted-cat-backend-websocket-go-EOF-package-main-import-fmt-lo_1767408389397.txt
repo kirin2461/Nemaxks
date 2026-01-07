@@ -1,0 +1,139 @@
+cat > backend/websocket.go << 'EOF'
+package main
+
+import (
+    "fmt"
+    "log"
+    "sync"
+    "github.com/gorilla/websocket"
+    "github.com/gin-gonic/gin"
+    "net/http"
+)
+
+type WSClient struct {
+    ID     int
+    Conn   *websocket.Conn
+    Send   chan interface{}
+    UserID int
+}
+
+type WSHub struct {
+    clients    map[*WSClient]bool
+    broadcast  chan interface{}
+    register   chan *WSClient
+    unregister chan *WSClient
+    mu         sync.RWMutex
+}
+
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+    CheckOrigin: func(r *http.Request) bool {
+        return true
+    },
+}
+
+var hub = &WSHub{
+    clients:    make(map[*WSClient]bool),
+    broadcast:  make(chan interface{}, 256),
+    register:   make(chan *WSClient),
+    unregister: make(chan *WSClient),
+}
+
+func init() {
+    go hub.run()
+}
+
+func (h *WSHub) run() {
+    for {
+        select {
+        case client := <-h.register:
+            h.mu.Lock()
+            h.clients[client] = true
+            h.mu.Unlock()
+            log.Printf("Client %d registered", client.UserID)
+
+        case client := <-h.unregister:
+            h.mu.Lock()
+            if _, ok := h.clients[client]; ok {
+                delete(h.clients, client)
+                close(client.Send)
+            }
+            h.mu.Unlock()
+            log.Printf("Client %d unregistered", client.UserID)
+
+        case msg := <-h.broadcast:
+            h.mu.RLock()
+            for client := range h.clients {
+                select {
+                case client.Send <- msg:
+                default:
+                }
+            }
+            h.mu.RUnlock()
+        }
+    }
+}
+
+func (c *WSClient) readPump() {
+    defer func() {
+        hub.unregister <- c
+        c.Conn.Close()
+    }()
+
+    for {
+        var msg map[string]interface{}
+        err := c.Conn.ReadJSON(&msg)
+        if err != nil {
+            if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+                log.Printf("error: %v", err)
+            }
+            return
+        }
+        
+        msg["user_id"] = c.UserID
+        hub.broadcast <- msg
+    }
+}
+
+func (c *WSClient) writePump() {
+    for {
+        select {
+        case msg, ok := <-c.Send:
+            if !ok {
+                c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+                return
+            }
+
+            if err := c.Conn.WriteJSON(msg); err != nil {
+                return
+            }
+        }
+    }
+}
+
+func handleWSConnection(c *gin.Context) {
+    userID := c.GetInt("user_id")
+    if userID == 0 {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+    if err != nil {
+        log.Println(err)
+        return
+    }
+
+    client := &WSClient{
+        ID:     len(hub.clients),
+        Conn:   conn,
+        Send:   make(chan interface{}, 256),
+        UserID: userID,
+    }
+
+    hub.register <- client
+    go client.readPump()
+    go client.writePump()
+}
+EOF

@@ -1,0 +1,26 @@
+2026/01/05 11:21:53 /home/runner/workspace/backend/handlers_friends.go:174 record not found
+[0.831ms] [rows:0] SELECT * FROM "friend_requests" WHERE "friend_requests"."id" = '5' ORDER BY "friend_requests"."id" LIMIT 1
+[GIN] 2026/01/05 - 11:21:53 | 404 |     1.36494ms |  85.198.105.198 | PUT      "/api/friends/request/5"
+
+2026/01/05 11:21:54 /home/runner/workspace/backend/handlers_friends.go:174 record not found
+[0.553ms] [rows:0] SELECT * FROM "friend_requests" WHERE "friend_requests"."id" = '5' ORDER BY "friend_requests"."id" LIMIT 1
+[GIN] 2026/01/05 - 11:21:54 | 404 |     1.26921ms |  85.198.105.198 | PUT      "/api/friends/request/5"
+
+2026/01/05 11:21:54 /home/runner/workspace/backend/handlers_friends.go:174 record not found
+[0.728ms] [rows:0] SELECT * FROM "friend_requests" WHERE "friend_requests"."id" = '5' ORDER BY "friend_requests"."id" LIMIT 1
+[GIN] 2026/01/05 - 11:21:54 | 404 |     1.02671ms |  85.198.105.198 | PUT      "/api/friends/request/5"
+
+2026/01/05 11:21:54 /home/runner/workspace/backend/handlers_friends.go:174 record not found
+[0.456ms] [rows:0] SELECT * FROM "friend_requests" WHERE "friend_requests"."id" = '5' ORDER BY "friend_requests"."id" LIMIT 1
+[GIN] 2026/01/05 - 11:21:54 | 404 |      692.73µs |  85.198.105.198 | PUT      "/api/friends/request/5"
+
+2026/01/05 11:21:55 /home/runner/workspace/backend/handlers_friends.go:174 record not found
+[2.123ms] [rows:0] SELECT * FROM "friend_requests" WHERE "friend_requests"."id" = '5' ORDER BY "friend_requests"."id" LIMIT 1
+[GIN] 2026/01/05 - 11:21:55 | 404 |    2.495059ms |  85.198.105.198 | PUT      "/api/friends/request/5"
+
+2026/01/05 11:21:55 /home/runner/workspace/backend/handlers_friends.go:174 record not found
+[0.415ms] [rows:0] SELECT * FROM "friend_requests" WHERE "friend_requests"."id" = '5' ORDER BY "friend_requests"."id" LIMIT 1
+[GIN] 2026/01/05 - 11:21:55 | 404 |      595.96µs |  85.198.105.198 | PUT      "/api/friends/request/5"
+
+2026/01/05 11:21:55 /home/runner/workspace/backend/handlers_friends.go:174 record not found
+[0.571ms] [rows:0] SELECT * FROM "friend_requests" WHERE "friend_requests"."id" = '5' ORDER BY "friend_requests"."id" LIMIT 1

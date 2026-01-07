@@ -1,0 +1,7 @@
+[
+  {"file": "greeting.wav", "text": "Джарвис - приветствие"},
+  {"file": "at_your_service.wav", "text": "К вашим услугам сэр"},
+  {"file": "system_diagnostic.wav", "text": "Начинаю диагностику системы"},
+  {"file": "welcome_sir.wav", "text": "Всегда к вашим услугам сэр"},
+  {"file": "rebooted.wav", "text": "Я перезагрузился сэр"}
+]

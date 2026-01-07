@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package audit;
+
+option go_package = "github.com/kirin2461/365/backend/proto/audit";
+
+service AuditService {
+    rpc LogEvent (LogEventRequest) returns (LogEventResponse);
+    rpc GetLogs (GetLogsRequest) returns (GetLogsResponse);
+    rpc BatchLogEvents (BatchLogEventsRequest) returns (BatchLogEventsResponse);
+}
+
+message LogEventRequest {
+    uint64 user_id = 1;
+    string action = 2;
+    string target_type = 3;
+    string target_id = 4;
+    string scope = 5;
+    string details = 6;
+    string ip_address = 7;
+    string user_agent = 8;
+}
+
+message LogEventResponse {
+    bool success = 1;
+    uint64 id = 2;
+}
+
+message BatchLogEventsRequest {
+    repeated LogEventRequest events = 1;
+}
+
+message BatchLogEventsResponse {
+    int32 count = 1;
+}
+
+message GetLogsRequest {
+    int32 page = 1;
+    int32 limit = 2;
+    uint64 user_id = 3; // Optional filter
+    string action = 4; // Optional filter
+}
+
+message AuditLogEntry {
+    uint64 id = 1;
+    uint64 user_id = 2;
+    string action = 3;
+    string target_type = 4;
+    string target_id = 5;
+    string scope = 6;
+    string details = 7;
+    string ip_address = 8;
+    string created_at = 9;
+}
+
+message GetLogsResponse {
+    repeated AuditLogEntry logs = 1;
+    int64 total = 2;
+}

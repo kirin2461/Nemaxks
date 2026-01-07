@@ -1,0 +1,28 @@
+port: 7880
+rtc:
+  port_range_start: 50000
+  port_range_end: 50100
+  use_external_ip: true
+  # For local development, use localhost
+  # For production, use your public IP or domain
+  tcp_port: 7881
+
+redis:
+  address: redis:6379
+
+keys:
+  devkey: devsecret
+
+logging:
+  level: info
+
+room:
+  auto_create: true
+  empty_timeout: 300   # 5 minutes
+  max_participants: 100
+
+audio:
+  # Enable advanced audio features
+  active_speaker:
+    smoothing_factor: 0.8
+    min_percentage: 20

@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+package channels.v1;
+
+option go_package = "backend/proto/channels;channelspb";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+// Channels Service
+service ChannelsService {
+  // Get channels in a guild
+  rpc GetChannels(GetChannelsRequest) returns (GetChannelsResponse) {
+    option (google.api.http) = {
+      get: "/v1/guilds/{guild_id}/channels"
+    };
+  }
+
+  // Create a new channel
+  rpc CreateChannel(CreateChannelRequest) returns (Channel) {
+    option (google.api.http) = {
+      post: "/v1/guilds/{guild_id}/channels"
+      body: "*"
+    };
+  }
+
+  // Update channel
+  rpc UpdateChannel(UpdateChannelRequest) returns (Channel) {
+    option (google.api.http) = {
+      put: "/v1/channels/{channel_id}"
+      body: "*"
+    };
+  }
+
+  // Delete channel
+  rpc DeleteChannel(DeleteChannelRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/channels/{channel_id}"
+    };
+  }
+
+  // Get messages in a channel
+  rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse) {
+    option (google.api.http) = {
+      get: "/v1/channels/{channel_id}/messages"
+    };
+  }
+
+  // Send a message
+  rpc SendMessage(SendMessageRequest) returns (Message) {
+    option (google.api.http) = {
+      post: "/v1/channels/{channel_id}/messages"
+      body: "*"
+    };
+  }
+
+  // Stream messages (real-time)
+  rpc StreamMessages(StreamMessagesRequest) returns (stream Message) {}
+}
+
+message GetChannelsRequest {
+  string guild_id = 1;
+}
+
+message GetChannelsResponse {
+  repeated Channel channels = 1;
+}
+
+message CreateChannelRequest {
+  string guild_id = 1;
+  string name = 2;
+  ChannelType type = 3;
+  string topic = 4;
+  uint32 position = 5;
+}
+
+message UpdateChannelRequest {
+  string channel_id = 1;
+  string name = 2;
+  string topic = 3;
+  uint32 position = 4;
+}
+
+message DeleteChannelRequest {
+  string channel_id = 1;
+}
+
+message GetMessagesRequest {
+  string channel_id = 1;
+  uint32 limit = 2;
+  string before = 3;
+  string after = 4;
+}
+
+message GetMessagesResponse {
+  repeated Message messages = 1;
+  bool has_more = 2;
+}
+
+message SendMessageRequest {
+  string channel_id = 1;
+  string content = 2;
+  repeated string attachments = 3;
+  string reply_to = 4;
+}
+
+message StreamMessagesRequest {
+  string channel_id = 1;
+}
+
+enum ChannelType {
+  CHANNEL_TYPE_UNSPECIFIED = 0;
+  CHANNEL_TYPE_TEXT = 1;
+  CHANNEL_TYPE_VOICE = 2;
+  CHANNEL_TYPE_CATEGORY = 3;
+}
+
+message Channel {
+  string id = 1;
+  string guild_id = 2;
+  string name = 3;
+  ChannelType type = 4;
+  string topic = 5;
+  uint32 position = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message Message {
+  string id = 1;
+  string channel_id = 2;
+  string author_id = 3;
+  string author_name = 4;
+  string content = 5;
+  repeated string attachments = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+  string reply_to = 9;
+}

@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package search;
+
+option go_package = "github.com/kirin2461/365/backend/proto/search";
+
+service SearchService {
+    rpc SearchMessages (SearchMessagesRequest) returns (SearchMessagesResponse);
+    rpc IndexMessage (IndexMessageRequest) returns (IndexMessageResponse);
+}
+
+message SearchMessagesRequest {
+    string query = 1;
+    string channel_id = 2;
+    string guild_id = 3;
+    string author_id = 4;
+    int32 limit = 5;
+    int32 offset = 6;
+}
+
+message SearchResult {
+    uint64 message_id = 1;
+    string content = 2;
+    uint64 author_id = 3;
+    string channel_id = 4;
+    float score = 5;
+    string created_at = 6;
+}
+
+message SearchMessagesResponse {
+    repeated SearchResult results = 1;
+    int64 total_hits = 2;
+}
+
+message IndexMessageRequest {
+    uint64 message_id = 1;
+    string content = 2;
+    uint64 author_id = 3;
+    string channel_id = 4;
+    string guild_id = 5;
+    string created_at = 6;
+}
+
+message IndexMessageResponse {
+    bool success = 1;
+}

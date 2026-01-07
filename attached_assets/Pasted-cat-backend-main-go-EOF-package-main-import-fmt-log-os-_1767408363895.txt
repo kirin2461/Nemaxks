@@ -1,0 +1,305 @@
+cat > backend/main.go << 'EOF'
+package main
+
+import (
+    "fmt"
+    "log"
+    "os"
+    "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
+    "github.com/joho/godotenv"
+    "gorm.io/driver/postgres"
+    "gorm.io/gorm"
+    "github.com/golang-jwt/jwt/v5"
+    "time"
+    "net/http"
+)
+
+type User struct {
+    ID        int       `json:"id" gorm:"primaryKey"`
+    Username  string    `json:"username" gorm:"unique;not null"`
+    Email     string    `json:"email" gorm:"unique;not null"`
+    Password  string    `json:"-"`
+    Avatar    *string   `json:"avatar"`
+    Status    string    `json:"status" gorm:"default:'offline'"`
+    Bio       *string   `json:"bio"`
+    CreatedAt time.Time `json:"created_at"`
+    UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Guild struct {
+    ID          int       `json:"id" gorm:"primaryKey"`
+    Name        string    `json:"name" gorm:"not null"`
+    Description *string   `json:"description"`
+    Icon        *string   `json:"icon"`
+    OwnerID     int       `json:"owner_id" gorm:"not null"`
+    IsPrivate   bool      `json:"is_private" gorm:"default:false"`
+    CreatedAt   time.Time `json:"created_at"`
+    UpdatedAt   time.Time `json:"updated_at"`
+    Owner       User      `json:"owner" gorm:"foreignKey:OwnerID"`
+}
+
+type Channel struct {
+    ID          int       `json:"id" gorm:"primaryKey"`
+    GuildID     int       `json:"guild_id" gorm:"not null"`
+    Name        string    `json:"name" gorm:"not null"`
+    Description *string   `json:"description"`
+    Type        string    `json:"type" gorm:"default:'text'"`
+    Position    int       `json:"position" gorm:"default:0"`
+    CreatedAt   time.Time `json:"created_at"`
+    UpdatedAt   time.Time `json:"updated_at"`
+    Guild       Guild     `json:"guild" gorm:"foreignKey:GuildID"`
+}
+
+type Message struct {
+    ID        int       `json:"id" gorm:"primaryKey"`
+    ChannelID int       `json:"channel_id" gorm:"not null"`
+    AuthorID  int       `json:"author_id" gorm:"not null"`
+    Content   string    `json:"content" gorm:"type:text"`
+    Edited    bool      `json:"edited" gorm:"default:false"`
+    CreatedAt time.Time `json:"created_at"`
+    UpdatedAt time.Time `json:"updated_at"`
+    Channel   Channel   `json:"channel" gorm:"foreignKey:ChannelID"`
+    Author    User      `json:"author" gorm:"foreignKey:AuthorID"`
+}
+
+type AuthResponse struct {
+    Token string `json:"token"`
+    User  User   `json:"user"`
+}
+
+var db *gorm.DB
+
+func initDB() {
+    dsn := os.Getenv("DATABASE_URL")
+    if dsn == "" {
+        dsn = "host=localhost user=postgres password=postgres dbname=nemaks port=5432 sslmode=disable"
+    }
+    
+    var err error
+    db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    if err != nil {
+        log.Fatalf("Failed to connect to database: %v", err)
+    }
+    
+    db.AutoMigrate(&User{}, &Guild{}, &Channel{}, &Message{})
+    log.Println("Database connected and migrated")
+}
+
+func generateToken(user *User) (string, error) {
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+        "user_id": user.ID,
+        "username": user.Username,
+        "exp": time.Now().Add(time.Hour * 24).Unix(),
+    })
+    
+    return token.SignedString([]byte("your-secret-key"))
+}
+
+func main() {
+    godotenv.Load()
+    initDB()
+    
+    r := gin.Default()
+    
+    r.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"*"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+    }))
+    
+    // Health check
+    r.GET("/health", func(c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{"status": "ok"})
+    })
+    
+    // Auth endpoints
+    r.POST("/api/auth/register", registerHandler)
+    r.POST("/api/auth/login", loginHandler)
+    r.GET("/api/auth/me", authMiddleware(), meHandler)
+    
+    // Guild endpoints
+    r.GET("/api/guilds", authMiddleware(), getGuildsHandler)
+    r.POST("/api/guilds", authMiddleware(), createGuildHandler)
+    r.GET("/api/guilds/:id", authMiddleware(), getGuildHandler)
+    r.PUT("/api/guilds/:id", authMiddleware(), updateGuildHandler)
+    r.DELETE("/api/guilds/:id", authMiddleware(), deleteGuildHandler)
+    
+    // Channel endpoints
+    r.GET("/api/guilds/:guild_id/channels", authMiddleware(), getChannelsHandler)
+    r.POST("/api/guilds/:guild_id/channels", authMiddleware(), createChannelHandler)
+    r.DELETE("/api/channels/:id", authMiddleware(), deleteChannelHandler)
+    
+    // Message endpoints
+    r.GET("/api/channels/:channel_id/messages", authMiddleware(), getMessagesHandler)
+    r.POST("/api/channels/:channel_id/messages", authMiddleware(), createMessageHandler)
+    r.PUT("/api/messages/:id", authMiddleware(), updateMessageHandler)
+    r.DELETE("/api/messages/:id", authMiddleware(), deleteMessageHandler)
+    
+    r.Run("0.0.0.0:8000")
+}
+
+func registerHandler(c *gin.Context) {
+    var req struct {
+        Username string `json:"username" binding:"required"`
+        Email    string `json:"email" binding:"required,email"`
+        Password string `json:"password" binding:"required,min=6"`
+    }
+    
+    if err := c.BindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    
+    user := User{Username: req.Username, Email: req.Email, Password: req.Password}
+    if err := db.Create(&user).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Username or email already exists"})
+        return
+    }
+    
+    token, _ := generateToken(&user)
+    c.JSON(http.StatusCreated, AuthResponse{Token: token, User: user})
+}
+
+func loginHandler(c *gin.Context) {
+    var req struct {
+        Email    string `json:"email" binding:"required"`
+        Password string `json:"password" binding:"required"`
+    }
+    
+    if err := c.BindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    
+    var user User
+    if err := db.Where("email = ? AND password = ?", req.Email, req.Password).First(&user).Error; err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
+    }
+    
+    token, _ := generateToken(&user)
+    c.JSON(http.StatusOK, AuthResponse{Token: token, User: user})
+}
+
+func authMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        authHeader := c.GetHeader("Authorization")
+        if authHeader == "" {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing authorization header"})
+            c.Abort()
+            return
+        }
+        c.Next()
+    }
+}
+
+func meHandler(c *gin.Context) {
+    c.JSON(http.StatusOK, gin.H{"id": 1, "name": "Demo User", "email": "demo@example.com"})
+}
+
+func getGuildsHandler(c *gin.Context) {
+    var guilds []Guild
+    db.Find(&guilds)
+    c.JSON(http.StatusOK, guilds)
+}
+
+func createGuildHandler(c *gin.Context) {
+    var guild Guild
+    if err := c.BindJSON(&guild); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    db.Create(&guild)
+    c.JSON(http.StatusCreated, guild)
+}
+
+func getGuildHandler(c *gin.Context) {
+    id := c.Param("id")
+    var guild Guild
+    if err := db.First(&guild, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Guild not found"})
+        return
+    }
+    c.JSON(http.StatusOK, guild)
+}
+
+func updateGuildHandler(c *gin.Context) {
+    id := c.Param("id")
+    var guild Guild
+    if err := db.First(&guild, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Guild not found"})
+        return
+    }
+    c.BindJSON(&guild)
+    db.Save(&guild)
+    c.JSON(http.StatusOK, guild)
+}
+
+func deleteGuildHandler(c *gin.Context) {
+    id := c.Param("id")
+    db.Delete(&Guild{}, id)
+    c.JSON(http.StatusNoContent, nil)
+}
+
+func getChannelsHandler(c *gin.Context) {
+    guildID := c.Param("guild_id")
+    var channels []Channel
+    db.Where("guild_id = ?", guildID).Find(&channels)
+    c.JSON(http.StatusOK, channels)
+}
+
+func createChannelHandler(c *gin.Context) {
+    var channel Channel
+    if err := c.BindJSON(&channel); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    db.Create(&channel)
+    c.JSON(http.StatusCreated, channel)
+}
+
+func deleteChannelHandler(c *gin.Context) {
+    id := c.Param("id")
+    db.Delete(&Channel{}, id)
+    c.JSON(http.StatusNoContent, nil)
+}
+
+func getMessagesHandler(c *gin.Context) {
+    channelID := c.Param("channel_id")
+    var messages []Message
+    db.Where("channel_id = ?", channelID).Preload("Author").Find(&messages)
+    c.JSON(http.StatusOK, messages)
+}
+
+func createMessageHandler(c *gin.Context) {
+    var message Message
+    if err := c.BindJSON(&message); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    db.Create(&message)
+    c.JSON(http.StatusCreated, message)
+}
+
+func updateMessageHandler(c *gin.Context) {
+    id := c.Param("id")
+    var message Message
+    if err := db.First(&message, id).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Message not found"})
+        return
+    }
+    c.BindJSON(&message)
+    message.Edited = true
+    db.Save(&message)
+    c.JSON(http.StatusOK, message)
+}
+
+func deleteMessageHandler(c *gin.Context) {
+    id := c.Param("id")
+    db.Delete(&Message{}, id)
+    c.JSON(http.StatusNoContent, nil)
+}
+EOF

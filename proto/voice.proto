@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package voice.v1;
+
+option go_package = "backend/proto/voice;voicepb";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+// Voice Service for real-time voice communication
+service VoiceService {
+  // Get LiveKit token for joining a voice channel
+  rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {
+    option (google.api.http) = {
+      post: "/v1/voice/token"
+      body: "*"
+    };
+  }
+
+  // Leave a voice channel
+  rpc LeaveChannel(LeaveChannelRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/voice/leave/{channel_id}"
+    };
+  }
+
+  // Get participants in a voice channel
+  rpc GetParticipants(GetParticipantsRequest) returns (GetParticipantsResponse) {
+    option (google.api.http) = {
+      get: "/v1/voice/channels/{channel_id}/participants"
+    };
+  }
+
+  // Stream voice events (join/leave/mute/etc)
+  rpc StreamVoiceEvents(StreamVoiceEventsRequest) returns (stream VoiceEvent) {}
+
+  // Update voice state (mute/unmute/deafen)
+  rpc UpdateVoiceState(UpdateVoiceStateRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/v1/voice/state"
+      body: "*"
+    };
+  }
+}
+
+message GetTokenRequest {
+  string channel_id = 1;
+  string room_name = 2;
+}
+
+message GetTokenResponse {
+  string token = 1;
+  string url = 2;
+  string room_name = 3;
+}
+
+message LeaveChannelRequest {
+  string channel_id = 1;
+}
+
+message GetParticipantsRequest {
+  string channel_id = 1;
+}
+
+message Participant {
+  string user_id = 1;
+  string username = 2;
+  string avatar = 3;
+  bool is_muted = 4;
+  bool is_deafened = 5;
+  bool is_speaking = 6;
+  google.protobuf.Timestamp joined_at = 7;
+}
+
+message GetParticipantsResponse {
+  repeated Participant participants = 1;
+}
+
+message StreamVoiceEventsRequest {
+  string channel_id = 1;
+}
+
+message VoiceEvent {
+  enum EventType {
+    UNKNOWN = 0;
+    USER_JOINED = 1;
+    USER_LEFT = 2;
+    USER_MUTED = 3;
+    USER_UNMUTED = 4;
+    USER_DEAFENED = 5;
+    USER_UNDEAFENED = 6;
+    USER_SPEAKING = 7;
+    USER_STOPPED_SPEAKING = 8;
+  }
+
+  EventType type = 1;
+  string user_id = 2;
+  string channel_id = 3;
+  string username = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  map<string, string> metadata = 6;
+}
+
+message UpdateVoiceStateRequest {
+  string channel_id = 1;
+  bool is_muted = 2;
+  bool is_deafened = 3;
+}

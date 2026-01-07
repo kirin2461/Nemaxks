@@ -1,0 +1,100 @@
+modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash"]
+[agent]
+expertMode = true
+
+[nix]
+packages = ["tree", "rustup", "protobuf"]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Frontend"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Audit Service (Rust)"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Search Service (Rust)"
+
+[[workflows.workflow]]
+name = "Frontend"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export LD_PRELOAD= && cd frontend && npm run dev -- --host 0.0.0.0 --port 5000"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Backend"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export LD_PRELOAD= && cd backend && go run ."
+
+[[workflows.workflow]]
+name = "Audit Service (Rust)"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export LD_PRELOAD= && export PATH=\"/nix/var/nix/profiles/default/bin:$PATH\" && cd rust-services/audit-service && cargo run || /usr/bin/cargo run || cargo run"
+
+[[workflows.workflow]]
+name = "Search Service (Rust)"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "export LD_PRELOAD= && export PATH=\"/nix/var/nix/profiles/default/bin:$PATH\" && cd rust-services/search-service && cargo run || /usr/bin/cargo run || cargo run"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[deployment]
+deploymentTarget = "vm"
+run = [
+  "bash",
+  "-c",
+  "./backend/server & cd frontend && npx serve -s dist -l 5000 --single",
+]
+build = [
+  "bash",
+  "-c",
+    "cd frontend && npm install && npm run build && cd ../jarvis && go mod download && go build -o jarvis . && cd ../backend && go mod tidy && go build -o server .",]
+
+[userenv]
+
+[userenv.shared]

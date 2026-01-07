@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "audit-service",
+    "search-service"
+]
+resolver = "2"

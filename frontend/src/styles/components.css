@@ -1,0 +1,206 @@
+/* Component-specific styles */
+
+.message-bubble {
+  @apply rounded-2xl px-4 py-2 max-w-[70%] break-words;
+  @apply transition-all duration-200;
+}
+
+.message-bubble.sent {
+  @apply bg-primary text-primary-foreground ml-auto;
+}
+
+.message-bubble.received {
+  @apply bg-muted text-muted-foreground mr-auto;
+}
+
+.message-bubble:hover {
+  @apply shadow-md;
+}
+
+.chat-input {
+  @apply w-full rounded-lg border border-input bg-background px-4 py-3;
+  @apply focus:outline-none focus:ring-2 focus:ring-ring;
+  @apply resize-none max-h-32;
+}
+
+.sidebar-item {
+  @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer;
+  @apply text-muted-foreground hover:bg-accent/50 hover:text-foreground active:scale-[0.98];
+  text-decoration: none !important;
+}
+
+.sidebar-item.active {
+  @apply bg-primary/10 text-primary font-semibold;
+}
+
+.avatar {
+  @apply rounded-full flex items-center justify-center;
+  @apply bg-gradient-to-br from-primary to-accent;
+  @apply text-primary-foreground font-semibold;
+}
+
+.avatar.sm {
+  @apply w-8 h-8 text-sm;
+}
+
+.avatar.md {
+  @apply w-10 h-10 text-base;
+}
+
+.avatar.lg {
+  @apply w-16 h-16 text-2xl;
+}
+
+.button-primary {
+  @apply px-4 py-2 rounded-lg font-medium;
+  @apply bg-primary text-primary-foreground;
+  @apply hover:opacity-90 active:opacity-80;
+  @apply transition-opacity duration-200;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.button-secondary {
+  @apply px-4 py-2 rounded-lg font-medium;
+  @apply bg-secondary text-secondary-foreground;
+  @apply hover:bg-secondary/80 active:bg-secondary/60;
+  @apply transition-colors duration-200;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.input-field {
+  @apply w-full px-4 py-2 rounded-lg;
+  @apply bg-background border border-input;
+  @apply focus:outline-none focus:ring-2 focus:ring-ring;
+  @apply transition-all duration-200;
+  @apply placeholder:text-muted-foreground;
+}
+
+.card {
+  @apply bg-card text-card-foreground;
+  @apply rounded-lg border border-border;
+  @apply p-6 shadow-sm;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  @apply transition-colors duration-200;
+}
+
+.badge.primary {
+  @apply bg-primary/10 text-primary border border-primary/20;
+}
+
+.badge.secondary {
+  @apply bg-secondary text-secondary-foreground;
+}
+
+.badge.success {
+  @apply bg-green-500/10 text-green-500 border border-green-500/20;
+}
+
+.badge.warning {
+  @apply bg-yellow-500/10 text-yellow-500 border border-yellow-500/20;
+}
+
+.badge.error {
+  @apply bg-red-500/10 text-red-500 border border-red-500/20;
+}
+
+.divider {
+  @apply h-px bg-border my-4;
+}
+
+.skeleton {
+  @apply animate-pulse bg-muted rounded;
+}
+
+.dropdown-menu {
+  @apply bg-card border border-border rounded-lg shadow-lg;
+  @apply p-1 min-w-[200px];
+}
+
+.dropdown-item {
+  @apply px-3 py-2 rounded-md cursor-pointer;
+  @apply hover:bg-accent/10 transition-colors duration-200;
+  @apply flex items-center gap-2;
+}
+
+.modal-overlay {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
+  @apply flex items-center justify-center p-4;
+  @apply z-50;
+}
+
+.modal-content {
+  @apply bg-card rounded-lg shadow-xl;
+  @apply max-w-md w-full p-6;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.loading-spinner {
+  @apply inline-block w-6 h-6 border-2 border-primary border-t-transparent;
+  @apply rounded-full animate-spin;
+}
+
+.notification-toast {
+  @apply fixed top-4 right-4 z-50;
+  @apply bg-card border border-border rounded-lg shadow-lg;
+  @apply p-4 min-w-[300px];
+  animation: slideIn 0.3s ease-out;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500;
+}
+
+/* Context Menu - Non-transparent solid background */
+.context-menu {
+  @apply bg-card rounded-lg shadow-2xl border border-border;
+  @apply min-w-[180px] py-1.5 overflow-hidden;
+}
+
+.context-menu-item {
+  @apply w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground;
+  @apply hover:bg-accent/30 transition-colors duration-150 cursor-pointer;
+  @apply text-left;
+}
+
+.context-menu-item:disabled,
+.context-menu-item-disabled {
+  @apply opacity-50 cursor-not-allowed hover:bg-transparent;
+}
+
+.context-menu-item-danger {
+  @apply text-red-500 hover:bg-red-500/20;
+}
+
+.context-menu-item-success {
+  @apply text-green-500 hover:bg-green-500/20;
+}
+
+.context-menu-icon {
+  @apply flex-shrink-0;
+}
+
+.context-menu-label {
+  @apply flex-1;
+}
+
+.context-menu-divider {
+  @apply h-px bg-border my-1 mx-2;
+}
+
+@keyframes context-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-context-menu {
+  animation: context-menu-in 0.15s ease-out;
+}

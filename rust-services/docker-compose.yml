@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: comm_postgres
+    environment:
+      POSTGRES_USER: comm_user
+      POSTGRES_PASSWORD: comm_password
+      POSTGRES_DB: communication_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U comm_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - comm_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: comm_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - comm_network
+
+  # Message Service
+  message-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: message_service
+    environment:
+      DATABASE_URL: postgresql://comm_user:comm_password@postgres:5432/communication_db
+      REDIS_URL: redis://redis:6379
+      SERVICE_PORT: 8001
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - comm_network
+
+  # Channel Service
+  channel-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: channel_service
+    environment:
+      DATABASE_URL: postgresql://comm_user:comm_password@postgres:5432/communication_db
+      REDIS_URL: redis://redis:6379
+      SERVICE_PORT: 8002
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - comm_network
+
+  # Voice Service
+  voice-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voice_service
+    environment:
+      DATABASE_URL: postgresql://comm_user:comm_password@postgres:5432/communication_db
+      REDIS_URL: redis://redis:6379
+      SERVICE_PORT: 8003
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - comm_network
+
+  # Board Service
+  board-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: board_service
+    environment:
+      DATABASE_URL: postgresql://comm_user:comm_password@postgres:5432/communication_db
+      REDIS_URL: redis://redis:6379
+      SERVICE_PORT: 8004
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - comm_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  comm_network:
+    driver: bridge

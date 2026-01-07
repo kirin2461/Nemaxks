@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: nemaks_user
+      POSTGRES_PASSWORD: nemaks_password
+      POSTGRES_DB: nemaks
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: rust-services/audit-service/Dockerfile
+    environment:
+      DATABASE_URL: postgres://nemaks_user:nemaks_password@postgres:5432/nemaks
+    ports:
+      - "50051:50051"
+    depends_on:
+      - postgres
+    restart: on-failure
+
+  search-service:
+    build:
+      context: .
+      dockerfile: rust-services/search-service/Dockerfile
+    environment:
+      DATABASE_URL: postgres://nemaks_user:nemaks_password@postgres:5432/nemaks
+    ports:
+      - "50052:50052"
+    depends_on:
+      - postgres
+    restart: on-failure
+
+  # Optional: Uncomment to run Go backend alongside
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: backend/Dockerfile
+  #   environment:
+  #     DATABASE_URL: postgres://nemaks_user:nemaks_password@postgres:5432/nemaks
+  #     REDIS_URL: redis://redis:6379
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - audit-service
+  #     - search-service
+
+volumes:
+  postgres_data:

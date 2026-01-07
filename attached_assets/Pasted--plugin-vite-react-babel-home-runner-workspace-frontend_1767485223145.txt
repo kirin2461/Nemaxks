@@ -1,0 +1,49 @@
+[plugin:vite:react-babel] /home/runner/workspace/frontend/src/pages/FriendsPage.tsx: Unexpected keyword 'const'. (24:7)
+  27 |   Mail,
+/home/runner/workspace/frontend/src/pages/FriendsPage.tsx:24:7
+22 |    Image,
+23 |    Paperclip,
+24 |    Gift,const friendContextMenu
+   |                               ^
+25 |    
+26 |    Calendar,
+    at constructor (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at TypeScriptParserMixin.raise (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:6624:19)
+    at TypeScriptParserMixin.checkReservedWord (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:12298:12)
+    at TypeScriptParserMixin.checkReservedWord (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:9369:13)
+    at TypeScriptParserMixin.parseImportSpecifier (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:14494:12)
+    at TypeScriptParserMixin.parseImportSpecifier (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:10205:18)
+    at TypeScriptParserMixin.parseNamedImportSpecifiers (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:14478:36)
+    at TypeScriptParserMixin.parseImportSpecifiersAndAfter (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:14318:37)
+    at TypeScriptParserMixin.parseImport (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:14311:17)
+    at TypeScriptParserMixin.parseImport (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:9412:26)
+    at TypeScriptParserMixin.parseStatementContent (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:12952:27)
+    at TypeScriptParserMixin.parseStatementContent (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:9569:18)
+    at TypeScriptParserMixin.parseStatementLike (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:12843:17)
+    at TypeScriptParserMixin.parseModuleItem (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:12820:17)
+    at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:13392:36)
+    at TypeScriptParserMixin.parseBlockBody (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:13385:10)
+    at TypeScriptParserMixin.parseProgram (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:12698:10)
+    at TypeScriptParserMixin.parseTopLevel (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:12688:25)
+    at TypeScriptParserMixin.parse (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:14568:25)
+    at TypeScriptParserMixin.parse (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:10183:18)
+    at parse (/home/runner/workspace/frontend/node_modules/@babel/parser/lib/index.js:14602:38)
+    at parser (/home/runner/workspace/frontend/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (/home/runner/workspace/frontend/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (/home/runner/workspace/frontend/node_modules/@babel/core/lib/transformation/index.js:22:50)
+    at run.next (<anonymous>)
+    at transform (/home/runner/workspace/frontend/node_modules/@babel/core/lib/transform.js:22:33)
+    at transform.next (<anonymous>)
+    at step (/home/runner/workspace/frontend/node_modules/gensync/index.js:261:32)
+    at /home/runner/workspace/frontend/node_modules/gensync/index.js:273:13
+    at async.call.result.err.err (/home/runner/workspace/frontend/node_modules/gensync/index.js:223:11)
+    at /home/runner/workspace/frontend/node_modules/gensync/index.js:189:28
+    at /home/runner/workspace/frontend/node_modules/@babel/core/lib/gensync-utils/async.js:67:7
+    at /home/runner/workspace/frontend/node_modules/gensync/index.js:113:33
+    at step (/home/runner/workspace/frontend/node_modules/gensync/index.js:287:14)
+    at /home/runner/workspace/frontend/node_modules/gensync/index.js:273:13
+    at async.call.result.err.err (/home/runner/workspace/frontend/node_modules/gensync/index.js:223:11
+Click outside, press Esc key, or fix the code to dismiss.
+You can also disable this overlay by setting server.hmr.overlay to false in vite.config.ts.

@@ -1,0 +1,10 @@
+{
+  "name": "nemaks-root",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Root build not used. Run build in frontend directory.'"
+  },
+  "dependencies": {
+    "qrcode.react": "^4.2.0"
+  }
+}

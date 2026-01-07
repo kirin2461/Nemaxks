@@ -1,0 +1,4 @@
+[submodule "jarvis"]
+	path = jarvis
+	url = https://github.com/can-acar/jarvis.git
+	branch = main

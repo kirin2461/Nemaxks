@@ -1,0 +1,107 @@
+[GIN] 2026/01/06 - 02:37:56 | 500 |    44.52111ms |       127.0.0.1 | GET      "/api/voice/channels/2/participants"
+2026/01/06 02:37:56 Voice join: user 1 joined channel 2
+2026/01/06 02:37:56 Voice state update: user 1 in channel 2
+2026/01/06 02:37:56 Voice join: user 1 joined channel 
+2026/01/06 02:37:56 Voice join: user 1 joined channel 
+2026/01/06 02:37:57 Routing voice-offer from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Routing voice-ice-candidate from 1 to undefined
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Target user undefined not connected
+2026/01/06 02:37:57 Target user undefined not connected
+[GIN] 2026/01/06 - 02:38:00 | 200 |       97.14µs |       127.0.0.1 | GET      "/api/rtc/ice-servers"
+[GIN] 2026/01/06 - 02:38:02 | 500 |    98.03779ms |       127.0.0.1 | GET      "/api/voice/channels/2/participants"
+2026/01/06 02:38:03 Voice join: user 2 joined channel 2
+2026/01/06 02:38:03 Voice state update: user 2 in channel 2
+2026/01/06 02:38:03 Routing voice-offer from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-ice-candidate from 1 to 2
+2026/01/06 02:38:03 Routing voice-answer from 2 to 1
+2026/01/06 02:38:04 Voice join: user 2 joined channel 
+2026/01/06 02:38:04 Voice join: user 2 joined channel 
+2026/01/06 02:38:04 Routing voice-offer from 1 to undefined
+2026/01/06 02:38:04 Routing voice-offer from 1 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-offer from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-offer from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Routing voice-ice-candidate from 2 to undefined
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Target user undefined not connected
+2026/01/06 02:38:04 Target user undefined not connected
