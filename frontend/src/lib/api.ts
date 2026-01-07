@@ -17,6 +17,11 @@ class APIError extends Error {
   }
 }
 
+// Ensure that any dynamic path segment is safely encoded so it cannot alter the URL structure
+function encodePathSegment(segment: string): string {
+  return encodeURIComponent(segment);
+}
+
 async function request<T>(
   endpoint: string,
   options: FetchOptions = {},
@@ -189,26 +194,35 @@ export const messagesAPI = {
     }),
 
   deleteMessage: (id: string) =>
-    request<{ success: boolean }>(`/messages/delete/${id}`, {
-      method: "DELETE",
-    }),
+    request<{ success: boolean }>(
+      `/messages/delete/${encodePathSegment(id)}`,
+      {
+        method: "DELETE",
+      },
+    ),
 
   markAsRead: (messageId: string) =>
-    request<{ success: boolean }>(`/messages/${messageId}/read`, {
-      method: "POST",
-    }),
+    request<{ success: boolean }>(
+      `/messages/${encodePathSegment(messageId)}/read`,
+      {
+        method: "POST",
+      },
+    ),
 
   updateMessage: (messageId: string, content: string) =>
-    request<Message>(`/messages/update/${messageId}`, {
+    request<Message>(`/messages/update/${encodePathSegment(messageId)}`, {
       method: "PUT",
       data: { content },
     }),
 
   addReaction: (messageId: string, emoji: string) =>
-    request<{ status: string }>(`/messages/${messageId}/reactions`, {
-      method: "POST",
-      data: { emoji },
-    }),
+    request<{ status: string }>(
+      `/messages/${encodePathSegment(messageId)}/reactions`,
+      {
+        method: "POST",
+        data: { emoji },
+      },
+    ),
 
   removeReaction: (messageId: string, emoji: string) =>
     request<{ status: string }>(
