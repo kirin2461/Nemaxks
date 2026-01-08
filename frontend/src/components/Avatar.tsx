@@ -14,6 +14,13 @@ function sanitizeImageSrc(src?: string): string | null {
   const trimmed = src.trim()
   if (!trimmed) return null
 
+  try {
+    const url = new URL(trimmed, window.location.origin)
+    if (url.protocol === 'http:' || url.protocol === 'https:') {
+      return url.toString()
+    }
+  } catch {
+    // If URL construction fails, treat it as unsafe.
   // In non-browser environments (e.g. SSR), avoid using window and skip external images
   if (typeof window === 'undefined') {
     return null
