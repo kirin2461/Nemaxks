@@ -14,32 +14,17 @@ function sanitizeImageSrc(src?: string): string | null {
   const trimmed = src.trim()
   if (!trimmed) return null
 
-  try {
-    const url = new URL(trimmed, window.location.origin)
-    if (url.protocol === 'http:' || url.protocol === 'https:') {
-      return url.toString()
-    }
-  } catch {
-    // If URL construction fails, treat it as unsafe.
-  // In non-browser environments (e.g. SSR), avoid using window and skip external images
   if (typeof window === 'undefined') {
     return null
   }
 
   try {
-    // Use current origin as base so relative URLs resolve correctly
     const url = new URL(trimmed, window.location.origin)
     const protocol = url.protocol.toLowerCase()
-
-    // Allow only http and https URLs (including same-origin relatives)
     if (protocol === 'http:' || protocol === 'https:') {
-      // Return the normalized URL string instead of the original input
-      return url.toString()
-      // Return the canonical, fully-resolved URL instead of the raw input
       return url.href
     }
   } catch {
-    // If URL construction fails, treat as invalid
     return null
   }
 
