@@ -144,11 +144,13 @@ func loginHandler(c *gin.Context) {
 
         var user User
         if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
+                log.Printf("Login attempt failed for username %s: user not found", req.Username)
                 c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
                 return
         }
 
         if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+                log.Printf("Login attempt failed for username %s: invalid password", req.Username)
                 c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
                 return
         }
