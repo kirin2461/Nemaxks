@@ -22,14 +22,6 @@ args = "Frontend"
 task = "workflow.run"
 args = "Backend"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Audit Service (Rust)"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Search Service (Rust)"
-
 [[workflows.workflow]]
 name = "Frontend"
 author = "agent"
@@ -52,28 +44,6 @@ outputType = "console"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "export LD_PRELOAD= && cd backend && go run ."
-
-[[workflows.workflow]]
-name = "Audit Service (Rust)"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "export LD_PRELOAD= && cd rust-services/audit-service && cargo run"
-
-[[workflows.workflow]]
-name = "Search Service (Rust)"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "export LD_PRELOAD= && cd rust-services/search-service && cargo run"
 
 [[ports]]
 localPort = 5000
