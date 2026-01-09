@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash", "postgresql-16"]
+modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash", "postgresql-16", "python-3.11", "go-1.22", "rust-1.78"]
 [agent]
 expertMode = true
 
@@ -62,8 +62,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "env -u LD_PRELOAD bash -l -c \"cd rust-services/audit-service && cargo run\""
-args = "cd rust-services/audit-service && cargo run"
+args = "env -u LD_PRELOAD -u LD_LIBRARY_PATH bash -l -c \"cd rust-services/audit-service && cargo run\""
 
 [[workflows.workflow]]
 name = "Search Service (Rust)"
@@ -74,8 +73,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "env -u LD_PRELOAD bash -l -c \"cd rust-services/search-service && cargo run\""
-args = "cd rust-services/search-service && cargo run"
+args = "env -u LD_PRELOAD -u LD_LIBRARY_PATH bash -l -c \"cd rust-services/search-service && cargo run\""
 
 [[ports]]
 localPort = 5000
