@@ -128,11 +128,15 @@ func registerHandler(c *gin.Context) {
                 Password: string(hashedPassword),
         }
 
-        if err := db.Create(&user).Error; err != nil {
-                log.Printf("Registration error: %v", err)
-                c.JSON(http.StatusConflict, gin.H{"error": "User or email already exists"})
-                return
-        }
+                if err := db.Create(&user).Error; err != nil {
+                        log.Printf("Registration error: %v", err)
+                        if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+                                c.JSON(http.StatusConflict, gin.H{"error": "User with this username or email already exists"})
+                        } else {
+                                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+                        }
+                        return
+                }
 
         token, _ := generateToken(&user)
         c.JSON(http.StatusCreated, gin.H{"token": token, "user": user})

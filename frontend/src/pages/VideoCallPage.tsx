@@ -529,7 +529,9 @@ export default function VideoCallPage() {
   const handleIceCandidate = async (message: any) => {
     if (!peerConnectionRef.current) return
     try {
-      await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(message.candidate))
+      if (message.candidate) {
+        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(message.candidate))
+      }
     } catch (error) {
       console.error('Failed to add ICE candidate:', error)
     }
