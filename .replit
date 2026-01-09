@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash", "postgresql-16", "python-3.11", "go-1.22", "rust-1.78"]
+modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash", "python-3.11", "go-1.22", "rust-1.78", "postgresql-16"]
 [agent]
 expertMode = true
 
