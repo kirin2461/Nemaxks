@@ -84,7 +84,7 @@ impl SearchService for MySearchService {
                                      req.offset.max(0)));
 
         // Execute simplified query (dynamic params not easily done here, using basic search)
-        let results = sqlx::query!(
+        let results = sqlx::query(
             r#"SELECT m.id, m.content, m.author_id, m.channel_id, c.guild_id, 
                       to_char(m.created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at
                FROM messages m 
@@ -92,23 +92,24 @@ impl SearchService for MySearchService {
                WHERE m.content ILIKE $1 
                ORDER BY m.created_at DESC 
                LIMIT $2 OFFSET $3"#,
-            format!("%{}%", req.query),
-            req.limit.max(10).min(100) as i32,
-            req.offset.max(0) as i32
         )
+        .bind(format!("%{}%", req.query))
+        .bind(req.limit.max(10).min(100) as i32)
+        .bind(req.offset.max(0) as i32)
         .fetch_all(&self.pool)
         .await;
 
         match results {
             Ok(rows) => {
+                use sqlx::Row;
                 let search_results: Vec<SearchResult> = rows.into_iter().map(|row| {
                     SearchResult {
-                        message_id: row.id as u64,
-                        content: row.content,
-                        author_id: row.author_id as u64,
-                        channel_id: row.channel_id.to_string(),
+                        message_id: row.get::<i64, _>("id") as u64,
+                        content: row.get("content"),
+                        author_id: row.get::<i64, _>("author_id") as u64,
+                        channel_id: row.get::<i64, _>("channel_id").to_string(),
                         score: 1.0, // SQL doesn't provide relevance score
-                        created_at: row.created_at.unwrap_or_default(),
+                        created_at: row.get::<Option<String>, _>("created_at").unwrap_or_default(),
                     }
                 }).collect();
 

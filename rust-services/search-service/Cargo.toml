@@ -9,6 +9,7 @@ prost = "0.12"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono"] }
 tantivy = "0.21" # Full-text search engine
+zstd = { version = "0.12", features = ["pkg-config"] }
 dotenv = "0.15"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
