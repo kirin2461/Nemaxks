@@ -5,6 +5,9 @@ import { JarvisVoiceProvider } from './contexts/JarvisVoiceContext'
 import { JarvisFloatingIndicator } from './components/JarvisFloatingIndicator'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { VoiceProvider } from './contexts/VoiceContext'
+import { AppStateProvider } from './contexts/AppStateContext'
+import { IncomingCallNotification } from './components/IncomingCallNotification'
+
 
 // Pages (lazy loaded)
 const AuthPage = React.lazy(() => import('./pages/AuthPage'))
@@ -76,6 +79,7 @@ function App() {
   }, [])
 
   return (
+    <AppStateProvider>
     <NotificationProvider>
     <VoiceProvider>
     <JarvisVoiceProvider>
@@ -202,6 +206,8 @@ function App() {
     </JarvisVoiceProvider>
     </VoiceProvider>
     </NotificationProvider>
+      <IncomingCallNotification />
+      </AppStateProvider>
   )
 }
 
