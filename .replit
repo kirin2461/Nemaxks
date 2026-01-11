@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash", "postgresql-16"]
+modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash"]
 
 [nix]
 channel = "stable-25_05"
