@@ -279,6 +279,7 @@ export default function VideoCallPage() {
     
     wsRef.current.onmessage = (event) => {
       const message = JSON.parse(event.data)
+      console.log('[Video WS] Received message:', message.type, 'from:', message.fromUserId)
       if (message.fromUserId !== user.id) {
         handleSignalingMessage(message)
       }
@@ -318,14 +319,19 @@ export default function VideoCallPage() {
         await handleIceCandidate(message)
         break
       case 'call-end':
-        if (callState !== 'idle' && callState !== 'ended' && !callEndSent.current) {
+        console.log('[Call Debug] Received call-end signal', { callState, callEndSent: callEndSent.current })
+        if (callState !== 'idle' && callState !== 'ended') {
+          console.log('[Call Debug] Processing call-end - ending call')
           callEndSent.current = true
           setCallState('ended')
+          audioLogger.logInfo('Remote participant ended the call')
           cleanup()
           setTimeout(() => {
             setCallState('idle')
             callEndSent.current = false
           }, 2000)
+        } else {
+          console.log('[Call Debug] Ignoring call-end - callState is', callState)
         }
         break
       case 'call-rejected':
