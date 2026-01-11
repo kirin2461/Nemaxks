@@ -1,7 +1,9 @@
 package main
 
 import (
+        "log"
         "net/http"
+        "os"
         "strconv"
         "time"
 
@@ -612,3 +614,256 @@ func getUserDonationsHandler(c *gin.Context) {
                 "total":     total,
         })
 }
+
+// Premium Billing Endpoints
+
+func getPremiumSubscriptionHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        
+        var sub PremiumSubscription
+        if err := db.Preload("Plan").Where("user_id = ? AND status IN ?", uid, []string{"active", "cancelled"}).Order("current_period_end DESC").First(&sub).Error; err != nil {
+                c.JSON(http.StatusOK, gin.H{})
+                return
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "id":                   sub.ID,
+                "plan_id":              sub.PlanID,
+                "plan_name":            sub.Plan.Name,
+                "status":               sub.Status,
+                "current_period_start": sub.CurrentPeriodStart,
+                "current_period_end":   sub.CurrentPeriodEnd,
+                "auto_renew":           sub.AutoRenew,
+                "cancel_at_period_end": sub.CancelAtPeriodEnd,
+        })
+}
+
+func checkoutPremiumHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        
+        var req struct {
+                PlanID int `json:"plan_id" binding:"required"`
+        }
+        if err := c.BindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+        
+        // Check if user already has active subscription
+        var existingSub PremiumSubscription
+        if db.Where("user_id = ? AND status = ?", uid, "active").First(&existingSub).RowsAffected > 0 {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Already have active subscription"})
+                return
+        }
+        
+        // Get plan
+        var plan PremiumPlan
+        if db.First(&plan, req.PlanID).RowsAffected == 0 {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
+                return
+        }
+        
+        // Create pending transaction
+        transaction := PremiumTransaction{
+                UserID:          uid,
+                PlanID:          uint(req.PlanID),
+                AmountRub:       plan.PriceRub,
+                Status:          "pending",
+                PaymentProvider: "yookassa",
+                Description:     "Premium subscription: " + plan.Name,
+        }
+        db.Create(&transaction)
+        
+        // TODO: Create actual YooKassa payment and get confirmation URL
+        // For now, return a placeholder - needs YOOKASSA_SHOP_ID and YOOKASSA_SECRET_KEY
+        shopID := os.Getenv("YOOKASSA_SHOP_ID")
+        if shopID == "" {
+                c.JSON(http.StatusOK, gin.H{
+                        "payment_id":       transaction.ID,
+                        "confirmation_url": "",
+                        "message":          "YooKassa not configured. Please contact admin.",
+                })
+                return
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "payment_id":       transaction.ID,
+                "confirmation_url": "https://yookassa.ru/checkout/...",
+        })
+}
+
+func cancelPremiumHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        
+        var sub PremiumSubscription
+        if err := db.Where("user_id = ? AND status = ?", uid, "active").First(&sub).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "No active subscription"})
+                return
+        }
+        
+        now := time.Now()
+        db.Model(&sub).Updates(map[string]interface{}{
+                "cancel_at_period_end": true,
+                "cancelled_at":         now,
+                "status":               "cancelled",
+                "auto_renew":           false,
+        })
+        
+        c.JSON(http.StatusOK, gin.H{"status": "cancelled", "ends_at": sub.CurrentPeriodEnd})
+}
+
+func getPremiumTransactionsHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        
+        var transactions []PremiumTransaction
+        db.Where("user_id = ?", uid).Order("created_at DESC").Limit(50).Find(&transactions)
+        
+        result := make([]gin.H, len(transactions))
+        for i, t := range transactions {
+                result[i] = gin.H{
+                        "id":               t.ID,
+                        "plan_id":          t.PlanID,
+                        "amount_rub":       t.AmountRub,
+                        "status":           t.Status,
+                        "payment_provider": t.PaymentProvider,
+                        "created_at":       t.CreatedAt,
+                        "completed_at":     t.CompletedAt,
+                }
+        }
+        
+        c.JSON(http.StatusOK, result)
+}
+
+func yookassaWebhookHandler(c *gin.Context) {
+        var payload struct {
+                Type   string `json:"type"`
+                Event  string `json:"event"`
+                Object struct {
+                        ID       string `json:"id"`
+                        Status   string `json:"status"`
+                        Metadata struct {
+                                TransactionID string `json:"transaction_id"`
+                        } `json:"metadata"`
+                } `json:"object"`
+        }
+        
+        if err := c.BindJSON(&payload); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
+                return
+        }
+        
+        if payload.Object.Status == "succeeded" {
+                transactionID, err := strconv.ParseUint(payload.Object.Metadata.TransactionID, 10, 32)
+                if err != nil {
+                        log.Printf("Invalid transaction ID in webhook: %s", payload.Object.Metadata.TransactionID)
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID"})
+                        return
+                }
+                
+                var transaction PremiumTransaction
+                if db.First(&transaction, transactionID).RowsAffected == 0 {
+                        log.Printf("Transaction not found: %d", transactionID)
+                        c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
+                        return
+                }
+                
+                if transaction.Status == "succeeded" {
+                        c.JSON(http.StatusOK, gin.H{"status": "already_processed"})
+                        return
+                }
+                
+                now := time.Now()
+                transaction.Status = "succeeded"
+                transaction.CompletedAt = &now
+                transaction.ProviderPaymentID = payload.Object.ID
+                db.Save(&transaction)
+                
+                var plan PremiumPlan
+                db.First(&plan, transaction.PlanID)
+                
+                periodEnd := now.AddDate(0, 1, 0)
+                if plan.BillingCycle == "quarterly" {
+                        periodEnd = now.AddDate(0, 3, 0)
+                } else if plan.BillingCycle == "annual" {
+                        periodEnd = now.AddDate(1, 0, 0)
+                }
+                
+                var existingSub PremiumSubscription
+                if db.Where("user_id = ?", transaction.UserID).First(&existingSub).RowsAffected > 0 {
+                        db.Model(&existingSub).Updates(map[string]interface{}{
+                                "plan_id":              transaction.PlanID,
+                                "status":               "active",
+                                "current_period_start": now,
+                                "current_period_end":   periodEnd,
+                                "auto_renew":           true,
+                                "cancel_at_period_end": false,
+                                "cancelled_at":         nil,
+                        })
+                        db.Model(&transaction).Update("subscription_id", existingSub.ID)
+                } else {
+                        sub := PremiumSubscription{
+                                UserID:             transaction.UserID,
+                                PlanID:             transaction.PlanID,
+                                Status:             "active",
+                                CurrentPeriodStart: now,
+                                CurrentPeriodEnd:   periodEnd,
+                                AutoRenew:          true,
+                        }
+                        db.Create(&sub)
+                        db.Model(&transaction).Update("subscription_id", sub.ID)
+                }
+                
+                log.Printf("Premium subscription activated for user %d, plan %d", transaction.UserID, transaction.PlanID)
+        }
+        
+        c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// Seed premium plans
+func seedPremiumPlans() {
+        plans := []PremiumPlan{
+                {
+                        Slug:         "basic",
+                        Name:         "Basic",
+                        Description:  "Базовый план для начинающих",
+                        PriceRub:     199,
+                        BillingCycle: "monthly",
+                        Features:     `["Без рекламы","Базовые темы оформления","Поддержка 24/7"]`,
+                        IsActive:     true,
+                        SortOrder:    1,
+                },
+                {
+                        Slug:         "pro",
+                        Name:         "Pro",
+                        Description:  "Расширенные возможности для активных пользователей",
+                        PriceRub:     499,
+                        BillingCycle: "monthly",
+                        Features:     `["Все из Basic","HD видео","Эксклюзивные темы","Приоритетная поддержка","Расширенное хранилище"]`,
+                        IsActive:     true,
+                        SortOrder:    2,
+                },
+                {
+                        Slug:         "vip",
+                        Name:         "VIP",
+                        Description:  "Максимальные возможности и эксклюзивный доступ",
+                        PriceRub:     999,
+                        BillingCycle: "monthly",
+                        Features:     `["Все из Pro","VIP значок","Ранний доступ к новым функциям","Персональный менеджер","Неограниченное хранилище"]`,
+                        IsActive:     true,
+                        SortOrder:    3,
+                },
+        }
+        
+        for _, plan := range plans {
+                var existing PremiumPlan
+                if db.Where("slug = ?", plan.Slug).First(&existing).RowsAffected == 0 {
+                        db.Create(&plan)
+                        log.Printf("Created premium plan: %s", plan.Name)
+                }
+        }
+}
+

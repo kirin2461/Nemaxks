@@ -390,6 +390,23 @@ type AbuseReport struct {
         CreatedAt  time.Time  `json:"created_at"`
 }
 
+// UserRequest - general user requests/reports to admins
+type UserRequest struct {
+        ID          uint       `gorm:"primaryKey" json:"id"`
+        UserID      uint       `gorm:"index" json:"user_id"`
+        User        User       `gorm:"foreignKey:UserID" json:"user,omitempty"`
+        Category    string     `gorm:"size:30;not null" json:"category"` // abuse, technical, feature_request, billing, other
+        Subject     string     `gorm:"size:200;not null" json:"subject"`
+        Description string     `gorm:"type:text" json:"description"`
+        Priority    string     `gorm:"size:20;default:'normal'" json:"priority"` // low, normal, high
+        Status      string     `gorm:"size:20;default:'pending'" json:"status"`  // pending, in_progress, resolved, rejected
+        AdminNotes  string     `gorm:"type:text" json:"admin_notes,omitempty"`
+        ReviewedBy  *uint      `json:"reviewed_by,omitempty"`
+        ReviewedAt  *time.Time `json:"reviewed_at,omitempty"`
+        CreatedAt   time.Time  `json:"created_at"`
+        UpdatedAt   time.Time  `json:"updated_at"`
+}
+
 // Invite Links
 type InviteLink struct {
         ID        uint       `gorm:"primaryKey" json:"id"`
@@ -532,14 +549,16 @@ type ReferralUse struct {
 
 // Premium Subscriptions
 type PremiumPlan struct {
-        ID          uint    `gorm:"primaryKey" json:"id"`
-        Slug        string  `gorm:"uniqueIndex" json:"slug"`
-        Name        string  `json:"name"`
-        Description string  `json:"description"`
-        PriceRub    float64 `json:"price_rub"`
-        Features    string  `gorm:"type:text" json:"features"`
-        IsActive    bool    `gorm:"default:true" json:"is_active"`
-        CreatedAt   time.Time `json:"created_at"`
+        ID           uint      `gorm:"primaryKey" json:"id"`
+        Slug         string    `gorm:"uniqueIndex" json:"slug"`
+        Name         string    `json:"name"`
+        Description  string    `json:"description"`
+        PriceRub     float64   `json:"price_rub"`
+        BillingCycle string    `gorm:"size:20;default:'monthly'" json:"billing_cycle"` // monthly, quarterly, annual
+        Features     string    `gorm:"type:text" json:"features"` // JSON array of features
+        IsActive     bool      `gorm:"default:true" json:"is_active"`
+        SortOrder    int       `gorm:"default:0" json:"sort_order"`
+        CreatedAt    time.Time `json:"created_at"`
 }
 
 type UserPremium struct {
@@ -565,6 +584,41 @@ type CreatorDonation struct {
         Status      string    `gorm:"default:'pending'" json:"status"`
         PaymentID   string    `json:"payment_id"`
         CreatedAt   time.Time `json:"created_at"`
+}
+
+// Premium Subscription (active subscription for billing)
+type PremiumSubscription struct {
+        ID                   uint       `gorm:"primaryKey" json:"id"`
+        UserID               uint       `gorm:"uniqueIndex" json:"user_id"`
+        User                 User       `gorm:"foreignKey:UserID" json:"user,omitempty"`
+        PlanID               uint       `json:"plan_id"`
+        Plan                 PremiumPlan `gorm:"foreignKey:PlanID" json:"plan,omitempty"`
+        Status               string     `gorm:"size:20;default:'active'" json:"status"` // active, cancelled, expired, past_due
+        CurrentPeriodStart   time.Time  `json:"current_period_start"`
+        CurrentPeriodEnd     time.Time  `json:"current_period_end"`
+        AutoRenew            bool       `gorm:"default:true" json:"auto_renew"`
+        CancelAtPeriodEnd    bool       `gorm:"default:false" json:"cancel_at_period_end"`
+        CancelledAt          *time.Time `json:"cancelled_at,omitempty"`
+        PaymentMethodID      string     `json:"payment_method_id,omitempty"` // YooKassa saved payment method
+        CreatedAt            time.Time  `json:"created_at"`
+        UpdatedAt            time.Time  `json:"updated_at"`
+}
+
+// Premium Transaction (payment history)
+type PremiumTransaction struct {
+        ID              uint       `gorm:"primaryKey" json:"id"`
+        UserID          uint       `gorm:"index" json:"user_id"`
+        SubscriptionID  *uint      `gorm:"index" json:"subscription_id,omitempty"`
+        PlanID          uint       `json:"plan_id"`
+        AmountRub       float64    `json:"amount_rub"`
+        Currency        string     `gorm:"size:3;default:'RUB'" json:"currency"`
+        Status          string     `gorm:"size:20;default:'pending'" json:"status"` // pending, succeeded, failed, refunded
+        PaymentProvider string     `gorm:"size:30" json:"payment_provider"` // yookassa, manual_transfer
+        ProviderPaymentID string   `json:"provider_payment_id,omitempty"`
+        Description     string     `json:"description"`
+        ConfirmationURL string     `json:"confirmation_url,omitempty"`
+        CompletedAt     *time.Time `json:"completed_at,omitempty"`
+        CreatedAt       time.Time  `json:"created_at"`
 }
 
 

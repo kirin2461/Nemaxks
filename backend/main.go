@@ -224,9 +224,16 @@ func main() {
 
         // Premium & Donations
         r.GET("/api/premium/plans", getPremiumPlansHandler)
+        r.GET("/api/premium/subscription", authMiddleware(), getPremiumSubscriptionHandler)
+        r.POST("/api/premium/checkout", authMiddleware(), checkoutPremiumHandler)
+        r.POST("/api/premium/cancel", authMiddleware(), cancelPremiumHandler)
+        r.GET("/api/premium/transactions", authMiddleware(), getPremiumTransactionsHandler)
         r.GET("/api/users/:id/premium", getUserPremiumHandler)
         r.POST("/api/users/:id/donate", optionalAuthMiddleware(), createDonationHandler)
         r.GET("/api/users/:id/donations", getUserDonationsHandler)
+        
+        // Billing webhooks (no auth - external service)
+        r.POST("/api/billing/yookassa/webhook", yookassaWebhookHandler)
 
         // Presence & Status
         r.GET("/api/users/:id/presence", authMiddleware(), getUserPresenceHandler)
@@ -273,6 +280,13 @@ func main() {
 
         // User reports (public endpoint for authenticated users)
         r.POST("/api/reports", authMiddleware(), createReportHandler)
+
+        // User Requests (general requests/reports to admins)
+        r.POST("/api/requests", authMiddleware(), createUserRequestHandler)
+        r.GET("/api/requests/my", authMiddleware(), getUserRequestsHandler)
+        r.DELETE("/api/requests/:id", authMiddleware(), cancelUserRequestHandler)
+        r.GET("/api/admin/requests", authMiddleware(), adminMiddleware(), getAdminUserRequestsHandler)
+        r.PUT("/api/admin/requests/:id", authMiddleware(), adminMiddleware(), updateUserRequestHandler)
 
         // Content Filtering (Admin)
         r.GET("/api/admin/forbidden-words", authMiddleware(), adminMiddleware(), getForbiddenWordsHandler)

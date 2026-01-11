@@ -2,7 +2,7 @@
 
 ## Overview
 
-Nemaks is a modern, real-time communication platform designed to offer Discord-style features, including real-time messaging, channels, stories, and an AI assistant. The platform aims to provide a comprehensive communication experience with robust admin tools, multimedia support, and extensive customization options. Its key capabilities include real-time interactions via WebSockets, a 5-star post rating system, multi-language support (Russian and English), and a sophisticated admin panel for user and content management.
+Nemaks is a modern, real-time communication platform offering Discord-style features such as real-time messaging, channels, ephemeral stories, and an integrated AI assistant. The platform's core purpose is to deliver a comprehensive and engaging communication experience, supported by robust admin tools, multimedia capabilities, and extensive customization. Key features include real-time interactions via WebSockets, a 5-star post rating system, multi-language support (Russian and English), and an advanced admin panel for managing users and content. The project aims to provide a secure, responsive, and feature-rich environment for user interaction.
 
 ## User Preferences
 
@@ -12,37 +12,25 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend
 
-The frontend is built with React 18.3 and TypeScript 5.6, using Vite 6 for tooling. State management is handled by Zustand for global state and React Query for server state caching. Styling leverages Tailwind CSS 3 with a custom design system and Framer Motion for animations. The project structure is modular, separating reusable components, pages, core utilities, and styles. Key components include dynamic Stories, interactive StarRating, real-time TypingIndicators, and a comprehensive AdminPanel. Mobile responsiveness is a core design principle, implemented with a mobile header, bottom navigation bar, and responsive layouts across all pages.
+The frontend is built with React 18.3 and TypeScript 5.6, utilizing Vite 6 for efficient development. State management is handled by Zustand for global state and React Query for server-side data caching. Styling is implemented with Tailwind CSS 3, adhering to a custom design system, and animations are powered by Framer Motion. The architecture emphasizes modularity, with distinct sections for reusable components, pages, core utilities, and styles. It includes dynamic Stories, interactive StarRating components, real-time TypingIndicators, and a comprehensive AdminPanel. Mobile responsiveness is a fundamental design principle, achieved through a mobile header, bottom navigation bar, and adaptable layouts across all pages. UI enhancements include multiple theme options with dynamic backgrounds, a new ConfirmDialog component for user actions, and optimized build processes.
 
 ### Backend
 
-The backend is developed in Go using the Gin framework, providing a RESTful API with JWT-based authentication. PostgreSQL is used as the database, managed with the GORM ORM. The architecture supports core features like user management, guild/channel systems, real-time messaging, stories with 24-hour expiration, and a 5-star rating system. It includes robust content filtering with forbidden words and regex support, IP banning, abuse reporting, and audit logging. WebSocket integration enables real-time functionalities.
+The backend is developed in Go using the Gin framework, providing a RESTful API secured with JWT-based authentication. PostgreSQL serves as the database, managed through the GORM ORM. The architecture supports core functionalities such as user management, guild/channel systems, real-time messaging, stories with 24-hour expiration, and a 5-star rating system. It incorporates robust content filtering with forbidden words and regex support, IP banning, abuse reporting, and audit logging. WebSocket integration is central to enabling real-time features like messaging, typing indicators, and online status. Security measures include bcrypt for password hashing, WebSocket origin validation, and JWT signing method validation. The system also supports WebRTC for voice and video calls with a mesh network topology, dynamic ICE server configuration, and STUN/TURN server support for NAT traversal.
 
-### Data Flow
+### Data Flow and Key Features
 
-Authentication uses JWT tokens. User sessions and UI preferences are managed via a Zustand store. API calls are centralized and typed. Real-time updates are handled via WebSocket. The platform supports internationalization with Russian and English translations.
-
-### Key Features and Implementations
-
-- **Real-time Communication:** WebSocket support for messaging, typing indicators, and online status.
-- **Content Management:** 24-hour disappearing Stories, 5-star post ratings, post bookmarks, likes, and subscriptions.
-- **User Interaction:** Message reactions, reply quoting, message forwarding, pinned messages, audio/video uploads, and an AI assistant (Jarvis).
-- **Voice/Video Calls:** WebRTC-based voice and video channels with multi-party support, screen sharing, noise suppression, and incoming call notifications.
-- **Admin Tools:** Full admin panel with user management, IP bans, abuse reports, audit logs, and content filtering.
-- **Theming & UI:** Multiple theme options with dynamic, animated backgrounds and a responsive design optimized for mobile.
-- **Security:** IP banning, content filtering, and QR code login for secure cross-device authentication.
-- **Internationalization:** Multi-language support (Russian and English).
-- **Advanced Messaging:** Voice messages, message editing, and search functionality.
+Authentication relies on JWT tokens. User sessions and UI preferences are managed via a Zustand store. API calls are centralized and strongly typed. Real-time updates occur via WebSocket, supporting features like real-time channel messages, typing indicators, and presence. The platform supports internationalization with Russian and English translations. Advanced features include 24-hour disappearing Stories, 5-star post ratings, post bookmarks, likes, subscriptions, message reactions, reply quoting, message forwarding, pinned messages, audio/video uploads, and an AI assistant. Voice/Video calls are WebRTC-based with multi-party support, screen sharing, noise suppression, and incoming call notifications. Admin tools include a full admin panel for user management, IP bans, abuse reports, audit logs, and content filtering. Security features encompass IP banning, content filtering, and QR code login. Monetization is handled via a premium billing system with subscription plans and donation capabilities, integrated with payment gateways like YooKassa. User support is facilitated by a request system with categorization, priority levels, and status tracking. The feed supports clickable tags for filtering, infinite scroll, and various sorting options (All Posts, Following, Trending, My Posts).
 
 ## External Dependencies
 
-### Frontend Runtime
+### Frontend
 
-- **react / react-dom**: UI framework.
-- **wouter**: Lightweight client-side routing.
+- **react / react-dom**: Core UI library.
+- **wouter**: Client-side routing.
 - **zustand**: Global state management.
-- **@tanstack/react-query**: Server state caching.
-- **socket.io-client**: WebSocket client.
+- **@tanstack/react-query**: Server state management and caching.
+- **socket.io-client**: WebSocket client for real-time communication.
 - **framer-motion**: UI animations.
 - **lucide-react**: Icon library.
 - **date-fns**: Date manipulation utilities.
@@ -55,161 +43,6 @@ Authentication uses JWT tokens. User sessions and UI preferences are managed via
 - **gorm**: ORM for PostgreSQL.
 - **jwt-go**: JWT authentication.
 
-### Development
+### Payment Gateway
 
-- **vite**: Build tool and dev server.
-- **typescript**: Type checking.
-- **tailwindcss / postcss / autoprefixer**: CSS processing.
-- **eslint**: Code linting.
-
-## Recent Changes (January 2026)
-
-- **Service Restoration (Latest)**
-  - Fixed Rust toolchain memory issues by clearing `LD_PRELOAD` and `LD_LIBRARY_PATH` in service workflows.
-  - Installed missing frontend dependencies (Vite) and configured Rust default toolchain.
-  - Verified Go backend and React frontend are running correctly.
-
-- **Security Audit & Fixes**
-  - Password hashing with bcrypt for registration and login (previously plaintext)
-  - Auto-migration of legacy passwords on login (detects bcrypt hash by $2 prefix, covers $2a$/$2b$/$2y$/$2x$ variants)
-  - WebSocket origin validation with URL parsing (validates hostname suffix against .replit.dev, .repl.co, .replit.app, localhost)
-  - JWT signing method validation in authMiddleware (HMAC only)
-  - RBAC verified for admin routes (admin/moderator roles required)
-  - Database indexes added for messages and friend requests
-  - Improved DB error handling in friend request handlers
-
-- **WebSocket Security Hardening**
-  - WebSocket connections now require JWT token authentication
-  - Token signing method validation prevents unsigned token attacks
-  - All frontend WebSocket connections updated to send JWT via query parameter
-  
-- **Friends Page Fixes**
-  - Backend returns request_id for friend requests
-  - Frontend uses request_id for accept/decline/cancel operations
-  
-- **Message History Ordering Fix**
-  - Messages now returned in chronological order (ASC) for proper display in chat
-  
-- **Audio Upload Support**
-  - Backend detects WAV, OGG, MP3 audio files via magic bytes
-  - Client type hint distinguishes audio WebM from video WebM
-  
-- **Enhanced Reply System**
-  - Backend preloads ReplyTo relationship in message queries
-  - Frontend displays quoted message content with author name
-
-- **Call System Overhaul**
-  - Unique call IDs (UUID) prevent stale call events from affecting new calls
-  - OutgoingCallModal component shows dialing status with cancel option
-  - Call states: dialing, ringing, connected, rejected, ended
-  - Backend routes call-accepted and call-cancelled WebSocket messages
-  - IncomingCall and OutgoingCall state managed in NotificationContext
-  - FriendsPage initiateCall uses NotificationContext for proper call flow
-  - Rejected calls show status for 2 seconds before dismissing modal
-  - Call cancellation clears incoming call modal on recipient side
-
-- **Real-time Channel Messaging**
-  - NotificationContext provides subscribeToMessages hook for WebSocket event handling
-  - ChannelsPage subscribes to 'channel-message' events via WebSocket
-  - Messages load from API when channel is selected (loadChannelMessages)
-  - New messages sent via channelsAPI.sendMessage (POST /channels/:id/messages)
-  - Backend broadcasts channel messages to all connected clients
-  - Real-time message updates appear instantly for all users in the channel
-
-- **Voice Channel Speaking Indicator (Updated)**
-  - Real-time audio level detection for remote users via Web Audio API AnalyserNode
-  - Green border/ring appears around user avatar when speaking
-  - Border reverts when audio stream stops or level drops below threshold
-  - Uses frequency analysis with smoothing and hold time for natural transitions
-  - VoiceContext provides setRemoteSpeaking, syncConnectedUsers, addConnectedUser, removeConnectedUser
-  - VoiceChannel syncs roster updates with VoiceContext on voice-users/voice-user-joined/voice-user-left events
-  - Speaking indicators driven by actual audio flow analysis, not just WebSocket events
-  - Consolidated user list management through VoiceContext for consistent state across components
-
-- **WebRTC Voice Chat System (Updated)**
-  - Complete mesh network topology for peer-to-peer audio streaming
-  - VoiceContext manages RTCPeerConnection lifecycle per user
-  - Dynamic ICE server configuration via /api/rtc/ice-servers endpoint
-  - STUN + TURN servers for reliable NAT traversal (uses metered.ca free TURN or custom via env vars)
-  - VoiceContext exposes getICEServers() for shared ICE configuration across components
-  - VoiceChannel uses shared ICE servers from VoiceContext
-  - Signaling via existing WebSocket (voice-offer, voice-answer, voice-ice-candidate)
-  - Backend voice roster tracking with GET /api/voice/channels/:id/participants
-  - Automatic roster cleanup on WebSocket disconnect
-  - ICE candidate buffering for pending connections
-  - Speaking detection via Web Audio API AnalyserNode
-  - Per-user volume controls (0-200%) with setUserVolume function
-  - Automatic ICE restart on connection failure (3s timeout for disconnected, immediate for failed)
-  - Automatic peer reconnection on connection failure
-  - Discord-style VoiceStatusBar with user list, speaking indicators, and controls
-  - No dial tones when entering voice channels (separated from direct calls)
-  - Environment variables for custom TURN: TURN_SERVER_URL, TURN_SERVER_USERNAME, TURN_SERVER_PASSWORD
-
-- **Channel Management & UI Improvements**
-  - ConfirmDialog component for user confirmations (replaces native browser dialogs)
-  - Channel deletion only available to guild owners (owner_id gating)
-  - Delete channel context menu option shows ConfirmDialog with warning
-  - Leave channel/guild confirmations via ConfirmDialog
-  - Message deletion confirmation via ConfirmDialog
-  - Vite build optimizations: manual chunks for vendor dependencies, CSS minification, optimized dependency pre-bundling
-  - Improved loading screen with animated spinner
-
-- **Video Call Audio Transmission & State Synchronization**
-  - AudioLevelIndicator component displays real-time audio levels with animated bars using Web Audio API
-  - AudioLogsPanel shows audio events (mute/unmute, transmission status, call state changes)
-  - useAudioLogger hook for centralized audio event logging with timestamps
-  - WebSocket message types added: mute-toggle, video-toggle, call-state-sync for participant state sync
-  - Remote participant state (muted/video off) displayed with badges on video containers
-  - State synchronization sent on call connect and when toggling mute/video
-  - AudioContext reuse to prevent browser resource exhaustion (single instance per component)
-
-- **Call Termination & Real-time Messaging Improvements**
-  - VideoCallPage now listens for `remote-call-end` custom event to properly handle call termination
-  - Improved audio quality settings: 48kHz sample rate, 16-bit sample size, mono channel
-  - MessagesPage subscribes to WebSocket for real-time message updates via subscribeToMessages hook
-  - Typing indicators with per-user debounce timers (Map-based) prevent flickering and stale state
-  - Proper cleanup of typing timers on unmount and user switch
-  - Messages without server-provided IDs are skipped to prevent duplicates
-  - Backend routes "typing" WebSocket messages to target users
-  - clearTypingIndicators function resets all timers when switching conversations
-  - Proper cleanup resets remote state to avoid stale data between calls
-
-- **Feed Improvements (Latest)**
-  - Clickable tags on posts filter the feed by that tag
-  - Tag filter visible in sidebar and mobile header with clear button
-  - Infinite scroll using Intersection Observer for seamless pagination
-  - Backend pagination with limit/offset and has_more flag
-  - Loading spinner while fetching more posts
-  - "Вы достигли конца ленты" message when no more posts
-  - Premium page (/premium) for site-wide subscription purchases
-  - Premium link added to sidebar navigation with Crown icon
-
-- **Monetization & Support System**
-  - SupportPage (/support/:userId) with donation and premium subscription options
-  - PremiumPlan, UserPremium, CreatorDonation models in backend
-  - Backend endpoints: GET /api/premium/plans, GET /api/users/:id/premium, POST /api/users/:id/donate, GET /api/users/:id/donations
-  - ProfilePage shows premium badge (Crown icon) next to username for premium users
-  - "Поддержать" (Support) button on other users' profiles links to SupportPage
-  - Donation form with predefined amounts (50, 100, 250, 500, 1000₽) or custom amount
-  - Premium plans display with features list and pricing
-  - Recent donations list with total amount on SupportPage
-
-- **Profile Page Enhancements**
-  - User profile viewing via /profile/:userId route
-  - Backend GET /api/users/:id/profile returns user data with is_subscribed, followers_count, following_count
-  - Backend GET /api/users/:id/stats returns followers_count, following_count, posts_count, friends_count
-  - optionalAuthMiddleware extracts user_id if present without requiring auth
-  - Subscribe/Unsubscribe buttons on other users' profiles
-  - Stats sidebar displays followers, following, friends, and posts counts for all profiles
-  - Optimistic UI updates for subscription state with local stats refresh
-  - Fixed isOwnProfile type comparison (string route param vs numeric user ID)
-
-- **Feed Page Improvements**
-  - 5-star rating system for posts with StarRating component
-  - Post filtering by All Posts, Following, Trending, and My Posts tabs
-  - Following filter returns posts only from subscribed users (via Subscription table)
-  - Trending filter sorts posts by likes count descending
-  - Subscribe/unsubscribe buttons show correct state based on user subscriptions
-  - Subscription handlers with proper authentication validation
-  - Optimistic UI updates for ratings with rollback on error
-  - Post enrichment with rating averages, counts, and user-specific interaction data
+- **YooKassa**: For premium billing and subscription processing.

@@ -232,7 +232,7 @@ export const premiumAPI = {
       name: string;
       description: string;
       price_rub: number;
-      duration_days: number;
+      billing_cycle: string;
       features: string;
       is_active: boolean;
     }>>('/premium/plans'),
@@ -243,6 +243,70 @@ export const premiumAPI = {
       plan_name?: string;
       expires_at?: string;
     }>(`/users/${userId}/premium`),
+    
+  getSubscription: () =>
+    request<{
+      id?: number;
+      plan_id?: number;
+      plan_name?: string;
+      status?: string;
+      current_period_start?: string;
+      current_period_end?: string;
+      auto_renew?: boolean;
+      cancel_at_period_end?: boolean;
+    }>('/premium/subscription'),
+    
+  checkout: (planId: number) =>
+    request<{
+      payment_id: string;
+      confirmation_url: string;
+    }>('/premium/checkout', {
+      method: 'POST',
+      data: { plan_id: planId },
+    }),
+    
+  cancelSubscription: () =>
+    request<{ status: string }>('/premium/cancel', {
+      method: 'POST',
+    }),
+    
+  getTransactions: () =>
+    request<Array<{
+      id: number;
+      plan_id: number;
+      amount_rub: number;
+      status: string;
+      payment_provider: string;
+      created_at: string;
+      completed_at?: string;
+    }>>('/premium/transactions'),
+};
+
+// User Requests API
+export const requestsAPI = {
+  create: (data: { category: string; subject: string; description: string; priority?: string }) =>
+    request<{ status: string; id: number }>('/requests', {
+      method: 'POST',
+      data,
+    }),
+    
+  getMyRequests: () =>
+    request<Array<{
+      id: number;
+      category: string;
+      subject: string;
+      description: string;
+      priority: string;
+      status: string;
+      admin_notes?: string;
+      created_at: string;
+      updated_at: string;
+    }>>('/requests/my'),
+    
+  cancel: (id: number) =>
+    request<{ status: string }>(`/requests/${id}`, {
+      method: 'DELETE',
+    }),
 };
 
 // Messages API (Consolidated)

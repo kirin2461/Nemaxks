@@ -25,6 +25,7 @@ import {
   Menu,
   X,
   Crown,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -53,6 +54,7 @@ export function Layout({ children }: LayoutProps) {
     { name: 'Channels', href: '/channels', icon: Hash, badge: notifications.channels },
     { name: 'Profile', href: '/profile', icon: User, badge: 0 },
     { name: 'Premium', href: '/premium', icon: Crown, badge: 0 },
+    { name: 'Reports', href: '/reports', icon: FileText, badge: 0 },
     { name: 'Invite', href: '/invite', icon: UserPlus, badge: 0 },
     { name: 'Settings', href: '/settings', icon: Settings, badge: 0 },
     ...(isAdmin ? [{ name: 'Админ', href: '/admin', icon: Shield, badge: 0 }] : []),

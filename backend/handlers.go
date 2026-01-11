@@ -92,11 +92,13 @@ func initDB() {
                 &UserReferral{}, &ReferralUse{},
                 &Video{}, &VideoChapter{}, &VideoLike{}, &VideoBookmark{},
                 &PremiumPlan{}, &UserPremium{}, &CreatorDonation{},
+                &UserRequest{}, &PremiumSubscription{}, &PremiumTransaction{},
         )
         log.Println("DB connected")
 
         initDefaultForbiddenWords()
         ensureGlobalGuild()
+        seedPremiumPlans()
 }
 
 func ensureGlobalGuild() {

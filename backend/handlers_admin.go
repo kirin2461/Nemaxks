@@ -647,3 +647,145 @@ func detectFileType(header []byte) string {
 
         return ""
 }
+
+// User Requests Handlers
+
+func createUserRequestHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+
+        var req struct {
+                Category    string `json:"category" binding:"required"`
+                Subject     string `json:"subject" binding:"required"`
+                Description string `json:"description"`
+                Priority    string `json:"priority"`
+        }
+        if err := c.BindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        // Validate category
+        validCategories := map[string]bool{"abuse": true, "technical": true, "feature_request": true, "billing": true, "other": true}
+        if !validCategories[req.Category] {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category"})
+                return
+        }
+
+        // Default priority
+        if req.Priority == "" {
+                req.Priority = "normal"
+        }
+
+        request := UserRequest{
+                UserID:      uid,
+                Category:    req.Category,
+                Subject:     req.Subject,
+                Description: req.Description,
+                Priority:    req.Priority,
+                Status:      "pending",
+        }
+        if err := db.Create(&request).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
+                return
+        }
+
+        c.JSON(http.StatusCreated, gin.H{"status": "request_submitted", "id": request.ID})
+}
+
+func getUserRequestsHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+
+        var requests []UserRequest
+        db.Where("user_id = ?", uid).Order("created_at DESC").Find(&requests)
+        c.JSON(http.StatusOK, requests)
+}
+
+func cancelUserRequestHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        requestID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request ID"})
+                return
+        }
+
+        var request UserRequest
+        if err := db.Where("id = ? AND user_id = ?", requestID, uid).First(&request).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Request not found"})
+                return
+        }
+
+        if request.Status != "pending" {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Can only cancel pending requests"})
+                return
+        }
+
+        db.Model(&request).Update("status", "cancelled")
+        c.JSON(http.StatusOK, gin.H{"status": "cancelled"})
+}
+
+func getAdminUserRequestsHandler(c *gin.Context) {
+        status := c.DefaultQuery("status", "")
+        category := c.DefaultQuery("category", "")
+        page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+        limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+        offset := (page - 1) * limit
+
+        query := db.Model(&UserRequest{}).Preload("User")
+        if status != "" {
+                query = query.Where("status = ?", status)
+        }
+        if category != "" {
+                query = query.Where("category = ?", category)
+        }
+
+        var total int64
+        query.Count(&total)
+
+        var requests []UserRequest
+        query.Offset(offset).Limit(limit).Order("created_at DESC").Find(&requests)
+
+        c.JSON(http.StatusOK, gin.H{
+                "requests": requests,
+                "total":    total,
+                "page":     page,
+                "limit":    limit,
+        })
+}
+
+func updateUserRequestHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        adminID := uint(userID.(float64))
+        requestID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request ID"})
+                return
+        }
+
+        var req struct {
+                Status     string `json:"status"`
+                AdminNotes string `json:"admin_notes"`
+        }
+        if err := c.BindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        updates := map[string]interface{}{}
+        if req.Status != "" {
+                updates["status"] = req.Status
+                updates["reviewed_by"] = adminID
+                now := time.Now()
+                updates["reviewed_at"] = now
+        }
+        if req.AdminNotes != "" {
+                updates["admin_notes"] = req.AdminNotes
+        }
+
+        db.Model(&UserRequest{}).Where("id = ?", requestID).Updates(updates)
+        logAudit(adminID, "user_request_update", "user_request", strconv.FormatUint(requestID, 10), c.ClientIP())
+
+        c.JSON(http.StatusOK, gin.H{"status": "updated"})
+}
