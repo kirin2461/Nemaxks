@@ -4,8 +4,16 @@ modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash"]
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "cd backend && go run cmd/server/main.go & cd frontend && npm run dev"]
-build = ["sh", "-c", "cd backend && go build -o server cmd/server/main.go && cd ../frontend && npm install && npm run build"]
+run = [
+  "sh",
+  "-c",
+  "cd backend && go run cmd/server/main.go & cd frontend && npm run dev",
+]
+build = [
+  "sh",
+  "-c",
+  "cd backend && go build -o server cmd/server/main.go && cd ../frontend && npm install && npm run build",
+]
 
 [[ports]]
 localPort = 3000
@@ -14,10 +22,6 @@ externalPort = 80
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5001
-externalPort = 3000
 
 [[ports]]
 localPort = 8000
