@@ -2,21 +2,21 @@
 node_modules/
 vendor/
 
-# Environment files
-.env
-.env.local
-.env.*.local
-
 # Build outputs
 dist/
 build/
 *.exe
-*.exe~
 *.dll
 *.so
 *.dylib
 
-# IDE and editor files
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE and editor configs
 .idea/
 .vscode/
 *.swp
@@ -45,16 +45,26 @@ temp/
 
 # Go specific
 *.test
-*.prof
+__debug_bin
 
-# Uploads (keep directory but ignore contents)
-backend/uploads/*
-!backend/uploads/.gitkeep
+# Frontend specific
+.cache/
+.parcel-cache/
 
-# OS specific
+# Uploaded files (keep structure, ignore content)
+uploads/*
+!uploads/.gitkeep
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS generated files
 nul
-.DS_Store
-desktop.ini
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 
 # Secrets and keys
 *.pem
@@ -62,18 +72,6 @@ desktop.ini
 *.crt
 secrets/
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Redis dump
-dump.rdb
-
-# Generated protobuf files (optional - uncomment if you want to regenerate)
-# backend/proto/*.pb.go
-# frontend/src/proto/*
-
-# Replit specific
-.replit.nix
-.cache/
+# Generated proto files (keep source .proto)
+*.pb.go
+*_grpc.pb.go
