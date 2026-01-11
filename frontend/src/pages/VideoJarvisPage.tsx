@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { Layout } from '@/components/Layout'
-import { useStore } from '@/lib/store'
 import {
   Play,
   Pause,
@@ -54,7 +53,6 @@ const DEMO_MESSAGES: Message[] = [
 ]
 
 export default function VideoJarvisPage() {
-  const { _user } = useStore()
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [currentTime, _setCurrentTime] = useState(0)

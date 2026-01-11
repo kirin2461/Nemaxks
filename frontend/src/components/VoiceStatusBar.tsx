@@ -1,4 +1,4 @@
-import { Mic, MicOff, Headphones, HeadphoneOff, PhoneOff, Signal } from 'lucide-react'
+import { Mic, MicOff, Headphones, PhoneOff, Signal, X } from 'lucide-react'
 import { useVoice } from '@/contexts/VoiceContext'
 import { cn } from '@/lib/utils'
 
@@ -47,7 +47,14 @@ export function VoiceStatusBar() {
             )}
             title={state.isDeafened ? "Включить звук" : "Отключить звук"}
           >
-            {state.isDeafened ? <HeadphoneOff className="w-5 h-5" /> : <Headphones className="w-5 h-5" />}
+            {state.isDeafened ? (
+              <div className="relative">
+                <Headphones className="w-5 h-5" />
+                <X className="w-3 h-3 absolute -top-1 -right-1" />
+              </div>
+            ) : (
+              <Headphones className="w-5 h-5" />
+            )}
           </button>
 
           <button

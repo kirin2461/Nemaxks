@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Send, Users, Settings } from 'lucide-react';
+import { Send, Users } from 'lucide-react';
 
 interface RemoteUser {
   userId: string;
@@ -60,7 +60,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        handleMessage(message, ws);
+        handleMessage(message);
       } catch (error) {
         console.error('Failed to parse message:', error);
       }
@@ -75,7 +75,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   }, [documentId, userId, username, serverUrl, version, content]);
 
   const handleMessage = useCallback(
-    (message: any, ws: WebSocket) => {
+    (message: any) => {
       switch (message.type) {
         case 'edit':
           if (message.userId !== userId && message.changes) {
@@ -148,6 +148,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     if (editorRef.current && isConnected) {
       const position = editorRef.current.selectionStart;
       // Cursor position would be sent via WebSocket in real implementation
+      console.log('Cursor at position:', position);
     }
   }, [isConnected]);
 
@@ -209,7 +210,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
           value={content}
           onChange={handleContentChange}
           onMouseMove={handleCursorMove}
-          onKeyMove={handleCursorMove}
+          onKeyUp={handleCursorMove}
           placeholder="Start typing... Your changes will sync in real-time."
           className="w-full h-full p-4 font-mono text-sm border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
