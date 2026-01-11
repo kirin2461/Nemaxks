@@ -581,6 +581,7 @@ type PremiumPlan struct {
         ID           uint      `gorm:"primaryKey" json:"id"`
         Slug         string    `gorm:"uniqueIndex" json:"slug"`
         Name         string    `json:"name"`
+        Tier         string    `gorm:"size:20;default:'basic'" json:"tier"` // basic, pro, vip
         Description  string    `json:"description"`
         PriceRub     float64   `json:"price_rub"`
         BillingCycle string    `gorm:"size:20;default:'monthly'" json:"billing_cycle"` // monthly, quarterly, annual

@@ -4,14 +4,21 @@ import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { premiumAPI } from "@/lib/api";
 import { useStore } from "@/lib/store";
-import { Crown, Check, Sparkles, Zap, Shield, Star } from "lucide-react";
+import { 
+  Crown, Check, Sparkles, Zap, Shield, Star, Gift, Users, 
+  Percent, Clock, CreditCard, ChevronDown, ChevronUp, X,
+  Rocket, MessageCircle, Video, Palette, TrendingUp, Award
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PremiumPlan {
   id: number;
+  slug: string;
   name: string;
+  tier?: string;
+  description: string;
   price_rub: number;
-  duration_days: number;
+  billing_cycle: string;
   features: string;
   is_active: boolean;
 }
@@ -20,6 +27,15 @@ interface UserPremium {
   has_premium: boolean;
   plan_name?: string;
   expires_at?: string;
+  auto_renew?: boolean;
+}
+
+interface PromoValidation {
+  valid: boolean;
+  code?: string;
+  discount_percent?: number;
+  discount_amount?: number;
+  error?: string;
 }
 
 export default function PremiumPage() {
@@ -28,6 +44,16 @@ export default function PremiumPage() {
   const [userPremium, setUserPremium] = useState<UserPremium | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<number | null>(null);
+  const [selectedTier, setSelectedTier] = useState<string>("pro");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoValidation, setPromoValidation] = useState<PromoValidation | null>(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [giftRecipient, setGiftRecipient] = useState("");
+  const [giftMessage, setGiftMessage] = useState("");
+  const [redeemCode, setRedeemCode] = useState("");
+  const [showFAQ, setShowFAQ] = useState<number | null>(null);
+  const [startingTrial, setStartingTrial] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -47,6 +73,20 @@ export default function PremiumPage() {
     loadData();
   }, [isAuthenticated, user?.id]);
 
+  const handleValidatePromo = async () => {
+    if (!promoCode.trim()) return;
+    setValidatingPromo(true);
+    try {
+      const response = await fetch(`/api/promo/validate?code=${encodeURIComponent(promoCode)}`);
+      const data = await response.json();
+      setPromoValidation(data);
+    } catch (error) {
+      setPromoValidation({ valid: false, error: "Ошибка проверки кода" });
+    } finally {
+      setValidatingPromo(false);
+    }
+  };
+
   const handlePurchase = async (planId: number) => {
     if (!isAuthenticated) {
       alert("Войдите в аккаунт для покупки подписки");
@@ -55,12 +95,109 @@ export default function PremiumPage() {
     
     setPurchasing(planId);
     try {
-      alert("Функция покупки будет доступна после интеграции платёжной системы");
+      const response = await fetch("/api/premium/checkout", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ 
+          plan_id: planId,
+          promo_code: promoValidation?.valid ? promoCode : undefined
+        }),
+      });
+      const data = await response.json();
+      if (data.confirmation_url) {
+        window.location.href = data.confirmation_url;
+      } else if (data.message) {
+        alert(data.message);
+      }
     } catch (error) {
       console.error("Failed to purchase:", error);
       alert("Ошибка при оформлении подписки");
     } finally {
       setPurchasing(null);
+    }
+  };
+
+  const handleStartTrial = async () => {
+    if (!isAuthenticated) {
+      alert("Войдите в аккаунт для активации пробного периода");
+      return;
+    }
+    setStartingTrial(true);
+    try {
+      const response = await fetch("/api/premium/trial", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+      });
+      const data = await response.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        alert("Пробный период активирован! Наслаждайтесь 7 днями Premium бесплатно.");
+        window.location.reload();
+      }
+    } catch (error) {
+      alert("Ошибка активации пробного периода");
+    } finally {
+      setStartingTrial(false);
+    }
+  };
+
+  const handlePurchaseGift = async (planId: number) => {
+    if (!giftRecipient) {
+      alert("Укажите получателя подарка");
+      return;
+    }
+    setPurchasing(planId);
+    try {
+      const response = await fetch("/api/gifts/purchase", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ 
+          plan_id: planId,
+          to_username: giftRecipient,
+          message: giftMessage
+        }),
+      });
+      const data = await response.json();
+      if (data.confirmation_url) {
+        window.location.href = data.confirmation_url;
+      } else if (data.error) {
+        alert(data.error);
+      }
+    } catch (error) {
+      alert("Ошибка при покупке подарка");
+    } finally {
+      setPurchasing(null);
+      setShowGiftModal(false);
+    }
+  };
+
+  const handleRedeemGift = async () => {
+    if (!redeemCode.trim()) return;
+    try {
+      const response = await fetch("/api/gifts/redeem", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ code: redeemCode }),
+      });
+      const data = await response.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        alert(`Подарок активирован! План: ${data.plan}`);
+        window.location.reload();
+      }
+    } catch (error) {
+      alert("Ошибка активации подарка");
     }
   };
 
@@ -72,19 +209,30 @@ export default function PremiumPage() {
     }
   };
 
-  const getPlanIcon = (index: number) => {
-    const icons = [Zap, Star, Crown];
-    return icons[index % icons.length];
+  const getTierPlans = (tier: string) => plans.filter(p => (p.tier || "basic") === tier);
+  const tiers = ["basic", "pro", "vip"];
+  
+  const tierConfig: Record<string, { name: string; icon: React.ElementType; color: string; gradient: string }> = {
+    basic: { name: "Basic", icon: Zap, color: "text-blue-500", gradient: "from-blue-500 to-cyan-500" },
+    pro: { name: "Pro", icon: Star, color: "text-purple-500", gradient: "from-purple-500 to-pink-500" },
+    vip: { name: "VIP", icon: Crown, color: "text-yellow-500", gradient: "from-yellow-500 to-amber-500" },
   };
 
-  const getPlanColor = (index: number) => {
-    const colors = [
-      "from-blue-500 to-cyan-500",
-      "from-purple-500 to-pink-500",
-      "from-yellow-500 to-amber-500",
-    ];
-    return colors[index % colors.length];
-  };
+  const allFeatures = [
+    { icon: MessageCircle, title: "Безлимитные сообщения", desc: "Никаких ограничений на общение" },
+    { icon: Video, title: "HD видеозвонки", desc: "Кристально чистое качество" },
+    { icon: Palette, title: "Эксклюзивные темы", desc: "Уникальное оформление профиля" },
+    { icon: TrendingUp, title: "Буст постов", desc: "Продвигайте контент со скидкой 20%" },
+    { icon: Award, title: "Premium значок", desc: "Выделяйтесь среди пользователей" },
+    { icon: Rocket, title: "Ранний доступ", desc: "Первыми получайте новые функции" },
+  ];
+
+  const faqItems = [
+    { q: "Как работает автопродление?", a: "Подписка автоматически продлевается в день окончания. Вы можете отключить автопродление в любой момент в настройках." },
+    { q: "Можно ли вернуть деньги?", a: "Да, возврат возможен в течение 14 дней после покупки, если вы не использовали Premium функции." },
+    { q: "Что такое пробный период?", a: "7 дней бесплатного доступа ко всем Premium функциям. Доступен один раз для новых пользователей." },
+    { q: "Как подарить подписку?", a: "Нажмите кнопку 'Подарить', выберите план и укажите имя получателя. Он получит код активации." },
+  ];
 
   if (loading) {
     return (
@@ -99,18 +247,30 @@ export default function PremiumPage() {
   return (
     <Layout>
       <div className="p-4 sm:p-8 max-w-6xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 mb-6">
             <Crown className="w-5 h-5 text-yellow-500" />
-            <span className="text-yellow-500 font-medium">Premium</span>
+            <span className="text-yellow-500 font-medium">Nemaks Premium</span>
           </div>
           
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">
-            <span className="gradient-text">Откройте все возможности</span>
+          <h1 className="text-3xl sm:text-5xl font-bold mb-4">
+            <span className="gradient-text">Раскройте весь потенциал</span>
           </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Получите доступ к эксклюзивным функциям и поддержите развитие платформы
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-6">
+            Эксклюзивные функции, приоритетная поддержка и уникальные возможности для продвинутых пользователей
           </p>
+
+          {!userPremium?.has_premium && (
+            <Button
+              onClick={handleStartTrial}
+              loading={startingTrial}
+              variant="secondary"
+              className="border-primary/50 hover:bg-primary/10"
+            >
+              <Clock className="w-4 h-4 mr-2" />
+              Попробовать 7 дней бесплатно
+            </Button>
+          )}
         </div>
 
         {userPremium?.has_premium && (
@@ -119,124 +279,264 @@ export default function PremiumPage() {
               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 flex items-center justify-center">
                 <Crown className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h3 className="font-semibold text-lg">У вас активна подписка {userPremium.plan_name}</h3>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg">Подписка {userPremium.plan_name} активна</h3>
                 {userPremium.expires_at && (
                   <p className="text-muted-foreground">
                     Действует до {new Date(userPremium.expires_at).toLocaleDateString("ru-RU")}
+                    {userPremium.auto_renew && " • Автопродление включено"}
                   </p>
                 )}
               </div>
-              <Shield className="w-8 h-8 text-green-500 ml-auto" />
+              <Shield className="w-8 h-8 text-green-500" />
             </div>
           </Card>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {plans.length > 0 ? (
-            plans.map((plan, index) => {
-              const Icon = getPlanIcon(index);
-              const gradientColor = getPlanColor(index);
-              const features = parseFeatures(plan.features);
-              const isPopular = index === 1;
-
-              return (
-                <Card
-                  key={plan.id}
-                  className={cn(
-                    "cosmic-border relative overflow-hidden transition-all hover:scale-105",
-                    isPopular && "ring-2 ring-primary"
-                  )}
-                >
-                  {isPopular && (
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-bl-lg">
-                      Популярный
-                    </div>
-                  )}
-                  
-                  <div className="p-6">
-                    <div className={cn(
-                      "w-12 h-12 rounded-xl bg-gradient-to-r flex items-center justify-center mb-4",
-                      gradientColor
-                    )}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    
-                    <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
-                    
-                    <div className="flex items-baseline gap-1 mb-4">
-                      <span className="text-3xl font-bold">{plan.price_rub}₽</span>
-                      <span className="text-muted-foreground">/ {plan.duration_days} дней</span>
-                    </div>
-
-                    <ul className="space-y-3 mb-6">
-                      {features.map((feature, i) => (
-                        <li key={i} className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                          <span className="text-sm">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Button
-                      onClick={() => handlePurchase(plan.id)}
-                      loading={purchasing === plan.id}
-                      disabled={!isAuthenticated || userPremium?.has_premium}
-                      className={cn(
-                        "w-full",
-                        isPopular && "bg-gradient-to-r from-primary to-accent"
-                      )}
-                    >
-                      {userPremium?.has_premium ? (
-                        "Уже активно"
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Оформить
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })
-          ) : (
-            <div className="col-span-full text-center py-12">
-              <Crown className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Планы подписки скоро появятся</h3>
-              <p className="text-muted-foreground">
-                Мы готовим для вас эксклюзивные предложения
-              </p>
-            </div>
-          )}
+        <div className="flex justify-center gap-2 mb-8">
+          {tiers.map((tier) => {
+            const config = tierConfig[tier];
+            const Icon = config.icon;
+            return (
+              <button
+                key={tier}
+                onClick={() => setSelectedTier(tier)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-full transition-all",
+                  selectedTier === tier
+                    ? `bg-gradient-to-r ${config.gradient} text-white`
+                    : "bg-card/50 hover:bg-card border border-border"
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                {config.name}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="mt-12 text-center">
-          <h2 className="text-2xl font-bold mb-6">Почему Premium?</h2>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="p-6 rounded-xl bg-card/50 border border-border/50">
-              <Zap className="w-10 h-10 text-primary mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Расширенные возможности</h3>
-              <p className="text-sm text-muted-foreground">
-                Доступ к эксклюзивным функциям и инструментам
-              </p>
+        <div className="grid gap-4 md:grid-cols-3 mb-8">
+          {getTierPlans(selectedTier).map((plan) => {
+            const tier = plan.tier || "basic";
+            const config = tierConfig[tier];
+            const features = parseFeatures(plan.features);
+            const isAnnual = plan.billing_cycle === "annual";
+            const isQuarterly = plan.billing_cycle === "quarterly";
+            const durationDays = isAnnual ? 365 : isQuarterly ? 90 : 30;
+            const monthlyPrice = Math.round(plan.price_rub / (durationDays / 30));
+            const discountPercent = isAnnual ? 25 : isQuarterly ? 15 : 0;
+
+            return (
+              <Card
+                key={plan.id}
+                className={cn(
+                  "cosmic-border relative overflow-hidden transition-all hover:scale-[1.02]",
+                  isAnnual && "ring-2 ring-green-500/50"
+                )}
+              >
+                {discountPercent > 0 && (
+                  <div className="absolute top-0 right-0 px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-bl-lg">
+                    -{discountPercent}%
+                  </div>
+                )}
+                
+                <div className="p-6">
+                  <div className="text-sm text-muted-foreground mb-2">
+                    {plan.billing_cycle === "monthly" ? "Ежемесячно" : 
+                     plan.billing_cycle === "quarterly" ? "Каждые 3 месяца" : "Ежегодно"}
+                  </div>
+                  
+                  <div className="flex items-baseline gap-1 mb-2">
+                    <span className="text-3xl font-bold">{plan.price_rub}₽</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-4">
+                    {(isQuarterly || isAnnual) && `~${monthlyPrice}₽/мес`}
+                  </div>
+
+                  <ul className="space-y-2 mb-6 text-sm">
+                    {features.slice(0, 4).map((feature, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    onClick={() => handlePurchase(plan.id)}
+                    loading={purchasing === plan.id}
+                    disabled={!isAuthenticated || userPremium?.has_premium}
+                    className={cn("w-full", `bg-gradient-to-r ${config.gradient}`)}
+                  >
+                    {userPremium?.has_premium ? "Активно" : (
+                      <>
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Оформить
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        <Card className="cosmic-border p-6 mb-8">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Percent className="w-5 h-5 text-green-500" />
+                Промокод
+              </h3>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  placeholder="Введите код"
+                  className="flex-1 px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none"
+                />
+                <Button onClick={handleValidatePromo} loading={validatingPromo} variant="secondary">
+                  Применить
+                </Button>
+              </div>
+              {promoValidation && (
+                <div className={cn(
+                  "mt-2 text-sm",
+                  promoValidation.valid ? "text-green-500" : "text-red-500"
+                )}>
+                  {promoValidation.valid 
+                    ? `Скидка ${promoValidation.discount_percent || promoValidation.discount_amount}${promoValidation.discount_percent ? '%' : '₽'} применена!`
+                    : promoValidation.error}
+                </div>
+              )}
             </div>
-            <div className="p-6 rounded-xl bg-card/50 border border-border/50">
-              <Shield className="w-10 h-10 text-green-500 mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Приоритетная поддержка</h3>
-              <p className="text-sm text-muted-foreground">
-                Быстрые ответы от команды поддержки
-              </p>
-            </div>
-            <div className="p-6 rounded-xl bg-card/50 border border-border/50">
-              <Crown className="w-10 h-10 text-yellow-500 mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Эксклюзивный значок</h3>
-              <p className="text-sm text-muted-foreground">
-                Выделяйтесь среди других пользователей
-              </p>
+
+            <div>
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Gift className="w-5 h-5 text-pink-500" />
+                Активировать подарок
+              </h3>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={redeemCode}
+                  onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
+                  placeholder="GIFT-XXXXXXXX"
+                  className="flex-1 px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none"
+                />
+                <Button onClick={handleRedeemGift} variant="secondary">
+                  Активировать
+                </Button>
+              </div>
             </div>
           </div>
+        </Card>
+
+        <div className="flex justify-center gap-4 mb-12">
+          <Button onClick={() => setShowGiftModal(true)} variant="secondary" className="flex items-center gap-2">
+            <Gift className="w-4 h-4" />
+            Подарить Premium
+          </Button>
+          <Button variant="secondary" className="flex items-center gap-2" onClick={() => window.location.href = '/referrals'}>
+            <Users className="w-4 h-4" />
+            Пригласить друзей (+7 дней)
+          </Button>
         </div>
+
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-center mb-8">Все преимущества Premium</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {allFeatures.map((feature, i) => (
+              <div key={i} className="p-5 rounded-xl bg-card/50 border border-border/50 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <feature.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-center mb-6">Частые вопросы</h2>
+          <div className="max-w-2xl mx-auto space-y-3">
+            {faqItems.map((item, i) => (
+              <div key={i} className="border border-border rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setShowFAQ(showFAQ === i ? null : i)}
+                  className="w-full p-4 flex items-center justify-between text-left hover:bg-card/50 transition-colors"
+                >
+                  <span className="font-medium">{item.q}</span>
+                  {showFAQ === i ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {showFAQ === i && (
+                  <div className="px-4 pb-4 text-muted-foreground">{item.a}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center text-sm text-muted-foreground">
+          <p>Оплата производится через YooKassa. Подписка продлевается автоматически.</p>
+          <p>Отменить подписку можно в любой момент в настройках аккаунта.</p>
+        </div>
+
+        {showGiftModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md cosmic-border p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Gift className="w-5 h-5 text-pink-500" />
+                  Подарить Premium
+                </h3>
+                <button onClick={() => setShowGiftModal(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Имя получателя</label>
+                  <input
+                    type="text"
+                    value={giftRecipient}
+                    onChange={(e) => setGiftRecipient(e.target.value)}
+                    placeholder="username"
+                    className="w-full px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Сообщение (необязательно)</label>
+                  <textarea
+                    value={giftMessage}
+                    onChange={(e) => setGiftMessage(e.target.value)}
+                    placeholder="Поздравляю!"
+                    rows={2}
+                    className="w-full px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none resize-none"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  {getTierPlans("pro").slice(0, 1).map((plan) => (
+                    <Button
+                      key={plan.id}
+                      onClick={() => handlePurchaseGift(plan.id)}
+                      loading={purchasing === plan.id}
+                      className="w-full bg-gradient-to-r from-pink-500 to-purple-500"
+                    >
+                      Подарить Pro ({plan.price_rub}₽)
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </Layout>
   );
