@@ -332,6 +332,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         callId: incomingCall.callId,
         callerId: incomingCall.callerId,
         callerName: incomingCall.callerName,
+        callerAvatar: incomingCall.callerAvatar,
         offer: incomingCall.offer
       }))
     }

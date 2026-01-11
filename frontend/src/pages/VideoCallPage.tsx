@@ -151,14 +151,27 @@ export default function VideoCallPage() {
       if (pendingCallData) {
         pendingCallProcessed.current = true
         try {
-          const { offer, callerId } = JSON.parse(pendingCallData)
+          const { offer, callerId, callerName, callerAvatar } = JSON.parse(pendingCallData)
           sessionStorage.removeItem('pendingCall')
           if (offer) {
             console.log('Processing pending call from', callerId, 'with offer')
+            if (callerId) {
+              setSelectedFriend({
+                id: callerId,
+                username: callerName || `User ${callerId}`,
+                avatar: callerAvatar,
+                status: 'online'
+              } as Friend)
+            }
             handleIncomingCall({ 
               type: 'call-offer', 
               offer, 
               fromUserId: callerId,
+              callerInfo: {
+                id: callerId,
+                username: callerName,
+                avatar: callerAvatar
+              },
               autoAccept: true 
             })
           } else {
