@@ -1,4 +1,4 @@
-module backend
+module github.com/kirin2461/Nemaxks/backend
 
 go 1.24
 
