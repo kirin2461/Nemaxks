@@ -3,6 +3,7 @@ package main
 import (
         "net/http"
         "strconv"
+        "time"
 
         "github.com/gin-gonic/gin"
 )
@@ -58,17 +59,42 @@ func createPostHandler(c *gin.Context) {
                 Title   string `json:"title" binding:"required"`
                 Content string `json:"content" binding:"required"`
         }
-        if err := c.BindJSON(&req); err != nil {
+        if err := c.ShouldBindJSON(&req); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
                 return
         }
 
         post := Post{
                 AuthorID: uint(userID.(float64)),
+                Title:    req.Title,
                 Content:  req.Content,
         }
-        db.Create(&post)
+        if err := db.Create(&post).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
+                return
+        }
         c.JSON(http.StatusCreated, post)
+}
+
+func getPlatformStatsHandler(c *gin.Context) {
+        var userCount, guildCount, messageCount int64
+        db.Model(&User{}).Count(&userCount)
+        db.Model(&Guild{}).Count(&guildCount)
+        db.Model(&Message{}).Count(&messageCount)
+
+        c.JSON(http.StatusOK, gin.H{
+                "users":    userCount,
+                "guilds":   guildCount,
+                "messages": messageCount,
+                "uptime":   time.Since(startTime).String(),
+        })
+}
+
+var startTime = time.Now()
+
+func getLiveStreamsHandler(c *gin.Context) {
+        // Placeholder for live streams integration
+        c.JSON(http.StatusOK, []gin.H{})
 }
 
 // Videos

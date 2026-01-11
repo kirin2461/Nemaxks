@@ -1,0 +1,45 @@
+2026/01/09 19:45:26 Voice join: user 3 joined channel 
+2026/01/09 19:45:26 Voice join: user 3 joined channel 
+2026/01/09 19:45:27 Voice join: user 3 joined channel 2
+2026/01/09 19:45:27 Routing voice-offer from 3 to undefined
+2026/01/09 19:45:27 Voice state update: user 3 in channel 2
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Routing voice-ice-candidate from 3 to undefined
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:27 Target user undefined not connected
+2026/01/09 19:45:29 Voice state update: user 3 in channel 2
+2026/01/09 19:45:31 Voice join: user 2 joined channel 
+2026/01/09 19:45:31 Voice join: user 2 joined channel 
+2026/01/09 19:45:31 Routing voice-offer from 3 to undefined
+2026/01/09 19:45:31 Target user undefined not connected
+2026/01/09 19:45:31 Routing voice-offer from 3 to undefined
+2026/01/09 19:45:31 Target user undefined not connected
+2026/01/09 19:45:40 Voice state update: user 3 in channel 2
+2026/01/09 19:45:41 Voice state update: user 3 in channel 2

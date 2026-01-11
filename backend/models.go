@@ -58,6 +58,7 @@ type Post struct {
         ID        uint      `json:"id" gorm:"primaryKey"`
         AuthorID  uint      `json:"author_id" gorm:"not null"`
         Author    User      `json:"author" gorm:"foreignKey:AuthorID"`
+        Title     string    `json:"title" gorm:"not null"`
         Content   string    `json:"content" gorm:"not null"`
         Tags      []string  `json:"tags" gorm:"type:text[]"`
         Likes     int       `json:"likes" gorm:"default:0"`

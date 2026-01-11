@@ -64,7 +64,12 @@ Authentication uses JWT tokens. User sessions and UI preferences are managed via
 
 ## Recent Changes (January 2026)
 
-- **Security Audit & Fixes (Latest)**
+- **Service Restoration (Latest)**
+  - Fixed Rust toolchain memory issues by clearing `LD_PRELOAD` and `LD_LIBRARY_PATH` in service workflows.
+  - Installed missing frontend dependencies (Vite) and configured Rust default toolchain.
+  - Verified Go backend and React frontend are running correctly.
+
+- **Security Audit & Fixes**
   - Password hashing with bcrypt for registration and login (previously plaintext)
   - Auto-migration of legacy passwords on login (detects bcrypt hash by $2 prefix, covers $2a$/$2b$/$2y$/$2x$ variants)
   - WebSocket origin validation with URL parsing (validates hostname suffix against .replit.dev, .repl.co, .replit.app, localhost)

@@ -227,6 +227,8 @@ func main() {
 
         // Admin Panel
         r.GET("/api/admin/stats", authMiddleware(), adminMiddleware(), getAdminStatsHandler)
+        r.GET("/api/stats/platform", getPlatformStatsHandler)
+        r.GET("/api/streams/live", getLiveStreamsHandler)
         r.GET("/api/admin/users", authMiddleware(), adminMiddleware(), getAdminUsersHandler)
         r.POST("/api/admin/users/:id/ban", authMiddleware(), adminMiddleware(), banUserHandler)
         r.DELETE("/api/admin/users/:id/ban", authMiddleware(), adminMiddleware(), unbanUserHandler)

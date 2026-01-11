@@ -330,11 +330,12 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   }, [createOffer])
 
   const handleVoiceOffer = useCallback(async (fromUserId: string, sdp: string, channelId: string) => {
-    if (!stateRef.current.isConnected) return
-    if (channelId && channelId !== 'undefined' && channelId !== 'null' && stateRef.current.channelId !== channelId) return
-    if (fromUserId === String(user?.id)) return
+    if (!stateRef.current.isConnected) return;
+    if (channelId && channelId !== 'undefined' && channelId !== 'null' && stateRef.current.channelId !== channelId) return;
+    // Ensure fromUserId is valid and not ourselves
+    if (!fromUserId || fromUserId === 'undefined' || fromUserId === String(user?.id)) return;
     
-    console.log(`Received voice offer from ${fromUserId}`)
+    console.log(`Received voice offer from ${fromUserId}`);
     let pc = peerConnectionsRef.current.get(fromUserId)
     if (!pc) {
       pc = createPeerConnection(fromUserId)
@@ -525,6 +526,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         volume: 100
       }
       
+      console.log(`Voice join event: user ${userId} in channel ${channelId}`);
+
       setVoiceChannelUsers(prev => {
         const channelUsers = prev[channelId] || []
         if (channelUsers.some(u => u.id === userId)) {
@@ -534,6 +537,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       })
       
       if (stateRef.current.channelId === channelId && userId !== String(user?.id)) {
+        console.log(`Adding ${userId} to connected users and creating offer`);
         setState(prev => ({
           ...prev,
           connectedUsers: prev.connectedUsers.some(u => u.id === userId)
@@ -541,7 +545,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
             : [...prev.connectedUsers, voiceUser]
         }))
         
-        createOffer(userId)
+        // Use a small timeout to ensure the state is updated and the other peer is ready
+        setTimeout(() => createOffer(userId), 500);
       }
     }
     

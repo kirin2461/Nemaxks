@@ -278,7 +278,7 @@ func (c *WSClient) readPump() {
                         }
                 }
 
-                if hasType && targetUserID != "" {
+                if hasType && targetUserID != "" && targetUserID != "undefined" {
                         switch msgType {
                         case "call-offer", "call-answer", "ice-candidate", "call-end", "call-rejected",
                                 "call-accepted", "call-cancelled", "voice-offer", "voice-answer", "voice-ice-candidate":

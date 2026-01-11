@@ -128,15 +128,26 @@ func registerHandler(c *gin.Context) {
                 Password: string(hashedPassword),
         }
 
-                if err := db.Create(&user).Error; err != nil {
-                        log.Printf("Registration error: %v", err)
-                        if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-                                c.JSON(http.StatusConflict, gin.H{"error": "User with this username or email already exists"})
-                        } else {
-                                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-                        }
+        // Check if user already exists to provide a clearer error message
+        var count int64
+        db.Model(&User{}).Where("username = ?", req.Username).Count(&count)
+        if count > 0 {
+                c.JSON(http.StatusConflict, gin.H{"error": "Username already taken"})
+                return
+        }
+        if email != nil {
+                db.Model(&User{}).Where("email = ?", *email).Count(&count)
+                if count > 0 {
+                        c.JSON(http.StatusConflict, gin.H{"error": "Email already registered"})
                         return
                 }
+        }
+
+        if err := db.Create(&user).Error; err != nil {
+                log.Printf("Registration error: %v", err)
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+                return
+        }
 
         token, _ := generateToken(&user)
         c.JSON(http.StatusCreated, gin.H{"token": token, "user": user})
