@@ -1,292 +1,343 @@
 package main
 
 import (
-        "log"
-        "net/http"
-        "os"
-        "time"
+	"context"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-        "github.com/gin-contrib/cors"
-        "github.com/gin-gonic/gin"
-        "gorm.io/gorm"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 var db *gorm.DB
 
 func main() {
-        // godotenv.Load() // Not needed in Replit
-        initDB()
+	// godotenv.Load() // Not needed in Replit
+	initDB()
 
-        // Initialize Redis (optional, non-fatal)
-        if os.Getenv("REDIS_URL") != "" {
-                if err := InitRedis(); err != nil {
-                        log.Printf("Warning: Redis not available: %v", err)
-                } else {
-                        defer CloseRedis()
-                }
-        }
+	// Initialize Redis (optional, non-fatal)
+	if os.Getenv("REDIS_URL") != "" {
+		if err := InitRedis(); err != nil {
+			log.Printf("Warning: Redis not available: %v", err)
+		} else {
+			defer CloseRedis()
+		}
+	}
 
-        // Initialize LiveKit (optional, non-fatal)
-        if os.Getenv("LIVEKIT_API_KEY") != "" {
-                if err := InitLiveKit(); err != nil {
-                        log.Printf("Warning: LiveKit not configured: %v", err)
-                }
-        }
+	// Initialize LiveKit (optional, non-fatal)
+	if os.Getenv("LIVEKIT_API_KEY") != "" {
+		if err := InitLiveKit(); err != nil {
+			log.Printf("Warning: LiveKit not configured: %v", err)
+		}
+	}
 
-        // Initialize Jarvis MCP bridge
-        log.Println("[*] Initializing Jarvis MCP bridge...")
-        mcpCfg := MCPConfig{
-                BinaryPath:         "../jarvis/jarvis",
-                AllowedDirectories: []string{"./uploads", "./jsvoice", "./backend"},
-                BlockedCommands:    []string{"execute-command"},
-                Timeout:            30 * time.Second,
-        }
-        if err := InitJarvisMCP(mcpCfg); err != nil {
-                log.Printf("[!] Jarvis MCP failed to start (non-fatal): %v\n", err)
-        }
-        defer func() {
-                if jarvisMCP != nil {
-                        jarvisMCP.stopProcess()
-                }
-        }()
+	// Initialize Jarvis MCP bridge
+	log.Println("[*] Initializing Jarvis MCP bridge...")
+	mcpCfg := MCPConfig{
+		BinaryPath:         "../jarvis/jarvis",
+		AllowedDirectories: []string{"./uploads", "./jsvoice", "./backend"},
+		BlockedCommands:    []string{"execute-command"},
+		Timeout:            30 * time.Second,
+	}
+	if err := InitJarvisMCP(mcpCfg); err != nil {
+		log.Printf("[!] Jarvis MCP failed to start (non-fatal): %v\n", err)
+	}
+	defer func() {
+		if jarvisMCP != nil {
+			jarvisMCP.stopProcess()
+		}
+	}()
 
-        r := gin.Default()
-        r.SetTrustedProxies(nil)
-        r.Use(cors.New(cors.Config{
-                AllowOrigins:     []string{"*"},
-                AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-                AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Cache-Control", "Access-Control-Allow-Origin"},
-                ExposeHeaders:    []string{"Content-Length", "Access-Control-Allow-Origin"},
-                AllowCredentials: true,
-        }))
+	r := gin.Default()
+	r.SetTrustedProxies(nil)
 
-        r.GET("/health", func(c *gin.Context) {
-                c.JSON(http.StatusOK, gin.H{"status": "ok"})
-        })
+	// Configure CORS properly
+	corsConfig := cors.Config{
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Cache-Control"},
+		ExposeHeaders:    []string{"Content-Length"},
+		MaxAge:           12 * time.Hour,
+	}
 
-        r.POST("/api/auth/register", registerHandler)
-        r.POST("/api/auth/login", loginHandler)
-        r.POST("/api/auth/logout", authMiddleware(), logoutHandler)
-        r.GET("/api/auth/me", authMiddleware(), meHandler)
+	// Get allowed origins from environment or use defaults
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL != "" {
+		// Production: specific origins with credentials
+		corsConfig.AllowOrigins = []string{frontendURL}
+		corsConfig.AllowCredentials = true
+	} else {
+		// Development: allow all origins but without credentials
+		// Note: AllowCredentials cannot be true when AllowAllOrigins is true
+		corsConfig.AllowAllOrigins = true
+		corsConfig.AllowCredentials = false
+		log.Println("WARNING: FRONTEND_URL not set, CORS allows all origins (development mode)")
+	}
 
-        // Guilds
-        r.GET("/api/guilds", authMiddleware(), getGuildsHandler)
-        r.POST("/api/guilds", authMiddleware(), createGuildHandler)
-        r.GET("/api/guilds/view/:id", authMiddleware(), getGuildHandler)
+	r.Use(cors.New(corsConfig))
 
-        // Channels
-        r.GET("/api/guilds/channels/:guild_id", authMiddleware(), getChannelsHandler)
-        r.POST("/api/guilds/channels/:guild_id", authMiddleware(), createChannelHandler)
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 
-        // Channel CRUD
-        r.GET("/api/channels/:channel_id", authMiddleware(), getChannelHandler)
-        r.PUT("/api/channels/:channel_id", authMiddleware(), updateChannelHandler)
-        r.DELETE("/api/channels/:channel_id", authMiddleware(), deleteChannelHandler)
+	r.POST("/api/auth/register", registerHandler)
+	r.POST("/api/auth/login", loginHandler)
+	r.POST("/api/auth/logout", authMiddleware(), logoutHandler)
+	r.GET("/api/auth/me", authMiddleware(), meHandler)
 
-        // Channel Members
-        r.GET("/api/channels/:channel_id/members", authMiddleware(), getChannelMembersHandler)
-        r.POST("/api/channels/:channel_id/members", authMiddleware(), addChannelMemberHandler)
-        r.PUT("/api/channels/:channel_id/members/:member_id", authMiddleware(), updateChannelMemberHandler)
-        r.DELETE("/api/channels/:channel_id/members/:member_id", authMiddleware(), removeChannelMemberHandler)
+	// Guilds
+	r.GET("/api/guilds", authMiddleware(), getGuildsHandler)
+	r.POST("/api/guilds", authMiddleware(), createGuildHandler)
+	r.GET("/api/guilds/view/:id", authMiddleware(), getGuildHandler)
 
-        // Channel Permissions
-        r.GET("/api/channels/:channel_id/permissions", authMiddleware(), getChannelPermissionsHandler)
-        r.POST("/api/channels/:channel_id/permissions", authMiddleware(), setChannelPermissionHandler)
-        r.DELETE("/api/channels/:channel_id/permissions/:perm_id", authMiddleware(), deleteChannelPermissionHandler)
+	// Channels
+	r.GET("/api/guilds/channels/:guild_id", authMiddleware(), getChannelsHandler)
+	r.POST("/api/guilds/channels/:guild_id", authMiddleware(), createChannelHandler)
 
-        // Channel Roles
-        r.GET("/api/channels/:channel_id/roles", authMiddleware(), getChannelRolesHandler)
+	// Channel CRUD
+	r.GET("/api/channels/:channel_id", authMiddleware(), getChannelHandler)
+	r.PUT("/api/channels/:channel_id", authMiddleware(), updateChannelHandler)
+	r.DELETE("/api/channels/:channel_id", authMiddleware(), deleteChannelHandler)
 
-        // Channel Categories
-        r.GET("/api/guild-categories/:guild_id", authMiddleware(), getChannelCategoriesHandler)
-        r.POST("/api/guild-categories/:guild_id", authMiddleware(), createChannelCategoryHandler)
-        r.PUT("/api/categories/:category_id", authMiddleware(), updateChannelCategoryHandler)
-        r.DELETE("/api/categories/:category_id", authMiddleware(), deleteChannelCategoryHandler)
+	// Channel Members
+	r.GET("/api/channels/:channel_id/members", authMiddleware(), getChannelMembersHandler)
+	r.POST("/api/channels/:channel_id/members", authMiddleware(), addChannelMemberHandler)
+	r.PUT("/api/channels/:channel_id/members/:member_id", authMiddleware(), updateChannelMemberHandler)
+	r.DELETE("/api/channels/:channel_id/members/:member_id", authMiddleware(), removeChannelMemberHandler)
 
-        // Channel Reordering
-        r.PUT("/api/guild-channels/:guild_id/reorder", authMiddleware(), reorderChannelsHandler)
+	// Channel Permissions
+	r.GET("/api/channels/:channel_id/permissions", authMiddleware(), getChannelPermissionsHandler)
+	r.POST("/api/channels/:channel_id/permissions", authMiddleware(), setChannelPermissionHandler)
+	r.DELETE("/api/channels/:channel_id/permissions/:perm_id", authMiddleware(), deleteChannelPermissionHandler)
 
-        // Messages
-        r.GET("/api/channels/:channel_id/messages", authMiddleware(), getMessagesByChannelHandler)
-        r.POST("/api/channels/:channel_id/messages", authMiddleware(), createChannelMessageHandler)
+	// Channel Roles
+	r.GET("/api/channels/:channel_id/roles", authMiddleware(), getChannelRolesHandler)
 
-        // Voice Channel Participants
-        r.GET("/api/voice/channels/:channel_id/participants", authMiddleware(), GetVoiceChannelParticipants)
+	// Channel Categories
+	r.GET("/api/guild-categories/:guild_id", authMiddleware(), getChannelCategoriesHandler)
+	r.POST("/api/guild-categories/:guild_id", authMiddleware(), createChannelCategoryHandler)
+	r.PUT("/api/categories/:category_id", authMiddleware(), updateChannelCategoryHandler)
+	r.DELETE("/api/categories/:category_id", authMiddleware(), deleteChannelCategoryHandler)
 
-        // LiveKit Voice Integration
-        r.POST("/api/livekit/token", authMiddleware(), getLiveKitTokenHandler)
-        r.POST("/api/livekit/leave/:channel_id", authMiddleware(), leaveLiveKitRoomHandler)
+	// Channel Reordering
+	r.PUT("/api/guild-channels/:guild_id/reorder", authMiddleware(), reorderChannelsHandler)
 
-        // RTC/WebRTC Configuration
-        r.GET("/api/rtc/ice-servers", authMiddleware(), getICEServersHandler)
+	// Messages
+	r.GET("/api/channels/:channel_id/messages", authMiddleware(), getMessagesByChannelHandler)
+	r.POST("/api/channels/:channel_id/messages", authMiddleware(), createChannelMessageHandler)
 
-        r.GET("/ws", handleWSConnection)
+	// Voice Channel Participants
+	r.GET("/api/voice/channels/:channel_id/participants", authMiddleware(), GetVoiceChannelParticipants)
 
-        // Posts
-        r.GET("/api/posts", getPostsHandler)
-        r.POST("/api/posts", authMiddleware(), createPostHandler)
-        r.GET("/api/settings", authMiddleware(), getUserSettingsHandler)
-        r.PUT("/api/settings", authMiddleware(), updateUserSettingsHandler)
+	// LiveKit Voice Integration
+	r.POST("/api/livekit/token", authMiddleware(), getLiveKitTokenHandler)
+	r.POST("/api/livekit/leave/:channel_id", authMiddleware(), leaveLiveKitRoomHandler)
 
-        // Friends API
-        r.GET("/api/friends", authMiddleware(), getFriendsHandler)
-        r.POST("/api/friends/request", authMiddleware(), sendFriendRequestHandler)
-        r.PUT("/api/friends/request/:id", authMiddleware(), respondFriendRequestHandler)
-        r.DELETE("/api/friends/request/:id", authMiddleware(), cancelFriendRequestHandler)
-        r.DELETE("/api/friends/:id", authMiddleware(), deleteFriendHandler)
-        r.GET("/api/friends/blocked", authMiddleware(), getBlockedUsersHandler)
-        r.POST("/api/friends/block", authMiddleware(), blockUserHandler)
-        r.DELETE("/api/friends/block/:id", authMiddleware(), unblockUserHandler)
+	// RTC/WebRTC Configuration
+	r.GET("/api/rtc/ice-servers", authMiddleware(), getICEServersHandler)
 
-        // Direct Messages API
-        r.GET("/api/messages/conversations", authMiddleware(), getConversationsHandler)
-        r.POST("/api/messages", authMiddleware(), createMessageHandler)
-        r.GET("/api/messages/with/:user_id", authMiddleware(), getUserMessagesHandler)
-        r.PUT("/api/messages/update/:message_id", authMiddleware(), updateMessageHandler)
-        r.DELETE("/api/messages/delete/:message_id", authMiddleware(), deleteMessageHandler)
-        r.GET("/api/messages/search", authMiddleware(), searchMessagesHandler)
-        r.POST("/api/messages/forward", authMiddleware(), forwardMessageHandler)
-        r.POST("/api/messages/pin/:message_id", authMiddleware(), pinDirectMessageHandler)
-        r.GET("/api/messages/pinned/:user_id", authMiddleware(), getPinnedDirectMessagesHandler)
+	r.GET("/ws", handleWSConnection)
 
-        // Jarvis AI routes
-        r.POST("/api/jarvis/chat/ollama", HandleJarvisChat) // Simplified mapping for now
-        r.POST("/api/jarvis/chat/deepseek", HandleJarvisChat)
-        r.POST("/api/jarvis/chat/auto", HandleJarvisChat)
-        r.POST("/api/jarvis/chat", HandleJarvisChat)
-        r.GET("/api/jarvis/status", HandleJarvisStatus)
+	// Posts
+	r.GET("/api/posts", getPostsHandler)
+	r.POST("/api/posts", authMiddleware(), createPostHandler)
+	r.GET("/api/settings", authMiddleware(), getUserSettingsHandler)
+	r.PUT("/api/settings", authMiddleware(), updateUserSettingsHandler)
 
-        // Stories API
-        r.GET("/api/stories", authMiddleware(), getStoriesHandler)
-        r.POST("/api/stories", authMiddleware(), createStoryHandler)
-        r.POST("/api/stories/:id/view", authMiddleware(), viewStoryHandler)
-        r.DELETE("/api/stories/:id", authMiddleware(), deleteStoryHandler)
+	// Friends API
+	r.GET("/api/friends", authMiddleware(), getFriendsHandler)
+	r.POST("/api/friends/request", authMiddleware(), sendFriendRequestHandler)
+	r.PUT("/api/friends/request/:id", authMiddleware(), respondFriendRequestHandler)
+	r.DELETE("/api/friends/request/:id", authMiddleware(), cancelFriendRequestHandler)
+	r.DELETE("/api/friends/:id", authMiddleware(), deleteFriendHandler)
+	r.GET("/api/friends/blocked", authMiddleware(), getBlockedUsersHandler)
+	r.POST("/api/friends/block", authMiddleware(), blockUserHandler)
+	r.DELETE("/api/friends/block/:id", authMiddleware(), unblockUserHandler)
 
-        // Videos
-        r.GET("/api/videos", getVideosHandler)
-        r.GET("/api/videos/:id", getVideoHandler)
-        r.POST("/api/videos", authMiddleware(), createVideoHandler)
-        r.PUT("/api/videos/:id", authMiddleware(), updateVideoHandler)
-        r.DELETE("/api/videos/:id", authMiddleware(), deleteVideoHandler)
-        r.POST("/api/videos/:id/like", authMiddleware(), likeVideoHandler)
-        r.DELETE("/api/videos/:id/like", authMiddleware(), unlikeVideoHandler)
-        r.POST("/api/videos/:id/bookmark", authMiddleware(), bookmarkVideoHandler)
-        r.DELETE("/api/videos/:id/bookmark", authMiddleware(), unbookmarkVideoHandler)
-        r.GET("/api/videos/:id/chapters", getVideoChaptersHandler)
-        r.POST("/api/videos/:id/view", incrementVideoViewHandler)
+	// Direct Messages API
+	r.GET("/api/messages/conversations", authMiddleware(), getConversationsHandler)
+	r.POST("/api/messages", authMiddleware(), createMessageHandler)
+	r.GET("/api/messages/with/:user_id", authMiddleware(), getUserMessagesHandler)
+	r.PUT("/api/messages/update/:message_id", authMiddleware(), updateMessageHandler)
+	r.DELETE("/api/messages/delete/:message_id", authMiddleware(), deleteMessageHandler)
+	r.GET("/api/messages/search", authMiddleware(), searchMessagesHandler)
+	r.POST("/api/messages/forward", authMiddleware(), forwardMessageHandler)
+	r.POST("/api/messages/pin/:message_id", authMiddleware(), pinDirectMessageHandler)
+	r.GET("/api/messages/pinned/:user_id", authMiddleware(), getPinnedDirectMessagesHandler)
 
-        // Post Ratings & Comments
-        r.POST("/api/posts/:id/rate", authMiddleware(), ratePostHandler)
-        r.GET("/api/posts/:id/rating", getPostRatingHandler)
-        r.GET("/api/posts/:id/comments", getPostCommentsHandler)
-        r.POST("/api/posts/:id/comments", authMiddleware(), createCommentHandler)
-        r.DELETE("/api/comments/:id", authMiddleware(), deleteCommentHandler)
+	// Jarvis AI routes
+	r.POST("/api/jarvis/chat/ollama", HandleJarvisChat) // Simplified mapping for now
+	r.POST("/api/jarvis/chat/deepseek", HandleJarvisChat)
+	r.POST("/api/jarvis/chat/auto", HandleJarvisChat)
+	r.POST("/api/jarvis/chat", HandleJarvisChat)
+	r.GET("/api/jarvis/status", HandleJarvisStatus)
 
-        // Post Likes
-        r.POST("/api/posts/:id/like", authMiddleware(), likePostHandler)
-        r.DELETE("/api/posts/:id/like", authMiddleware(), unlikePostHandler)
+	// Stories API
+	r.GET("/api/stories", authMiddleware(), getStoriesHandler)
+	r.POST("/api/stories", authMiddleware(), createStoryHandler)
+	r.POST("/api/stories/:id/view", authMiddleware(), viewStoryHandler)
+	r.DELETE("/api/stories/:id", authMiddleware(), deleteStoryHandler)
 
-        // Post Bookmarks
-        r.POST("/api/posts/:id/bookmark", authMiddleware(), bookmarkPostHandler)
-        r.DELETE("/api/posts/:id/bookmark", authMiddleware(), unbookmarkPostHandler)
+	// Videos
+	r.GET("/api/videos", getVideosHandler)
+	r.GET("/api/videos/:id", getVideoHandler)
+	r.POST("/api/videos", authMiddleware(), createVideoHandler)
+	r.PUT("/api/videos/:id", authMiddleware(), updateVideoHandler)
+	r.DELETE("/api/videos/:id", authMiddleware(), deleteVideoHandler)
+	r.POST("/api/videos/:id/like", authMiddleware(), likeVideoHandler)
+	r.DELETE("/api/videos/:id/like", authMiddleware(), unlikeVideoHandler)
+	r.POST("/api/videos/:id/bookmark", authMiddleware(), bookmarkVideoHandler)
+	r.DELETE("/api/videos/:id/bookmark", authMiddleware(), unbookmarkVideoHandler)
+	r.GET("/api/videos/:id/chapters", getVideoChaptersHandler)
+	r.POST("/api/videos/:id/view", incrementVideoViewHandler)
 
-        // Subscriptions (Follow)
-        r.GET("/api/subscriptions", authMiddleware(), getSubscriptionsHandler)
-        r.POST("/api/users/:id/subscribe", authMiddleware(), subscribeHandler)
-        r.DELETE("/api/users/:id/subscribe", authMiddleware(), unsubscribeHandler)
-        r.GET("/api/users/:id/subscribers", getSubscribersHandler)
+	// Post Ratings & Comments
+	r.POST("/api/posts/:id/rate", authMiddleware(), ratePostHandler)
+	r.GET("/api/posts/:id/rating", getPostRatingHandler)
+	r.GET("/api/posts/:id/comments", getPostCommentsHandler)
+	r.POST("/api/posts/:id/comments", authMiddleware(), createCommentHandler)
+	r.DELETE("/api/comments/:id", authMiddleware(), deleteCommentHandler)
 
-        // Presence & Status
-        r.GET("/api/users/:id/presence", authMiddleware(), getUserPresenceHandler)
-        r.PUT("/api/presence", authMiddleware(), updatePresenceHandler)
-        r.POST("/api/typing", authMiddleware(), sendTypingHandler)
-        r.POST("/api/messages/:id/read", authMiddleware(), markAsReadHandler)
+	// Post Likes
+	r.POST("/api/posts/:id/like", authMiddleware(), likePostHandler)
+	r.DELETE("/api/posts/:id/like", authMiddleware(), unlikePostHandler)
 
-        // Message Reactions
-        r.POST("/api/messages/:id/reactions", authMiddleware(), addReactionHandler)
-        r.DELETE("/api/messages/:id/reactions/:emoji", authMiddleware(), removeReactionHandler)
+	// Post Bookmarks
+	r.POST("/api/posts/:id/bookmark", authMiddleware(), bookmarkPostHandler)
+	r.DELETE("/api/posts/:id/bookmark", authMiddleware(), unbookmarkPostHandler)
 
-        // Invite Links
-        r.POST("/api/invites", authMiddleware(), createInviteHandler)
-        r.GET("/api/invites/:code", getInviteHandler)
-        r.POST("/api/invites/:code/use", authMiddleware(), useInviteHandler)
+	// Subscriptions (Follow)
+	r.GET("/api/subscriptions", authMiddleware(), getSubscriptionsHandler)
+	r.POST("/api/users/:id/subscribe", authMiddleware(), subscribeHandler)
+	r.DELETE("/api/users/:id/subscribe", authMiddleware(), unsubscribeHandler)
+	r.GET("/api/users/:id/subscribers", getSubscribersHandler)
 
-        // User Referrals
-        r.GET("/api/referral/my", authMiddleware(), getMyReferralHandler)
-        r.GET("/api/referral/info/:code", getReferralInfoHandler)
-        r.POST("/api/referral/use/:code", authMiddleware(), useReferralHandler)
-        r.GET("/api/referral/invited", authMiddleware(), getMyReferralsHandler)
+	// Presence & Status
+	r.GET("/api/users/:id/presence", authMiddleware(), getUserPresenceHandler)
+	r.PUT("/api/presence", authMiddleware(), updatePresenceHandler)
+	r.POST("/api/typing", authMiddleware(), sendTypingHandler)
+	r.POST("/api/messages/:id/read", authMiddleware(), markAsReadHandler)
 
-        // User Notes
-        r.GET("/api/users/:id/notes", authMiddleware(), getUserNoteHandler)
-        r.PUT("/api/users/:id/notes", authMiddleware(), updateUserNoteHandler)
+	// Message Reactions
+	r.POST("/api/messages/:id/reactions", authMiddleware(), addReactionHandler)
+	r.DELETE("/api/messages/:id/reactions/:emoji", authMiddleware(), removeReactionHandler)
 
-        // User Search
-        r.GET("/api/users/search", authMiddleware(), searchUsersHandler)
-        r.GET("/api/users/all", authMiddleware(), getAllUsersHandler)
+	// Invite Links
+	r.POST("/api/invites", authMiddleware(), createInviteHandler)
+	r.GET("/api/invites/:code", getInviteHandler)
+	r.POST("/api/invites/:code/use", authMiddleware(), useInviteHandler)
 
-        // Admin Panel
-        r.GET("/api/admin/stats", authMiddleware(), adminMiddleware(), getAdminStatsHandler)
-        r.GET("/api/stats/platform", getPlatformStatsHandler)
-        r.GET("/api/streams/live", getLiveStreamsHandler)
-        r.GET("/api/admin/users", authMiddleware(), adminMiddleware(), getAdminUsersHandler)
-        r.POST("/api/admin/users/:id/ban", authMiddleware(), adminMiddleware(), banUserHandler)
-        r.DELETE("/api/admin/users/:id/ban", authMiddleware(), adminMiddleware(), unbanUserHandler)
-        r.POST("/api/admin/ip-bans", authMiddleware(), adminMiddleware(), createIPBanHandler)
-        r.GET("/api/admin/ip-bans", authMiddleware(), adminMiddleware(), getIPBansHandler)
-        r.DELETE("/api/admin/ip-bans/:id", authMiddleware(), adminMiddleware(), deleteIPBanHandler)
-        r.GET("/api/admin/reports", authMiddleware(), adminMiddleware(), getReportsHandler)
-        r.PUT("/api/admin/reports/:id", authMiddleware(), adminMiddleware(), updateReportHandler)
-        r.GET("/api/admin/audit-logs", authMiddleware(), adminMiddleware(), getAuditLogsHandler)
+	// User Referrals
+	r.GET("/api/referral/my", authMiddleware(), getMyReferralHandler)
+	r.GET("/api/referral/info/:code", getReferralInfoHandler)
+	r.POST("/api/referral/use/:code", authMiddleware(), useReferralHandler)
+	r.GET("/api/referral/invited", authMiddleware(), getMyReferralsHandler)
 
-        // User reports (public endpoint for authenticated users)
-        r.POST("/api/reports", authMiddleware(), createReportHandler)
+	// User Notes
+	r.GET("/api/users/:id/notes", authMiddleware(), getUserNoteHandler)
+	r.PUT("/api/users/:id/notes", authMiddleware(), updateUserNoteHandler)
 
-        // Content Filtering (Admin)
-        r.GET("/api/admin/forbidden-words", authMiddleware(), adminMiddleware(), getForbiddenWordsHandler)
-        r.POST("/api/admin/forbidden-words", authMiddleware(), adminMiddleware(), addForbiddenWordHandler)
-        r.PUT("/api/admin/forbidden-words/:id", authMiddleware(), adminMiddleware(), updateForbiddenWordHandler)
-        r.DELETE("/api/admin/forbidden-words/:id", authMiddleware(), adminMiddleware(), deleteForbiddenWordHandler)
-        r.GET("/api/admin/forbidden-attempts", authMiddleware(), adminMiddleware(), getForbiddenAttemptsHandler)
+	// User Search
+	r.GET("/api/users/search", authMiddleware(), searchUsersHandler)
+	r.GET("/api/users/all", authMiddleware(), getAllUsersHandler)
 
-        // Content Validation (Public)
-        r.POST("/api/content/validate", authMiddleware(), validateContentHandler)
+	// Admin Panel
+	r.GET("/api/admin/stats", authMiddleware(), adminMiddleware(), getAdminStatsHandler)
+	r.GET("/api/stats/platform", getPlatformStatsHandler)
+	r.GET("/api/streams/live", getLiveStreamsHandler)
+	r.GET("/api/admin/users", authMiddleware(), adminMiddleware(), getAdminUsersHandler)
+	r.POST("/api/admin/users/:id/ban", authMiddleware(), adminMiddleware(), banUserHandler)
+	r.DELETE("/api/admin/users/:id/ban", authMiddleware(), adminMiddleware(), unbanUserHandler)
+	r.POST("/api/admin/ip-bans", authMiddleware(), adminMiddleware(), createIPBanHandler)
+	r.GET("/api/admin/ip-bans", authMiddleware(), adminMiddleware(), getIPBansHandler)
+	r.DELETE("/api/admin/ip-bans/:id", authMiddleware(), adminMiddleware(), deleteIPBanHandler)
+	r.GET("/api/admin/reports", authMiddleware(), adminMiddleware(), getReportsHandler)
+	r.PUT("/api/admin/reports/:id", authMiddleware(), adminMiddleware(), updateReportHandler)
+	r.GET("/api/admin/audit-logs", authMiddleware(), adminMiddleware(), getAuditLogsHandler)
 
-        // Telegram Integration
-        r.GET("/api/telegram/link", authMiddleware(), getTelegramLinkHandler)
-        r.POST("/api/telegram/link", authMiddleware(), createTelegramLinkHandler)
-        r.DELETE("/api/telegram/link", authMiddleware(), unlinkTelegramHandler)
-        r.POST("/api/telegram/verify", verifyTelegramLinkHandler)
-        r.PUT("/api/telegram/settings", authMiddleware(), updateTelegramSettingsHandler)
-        r.GET("/api/notifications", authMiddleware(), getNotificationsHandler)
-        r.POST("/api/1470", getTelegramWebhookHandler)
+	// User reports (public endpoint for authenticated users)
+	r.POST("/api/reports", authMiddleware(), createReportHandler)
 
-        // File uploads
-        r.POST("/api/upload", authMiddleware(), uploadFileHandler)
-        r.Static("/uploads", "./uploads")
+	// Content Filtering (Admin)
+	r.GET("/api/admin/forbidden-words", authMiddleware(), adminMiddleware(), getForbiddenWordsHandler)
+	r.POST("/api/admin/forbidden-words", authMiddleware(), adminMiddleware(), addForbiddenWordHandler)
+	r.PUT("/api/admin/forbidden-words/:id", authMiddleware(), adminMiddleware(), updateForbiddenWordHandler)
+	r.DELETE("/api/admin/forbidden-words/:id", authMiddleware(), adminMiddleware(), deleteForbiddenWordHandler)
+	r.GET("/api/admin/forbidden-attempts", authMiddleware(), adminMiddleware(), getForbiddenAttemptsHandler)
 
-        // Channel Tools (Board/Notebook)
-        r.POST("/api/channels/:channel_id/tools", authMiddleware(), HandleCreateChannelTool)
-        r.GET("/api/channels/:channel_id/tools", authMiddleware(), HandleGetChannelTools)
-        r.PUT("/api/channels/tools/:tool_id", authMiddleware(), HandleUpdateChannelTool)
-        r.DELETE("/api/channels/tools/:tool_id", authMiddleware(), HandleDeleteChannelTool)
+	// Content Validation (Public)
+	r.POST("/api/content/validate", authMiddleware(), validateContentHandler)
 
-        // Real-time Collaborative Editing (WebSocket)
-        r.GET("/ws/collab/:channel_id/:tool_id", handleRealtimeCollaboration)
-        r.POST("/api/collab/sync", authMiddleware(), handleCollaborationSync)
-        r.GET("/api/collab/users/:channel_id/:tool_id", authMiddleware(), handleGetCollaborationUsers)
-        r.POST("/api/collab/cursor", authMiddleware(), handleUpdateCursorPosition)
+	// Telegram Integration
+	r.GET("/api/telegram/link", authMiddleware(), getTelegramLinkHandler)
+	r.POST("/api/telegram/link", authMiddleware(), createTelegramLinkHandler)
+	r.DELETE("/api/telegram/link", authMiddleware(), unlinkTelegramHandler)
+	r.POST("/api/telegram/verify", verifyTelegramLinkHandler)
+	r.PUT("/api/telegram/settings", authMiddleware(), updateTelegramSettingsHandler)
+	r.GET("/api/notifications", authMiddleware(), getNotificationsHandler)
+	r.POST("/api/1470", getTelegramWebhookHandler)
 
-        // Guild Roles & Permissions
-        r.GET("/api/guilds/:id/roles", authMiddleware(), getGuildRolesHandler)
-        r.POST("/api/guilds/:id/roles", authMiddleware(), createGuildRoleHandler)
-        r.PUT("/api/guilds/:id/roles/:role_id", authMiddleware(), updateGuildRoleHandler)
-        r.DELETE("/api/guilds/:id/roles/:role_id", authMiddleware(), deleteGuildRoleHandler)
+	// File uploads
+	r.POST("/api/upload", authMiddleware(), uploadFileHandler)
+	r.Static("/uploads", "./uploads")
 
-        port := os.Getenv("PORT")
-        if port == "" {
-                port = "8000"
-        }
-        log.Printf("Server starting on port %s", port)
-        r.Run(":" + port)
+	// Channel Tools (Board/Notebook)
+	r.POST("/api/channels/:channel_id/tools", authMiddleware(), HandleCreateChannelTool)
+	r.GET("/api/channels/:channel_id/tools", authMiddleware(), HandleGetChannelTools)
+	r.PUT("/api/channels/tools/:tool_id", authMiddleware(), HandleUpdateChannelTool)
+	r.DELETE("/api/channels/tools/:tool_id", authMiddleware(), HandleDeleteChannelTool)
+
+	// Real-time Collaborative Editing (WebSocket)
+	r.GET("/ws/collab/:channel_id/:tool_id", handleRealtimeCollaboration)
+	r.POST("/api/collab/sync", authMiddleware(), handleCollaborationSync)
+	r.GET("/api/collab/users/:channel_id/:tool_id", authMiddleware(), handleGetCollaborationUsers)
+	r.POST("/api/collab/cursor", authMiddleware(), handleUpdateCursorPosition)
+
+	// Guild Roles & Permissions
+	r.GET("/api/guilds/:id/roles", authMiddleware(), getGuildRolesHandler)
+	r.POST("/api/guilds/:id/roles", authMiddleware(), createGuildRoleHandler)
+	r.PUT("/api/guilds/:id/roles/:role_id", authMiddleware(), updateGuildRoleHandler)
+	r.DELETE("/api/guilds/:id/roles/:role_id", authMiddleware(), deleteGuildRoleHandler)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+
+	// Create HTTP server with timeouts
+	srv := &http.Server{
+		Addr:         ":" + port,
+		Handler:      r,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	// Start server in goroutine
+	go func() {
+		log.Printf("Server starting on port %s", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed to start: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal for graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	// Give outstanding requests 30 seconds to complete
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("Server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server exited gracefully")
 }
