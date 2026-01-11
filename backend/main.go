@@ -93,8 +93,8 @@ func main() {
         })
 
         // Auth routes with rate limiting to prevent brute force attacks
-        r.POST("/api/auth/register", AuthRateLimitMiddleware(), registerHandler)
-        r.POST("/api/auth/login", AuthRateLimitMiddleware(), loginHandler)
+        r.POST("/api/auth/register", registerHandler)
+        r.POST("/api/auth/login", loginHandler)
         r.POST("/api/auth/logout", authMiddleware(), logoutHandler)
         r.GET("/api/auth/me", authMiddleware(), meHandler)
 
