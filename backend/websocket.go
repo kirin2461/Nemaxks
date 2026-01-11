@@ -318,8 +318,9 @@ func (c *WSClient) readPump() {
                         switch msgType {
                         case "call-offer", "call-answer", "ice-candidate", "call-end", "call-rejected",
                                 "call-accepted", "call-cancelled", "voice-offer", "voice-answer", "voice-ice-candidate",
-                                "mute-toggle", "video-toggle", "call-state-sync":
+                                "mute-toggle", "video-toggle", "call-state-sync", "typing":
                                 log.Printf("Routing %s from %s to %s", msgType, c.UserID, targetUserID)
+                                msg["from_user_id"] = c.UserID
                                 hub.sendToUser(targetUserID, msg)
                                 
                                 // CRITICAL FIX: Ensure both sides end the call when one side sends "call-end"

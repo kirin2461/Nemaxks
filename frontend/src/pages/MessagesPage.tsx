@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useLocation } from 'wouter'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Layout } from '@/components/Layout'
@@ -6,6 +6,7 @@ import { Avatar } from '@/components/Avatar'
 import { ContextMenu, useContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
 import { NewMessageModal } from '@/components/NewMessageModal'
 import { useStore } from '@/lib/store'
+import { useNotifications } from '@/contexts/NotificationContext'
 import { messagesAPI, uploadAPI, type Message, type User } from '@/lib/api'
 import { formatTime } from '@/lib/utils'
 import {
@@ -36,6 +37,7 @@ import {
 
 export default function MessagesPage() {
   const { user, conversations, fetchConversations, isDemoMode } = useStore()
+  const { subscribeToMessages, sendWebSocketMessage } = useNotifications()
   const [location] = useLocation()
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -50,6 +52,11 @@ export default function MessagesPage() {
   const [playingVoice, setPlayingVoice] = useState<string | null>(null)
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const selectedUserRef = useRef<User | null>(null)
+  
+  useEffect(() => {
+    selectedUserRef.current = selectedUser
+  }, [selectedUser])
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior })
@@ -92,7 +99,96 @@ export default function MessagesPage() {
   void forwardingMessage
   void setForwardingMessage
 
-  void setTypingUsers
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const typingRemovalTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map())
+
+  const handleWebSocketMessage = useCallback((data: any) => {
+    console.log('[Messages] WebSocket message received:', data.type)
+    
+    switch (data.type) {
+      case 'new_message':
+      case 'direct_message':
+        if (!data.id) {
+          console.warn('[Messages] Received message without ID, skipping')
+          break
+        }
+        if (selectedUserRef.current && 
+            (String(data.from_user_id) === String(selectedUserRef.current.id) ||
+             String(data.fromUserId) === String(selectedUserRef.current.id))) {
+          const newMsg: Message = {
+            id: String(data.id),
+            content: data.content || '',
+            sender_id: data.from_user_id || data.fromUserId,
+            receiver_id: user?.id || '',
+            created_at: data.created_at || new Date().toISOString(),
+            read: false,
+            voice_url: data.voice_url,
+            voice_duration: data.voice_duration,
+            reply_to_id: data.reply_to_id,
+          }
+          setMessages(prev => {
+            if (prev.some(m => m.id === newMsg.id)) return prev
+            return [...prev, newMsg]
+          })
+        }
+        fetchConversations()
+        break
+      case 'typing':
+        if (selectedUserRef.current && 
+            String(data.from_user_id) === String(selectedUserRef.current.id)) {
+          const username = data.username
+          if (!username) break
+          
+          const existingTimer = typingRemovalTimersRef.current.get(username)
+          if (existingTimer) {
+            clearTimeout(existingTimer)
+          }
+          
+          setTypingUsers(prev => {
+            if (!prev.includes(username)) {
+              return [...prev, username]
+            }
+            return prev
+          })
+          
+          const newTimer = setTimeout(() => {
+            setTypingUsers(prev => prev.filter(u => u !== username))
+            typingRemovalTimersRef.current.delete(username)
+          }, 3000)
+          typingRemovalTimersRef.current.set(username, newTimer)
+        }
+        break
+      case 'message_read':
+        if (data.message_id) {
+          setMessages(prev => prev.map(m => 
+            m.id === String(data.message_id) ? { ...m, read: true } : m
+          ))
+        }
+        break
+    }
+  }, [user?.id, fetchConversations])
+
+  useEffect(() => {
+    const unsubscribe = subscribeToMessages(handleWebSocketMessage)
+    return () => {
+      unsubscribe()
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+      typingRemovalTimersRef.current.forEach(timer => clearTimeout(timer))
+      typingRemovalTimersRef.current.clear()
+    }
+  }, [subscribeToMessages, handleWebSocketMessage])
+
+  const sendTypingIndicator = useCallback(() => {
+    if (selectedUser && user) {
+      sendWebSocketMessage({
+        type: 'typing',
+        targetUserId: selectedUser.id,
+        username: user.username
+      })
+    }
+  }, [selectedUser, user, sendWebSocketMessage])
 
   const startRecording = async () => {
     try {
@@ -255,13 +351,21 @@ export default function MessagesPage() {
     }
   }
 
+  const clearTypingIndicators = useCallback(() => {
+    typingRemovalTimersRef.current.forEach(timer => clearTimeout(timer))
+    typingRemovalTimersRef.current.clear()
+    setTypingUsers([])
+  }, [])
+
   const handleSelectUser = (chatUser: User) => {
+    clearTypingIndicators()
     setSelectedUser(chatUser)
     loadMessages(chatUser.id)
   }
 
   const handleSelectUserFromModal = (friend: any) => {
-    const user: User = {
+    clearTypingIndicators()
+    const friendUser: User = {
       id: friend.id,
       username: friend.username,
       alias: friend.alias,
@@ -269,8 +373,8 @@ export default function MessagesPage() {
       bio: friend.bio || undefined,
       created_at: new Date().toISOString(),
     }
-    setSelectedUser(user)
-    loadMessages(user.id) // Load actual messages
+    setSelectedUser(friendUser)
+    loadMessages(friendUser.id)
     setShowNewMessageModal(false)
   }
 
@@ -885,7 +989,16 @@ export default function MessagesPage() {
                       </button>
                       <textarea
                         value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
+                        onChange={(e) => {
+                          setNewMessage(e.target.value)
+                          if (typingTimeoutRef.current) {
+                            clearTimeout(typingTimeoutRef.current)
+                          }
+                          sendTypingIndicator()
+                          typingTimeoutRef.current = setTimeout(() => {
+                            typingTimeoutRef.current = null
+                          }, 2000)
+                        }}
                         placeholder={editingMessage ? 'Edit your message...' : 'Type a message...'}
                         rows={1}
                         className="flex-1 px-4 py-3 bg-background border border-border rounded-lg resize-none

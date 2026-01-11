@@ -154,7 +154,7 @@ Authentication uses JWT tokens. User sessions and UI preferences are managed via
   - Vite build optimizations: manual chunks for vendor dependencies, CSS minification, optimized dependency pre-bundling
   - Improved loading screen with animated spinner
 
-- **Video Call Audio Transmission & State Synchronization (Latest)**
+- **Video Call Audio Transmission & State Synchronization**
   - AudioLevelIndicator component displays real-time audio levels with animated bars using Web Audio API
   - AudioLogsPanel shows audio events (mute/unmute, transmission status, call state changes)
   - useAudioLogger hook for centralized audio event logging with timestamps
@@ -162,4 +162,14 @@ Authentication uses JWT tokens. User sessions and UI preferences are managed via
   - Remote participant state (muted/video off) displayed with badges on video containers
   - State synchronization sent on call connect and when toggling mute/video
   - AudioContext reuse to prevent browser resource exhaustion (single instance per component)
+
+- **Call Termination & Real-time Messaging Improvements (Latest)**
+  - VideoCallPage now listens for `remote-call-end` custom event to properly handle call termination
+  - Improved audio quality settings: 48kHz sample rate, 16-bit sample size, mono channel
+  - MessagesPage subscribes to WebSocket for real-time message updates via subscribeToMessages hook
+  - Typing indicators with per-user debounce timers (Map-based) prevent flickering and stale state
+  - Proper cleanup of typing timers on unmount and user switch
+  - Messages without server-provided IDs are skipped to prevent duplicates
+  - Backend routes "typing" WebSocket messages to target users
+  - clearTypingIndicators function resets all timers when switching conversations
   - Proper cleanup resets remote state to avoid stale data between calls

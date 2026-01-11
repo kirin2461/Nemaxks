@@ -229,6 +229,26 @@ export default function VideoCallPage() {
   }, [user?.id])
 
   useEffect(() => {
+    const handleRemoteCallEnd = (event: CustomEvent) => {
+      console.log('[Call Debug] Received remote-call-end event:', event.detail)
+      if (callState !== 'idle' && callState !== 'ended') {
+        console.log('[Call Debug] Processing remote-call-end - ending call')
+        setCallState('ended')
+        audioLogger.logInfo('Remote participant ended the call')
+        cleanup()
+        setTimeout(() => {
+          setCallState('idle')
+        }, 2000)
+      }
+    }
+
+    window.addEventListener('remote-call-end', handleRemoteCallEnd as EventListener)
+    return () => {
+      window.removeEventListener('remote-call-end', handleRemoteCallEnd as EventListener)
+    }
+  }, [callState])
+
+  useEffect(() => {
     if (callState === 'connected') {
       durationIntervalRef.current = setInterval(() => {
         setCallDuration(prev => prev + 1)
@@ -367,7 +387,10 @@ export default function VideoCallPage() {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
+          sampleRate: 48000,
+          sampleSize: 16,
+          channelCount: 1
         }
       })
       return stream
