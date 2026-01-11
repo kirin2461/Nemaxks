@@ -373,6 +373,87 @@ func getSubscribersHandler(c *gin.Context) {
         c.JSON(http.StatusOK, response)
 }
 
+// User Profile and Stats
+func getUserProfileHandler(c *gin.Context) {
+        targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                return
+        }
+        
+        var user User
+        if db.First(&user, targetID).RowsAffected == 0 {
+                c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+                return
+        }
+        
+        // Get subscription stats
+        var followersCount int64
+        var followingCount int64
+        db.Model(&Subscription{}).Where("following_id = ?", targetID).Count(&followersCount)
+        db.Model(&Subscription{}).Where("follower_id = ?", targetID).Count(&followingCount)
+        
+        // Check if current user is subscribed to this profile
+        isSubscribed := false
+        if userID, exists := c.Get("user_id"); exists {
+                uid := uint(userID.(float64))
+                if uid != uint(targetID) {
+                        var sub Subscription
+                        if db.Where("follower_id = ? AND following_id = ?", uid, targetID).First(&sub).RowsAffected > 0 {
+                                isSubscribed = true
+                        }
+                }
+        }
+        
+        avatar := ""
+        if user.Avatar != nil {
+                avatar = *user.Avatar
+        }
+        bio := ""
+        if user.Bio != nil {
+                bio = *user.Bio
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "id":              user.ID,
+                "username":        user.Username,
+                "avatar":          avatar,
+                "bio":             bio,
+                "role":            user.Role,
+                "created_at":      user.CreatedAt,
+                "followers_count": followersCount,
+                "following_count": followingCount,
+                "is_subscribed":   isSubscribed,
+        })
+}
+
+func getUserStatsHandler(c *gin.Context) {
+        targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                return
+        }
+        
+        var followersCount int64
+        var followingCount int64
+        var postsCount int64
+        var friendsCount int64
+        
+        db.Model(&Subscription{}).Where("following_id = ?", targetID).Count(&followersCount)
+        db.Model(&Subscription{}).Where("follower_id = ?", targetID).Count(&followingCount)
+        db.Model(&Post{}).Where("author_id = ?", targetID).Count(&postsCount)
+        
+        // Count friends (accepted friend requests in either direction)
+        db.Model(&FriendRequest{}).Where("(from_user_id = ? OR to_user_id = ?) AND status = ?", targetID, targetID, "accepted").Count(&friendsCount)
+        
+        c.JSON(http.StatusOK, gin.H{
+                "followers_count": followersCount,
+                "following_count": followingCount,
+                "posts_count":     postsCount,
+                "friends_count":   friendsCount,
+        })
+}
+
 // Video Extras
 func likeVideoHandler(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{"status": "liked"})

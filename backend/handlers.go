@@ -328,6 +328,32 @@ func authMiddleware() gin.HandlerFunc {
         }
 }
 
+// optionalAuthMiddleware extracts user_id if token is present but doesn't require it
+func optionalAuthMiddleware() gin.HandlerFunc {
+        return func(c *gin.Context) {
+                authHeader := c.GetHeader("Authorization")
+                if authHeader == "" {
+                        c.Next()
+                        return
+                }
+
+                tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+                token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+                        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+                                return nil, jwt.ErrSignatureInvalid
+                        }
+                        return getJWTSecret(), nil
+                })
+
+                if err == nil && token.Valid {
+                        if claims, ok := token.Claims.(jwt.MapClaims); ok {
+                                c.Set("user_id", claims["user_id"])
+                        }
+                }
+                c.Next()
+        }
+}
+
 func generateToken(user *User) (string, error) {
         token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
                 "user_id":  user.ID,

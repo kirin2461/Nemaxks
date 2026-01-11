@@ -212,6 +212,10 @@ func main() {
         r.POST("/api/posts/:id/bookmark", authMiddleware(), bookmarkPostHandler)
         r.DELETE("/api/posts/:id/bookmark", authMiddleware(), unbookmarkPostHandler)
 
+        // User Profile
+        r.GET("/api/users/:id/profile", optionalAuthMiddleware(), getUserProfileHandler)
+        r.GET("/api/users/:id/stats", getUserStatsHandler)
+
         // Subscriptions (Follow)
         r.GET("/api/subscriptions", authMiddleware(), getSubscriptionsHandler)
         r.POST("/api/users/:id/subscribe", authMiddleware(), subscribeHandler)

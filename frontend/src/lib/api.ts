@@ -134,12 +134,36 @@ export const authAPI = {
     ),
 };
 
+// User Profile Response Type
+export interface UserProfile {
+  id: number;
+  username: string;
+  avatar: string;
+  bio: string;
+  role: string;
+  created_at: string;
+  followers_count: number;
+  following_count: number;
+  is_subscribed: boolean;
+}
+
+export interface UserStats {
+  followers_count: number;
+  following_count: number;
+  posts_count: number;
+  friends_count: number;
+}
+
 // User API
 export const userAPI = {
   search: (query: string) =>
     request<User[]>(`/users/search?q=${encodeURIComponent(query)}`),
 
   getUser: (id: string) => request<User>(`/users/${id}`),
+  
+  getProfile: (id: string) => request<UserProfile>(`/users/${id}/profile`),
+  
+  getStats: (id: string) => request<UserStats>(`/users/${id}/stats`),
 
   updateProfile: (data: Partial<User>) =>
     request<User>("/users/me", {
@@ -161,6 +185,16 @@ export const userAPI = {
       headers,
     }).then((res) => res.json());
   },
+  
+  subscribe: (id: string) =>
+    request<{ status: string; id: number }>(`/users/${id}/subscribe`, {
+      method: "POST",
+    }),
+    
+  unsubscribe: (id: string) =>
+    request<{ status: string }>(`/users/${id}/subscribe`, {
+      method: "DELETE",
+    }),
 };
 
 // Messages API (Consolidated)
