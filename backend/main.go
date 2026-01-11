@@ -36,6 +36,13 @@ func main() {
                 }
         }
 
+        // Initialize Email Service
+        InitEmailService()
+        
+        // Initialize Billing System
+        InitBillingSystem()
+        defer StopBillingSystem()
+
         // Initialize Jarvis MCP bridge
         log.Println("[*] Initializing Jarvis MCP bridge...")
         mcpCfg := MCPConfig{
@@ -287,6 +294,11 @@ func main() {
         r.DELETE("/api/requests/:id", authMiddleware(), cancelUserRequestHandler)
         r.GET("/api/admin/requests", authMiddleware(), adminMiddleware(), getAdminUserRequestsHandler)
         r.PUT("/api/admin/requests/:id", authMiddleware(), adminMiddleware(), updateUserRequestHandler)
+        
+        // Admin Billing
+        r.POST("/api/admin/billing/refund", authMiddleware(), adminMiddleware(), refundPremiumHandler)
+        r.GET("/api/admin/billing/stats", authMiddleware(), adminMiddleware(), getAdminBillingStatsHandler)
+        r.GET("/api/billing/transactions/:id/status", authMiddleware(), getPaymentStatusHandler)
 
         // Content Filtering (Admin)
         r.GET("/api/admin/forbidden-words", authMiddleware(), adminMiddleware(), getForbiddenWordsHandler)

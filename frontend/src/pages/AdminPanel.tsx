@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Layout } from '@/components/Layout'
 import { Avatar } from '@/components/Avatar'
 import { useStore } from '@/lib/store'
-import { adminAPI, type AdminStats, type IPBan, type AbuseReport, type AuditLog, type User, type ForbiddenWord, type ForbiddenAttempt } from '@/lib/api'
+import { adminAPI, type AdminStats, type IPBan, type AbuseReport, type AuditLog, type User, type ForbiddenWord, type ForbiddenAttempt, type BillingStats, type BillingTransaction } from '@/lib/api'
 import {
   Users,
   Shield,
@@ -23,11 +23,14 @@ import {
   Trash2,
   Edit,
   Save,
-  X
+  X,
+  CreditCard,
+  DollarSign,
+  RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type TabType = 'dashboard' | 'users' | 'bans' | 'reports' | 'logs' | 'filter' | 'attempts'
+type TabType = 'dashboard' | 'users' | 'bans' | 'reports' | 'logs' | 'filter' | 'attempts' | 'billing'
 
 export default function AdminPanel() {
   const { user } = useStore()
@@ -39,6 +42,7 @@ export default function AdminPanel() {
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [forbiddenWords, setForbiddenWords] = useState<ForbiddenWord[]>([])
   const [forbiddenAttempts, setForbiddenAttempts] = useState<ForbiddenAttempt[]>([])
+  const [billingStats, setBillingStats] = useState<BillingStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [newWord, setNewWord] = useState('')
@@ -81,6 +85,10 @@ export default function AdminPanel() {
         case 'attempts':
           const attemptsData = await adminAPI.getForbiddenAttempts()
           setForbiddenAttempts(attemptsData.attempts)
+          break
+        case 'billing':
+          const billingData = await adminAPI.getBillingStats()
+          setBillingStats(billingData)
           break
       }
     } catch (error) {
@@ -176,6 +184,7 @@ export default function AdminPanel() {
     { id: 'filter' as TabType, label: 'Чёрный список', icon: Filter },
     { id: 'attempts' as TabType, label: 'Попытки', icon: AlertTriangle },
     { id: 'logs' as TabType, label: 'Журнал', icon: FileText },
+    { id: 'billing' as TabType, label: 'Биллинг', icon: CreditCard },
   ]
 
   return (
@@ -573,6 +582,117 @@ export default function AdminPanel() {
                       </div>
                     ))
                   )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'billing' && billingStats && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <StatCard
+                    title="Активные подписки"
+                    value={billingStats.active_subscriptions}
+                    icon={CreditCard}
+                    color="text-purple-500"
+                  />
+                  <StatCard
+                    title="Доход за месяц"
+                    value={billingStats.monthly_revenue}
+                    icon={DollarSign}
+                    color="text-green-500"
+                  />
+                  <StatCard
+                    title="Общий доход"
+                    value={billingStats.total_revenue}
+                    icon={TrendingUp}
+                    color="text-blue-500"
+                  />
+                  <div className="bg-card rounded-lg border border-border p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-muted-foreground">Churn Rate</span>
+                      <RefreshCw className="w-5 h-5 text-orange-500" />
+                    </div>
+                    <p className="text-3xl font-bold">{billingStats.churn_rate.toFixed(1)}%</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-card rounded-lg border border-border p-6">
+                    <h3 className="text-lg font-semibold mb-4">Статистика за месяц</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Новых подписок</span>
+                        <span className="font-medium text-green-500">+{billingStats.new_subscriptions}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Отменено</span>
+                        <span className="font-medium text-red-500">-{billingStats.cancelled_subscriptions}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Нетто</span>
+                        <span className={cn("font-medium", billingStats.new_subscriptions - billingStats.cancelled_subscriptions >= 0 ? "text-green-500" : "text-red-500")}>
+                          {billingStats.new_subscriptions - billingStats.cancelled_subscriptions >= 0 ? '+' : ''}{billingStats.new_subscriptions - billingStats.cancelled_subscriptions}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-card rounded-lg border border-border p-6">
+                    <h3 className="text-lg font-semibold mb-4">MRR</h3>
+                    <div className="text-4xl font-bold text-purple-500">
+                      {billingStats.monthly_revenue.toLocaleString()} ₽
+                    </div>
+                    <p className="text-muted-foreground mt-2">
+                      Ежемесячный регулярный доход
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-card rounded-lg border border-border">
+                  <div className="p-4 border-b border-border">
+                    <h3 className="font-semibold">Последние транзакции</h3>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {billingStats.recent_transactions.length === 0 ? (
+                      <div className="p-8 text-center text-muted-foreground">
+                        Нет транзакций
+                      </div>
+                    ) : (
+                      billingStats.recent_transactions.map((tx) => (
+                        <div key={tx.id} className="p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "w-10 h-10 rounded-full flex items-center justify-center",
+                              tx.status === 'succeeded' ? "bg-green-500/20" : tx.status === 'pending' ? "bg-yellow-500/20" : "bg-red-500/20"
+                            )}>
+                              {tx.status === 'succeeded' ? (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                              ) : tx.status === 'pending' ? (
+                                <Clock className="w-5 h-5 text-yellow-500" />
+                              ) : (
+                                <XCircle className="w-5 h-5 text-red-500" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium">{tx.username || `User #${tx.user_id}`}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {new Date(tx.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">{tx.amount_rub.toLocaleString()} ₽</p>
+                            <p className={cn(
+                              "text-sm",
+                              tx.status === 'succeeded' ? "text-green-500" : tx.status === 'pending' ? "text-yellow-500" : "text-red-500"
+                            )}>
+                              {tx.status === 'succeeded' ? 'Успешно' : tx.status === 'pending' ? 'Ожидание' : 'Ошибка'}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             )}

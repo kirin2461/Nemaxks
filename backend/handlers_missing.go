@@ -676,10 +676,7 @@ func checkoutPremiumHandler(c *gin.Context) {
         }
         db.Create(&transaction)
         
-        // TODO: Create actual YooKassa payment and get confirmation URL
-        // For now, return a placeholder - needs YOOKASSA_SHOP_ID and YOOKASSA_SECRET_KEY
-        shopID := os.Getenv("YOOKASSA_SHOP_ID")
-        if shopID == "" {
+        if yookassaService == nil {
                 c.JSON(http.StatusOK, gin.H{
                         "payment_id":       transaction.ID,
                         "confirmation_url": "",
@@ -688,9 +685,33 @@ func checkoutPremiumHandler(c *gin.Context) {
                 return
         }
         
+        returnURL := os.Getenv("APP_URL")
+        if returnURL == "" {
+                returnURL = "https://nemaks.com"
+        }
+        
+        payment, err := yookassaService.CreatePayment(
+                transaction.ID,
+                plan.PriceRub,
+                "Подписка "+plan.Name,
+                returnURL+"/premium?status=success",
+                true,
+        )
+        if err != nil {
+                log.Printf("[Billing] YooKassa payment error: %v", err)
+                db.Model(&transaction).Update("status", "failed")
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Payment creation failed"})
+                return
+        }
+        
+        db.Model(&transaction).Updates(map[string]interface{}{
+                "provider_payment_id": payment.ID,
+                "confirmation_url":    payment.Confirmation.ConfirmationURL,
+        })
+        
         c.JSON(http.StatusOK, gin.H{
                 "payment_id":       transaction.ID,
-                "confirmation_url": "https://yookassa.ru/checkout/...",
+                "confirmation_url": payment.Confirmation.ConfirmationURL,
         })
 }
 
@@ -711,6 +732,8 @@ func cancelPremiumHandler(c *gin.Context) {
                 "status":               "cancelled",
                 "auto_renew":           false,
         })
+        
+        go SendSubscriptionCancelled(uid, sub.CurrentPeriodEnd)
         
         c.JSON(http.StatusOK, gin.H{"status": "cancelled", "ends_at": sub.CurrentPeriodEnd})
 }
@@ -748,6 +771,11 @@ func yookassaWebhookHandler(c *gin.Context) {
                         Metadata struct {
                                 TransactionID string `json:"transaction_id"`
                         } `json:"metadata"`
+                        PaymentMethod struct {
+                                Type  string `json:"type"`
+                                ID    string `json:"id"`
+                                Saved bool   `json:"saved"`
+                        } `json:"payment_method"`
                 } `json:"object"`
         }
         
@@ -792,9 +820,15 @@ func yookassaWebhookHandler(c *gin.Context) {
                         periodEnd = now.AddDate(1, 0, 0)
                 }
                 
+                paymentMethodID := ""
+                if payload.Object.PaymentMethod.Saved && payload.Object.PaymentMethod.ID != "" {
+                        paymentMethodID = payload.Object.PaymentMethod.ID
+                        log.Printf("[Billing] Saved payment method %s for user %d", paymentMethodID, transaction.UserID)
+                }
+                
                 var existingSub PremiumSubscription
                 if db.Where("user_id = ?", transaction.UserID).First(&existingSub).RowsAffected > 0 {
-                        db.Model(&existingSub).Updates(map[string]interface{}{
+                        updates := map[string]interface{}{
                                 "plan_id":              transaction.PlanID,
                                 "status":               "active",
                                 "current_period_start": now,
@@ -802,7 +836,11 @@ func yookassaWebhookHandler(c *gin.Context) {
                                 "auto_renew":           true,
                                 "cancel_at_period_end": false,
                                 "cancelled_at":         nil,
-                        })
+                        }
+                        if paymentMethodID != "" {
+                                updates["payment_method_id"] = paymentMethodID
+                        }
+                        db.Model(&existingSub).Updates(updates)
                         db.Model(&transaction).Update("subscription_id", existingSub.ID)
                 } else {
                         sub := PremiumSubscription{
@@ -812,10 +850,13 @@ func yookassaWebhookHandler(c *gin.Context) {
                                 CurrentPeriodStart: now,
                                 CurrentPeriodEnd:   periodEnd,
                                 AutoRenew:          true,
+                                PaymentMethodID:    paymentMethodID,
                         }
                         db.Create(&sub)
                         db.Model(&transaction).Update("subscription_id", sub.ID)
                 }
+                
+                go SendPaymentConfirmation(transaction.UserID, plan.Name, plan.PriceRub)
                 
                 log.Printf("Premium subscription activated for user %d, plan %d", transaction.UserID, transaction.PlanID)
         }
@@ -865,5 +906,66 @@ func seedPremiumPlans() {
                         log.Printf("Created premium plan: %s", plan.Name)
                 }
         }
+}
+
+func getAdminBillingStatsHandler(c *gin.Context) {
+        now := time.Now()
+        startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+        
+        var activeSubscriptions int64
+        db.Model(&PremiumSubscription{}).Where("status = ?", "active").Count(&activeSubscriptions)
+        
+        var monthlyRevenue float64
+        db.Model(&PremiumTransaction{}).
+                Select("COALESCE(SUM(amount_rub), 0)").
+                Where("status = ? AND created_at >= ?", "succeeded", startOfMonth).
+                Scan(&monthlyRevenue)
+        
+        var totalRevenue float64
+        db.Model(&PremiumTransaction{}).
+                Select("COALESCE(SUM(amount_rub), 0)").
+                Where("status = ?", "succeeded").
+                Scan(&totalRevenue)
+        
+        var newSubscriptions int64
+        db.Model(&PremiumSubscription{}).Where("created_at >= ?", startOfMonth).Count(&newSubscriptions)
+        
+        var cancelledSubscriptions int64
+        db.Model(&PremiumSubscription{}).Where("cancelled_at >= ?", startOfMonth).Count(&cancelledSubscriptions)
+        
+        var churnRate float64
+        if activeSubscriptions > 0 {
+                churnRate = float64(cancelledSubscriptions) / float64(activeSubscriptions+cancelledSubscriptions) * 100
+        }
+        
+        var recentTransactions []PremiumTransaction
+        db.Preload("User").Order("created_at DESC").Limit(20).Find(&recentTransactions)
+        
+        txList := make([]gin.H, len(recentTransactions))
+        for i, tx := range recentTransactions {
+                username := ""
+                if tx.User.Username != "" {
+                        username = tx.User.Username
+                }
+                txList[i] = gin.H{
+                        "id":           tx.ID,
+                        "user_id":      tx.UserID,
+                        "username":     username,
+                        "amount_rub":   tx.AmountRub,
+                        "status":       tx.Status,
+                        "created_at":   tx.CreatedAt,
+                        "completed_at": tx.CompletedAt,
+                }
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "active_subscriptions":    activeSubscriptions,
+                "monthly_revenue":         monthlyRevenue,
+                "total_revenue":           totalRevenue,
+                "new_subscriptions":       newSubscriptions,
+                "cancelled_subscriptions": cancelledSubscriptions,
+                "churn_rate":              churnRate,
+                "recent_transactions":     txList,
+        })
 }
 

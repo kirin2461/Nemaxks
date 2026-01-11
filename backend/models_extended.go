@@ -608,6 +608,7 @@ type PremiumSubscription struct {
 type PremiumTransaction struct {
         ID              uint       `gorm:"primaryKey" json:"id"`
         UserID          uint       `gorm:"index" json:"user_id"`
+        User            User       `gorm:"foreignKey:UserID" json:"-"`
         SubscriptionID  *uint      `gorm:"index" json:"subscription_id,omitempty"`
         PlanID          uint       `json:"plan_id"`
         AmountRub       float64    `json:"amount_rub"`

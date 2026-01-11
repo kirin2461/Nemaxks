@@ -586,7 +586,35 @@ export const adminAPI = {
     request<{ attempts: ForbiddenAttempt[]; total: number }>(
       `/admin/forbidden-attempts?page=${page}&limit=${limit}`,
     ),
+
+  getBillingStats: () => request<BillingStats>("/admin/billing/stats"),
+
+  refundTransaction: (transactionId: string, reason: string) =>
+    request<{ status: string }>("/admin/billing/refund", {
+      method: "POST",
+      data: { transaction_id: parseInt(transactionId), reason },
+    }),
 };
+
+export interface BillingStats {
+  active_subscriptions: number;
+  monthly_revenue: number;
+  total_revenue: number;
+  new_subscriptions: number;
+  cancelled_subscriptions: number;
+  churn_rate: number;
+  recent_transactions: BillingTransaction[];
+}
+
+export interface BillingTransaction {
+  id: number;
+  user_id: number;
+  username: string;
+  amount_rub: number;
+  status: string;
+  created_at: string;
+  completed_at: string | null;
+}
 
 export interface ForbiddenWord {
   id: string;
