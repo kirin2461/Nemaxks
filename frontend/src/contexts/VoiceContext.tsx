@@ -9,7 +9,11 @@ interface VoiceUser {
   isMuted: boolean
   isDeafened: boolean
   isSpeaking: boolean
+  hasVideo: boolean
+  isScreenSharing: boolean
   volume: number
+  videoStream?: MediaStream
+  screenStream?: MediaStream
 }
 
 interface VoiceState {
@@ -21,6 +25,8 @@ interface VoiceState {
   isMuted: boolean
   isDeafened: boolean
   isSpeaking: boolean
+  hasVideo: boolean
+  isScreenSharing: boolean
   connectedUsers: VoiceUser[]
   connectionQuality: 'excellent' | 'good' | 'poor'
 }
@@ -32,10 +38,14 @@ interface VoiceChannelUsers {
 interface VoiceContextValue {
   state: VoiceState
   voiceChannelUsers: VoiceChannelUsers
+  localVideoStream: MediaStream | null
+  localScreenStream: MediaStream | null
   joinChannel: (channelId: string, channelName: string, guildId: string, guildName: string) => Promise<void>
   leaveChannel: () => void
   toggleMute: () => void
   toggleDeafen: () => void
+  toggleVideo: () => Promise<void>
+  toggleScreenShare: () => Promise<void>
   setUserVolume: (userId: string, volume: number) => void
   setRemoteSpeaking: (userId: string, isSpeaking: boolean) => void
   syncConnectedUsers: (users: VoiceUser[]) => void
@@ -55,6 +65,8 @@ const initialState: VoiceState = {
   isMuted: false,
   isDeafened: false,
   isSpeaking: false,
+  hasVideo: false,
+  isScreenSharing: false,
   connectedUsers: [],
   connectionQuality: 'excellent'
 }
@@ -93,6 +105,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const [voiceChannelUsers, setVoiceChannelUsers] = useState<VoiceChannelUsers>({})
   
   const localStreamRef = useRef<MediaStream | null>(null)
+  const localVideoStreamRef = useRef<MediaStream | null>(null)
+  const localScreenStreamRef = useRef<MediaStream | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const speakingAnimationRef = useRef<number | null>(null)
@@ -101,6 +115,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map())
   const remoteAudioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map())
   const remoteAudioAnalysersRef = useRef<Map<string, { audioContext: AudioContext; analyser: AnalyserNode; animationId: number }>>(new Map())
+  const remoteVideoStreamsRef = useRef<Map<string, MediaStream>>(new Map())
+  const remoteScreenStreamsRef = useRef<Map<string, MediaStream>>(new Map())
   const pendingCandidatesRef = useRef<Map<string, RTCIceCandidate[]>>(new Map())
   const createOfferRef = useRef<((peerId: string) => Promise<void>) | null>(null)
   const iceServersRef = useRef<RTCIceServer[]>(DEFAULT_ICE_SERVERS)
@@ -112,6 +128,32 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const broadcastVoiceEvent = useCallback((type: string, data: object) => {
     sendWebSocketMessage({ type, ...data })
   }, [sendWebSocketMessage])
+
+  const addTracksToPeerConnection = useCallback((pc: RTCPeerConnection) => {
+    // Remove existing senders
+    pc.getSenders().forEach(sender => pc.removeTrack(sender))
+    
+    // Add audio track
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => {
+        pc.addTrack(track, localStreamRef.current!)
+      })
+    }
+    
+    // Add video track if enabled
+    if (localVideoStreamRef.current && stateRef.current.hasVideo) {
+      localVideoStreamRef.current.getTracks().forEach(track => {
+        pc.addTrack(track, localVideoStreamRef.current!)
+      })
+    }
+    
+    // Add screen share track if enabled
+    if (localScreenStreamRef.current && stateRef.current.isScreenSharing) {
+      localScreenStreamRef.current.getTracks().forEach(track => {
+        pc.addTrack(track, localScreenStreamRef.current!)
+      })
+    }
+  }, [])
 
   const createPeerConnection = useCallback((peerId: string): RTCPeerConnection => {
     const pc = new RTCPeerConnection({ 
@@ -133,17 +175,38 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     }
     
     pc.ontrack = (event) => {
-      console.log(`Received remote track from ${peerId}`)
-      let audioEl = remoteAudioElementsRef.current.get(peerId)
-      if (!audioEl) {
-        audioEl = new Audio()
-        audioEl.autoplay = true
-        remoteAudioElementsRef.current.set(peerId, audioEl)
-      }
-      audioEl.srcObject = event.streams[0]
-      audioEl.play().catch(console.error)
+      console.log(`Received remote track from ${peerId}: ${event.track.kind}`, event.track.label)
       
-      startRemoteVoiceAnalysis(peerId, event.streams[0])
+      if (event.track.kind === 'audio') {
+        let audioEl = remoteAudioElementsRef.current.get(peerId)
+        if (!audioEl) {
+          audioEl = new Audio()
+          audioEl.autoplay = true
+          remoteAudioElementsRef.current.set(peerId, audioEl)
+        }
+        audioEl.srcObject = event.streams[0]
+        audioEl.play().catch(console.error)
+        startRemoteVoiceAnalysis(peerId, event.streams[0])
+      } else if (event.track.kind === 'video') {
+        const label = event.track.label.toLowerCase()
+        if (label.includes('screen') || label.includes('window')) {
+          remoteScreenStreamsRef.current.set(peerId, event.streams[0])
+          setState(prev => ({
+            ...prev,
+            connectedUsers: prev.connectedUsers.map(u => 
+              u.id === peerId ? { ...u, isScreenSharing: true, screenStream: event.streams[0] } : u
+            )
+          }))
+        } else {
+          remoteVideoStreamsRef.current.set(peerId, event.streams[0])
+          setState(prev => ({
+            ...prev,
+            connectedUsers: prev.connectedUsers.map(u => 
+              u.id === peerId ? { ...u, hasVideo: true, videoStream: event.streams[0] } : u
+            )
+          }))
+        }
+      }
     }
     
     pc.onconnectionstatechange = () => {
@@ -172,30 +235,10 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
-    // Применяем настройки качества при создании соединения
-    pc.addEventListener('connectionstatechange', () => {
-      if (pc.connectionState === 'connected') {
-        const senders = pc.getSenders();
-        senders.forEach(sender => {
-          if (sender.track && sender.track.kind === 'audio') {
-            const params = sender.getParameters();
-            if (!params.encodings) params.encodings = [{}];
-            params.encodings[0].maxBitrate = 128000;
-            sender.setParameters(params).catch(console.error);
-          }
-        });
-      }
-    });
-    
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => {
-        pc.addTrack(track, localStreamRef.current!)
-      })
-    }
-    
+    addTracksToPeerConnection(pc)
     peerConnectionsRef.current.set(peerId, pc)
     return pc
-  }, [sendWebSocketMessage])
+  }, [sendWebSocketMessage, addTracksToPeerConnection])
 
   const startRemoteVoiceAnalysis = useCallback((peerId: string, stream: MediaStream) => {
     const existingAnalyser = remoteAudioAnalysersRef.current.get(peerId)
@@ -220,7 +263,6 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       
       const checkAudio = () => {
         analyser.getByteFrequencyData(dataArray)
-        
         const voiceBands = Array.from(dataArray).slice(2, 40)
         const level = voiceBands.reduce((a, b) => a + b, 0) / voiceBands.length
         const threshold = 15
@@ -284,6 +326,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       remoteAudioElementsRef.current.delete(peerId)
     }
     
+    remoteVideoStreamsRef.current.delete(peerId)
+    remoteScreenStreamsRef.current.delete(peerId)
     stopRemoteVoiceAnalysis(peerId)
     pendingCandidatesRef.current.delete(peerId)
   }, [stopRemoteVoiceAnalysis])
@@ -300,8 +344,32 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     peerConnectionsRef.current.clear()
     remoteAudioElementsRef.current.clear()
     remoteAudioAnalysersRef.current.clear()
+    remoteVideoStreamsRef.current.clear()
+    remoteScreenStreamsRef.current.clear()
     pendingCandidatesRef.current.clear()
   }, [stopRemoteVoiceAnalysis])
+
+  const renegotiateAll = useCallback(async () => {
+    for (const [peerId, pc] of peerConnectionsRef.current.entries()) {
+      try {
+        // Update tracks
+        addTracksToPeerConnection(pc)
+        
+        // Create new offer
+        const offer = await pc.createOffer()
+        await pc.setLocalDescription(offer)
+        
+        sendWebSocketMessage({
+          type: 'voice-offer',
+          targetUserId: peerId,
+          channel_id: stateRef.current.channelId,
+          sdp: offer.sdp
+        })
+      } catch (error) {
+        console.error(`Error renegotiating with peer ${peerId}:`, error)
+      }
+    }
+  }, [addTracksToPeerConnection, sendWebSocketMessage])
 
   const createOffer = useCallback(async (peerId: string) => {
     console.log(`Creating offer for peer ${peerId}`)
@@ -332,7 +400,6 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const handleVoiceOffer = useCallback(async (fromUserId: string, sdp: string, channelId: string) => {
     if (!stateRef.current.isConnected) return;
     if (channelId && channelId !== 'undefined' && channelId !== 'null' && stateRef.current.channelId !== channelId) return;
-    // Ensure fromUserId is valid and not ourselves
     if (!fromUserId || fromUserId === 'undefined' || fromUserId === String(user?.id)) return;
     
     console.log(`Received voice offer from ${fromUserId}`);
@@ -450,7 +517,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
             user_id: user?.id,
             is_muted: stateRef.current.isMuted,
             is_deafened: stateRef.current.isDeafened,
-            is_speaking: shouldBeSpeaking
+            is_speaking: shouldBeSpeaking,
+            has_video: stateRef.current.hasVideo,
+            is_screen_sharing: stateRef.current.isScreenSharing
           })
         }
       }
@@ -486,6 +555,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
             isMuted: p.is_muted || false,
             isDeafened: p.is_deafened || false,
             isSpeaking: false,
+            hasVideo: p.has_video || false,
+            isScreenSharing: p.is_screen_sharing || false,
             volume: 100
           }))
       }
@@ -523,6 +594,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         isMuted: data.is_muted || false,
         isDeafened: data.is_deafened || false,
         isSpeaking: false,
+        hasVideo: data.has_video || false,
+        isScreenSharing: data.is_screen_sharing || false,
         volume: 100
       }
       
@@ -545,7 +618,6 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
             : [...prev.connectedUsers, voiceUser]
         }))
         
-        // Use a small timeout to ensure the state is updated and the other peer is ready
         setTimeout(() => createOffer(userId), 500);
       }
     }
@@ -569,7 +641,14 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     if (data.type === 'voice-state-update') {
       const updateUser = (users: VoiceUser[]) => 
         users.map(u => u.id === userId 
-          ? { ...u, isMuted: data.is_muted, isDeafened: data.is_deafened, isSpeaking: data.is_speaking } 
+          ? { 
+              ...u, 
+              isMuted: data.is_muted, 
+              isDeafened: data.is_deafened, 
+              isSpeaking: data.is_speaking,
+              hasVideo: data.has_video || false,
+              isScreenSharing: data.is_screen_sharing || false
+            } 
           : u
         )
       
@@ -634,37 +713,10 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
           autoGainControl: true,
           channelCount: 1,
           sampleRate: 48000,
-          sampleSize: 16,
-          // Улучшенные параметры для качества речи
-          ...({
-            googEchoCancellation: true,
-            googAutoGainControl: true,
-            googNoiseSuppression: true,
-            googHighpassFilter: true,
-            googTypingNoiseDetection: true,
-            googAudioMirroring: false
-          } as any)
+          sampleSize: 16
         }
       })
       localStreamRef.current = stream
-
-      // Оптимизация битрейта и параметров WebRTC
-      const updateSenderParameters = (pc: RTCPeerConnection) => {
-        pc.getSenders().forEach(sender => {
-          if (sender.track && sender.track.kind === 'audio') {
-            const parameters = sender.getParameters();
-            if (!parameters.encodings) {
-              parameters.encodings = [{}];
-            }
-            // Устанавливаем высокий битрейт для аудио (Опус обычно 32-64kbps достаточно, но можно до 128)
-            parameters.encodings[0].maxBitrate = 128000;
-            sender.setParameters(parameters).catch(err => console.error('Error setting audio parameters:', err));
-          }
-        });
-      };
-      
-      // Вызываем для всех существующих соединений
-      peerConnectionsRef.current.forEach(pc => updateSenderParameters(pc));
 
       audioContextRef.current = new AudioContext({
         latencyHint: 'interactive',
@@ -680,6 +732,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         isMuted: state.isMuted,
         isDeafened: state.isDeafened,
         isSpeaking: false,
+        hasVideo: false,
+        isScreenSharing: false,
         volume: 100
       }
 
@@ -690,6 +744,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         channelName,
         guildId,
         guildName,
+        hasVideo: false,
+        isScreenSharing: false,
         connectedUsers: [currentUser, ...existingParticipants.filter(p => p.id !== String(user?.id))],
         connectionQuality: 'excellent'
       }))
@@ -705,7 +761,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         username: user?.username || 'User',
         avatar: user?.avatar,
         is_muted: state.isMuted,
-        is_deafened: state.isDeafened
+        is_deafened: state.isDeafened,
+        has_video: false,
+        is_screen_sharing: false
       })
 
       for (const participant of existingParticipants) {
@@ -744,6 +802,16 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       localStreamRef.current = null
     }
 
+    if (localVideoStreamRef.current) {
+      localVideoStreamRef.current.getTracks().forEach(track => track.stop())
+      localVideoStreamRef.current = null
+    }
+
+    if (localScreenStreamRef.current) {
+      localScreenStreamRef.current.getTracks().forEach(track => track.stop())
+      localScreenStreamRef.current = null
+    }
+
     if (audioContextRef.current) {
       audioContextRef.current.close()
       audioContextRef.current = null
@@ -768,7 +836,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
           user_id: user?.id,
           is_muted: newMuted,
           is_deafened: prev.isDeafened,
-          is_speaking: false
+          is_speaking: false,
+          has_video: prev.hasVideo,
+          is_screen_sharing: prev.isScreenSharing
         })
       }
 
@@ -790,7 +860,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
           user_id: user?.id,
           is_muted: prev.isMuted || newDeafened,
           is_deafened: newDeafened,
-          is_speaking: false
+          is_speaking: false,
+          has_video: prev.hasVideo,
+          is_screen_sharing: prev.isScreenSharing
         })
       }
 
@@ -802,6 +874,126 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       }
     })
   }, [user?.id, broadcastVoiceEvent])
+
+  const toggleVideo = useCallback(async () => {
+    if (!state.isConnected) return
+
+    try {
+      if (state.hasVideo) {
+        // Disable video
+        if (localVideoStreamRef.current) {
+          localVideoStreamRef.current.getTracks().forEach(track => track.stop())
+          localVideoStreamRef.current = null
+        }
+        
+        setState(prev => ({ ...prev, hasVideo: false }))
+        
+        if (state.channelId) {
+          broadcastVoiceEvent('voice-state-update', {
+            channel_id: state.channelId,
+            user_id: user?.id,
+            is_muted: state.isMuted,
+            is_deafened: state.isDeafened,
+            is_speaking: state.isSpeaking,
+            has_video: false,
+            is_screen_sharing: state.isScreenSharing
+          })
+        }
+      } else {
+        // Enable video
+        const videoStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 }
+          }
+        })
+        
+        localVideoStreamRef.current = videoStream
+        setState(prev => ({ ...prev, hasVideo: true }))
+        
+        if (state.channelId) {
+          broadcastVoiceEvent('voice-state-update', {
+            channel_id: state.channelId,
+            user_id: user?.id,
+            is_muted: state.isMuted,
+            is_deafened: state.isDeafened,
+            is_speaking: state.isSpeaking,
+            has_video: true,
+            is_screen_sharing: state.isScreenSharing
+          })
+        }
+      }
+      
+      // Renegotiate all peer connections
+      await renegotiateAll()
+    } catch (error) {
+      console.error('Failed to toggle video:', error)
+    }
+  }, [state, user?.id, broadcastVoiceEvent, renegotiateAll])
+
+  const toggleScreenShare = useCallback(async () => {
+    if (!state.isConnected) return
+
+    try {
+      if (state.isScreenSharing) {
+        // Stop screen sharing
+        if (localScreenStreamRef.current) {
+          localScreenStreamRef.current.getTracks().forEach(track => track.stop())
+          localScreenStreamRef.current = null
+        }
+        
+        setState(prev => ({ ...prev, isScreenSharing: false }))
+        
+        if (state.channelId) {
+          broadcastVoiceEvent('voice-state-update', {
+            channel_id: state.channelId,
+            user_id: user?.id,
+            is_muted: state.isMuted,
+            is_deafened: state.isDeafened,
+            is_speaking: state.isSpeaking,
+            has_video: state.hasVideo,
+            is_screen_sharing: false
+          })
+        }
+      } else {
+        // Start screen sharing
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30 }
+          },
+          audio: true
+        })
+        
+        // Handle when user stops sharing via browser UI
+        screenStream.getVideoTracks()[0].onended = () => {
+          toggleScreenShare()
+        }
+        
+        localScreenStreamRef.current = screenStream
+        setState(prev => ({ ...prev, isScreenSharing: true }))
+        
+        if (state.channelId) {
+          broadcastVoiceEvent('voice-state-update', {
+            channel_id: state.channelId,
+            user_id: user?.id,
+            is_muted: state.isMuted,
+            is_deafened: state.isDeafened,
+            is_speaking: state.isSpeaking,
+            has_video: state.hasVideo,
+            is_screen_sharing: true
+          })
+        }
+      }
+      
+      // Renegotiate all peer connections
+      await renegotiateAll()
+    } catch (error) {
+      console.error('Failed to toggle screen share:', error)
+    }
+  }, [state, user?.id, broadcastVoiceEvent, renegotiateAll])
 
   const setUserVolume = useCallback((userId: string, volume: number) => {
     const clampedVolume = Math.max(0, Math.min(200, volume))
@@ -888,6 +1080,12 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach(track => track.stop())
       }
+      if (localVideoStreamRef.current) {
+        localVideoStreamRef.current.getTracks().forEach(track => track.stop())
+      }
+      if (localScreenStreamRef.current) {
+        localScreenStreamRef.current.getTracks().forEach(track => track.stop())
+      }
       if (audioContextRef.current) {
         audioContextRef.current.close()
       }
@@ -897,11 +1095,15 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   return (
     <VoiceContext.Provider value={{ 
       state, 
-      voiceChannelUsers, 
+      voiceChannelUsers,
+      localVideoStream: localVideoStreamRef.current,
+      localScreenStream: localScreenStreamRef.current,
       joinChannel, 
       leaveChannel, 
       toggleMute, 
-      toggleDeafen, 
+      toggleDeafen,
+      toggleVideo,
+      toggleScreenShare,
       setUserVolume, 
       setRemoteSpeaking, 
       syncConnectedUsers, 
