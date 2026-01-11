@@ -258,8 +258,10 @@ export default function VideoCallPage() {
     if (!token) return
     
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`
+    const host = window.location.host.split(':')[0]
+    const wsUrl = `${protocol}//${host}:8000/ws?token=${encodeURIComponent(token)}`
     
+    console.log('Connecting to Video WebSocket:', wsUrl)
     wsRef.current = new WebSocket(wsUrl)
     
     wsRef.current.onopen = () => {

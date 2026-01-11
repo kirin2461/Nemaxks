@@ -121,8 +121,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     
     const connect = () => {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`
+      const host = window.location.host.split(':')[0]
+      const wsUrl = `${protocol}//${host}:8000/ws?token=${encodeURIComponent(token)}`
       
+      console.log('Connecting to WebSocket:', wsUrl)
       socket = new WebSocket(wsUrl)
       
       socket.onopen = () => {
