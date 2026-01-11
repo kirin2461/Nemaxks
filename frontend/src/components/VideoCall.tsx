@@ -41,6 +41,10 @@ const VideoCall: React.FC<VideoCallProps> = ({
       const remoteStream = callHook.getRemoteStream(firstRemoteParticipant.id);
       if (remoteVideoRef.current && remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
+        
+        // Ensure volume is up and playing
+        remoteVideoRef.current.volume = 1.0;
+        remoteVideoRef.current.play().catch(e => console.error("Error playing remote video:", e));
       }
     }
   }, [callHook.remoteParticipants, callHook]);
@@ -55,7 +59,12 @@ const VideoCall: React.FC<VideoCallProps> = ({
   };
 
   const handleEndCall = () => {
-    callHook.endCall();
+    // If we have a remote participant, send the end-call signal to them
+    const targetUserId = callHook.remoteParticipants.length > 0 
+      ? callHook.remoteParticipants[0].id 
+      : undefined;
+    
+    callHook.endCall(targetUserId);
     onEndCall?.();
   };
 

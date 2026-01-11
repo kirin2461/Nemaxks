@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export interface CallParticipant {
   id: string;
@@ -26,7 +27,7 @@ export interface UseVoiceVideoCallReturn extends CallState {
   initCall: (type: 'voice' | 'video', targetUserId: string) => Promise<void>;
   acceptCall: () => Promise<void>;
   rejectCall: () => void;
-  endCall: () => void;
+  endCall: (targetUserId?: string) => void;
   toggleAudio: () => Promise<void>;
   toggleVideo: () => Promise<void>;
   addRemoteParticipant: (participant: CallParticipant, stream: MediaStream) => void;
@@ -36,6 +37,7 @@ export interface UseVoiceVideoCallReturn extends CallState {
 }
 
 const useVoiceVideoCall = (): UseVoiceVideoCallReturn => {
+  const { sendWebSocketMessage } = useNotifications();
   const [callState, setCallState] = useState<CallState>({
     isCallActive: false,
     isAudioEnabled: true,
@@ -126,7 +128,7 @@ const useVoiceVideoCall = (): UseVoiceVideoCallReturn => {
   }, []);
 
   // End active call
-  const endCall = useCallback(() => {
+  const endCall = useCallback((targetUserId?: string) => {
     if (callState.localStream) {
       callState.localStream.getTracks().forEach((track) => track.stop());
     }
@@ -140,6 +142,14 @@ const useVoiceVideoCall = (): UseVoiceVideoCallReturn => {
       clearInterval(durationIntervalRef.current);
     }
 
+    // Notify backend and other peer through WebSocket
+    if (targetUserId && targetUserId !== 'undefined') {
+      sendWebSocketMessage({
+        type: 'call-end',
+        targetUserId: targetUserId
+      });
+    }
+
     setCallState((prev) => ({
       ...prev,
       isCallActive: false,
@@ -149,7 +159,23 @@ const useVoiceVideoCall = (): UseVoiceVideoCallReturn => {
       duration: 0,
       callStartTime: undefined,
     }));
-  }, [callState.localStream]);
+  }, [callState.localStream, sendWebSocketMessage]);
+
+  // Handle remote call end
+  useEffect(() => {
+    const handleRemoteCallEnd = (event: any) => {
+      const { fromUserId } = event.detail;
+      // If we are in a call with this user, end it locally
+      if (callState.remoteParticipants.some(p => p.id === fromUserId)) {
+        endCall();
+      }
+    };
+
+    window.addEventListener('remote-call-end', handleRemoteCallEnd);
+    return () => {
+      window.removeEventListener('remote-call-end', handleRemoteCallEnd);
+    };
+  }, [callState.remoteParticipants, endCall]);
 
   // Toggle audio
   const toggleAudio = useCallback(async () => {

@@ -241,7 +241,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
             })
           }
         }
-        break
+        break;
       case 'call-end':
         {
           const endedCallId = data.callId
@@ -252,8 +252,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           setOutgoingCall(null)
           pendingOfferRef.current = null
           activeCallIdRef.current = null
+          
+          // Emit local event for useVoiceVideoCall to end the session
+          window.dispatchEvent(new CustomEvent('remote-call-end', { 
+            detail: { fromUserId: data.fromUserId || data.from_user_id } 
+          }));
         }
-        break
+        break;
       case 'new_message':
         addNotification({
           type: 'message',
