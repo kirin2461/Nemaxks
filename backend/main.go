@@ -58,10 +58,10 @@ func main() {
 
 	// Configure CORS properly
 	corsConfig := cors.Config{
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Cache-Control"},
-		ExposeHeaders:    []string{"Content-Length"},
-		MaxAge:           12 * time.Hour,
+		AllowMethods:  []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:  []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Cache-Control"},
+		ExposeHeaders: []string{"Content-Length"},
+		MaxAge:        12 * time.Hour,
 	}
 
 	// Get allowed origins from environment or use defaults
@@ -84,8 +84,9 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	r.POST("/api/auth/register", registerHandler)
-	r.POST("/api/auth/login", loginHandler)
+	// Auth routes with rate limiting to prevent brute force attacks
+	r.POST("/api/auth/register", AuthRateLimitMiddleware(), registerHandler)
+	r.POST("/api/auth/login", AuthRateLimitMiddleware(), loginHandler)
 	r.POST("/api/auth/logout", authMiddleware(), logoutHandler)
 	r.GET("/api/auth/me", authMiddleware(), meHandler)
 
