@@ -210,6 +210,11 @@ func registerHandler(c *gin.Context) {
 
         if err := db.Create(&user).Error; err != nil {
                 log.Printf("Registration error: %v", err)
+                // Check for duplicate key constraint violation
+                if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "23505") {
+                        c.JSON(http.StatusConflict, gin.H{"error": "Username already taken"})
+                        return
+                }
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
                 return
         }
