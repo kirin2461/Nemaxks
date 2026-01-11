@@ -54,7 +54,7 @@ func main() {
         }()
 
         r := gin.Default()
-        r.SetTrustedProxies(nil)
+        r.SetTrustedProxies(nil) // Trust all proxies for Replit reverse proxy
 
         // Configure CORS properly
         corsConfig := cors.Config{

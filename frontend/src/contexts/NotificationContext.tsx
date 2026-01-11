@@ -149,8 +149,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         setWs(null)
         
         if (reconnectAttempts < maxReconnectAttempts && user?.id) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000)
           reconnectAttempts++
+          const delay = Math.min(5000 * Math.pow(1.5, reconnectAttempts - 1), 30000)
           console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`)
           reconnectTimeout = setTimeout(connect, delay)
         }
