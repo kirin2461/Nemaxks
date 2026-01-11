@@ -80,134 +80,134 @@ function App() {
 
   return (
     <AppStateProvider>
-    <NotificationProvider>
-    <VoiceProvider>
-    <JarvisVoiceProvider>
-    <React.Suspense fallback={<LoadingScreen />}>
-      <JarvisFloatingIndicator />
-      <Switch>
-        {/* Public routes */}
-        <Route path="/welcome">
-          <PresentationPage />
-        </Route>
+      <NotificationProvider>
+        <VoiceProvider>
+          <JarvisVoiceProvider>
+            <React.Suspense fallback={<LoadingScreen />}>
+              <JarvisFloatingIndicator />
+              <IncomingCallNotification />
+              <Switch>
+                {/* Public routes */}
+                <Route path="/welcome">
+                  <PresentationPage />
+                </Route>
 
-        <Route path="/auth">
-          <PublicRoute>
-            <AuthPage />
-          </PublicRoute>
-        </Route>
+                <Route path="/auth">
+                  <PublicRoute>
+                    <AuthPage />
+                  </PublicRoute>
+                </Route>
 
-        {/* QR Login confirmation - handles its own auth check */}
-        <Route path="/qr-confirm/:token">
-          <QRConfirmPage />
-        </Route>
+                {/* QR Login confirmation - handles its own auth check */}
+                <Route path="/qr-confirm/:token">
+                  <QRConfirmPage />
+                </Route>
 
-        {/* Protected routes */}
-        <Route path="/">
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        </Route>
+                {/* Protected routes */}
+                <Route path="/">
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/feed">
-          <ProtectedRoute>
-            <FeedPage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/feed">
+                  <ProtectedRoute>
+                    <FeedPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/video">
-          <ProtectedRoute>
-            <VideoPage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/video">
+                  <ProtectedRoute>
+                    <VideoPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/call">
-          <ProtectedRoute>
-            <VideoCallPage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/call">
+                  <ProtectedRoute>
+                    <VideoCallPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/call/:userId">
-          <ProtectedRoute>
-            <VideoCallPage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/call/:userId">
+                  <ProtectedRoute>
+                    <VideoCallPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/jarvis">
-          <ProtectedRoute>
-            <JarvisPage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/jarvis">
+                  <ProtectedRoute>
+                    <JarvisPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/messages">
-          <ProtectedRoute>
-            <MessagesPage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/messages">
+                  <ProtectedRoute>
+                    <MessagesPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/channels">
-          <ProtectedRoute>
-            <ChannelsPage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/channels">
+                  <ProtectedRoute>
+                    <ChannelsPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/friends">
-          <ProtectedRoute>
-            <FriendsPage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/friends">
+                  <ProtectedRoute>
+                    <FriendsPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/profile/:userId?">
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/profile/:userId?">
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/settings">
-          <ProtectedRoute>
-            <SettingsPage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/settings">
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/admin">
-          <ProtectedRoute>
-            <AdminPanel />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/admin">
+                  <ProtectedRoute>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/invite">
-          <ProtectedRoute>
-            <InvitePage />
-          </ProtectedRoute>
-        </Route>
+                <Route path="/invite">
+                  <ProtectedRoute>
+                    <InvitePage />
+                  </ProtectedRoute>
+                </Route>
 
-        <Route path="/join/:code">
-          <JoinPage />
-        </Route>
+                <Route path="/join/:code">
+                  <JoinPage />
+                </Route>
 
-        <Route path="/invite/:code">
-          <ServerJoinPage />
-        </Route>
+                <Route path="/invite/:code">
+                  <ServerJoinPage />
+                </Route>
 
-        {/* 404 */}
-        <Route>
-          <div className="min-h-screen flex items-center justify-center bg-background">
-            <div className="text-center">
-              <h1 className="text-6xl font-bold gradient-text mb-4">404</h1>
-              <p className="text-muted-foreground mb-6">Page not found</p>
-              <a href="/" className="button-primary">
-                Go Home
-              </a>
-            </div>
-          </div>
-        </Route>
-      </Switch>
-    </React.Suspense>
-    </JarvisVoiceProvider>
-    </VoiceProvider>
-    </NotificationProvider>
-      <IncomingCallNotification />
-      </AppStateProvider>
+                {/* 404 */}
+                <Route>
+                  <div className="min-h-screen flex items-center justify-center bg-background">
+                    <div className="text-center">
+                      <h1 className="text-6xl font-bold gradient-text mb-4">404</h1>
+                      <p className="text-muted-foreground mb-6">Page not found</p>
+                      <a href="/" className="button-primary">
+                        Go Home
+                      </a>
+                    </div>
+                  </div>
+                </Route>
+              </Switch>
+            </React.Suspense>
+          </JarvisVoiceProvider>
+        </VoiceProvider>
+      </NotificationProvider>
+    </AppStateProvider>
   )
 }
 
