@@ -928,6 +928,8 @@ func yookassaWebhookHandler(c *gin.Context) {
                 }
                 
                 go SendPaymentConfirmation(transaction.UserID, plan.Name, plan.PriceRub)
+                go grantReferralBonus(transaction.UserID, 7, "premium_subscription")
+                go activateBoostFromWebhook(transaction.ID)
                 
                 log.Printf("Premium subscription activated for user %d, plan %d", transaction.UserID, transaction.PlanID)
         }
@@ -1524,5 +1526,181 @@ func generateGiftCode() string {
                 time.Sleep(time.Nanosecond)
         }
         return code
+}
+
+// Post Boost Handlers
+func getBoostPricingHandler(c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{
+                "pricing": []gin.H{
+                        {"type": "featured", "hours": 24, "price_rub": 99, "description": "Featured in category"},
+                        {"type": "featured", "hours": 72, "price_rub": 249, "description": "Featured in category (3 days)"},
+                        {"type": "trending", "hours": 24, "price_rub": 199, "description": "Trending section placement"},
+                        {"type": "trending", "hours": 72, "price_rub": 499, "description": "Trending section (3 days)"},
+                        {"type": "top", "hours": 24, "price_rub": 399, "description": "Top of feed placement"},
+                        {"type": "top", "hours": 72, "price_rub": 999, "description": "Top of feed (3 days)"},
+                },
+        })
+}
+
+func createPostBoostHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        
+        var req struct {
+                PostID        uint   `json:"post_id" binding:"required"`
+                BoostType     string `json:"boost_type" binding:"required"`
+                DurationHours int    `json:"duration_hours" binding:"required"`
+        }
+        if err := c.BindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+        
+        var post Post
+        if db.First(&post, req.PostID).RowsAffected == 0 {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+                return
+        }
+        
+        if post.AuthorID != uid {
+                c.JSON(http.StatusForbidden, gin.H{"error": "Can only boost your own posts"})
+                return
+        }
+        
+        var existingBoost PostBoost
+        if db.Where("post_id = ? AND status IN ?", req.PostID, []string{"pending", "active"}).First(&existingBoost).RowsAffected > 0 {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Post already has active boost"})
+                return
+        }
+        
+        priceMap := map[string]map[int]float64{
+                "featured": {24: 99, 72: 249},
+                "trending": {24: 199, 72: 499},
+                "top":      {24: 399, 72: 999},
+        }
+        
+        price, ok := priceMap[req.BoostType][req.DurationHours]
+        if !ok {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid boost type or duration"})
+                return
+        }
+        
+        var sub PremiumSubscription
+        isPremium := db.Where("user_id = ? AND status = ?", uid, "active").First(&sub).RowsAffected > 0
+        if isPremium {
+                price = price * 0.8
+        }
+        
+        transaction := PremiumTransaction{
+                UserID:          uid,
+                AmountRub:       price,
+                Status:          "pending",
+                PaymentProvider: "yookassa",
+                Description:     "Post boost: " + req.BoostType,
+        }
+        db.Create(&transaction)
+        
+        boost := PostBoost{
+                PostID:        req.PostID,
+                UserID:        uid,
+                BoostType:     req.BoostType,
+                AmountRub:     price,
+                DurationHours: req.DurationHours,
+                Status:        "pending",
+                TransactionID: &transaction.ID,
+        }
+        db.Create(&boost)
+        
+        if yookassaService != nil {
+                returnURL := os.Getenv("APP_URL")
+                if returnURL == "" {
+                        returnURL = "https://nemaks.com"
+                }
+                
+                payment, err := yookassaService.CreatePayment(
+                        transaction.ID,
+                        price,
+                        "Буст публикации",
+                        returnURL+"/feed?boosted="+strconv.FormatUint(uint64(boost.ID), 10),
+                        false,
+                )
+                if err != nil {
+                        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+                        return
+                }
+                
+                db.Model(&transaction).Updates(map[string]interface{}{
+                        "provider_payment_id": payment.ID,
+                        "confirmation_url":    payment.Confirmation.ConfirmationURL,
+                })
+                
+                c.JSON(http.StatusOK, gin.H{
+                        "boost_id":         boost.ID,
+                        "confirmation_url": payment.Confirmation.ConfirmationURL,
+                        "price":            price,
+                })
+                return
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "boost_id": boost.ID,
+                "message":  "Payment system not configured",
+        })
+}
+
+func getMyBoostsHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        
+        var boosts []PostBoost
+        db.Where("user_id = ?", uid).Order("created_at DESC").Find(&boosts)
+        
+        c.JSON(http.StatusOK, boosts)
+}
+
+func getBoostedPostsHandler(c *gin.Context) {
+        boostType := c.DefaultQuery("type", "")
+        now := time.Now()
+        
+        query := db.Model(&PostBoost{}).Where("status = ? AND expires_at > ?", "active", now)
+        if boostType != "" {
+                query = query.Where("boost_type = ?", boostType)
+        }
+        
+        var boosts []PostBoost
+        query.Order("boost_type DESC, created_at DESC").Limit(20).Find(&boosts)
+        
+        var postIDs []uint
+        for _, b := range boosts {
+                postIDs = append(postIDs, b.PostID)
+        }
+        
+        var posts []Post
+        if len(postIDs) > 0 {
+                db.Preload("Author").Where("id IN ?", postIDs).Find(&posts)
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "boosted_posts": posts,
+                "boost_info":    boosts,
+        })
+}
+
+func activateBoostFromWebhook(transactionID uint) {
+        var boost PostBoost
+        if db.Where("transaction_id = ? AND status = ?", transactionID, "pending").First(&boost).RowsAffected == 0 {
+                return
+        }
+        
+        now := time.Now()
+        expiresAt := now.Add(time.Duration(boost.DurationHours) * time.Hour)
+        
+        db.Model(&boost).Updates(map[string]interface{}{
+                "status":     "active",
+                "started_at": now,
+                "expires_at": expiresAt,
+        })
+        
+        log.Printf("[Boost] Post %d boosted until %v", boost.PostID, expiresAt)
 }
 

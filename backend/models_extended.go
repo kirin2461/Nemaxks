@@ -544,7 +544,36 @@ type ReferralUse struct {
         ID            uint      `gorm:"primaryKey" json:"id"`
         ReferralID    uint      `gorm:"index" json:"referral_id"`
         InvitedUserID uint      `gorm:"uniqueIndex" json:"invited_user_id"`
+        BonusGranted  bool      `gorm:"default:false" json:"bonus_granted"`
         CreatedAt     time.Time `json:"created_at"`
+}
+
+// Referral Bonus tracking
+type ReferralBonus struct {
+        ID            uint      `gorm:"primaryKey" json:"id"`
+        UserID        uint      `gorm:"index" json:"user_id"`
+        ReferralUseID uint      `gorm:"index" json:"referral_use_id"`
+        BonusDays     int       `json:"bonus_days"`
+        BonusType     string    `gorm:"size:30" json:"bonus_type"` // signup, premium_subscription
+        Description   string    `json:"description"`
+        CreatedAt     time.Time `json:"created_at"`
+}
+
+// Post Boost for promotion
+type PostBoost struct {
+        ID            uint       `gorm:"primaryKey" json:"id"`
+        PostID        uint       `gorm:"index" json:"post_id"`
+        UserID        uint       `gorm:"index" json:"user_id"`
+        BoostType     string     `gorm:"size:30" json:"boost_type"` // featured, trending, top
+        AmountRub     float64    `json:"amount_rub"`
+        DurationHours int        `json:"duration_hours"`
+        Impressions   int        `gorm:"default:0" json:"impressions"`
+        Clicks        int        `gorm:"default:0" json:"clicks"`
+        Status        string     `gorm:"size:20;default:'pending'" json:"status"` // pending, active, expired, cancelled
+        TransactionID *uint      `json:"transaction_id,omitempty"`
+        StartedAt     *time.Time `json:"started_at,omitempty"`
+        ExpiresAt     *time.Time `json:"expires_at,omitempty"`
+        CreatedAt     time.Time  `json:"created_at"`
 }
 
 // Premium Subscriptions

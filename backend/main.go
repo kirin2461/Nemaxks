@@ -253,6 +253,12 @@ func main() {
         r.POST("/api/gifts/redeem", authMiddleware(), redeemGiftHandler)
         r.GET("/api/gifts/my", authMiddleware(), getUserGiftsHandler)
         
+        // Post Boosts
+        r.GET("/api/boosts/pricing", getBoostPricingHandler)
+        r.POST("/api/boosts", authMiddleware(), createPostBoostHandler)
+        r.GET("/api/boosts/my", authMiddleware(), getMyBoostsHandler)
+        r.GET("/api/posts/boosted", getBoostedPostsHandler)
+        
         // Billing webhooks (no auth - external service)
         r.POST("/api/billing/yookassa/webhook", yookassaWebhookHandler)
 
@@ -276,6 +282,7 @@ func main() {
         r.GET("/api/referral/info/:code", getReferralInfoHandler)
         r.POST("/api/referral/use/:code", authMiddleware(), useReferralHandler)
         r.GET("/api/referral/invited", authMiddleware(), getMyReferralsHandler)
+        r.GET("/api/referral/bonuses", authMiddleware(), getReferralBonusesHandler)
 
         // User Notes
         r.GET("/api/users/:id/notes", authMiddleware(), getUserNoteHandler)

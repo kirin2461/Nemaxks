@@ -93,7 +93,7 @@ func initDB() {
                 &Video{}, &VideoChapter{}, &VideoLike{}, &VideoBookmark{},
                 &PremiumPlan{}, &UserPremium{}, &CreatorDonation{},
                 &UserRequest{}, &PremiumSubscription{}, &PremiumTransaction{},
-                &PromoCode{}, &PromoCodeUsage{}, &GiftSubscription{},
+                &PromoCode{}, &PromoCodeUsage{}, &GiftSubscription{}, &ReferralBonus{}, &PostBoost{},
         )
         log.Println("DB connected")
 
