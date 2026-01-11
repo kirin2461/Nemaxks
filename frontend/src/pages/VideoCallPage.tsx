@@ -389,19 +389,29 @@ export default function VideoCallPage() {
       const stream = event.streams[0] || new MediaStream([event.track])
       
       const playMedia = () => {
-        if (event.track.kind === 'video' && remoteVideoRef.current) {
-          if (!remoteVideoRef.current.srcObject) {
-            remoteVideoRef.current.srcObject = stream
+        if (event.track.kind === 'video') {
+          console.log('[Audio Debug] Setting up video, remoteVideoRef exists:', !!remoteVideoRef.current)
+          if (remoteVideoRef.current) {
+            if (!remoteVideoRef.current.srcObject) {
+              remoteVideoRef.current.srcObject = stream
+            }
+            remoteVideoRef.current.muted = true
+            remoteVideoRef.current.play().catch(e => console.log('Video play error:', e))
           }
-          remoteVideoRef.current.muted = true
-          remoteVideoRef.current.play().catch(e => console.log('Video play error:', e))
         }
         
-        if (event.track.kind === 'audio' && remoteAudioRef.current) {
-          // Create a new stream with this specific track
+        if (event.track.kind === 'audio') {
+          console.log('[Audio Debug] Setting up audio, remoteAudioRef exists:', !!remoteAudioRef.current)
+          
+          if (!remoteAudioRef.current) {
+            console.log('[Audio Debug] Audio ref is null, will retry in 500ms')
+            setTimeout(() => playMedia(), 500)
+            return
+          }
+          
           const audioStream = new MediaStream([event.track])
+          console.log('[Audio Debug] Created audio stream with track:', event.track.id)
 
-          // If there's already audio, stop old tracks first
           if (remoteAudioRef.current.srcObject) {
             const oldStream = remoteAudioRef.current.srcObject as MediaStream
             oldStream.getTracks().forEach(t => {
@@ -414,33 +424,37 @@ export default function VideoCallPage() {
           remoteAudioRef.current.srcObject = audioStream
           remoteAudioRef.current.muted = false
           remoteAudioRef.current.volume = 1.0
+          
+          console.log('[Audio Debug] Audio element state - muted:', remoteAudioRef.current.muted, 'volume:', remoteAudioRef.current.volume, 'paused:', remoteAudioRef.current.paused)
 
-          // Use user interaction to enable autoplay
           const playAudio = () => {
-            remoteAudioRef.current?.play().then(() => {
-              console.log('Remote audio playing successfully')
+            if (!remoteAudioRef.current) return
+            
+            remoteAudioRef.current.play().then(() => {
+              console.log('[Audio Debug] Remote audio playing successfully! paused:', remoteAudioRef.current?.paused)
             }).catch(e => {
-              console.log('Audio play error - waiting for user interaction:', e)
+              console.log('[Audio Debug] Audio play error:', e.name, e.message)
+              if (e.name === 'NotAllowedError') {
+                console.log('[Audio Debug] Waiting for user interaction to play audio')
+              }
             })
           }
 
           playAudio()
-          // Retry on user interaction if needed
           document.addEventListener('click', playAudio, { once: true })
+          document.addEventListener('touchstart', playAudio, { once: true })
         }
       }
       
-      if (!event.track.muted) {
-        playMedia()
-      }
+      playMedia()
       
       event.track.onunmute = () => {
-        console.log('Track unmuted:', event.track.kind)
+        console.log('[Audio Debug] Track unmuted:', event.track.kind)
         playMedia()
       }
       
       event.track.onmute = () => {
-        console.log('Track muted:', event.track.kind)
+        console.log('[Audio Debug] Track muted:', event.track.kind)
       }
     }
     
