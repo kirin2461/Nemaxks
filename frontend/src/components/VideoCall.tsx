@@ -40,11 +40,20 @@ const VideoCall: React.FC<VideoCallProps> = ({
       const firstRemoteParticipant = callHook.remoteParticipants[0];
       const remoteStream = callHook.getRemoteStream(firstRemoteParticipant.id);
       if (remoteVideoRef.current && remoteStream) {
+        console.log("Setting remote stream to video element", remoteStream.getAudioTracks().length, "audio tracks found");
         remoteVideoRef.current.srcObject = remoteStream;
         
         // Ensure volume is up and playing
         remoteVideoRef.current.volume = 1.0;
-        remoteVideoRef.current.play().catch(e => console.error("Error playing remote video:", e));
+        remoteVideoRef.current.muted = false; // CRITICAL: Ensure NOT muted
+        
+        const playPromise = remoteVideoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => {
+            console.error("Error playing remote video:", e);
+            // Fallback: try to play on user interaction if needed
+          });
+        }
       }
     }
   }, [callHook.remoteParticipants, callHook]);

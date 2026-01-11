@@ -62,6 +62,12 @@ const useVoiceVideoCall = (): UseVoiceVideoCallReturn => {
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
+        // Ensure audio tracks are enabled and not muted at the source
+        stream.getAudioTracks().forEach(track => {
+          track.enabled = true;
+          console.log("Local audio track initialized:", track.label);
+        });
+
         setCallState((prev) => ({
           ...prev,
           isCallActive: true,

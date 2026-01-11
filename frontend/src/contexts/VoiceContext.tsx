@@ -182,10 +182,13 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         if (!audioEl) {
           audioEl = new Audio()
           audioEl.autoplay = true
+          audioEl.muted = false // Ensure not muted
+          audioEl.volume = 1.0
           remoteAudioElementsRef.current.set(peerId, audioEl)
         }
+        console.log(`Setting remote audio stream for ${peerId}`);
         audioEl.srcObject = event.streams[0]
-        audioEl.play().catch(console.error)
+        audioEl.play().catch(err => console.error("Error playing remote audio element:", err))
         startRemoteVoiceAnalysis(peerId, event.streams[0])
       } else if (event.track.kind === 'video') {
         const label = event.track.label.toLowerCase()

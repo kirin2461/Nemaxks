@@ -308,7 +308,11 @@ function VideoStream({ stream }: { stream: MediaStream }) {
 
   useEffect(() => {
     if (videoRef.current && stream) {
+      console.log("Setting stream to VideoStream component", stream.getAudioTracks().length, "audio tracks");
       videoRef.current.srcObject = stream
+      videoRef.current.muted = false
+      videoRef.current.volume = 1.0
+      videoRef.current.play().catch(e => console.error("VideoStream play error:", e))
     }
   }, [stream])
 
