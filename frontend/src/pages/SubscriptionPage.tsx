@@ -132,7 +132,7 @@ const SubscriptionPage: React.FC = () => {
                   currentPlanId === plan.id
                     ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                     : 'bg-white text-indigo-600 hover:bg-slate-100'
-                }"}
+                }`}
               >
                 {currentPlanId === plan.id ? 'Current Plan' : 'Select Plan'}
               </button>
