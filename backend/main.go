@@ -222,6 +222,12 @@ func main() {
         r.DELETE("/api/users/:id/subscribe", authMiddleware(), unsubscribeHandler)
         r.GET("/api/users/:id/subscribers", getSubscribersHandler)
 
+        // Premium & Donations
+        r.GET("/api/premium/plans", getPremiumPlansHandler)
+        r.GET("/api/users/:id/premium", getUserPremiumHandler)
+        r.POST("/api/users/:id/donate", optionalAuthMiddleware(), createDonationHandler)
+        r.GET("/api/users/:id/donations", getUserDonationsHandler)
+
         // Presence & Status
         r.GET("/api/users/:id/presence", authMiddleware(), getUserPresenceHandler)
         r.PUT("/api/presence", authMiddleware(), updatePresenceHandler)

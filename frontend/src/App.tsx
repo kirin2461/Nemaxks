@@ -28,6 +28,7 @@ const PresentationPage = React.lazy(() => import('./pages/PresentationPage'))
 const InvitePage = React.lazy(() => import('./pages/InvitePage'))
 const JoinPage = React.lazy(() => import('./pages/JoinPage'))
 const ServerJoinPage = React.lazy(() => import('./pages/ServerJoinPage'))
+const SupportPage = React.lazy(() => import('./pages/SupportPage'))
 
 // Loading component with skeleton animation
 function LoadingScreen() {
@@ -163,6 +164,12 @@ function App() {
                 <Route path="/profile/:userId?">
                   <ProtectedRoute>
                     <ProfilePage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/support/:userId">
+                  <ProtectedRoute>
+                    <SupportPage />
                   </ProtectedRoute>
                 </Route>
 

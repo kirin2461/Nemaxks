@@ -473,3 +473,108 @@ func getVideoChaptersHandler(c *gin.Context) {
 func incrementVideoViewHandler(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{"status": "viewed"})
 }
+
+// Premium Subscription Handlers
+func getPremiumPlansHandler(c *gin.Context) {
+        var plans []PremiumPlan
+        db.Where("is_active = ?", true).Find(&plans)
+        c.JSON(http.StatusOK, plans)
+}
+
+func getUserPremiumHandler(c *gin.Context) {
+        userIDParam := c.Param("id")
+        userID, err := strconv.ParseUint(userIDParam, 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+                return
+        }
+        
+        var premium UserPremium
+        result := db.Preload("Plan").Where("user_id = ? AND status = ?", userID, "active").First(&premium)
+        
+        if result.Error != nil {
+                c.JSON(http.StatusOK, gin.H{
+                        "has_premium": false,
+                        "plan": nil,
+                })
+                return
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "has_premium":           true,
+                "plan_name":             premium.Plan.Name,
+                "plan_slug":             premium.Plan.Slug,
+                "current_period_end":    premium.CurrentPeriodEnd,
+                "auto_renew":            premium.AutoRenew,
+        })
+}
+
+func createDonationHandler(c *gin.Context) {
+        toUserIDParam := c.Param("id")
+        toUserID, err := strconv.ParseUint(toUserIDParam, 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+                return
+        }
+        
+        var fromUserID *uint
+        if uid, exists := c.Get("user_id"); exists {
+                id := uint(uid.(float64))
+                fromUserID = &id
+        }
+        
+        var req struct {
+                Amount  float64 `json:"amount" binding:"required,min=10"`
+                Message string  `json:"message"`
+        }
+        if err := c.ShouldBindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+        
+        donation := CreatorDonation{
+                FromUserID: fromUserID,
+                ToUserID:   uint(toUserID),
+                AmountRub:  req.Amount,
+                Message:    req.Message,
+                Status:     "pending",
+                CreatedAt:  time.Now(),
+        }
+        
+        if err := db.Create(&donation).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create donation"})
+                return
+        }
+        
+        c.JSON(http.StatusCreated, gin.H{
+                "id":      donation.ID,
+                "status":  "pending",
+                "message": "Donation created. Redirecting to payment...",
+        })
+}
+
+func getUserDonationsHandler(c *gin.Context) {
+        userIDParam := c.Param("id")
+        userID, err := strconv.ParseUint(userIDParam, 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+                return
+        }
+        
+        var donations []CreatorDonation
+        db.Where("to_user_id = ?", userID).
+                Order("created_at desc").
+                Limit(50).
+                Find(&donations)
+        
+        var total float64
+        db.Model(&CreatorDonation{}).
+                Where("to_user_id = ?", userID).
+                Select("COALESCE(SUM(amount_rub), 0)").
+                Scan(&total)
+        
+        c.JSON(http.StatusOK, gin.H{
+                "donations": donations,
+                "total":     total,
+        })
+}

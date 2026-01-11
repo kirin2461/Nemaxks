@@ -91,6 +91,7 @@ func initDB() {
                 &TelegramLink{}, &TelegramNotification{},
                 &UserReferral{}, &ReferralUse{},
                 &Video{}, &VideoChapter{}, &VideoLike{}, &VideoBookmark{},
+                &PremiumPlan{}, &UserPremium{}, &CreatorDonation{},
         )
         log.Println("DB connected")
 

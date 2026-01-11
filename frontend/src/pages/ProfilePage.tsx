@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'wouter'
+import { useParams, useLocation } from 'wouter'
 import { Layout } from '@/components/Layout'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card'
 import { Avatar } from '@/components/Avatar'
@@ -8,11 +8,12 @@ import { Input, Textarea } from '@/components/Input'
 import { TelegramLink } from '@/components/TelegramLink'
 import { useStore } from '@/lib/store'
 import { userAPI, UserProfile, UserStats } from '@/lib/api'
-import { Edit, Save, X, Upload, UserPlus, UserMinus, Users } from 'lucide-react'
+import { Edit, Save, X, Upload, UserPlus, UserMinus, Users, Crown, Heart } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 export default function ProfilePage() {
   const { userId } = useParams<{ userId?: string }>()
+  const [, navigate] = useLocation()
   const { user, updateProfile } = useStore()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -20,6 +21,11 @@ export default function ProfilePage() {
   
   const [profileData, setProfileData] = useState<UserProfile | null>(null)
   const [stats, setStats] = useState<UserStats | null>(null)
+  const [premiumInfo, setPremiumInfo] = useState<{
+    has_premium: boolean;
+    plan_name?: string;
+    current_period_end?: string;
+  } | null>(null)
   const [profileLoading, setProfileLoading] = useState(false)
 
   const [alias, setAlias] = useState(user?.alias || '')
@@ -32,6 +38,7 @@ export default function ProfilePage() {
     if (targetId) {
       loadProfile(String(targetId))
       loadStats(String(targetId))
+      loadPremium(String(targetId))
     }
   }, [userId, user?.id, isOwnProfile])
 
@@ -57,12 +64,22 @@ export default function ProfilePage() {
     }
   }
 
+  const loadPremium = async (id: string) => {
+    try {
+      const data = await userAPI.getPremium(id)
+      setPremiumInfo(data)
+    } catch (error) {
+      console.error('Failed to load premium:', error)
+    }
+  }
+
   const displayUser = isOwnProfile ? user : profileData
   const followersCount = stats?.followers_count || profileData?.followers_count || 0
   const followingCount = stats?.following_count || profileData?.following_count || 0
   const friendsCount = stats?.friends_count || 0
   const postsCount = stats?.posts_count || 0
   const isSubscribed = profileData?.is_subscribed || false
+  const hasPremium = premiumInfo?.has_premium || false
 
   const handleSubscribe = async () => {
     if (!userId || isOwnProfile) return
@@ -196,9 +213,17 @@ export default function ProfilePage() {
                 <div className="flex-1 pt-4">
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <h1 className="text-2xl font-bold">
-                        {displayUser?.username}
-                      </h1>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-2xl font-bold">
+                          {displayUser?.username}
+                        </h1>
+                        {hasPremium && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-medium">
+                            <Crown className="w-3 h-3" />
+                            {premiumInfo?.plan_name || 'Premium'}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-muted-foreground">@{displayUser?.username}</p>
                     </div>
                     {isOwnProfile && !isEditing && (
@@ -220,7 +245,14 @@ export default function ProfilePage() {
                       </div>
                     )}
                     {!isOwnProfile && (
-                      <div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="secondary"
+                          onClick={() => navigate(`/support/${userId}`)}
+                        >
+                          <Heart className="w-4 h-4" />
+                          Поддержать
+                        </Button>
                         {isSubscribed ? (
                           <Button 
                             variant="secondary" 

@@ -174,7 +174,17 @@ Authentication uses JWT tokens. User sessions and UI preferences are managed via
   - clearTypingIndicators function resets all timers when switching conversations
   - Proper cleanup resets remote state to avoid stale data between calls
 
-- **Profile Page Enhancements (Latest)**
+- **Monetization & Support System (Latest)**
+  - SupportPage (/support/:userId) with donation and premium subscription options
+  - PremiumPlan, UserPremium, CreatorDonation models in backend
+  - Backend endpoints: GET /api/premium/plans, GET /api/users/:id/premium, POST /api/users/:id/donate, GET /api/users/:id/donations
+  - ProfilePage shows premium badge (Crown icon) next to username for premium users
+  - "Поддержать" (Support) button on other users' profiles links to SupportPage
+  - Donation form with predefined amounts (50, 100, 250, 500, 1000₽) or custom amount
+  - Premium plans display with features list and pricing
+  - Recent donations list with total amount on SupportPage
+
+- **Profile Page Enhancements**
   - User profile viewing via /profile/:userId route
   - Backend GET /api/users/:id/profile returns user data with is_subscribed, followers_count, following_count
   - Backend GET /api/users/:id/stats returns followers_count, following_count, posts_count, friends_count

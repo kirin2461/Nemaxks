@@ -530,6 +530,43 @@ type ReferralUse struct {
         CreatedAt     time.Time `json:"created_at"`
 }
 
+// Premium Subscriptions
+type PremiumPlan struct {
+        ID          uint    `gorm:"primaryKey" json:"id"`
+        Slug        string  `gorm:"uniqueIndex" json:"slug"`
+        Name        string  `json:"name"`
+        Description string  `json:"description"`
+        PriceRub    float64 `json:"price_rub"`
+        Features    string  `gorm:"type:text" json:"features"`
+        IsActive    bool    `gorm:"default:true" json:"is_active"`
+        CreatedAt   time.Time `json:"created_at"`
+}
+
+type UserPremium struct {
+        ID                 uint       `gorm:"primaryKey" json:"id"`
+        UserID             uint       `gorm:"uniqueIndex" json:"user_id"`
+        PlanID             uint       `json:"plan_id"`
+        Plan               PremiumPlan `gorm:"foreignKey:PlanID" json:"plan"`
+        Status             string     `gorm:"default:'active'" json:"status"`
+        CurrentPeriodStart time.Time  `json:"current_period_start"`
+        CurrentPeriodEnd   time.Time  `json:"current_period_end"`
+        AutoRenew          bool       `gorm:"default:true" json:"auto_renew"`
+        CreatedAt          time.Time  `json:"created_at"`
+        UpdatedAt          time.Time  `json:"updated_at"`
+}
+
+// Creator Donations
+type CreatorDonation struct {
+        ID          uint      `gorm:"primaryKey" json:"id"`
+        FromUserID  *uint     `gorm:"index" json:"from_user_id"`
+        ToUserID    uint      `gorm:"index" json:"to_user_id"`
+        AmountRub   float64   `json:"amount_rub"`
+        Message     string    `gorm:"type:text" json:"message"`
+        Status      string    `gorm:"default:'pending'" json:"status"`
+        PaymentID   string    `json:"payment_id"`
+        CreatedAt   time.Time `json:"created_at"`
+}
+
 
 // ChannelTool represents an educational tool for channels (board/notebook)
 type ChannelTool struct {

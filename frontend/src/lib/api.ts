@@ -195,6 +195,46 @@ export const userAPI = {
     request<{ status: string }>(`/users/${id}/subscribe`, {
       method: "DELETE",
     }),
+    
+  getPremium: (id: string) => 
+    request<{
+      has_premium: boolean;
+      plan_name?: string;
+      plan_slug?: string;
+      current_period_end?: string;
+      auto_renew?: boolean;
+    }>(`/users/${id}/premium`),
+    
+  getDonations: (id: string) =>
+    request<{
+      donations: Array<{
+        id: number;
+        amount_rub: number;
+        message: string;
+        created_at: string;
+      }>;
+      total: number;
+    }>(`/users/${id}/donations`),
+    
+  createDonation: (id: string, data: { amount: number; message?: string }) =>
+    request<{ id: number; status: string; message: string }>(`/users/${id}/donate`, {
+      method: "POST",
+      data,
+    }),
+};
+
+// Premium API
+export const premiumAPI = {
+  getPlans: () =>
+    request<Array<{
+      id: number;
+      slug: string;
+      name: string;
+      description: string;
+      price_rub: number;
+      features: string;
+      is_active: boolean;
+    }>>('/premium/plans'),
 };
 
 // Messages API (Consolidated)
