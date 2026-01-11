@@ -46,3 +46,51 @@ Authentication relies on JWT tokens. User sessions and UI preferences are manage
 ### Payment Gateway
 
 - **YooKassa**: For premium billing and subscription processing.
+
+## Monetization System (January 2026)
+
+### Premium Subscriptions
+- **3 Tiers**: Basic, Pro, VIP with different feature sets
+- **3 Billing Periods**: Monthly, Quarterly (15% off), Annual (25% off)
+- **Auto-Renewal**: Server-side charging using saved payment methods via `CreatePaymentWithSavedMethod`
+- **Payment Retry**: Failed renewals retry up to 3 times over 72 hours
+- **Scheduler**: Runs at midnight (renewals), every 6 hours (retries), 8 AM (expiration reminders)
+
+### Promo Codes
+- Supports percent and fixed discounts
+- Min purchase requirements and usage limits
+- Per-user tracking via PromoCodeUsage model
+- Admin CRUD endpoints for managing codes
+
+### Trial Period
+- 7-day free trial for new users
+- One trial per user, tracked in database
+- Automatically creates premium subscription
+
+### Gift Subscriptions
+- Purchase gifts for other users with unique codes (GIFT-XXXXXXXX)
+- Redeem endpoint to activate gift
+- Gift message and tracking
+
+### Referral Bonuses
+- Users get unique referral codes
+- When referred user subscribes to premium, referrer gets 7 days free
+- Extends existing subscription or creates new one
+
+### Post Boosting
+- Featured (99-249₽), Trending (199-499₽), Top (399-999₽) placements
+- 24 or 72 hour duration options
+- Premium users get 20% discount
+- Activated via YooKassa payment webhook
+
+### Email Notifications
+- Payment confirmation emails
+- Subscription expiring reminders (3 days before)
+- Cancellation/refund confirmations
+- Requires SMTP credentials: SMTP_HOST, SMTP_USER, SMTP_PASSWORD
+
+### Admin Billing Panel
+- MRR (Monthly Recurring Revenue) calculation
+- Churn rate tracking
+- Transaction history with filtering
+- Refund processing
