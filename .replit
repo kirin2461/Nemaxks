@@ -64,3 +64,8 @@ outputType = "webview"
 task = "shell.exec"
 args = "cd frontend && npm run dev -- --host 0.0.0.0 --port 5000"
 waitForPort = 5000
+
+[userenv]
+
+[userenv.shared]
+FRONTEND_URL = "https://ad8c103e-7f00-4f8c-9f86-5417eba46f44-00-2cp6eq3ssicld.riker.replit.dev"
