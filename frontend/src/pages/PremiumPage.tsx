@@ -6,23 +6,11 @@ import { premiumAPI } from "@/lib/api";
 import { useStore } from "@/lib/store";
 import { 
   Crown, Check, Sparkles, Zap, Shield, Star, Gift, Users, 
-  Percent, Clock, CreditCard, ChevronDown, ChevronUp, X,
+  Percent, Clock, ChevronDown, ChevronUp, X,
   Rocket, MessageCircle, Video, Palette, TrendingUp, Award,
-  Building, GraduationCap, BookOpen, Bot
+  BookOpen, Bot
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface PremiumPlan {
-  id: number;
-  slug: string;
-  name: string;
-  tier?: string;
-  description: string;
-  price_rub: number;
-  billing_cycle: string;
-  features: string;
-  is_active: boolean;
-}
 
 interface UserPremium {
   has_premium: boolean;
@@ -56,12 +44,10 @@ interface OrgPlan {
 
 export default function PremiumPage() {
   const { user, isAuthenticated } = useStore();
-  const [plans, setPlans] = useState<PremiumPlan[]>([]);
   const [orgPlans, setOrgPlans] = useState<OrgPlan[]>([]);
   const [userPremium, setUserPremium] = useState<UserPremium | null>(null);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState<number | null>(null);
-  const [selectedTier, setSelectedTier] = useState<string>("pro");
+  const [purchasing, setPurchasing] = useState<string | null>(null);
   const [promoCode, setPromoCode] = useState("");
   const [promoValidation, setPromoValidation] = useState<PromoValidation | null>(null);
   const [validatingPromo, setValidatingPromo] = useState(false);
@@ -75,12 +61,10 @@ export default function PremiumPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [plansData, premiumData, orgPlansData] = await Promise.all([
-          premiumAPI.getPlans(),
+        const [premiumData, orgPlansData] = await Promise.all([
           isAuthenticated && user?.id ? premiumAPI.getUserPremium(String(user.id)) : null,
           fetch("/api/subscription-plans").then(r => r.ok ? r.json() : []),
         ]);
-        setPlans(plansData || []);
         setUserPremium(premiumData);
         setOrgPlans(orgPlansData || []);
       } catch (error) {
@@ -106,13 +90,13 @@ export default function PremiumPage() {
     }
   };
 
-  const handlePurchase = async (planId: number) => {
+  const handlePurchase = async (planSlug: string) => {
     if (!isAuthenticated) {
       alert("Войдите в аккаунт для покупки подписки");
       return;
     }
     
-    setPurchasing(planId);
+    setPurchasing(planSlug);
     try {
       const response = await fetch("/api/premium/checkout", {
         method: "POST",
@@ -121,7 +105,7 @@ export default function PremiumPage() {
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
         body: JSON.stringify({ 
-          plan_id: planId,
+          plan_slug: planSlug,
           promo_code: promoValidation?.valid ? promoCode : undefined
         }),
       });
@@ -164,12 +148,12 @@ export default function PremiumPage() {
     }
   };
 
-  const handlePurchaseGift = async (planId: number) => {
+  const handlePurchaseGift = async (planSlug: string) => {
     if (!giftRecipient) {
       alert("Укажите получателя подарка");
       return;
     }
-    setPurchasing(planId);
+    setPurchasing(planSlug);
     try {
       const response = await fetch("/api/gifts/purchase", {
         method: "POST",
@@ -178,7 +162,7 @@ export default function PremiumPage() {
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
         body: JSON.stringify({ 
-          plan_id: planId,
+          plan_slug: planSlug,
           to_username: giftRecipient,
           message: giftMessage
         }),
@@ -220,22 +204,7 @@ export default function PremiumPage() {
     }
   };
 
-  const parseFeatures = (featuresStr: string): string[] => {
-    try {
-      return JSON.parse(featuresStr);
-    } catch {
-      return featuresStr.split(",").map(f => f.trim()).filter(Boolean);
-    }
-  };
-
-  const getTierPlans = (tier: string) => plans.filter(p => (p.tier || "basic") === tier);
-  const tiers = ["basic", "pro", "vip"];
-  
-  const tierConfig: Record<string, { name: string; icon: React.ElementType; color: string; gradient: string }> = {
-    basic: { name: "Basic", icon: Zap, color: "text-blue-500", gradient: "from-blue-500 to-cyan-500" },
-    pro: { name: "Pro", icon: Star, color: "text-purple-500", gradient: "from-purple-500 to-pink-500" },
-    vip: { name: "VIP", icon: Crown, color: "text-yellow-500", gradient: "from-yellow-500 to-amber-500" },
-  };
+  const getPaidPlans = () => orgPlans.filter(p => p.base_price_rub > 0);
 
   const allFeatures = [
     { icon: MessageCircle, title: "Безлимитные сообщения", desc: "Никаких ограничений на общение" },
@@ -589,14 +558,18 @@ export default function PremiumPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  {getTierPlans("pro").slice(0, 1).map((plan) => (
+                  {getPaidPlans().map((plan) => (
                     <Button
-                      key={plan.id}
-                      onClick={() => handlePurchaseGift(plan.id)}
-                      loading={purchasing === plan.id}
-                      className="w-full bg-gradient-to-r from-pink-500 to-purple-500"
+                      key={plan.slug}
+                      onClick={() => handlePurchaseGift(plan.slug)}
+                      loading={purchasing === plan.slug}
+                      className={cn(
+                        "w-full",
+                        plan.slug === "pro" && "bg-gradient-to-r from-blue-500 to-cyan-500",
+                        plan.slug === "premium" && "bg-gradient-to-r from-purple-500 to-pink-500"
+                      )}
                     >
-                      Подарить Pro ({plan.price_rub}₽)
+                      Подарить {plan.name} ({plan.base_price_rub}₽)
                     </Button>
                   ))}
                 </div>
