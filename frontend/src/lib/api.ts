@@ -1144,6 +1144,7 @@ export interface VideoWithAuthor extends Video {
     display_name?: string;
     avatar_url?: string;
   };
+  quality?: '720p' | '1080p';
 }
 
 export interface VideoChapter {
