@@ -110,12 +110,6 @@ function App() {
                 </Route>
 
                 {/* Protected routes */}
-                <Route path="/">
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                </Route>
-
                 <Route path="/feed">
                   <ProtectedRoute>
                     <FeedPage />
@@ -216,6 +210,13 @@ function App() {
 
                 <Route path="/invite/:code">
                   <ServerJoinPage />
+                </Route>
+
+                {/* Home - must be last before 404 */}
+                <Route path="/">
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
                 </Route>
 
                 {/* 404 */}
