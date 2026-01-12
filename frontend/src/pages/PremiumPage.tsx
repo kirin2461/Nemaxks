@@ -7,7 +7,8 @@ import { useStore } from "@/lib/store";
 import { 
   Crown, Check, Sparkles, Zap, Shield, Star, Gift, Users, 
   Percent, Clock, CreditCard, ChevronDown, ChevronUp, X,
-  Rocket, MessageCircle, Video, Palette, TrendingUp, Award
+  Rocket, MessageCircle, Video, Palette, TrendingUp, Award,
+  Building, GraduationCap, BookOpen, Bot
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,13 +39,30 @@ interface PromoValidation {
   error?: string;
 }
 
+interface OrgPlan {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  base_price_rub: number;
+  video_retention_days: number;
+  messages_retention_days: number;
+  jarvis_daily_limit: number;
+  boards_persist_flag: boolean;
+  overage_storage_enabled: boolean;
+  traffic_reports_enabled: boolean;
+  is_active: boolean;
+}
+
 export default function PremiumPage() {
   const { user, isAuthenticated } = useStore();
   const [plans, setPlans] = useState<PremiumPlan[]>([]);
+  const [orgPlans, setOrgPlans] = useState<OrgPlan[]>([]);
   const [userPremium, setUserPremium] = useState<UserPremium | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<number | null>(null);
   const [selectedTier, setSelectedTier] = useState<string>("pro");
+  const [subscriptionType, setSubscriptionType] = useState<"personal" | "organization">("personal");
   const [promoCode, setPromoCode] = useState("");
   const [promoValidation, setPromoValidation] = useState<PromoValidation | null>(null);
   const [validatingPromo, setValidatingPromo] = useState(false);
@@ -58,12 +76,14 @@ export default function PremiumPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [plansData, premiumData] = await Promise.all([
+        const [plansData, premiumData, orgPlansData] = await Promise.all([
           premiumAPI.getPlans(),
           isAuthenticated && user?.id ? premiumAPI.getUserPremium(String(user.id)) : null,
+          fetch("/api/subscription-plans").then(r => r.ok ? r.json() : []),
         ]);
         setPlans(plansData || []);
         setUserPremium(premiumData);
+        setOrgPlans(orgPlansData || []);
       } catch (error) {
         console.error("Failed to load premium data:", error);
       } finally {
@@ -293,6 +313,35 @@ export default function PremiumPage() {
           </Card>
         )}
 
+        <div className="flex justify-center gap-4 mb-8">
+          <button
+            onClick={() => setSubscriptionType("personal")}
+            className={cn(
+              "flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all",
+              subscriptionType === "personal"
+                ? "bg-gradient-to-r from-yellow-500 to-amber-500 text-white shadow-lg"
+                : "bg-card/50 hover:bg-card border border-border text-muted-foreground"
+            )}
+          >
+            <Crown className="w-5 h-5" />
+            Персональные
+          </button>
+          <button
+            onClick={() => setSubscriptionType("organization")}
+            className={cn(
+              "flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all",
+              subscriptionType === "organization"
+                ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
+                : "bg-card/50 hover:bg-card border border-border text-muted-foreground"
+            )}
+          >
+            <Building className="w-5 h-5" />
+            Для организаций
+          </button>
+        </div>
+
+        {subscriptionType === "personal" && (
+        <>
         <div className="flex justify-center gap-2 mb-8">
           {tiers.map((tier) => {
             const config = tierConfig[tier];
@@ -380,7 +429,138 @@ export default function PremiumPage() {
             );
           })}
         </div>
+        </>
+        )}
 
+        {subscriptionType === "organization" && (
+        <div className="mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-2">Подписки для образовательных организаций</h2>
+            <p className="text-muted-foreground">Планы для курсов, школ и учебных заведений</p>
+          </div>
+          
+          <div className="grid gap-6 md:grid-cols-3">
+            {orgPlans.map((plan) => {
+              const isFree = plan.slug === "free";
+              const isBasic = plan.slug === "edu_basic";
+              const isPro = plan.slug === "edu_pro";
+              
+              return (
+                <Card
+                  key={plan.id}
+                  className={cn(
+                    "cosmic-border relative overflow-hidden transition-all hover:scale-[1.02]",
+                    isPro && "ring-2 ring-purple-500/50"
+                  )}
+                >
+                  {isPro && (
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-purple-500 text-white text-xs font-medium rounded-bl-lg">
+                      Популярный
+                    </div>
+                  )}
+                  
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      {isFree && <Zap className="w-5 h-5 text-gray-500" />}
+                      {isBasic && <GraduationCap className="w-5 h-5 text-blue-500" />}
+                      {isPro && <Crown className="w-5 h-5 text-purple-500" />}
+                      <h3 className="text-xl font-bold">{plan.name}</h3>
+                    </div>
+                    
+                    <div className="flex items-baseline gap-1 mb-2">
+                      <span className="text-3xl font-bold">
+                        {plan.base_price_rub > 0 ? `${plan.base_price_rub}₽` : "Бесплатно"}
+                      </span>
+                      {plan.base_price_rub > 0 && <span className="text-muted-foreground">/мес</span>}
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground mb-4 min-h-[60px]">
+                      {plan.description}
+                    </p>
+                    
+                    <ul className="space-y-2 mb-6 text-sm">
+                      <li className="flex items-center gap-2">
+                        <Video className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <span>Видео: {plan.video_retention_days} дней</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>Сообщения: {plan.messages_retention_days} дней</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Bot className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                        <span>Jarvis AI: {plan.jarvis_daily_limit}/день</span>
+                      </li>
+                      {plan.boards_persist_flag && (
+                        <li className="flex items-center gap-2">
+                          <BookOpen className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                          <span>Интерактивные доски и тетради</span>
+                        </li>
+                      )}
+                      {plan.overage_storage_enabled && (
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          <span>Докупка хранилища (50₽/ГБ)</span>
+                        </li>
+                      )}
+                      {plan.traffic_reports_enabled && (
+                        <li className="flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+                          <span>Отчёты по трафику</span>
+                        </li>
+                      )}
+                    </ul>
+                    
+                    <Button
+                      className={cn(
+                        "w-full",
+                        isFree && "bg-gray-600 hover:bg-gray-700",
+                        isBasic && "bg-gradient-to-r from-blue-500 to-cyan-500",
+                        isPro && "bg-gradient-to-r from-purple-500 to-pink-500"
+                      )}
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          alert("Войдите в аккаунт для создания организации");
+                          return;
+                        }
+                        window.location.href = "/templates";
+                      }}
+                    >
+                      {isFree ? "Начать бесплатно" : "Выбрать план"}
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+          
+          <Card className="cosmic-border p-6 mt-6">
+            <div className="text-center">
+              <h3 className="font-semibold mb-2">Seat-based биллинг</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Для Edu Basic и Edu Pro оплата рассчитывается по количеству участников
+              </p>
+              <div className="flex justify-center gap-8">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-500">35₽</div>
+                  <div className="text-sm text-muted-foreground">Студент-редактор/мес</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-500">500₽</div>
+                  <div className="text-sm text-muted-foreground">Преподаватель/мес</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-500">0₽</div>
+                  <div className="text-sm text-muted-foreground">Читатель</div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+        )}
+
+        {subscriptionType === "personal" && (
+        <>
         <Card className="cosmic-border p-6 mb-8">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
@@ -485,6 +665,8 @@ export default function PremiumPage() {
           <p>Оплата производится через YooKassa. Подписка продлевается автоматически.</p>
           <p>Отменить подписку можно в любой момент в настройках аккаунта.</p>
         </div>
+        </>
+        )}
 
         {showGiftModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
