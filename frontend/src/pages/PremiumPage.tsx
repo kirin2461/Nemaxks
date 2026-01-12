@@ -62,7 +62,6 @@ export default function PremiumPage() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<number | null>(null);
   const [selectedTier, setSelectedTier] = useState<string>("pro");
-  const [subscriptionType, setSubscriptionType] = useState<"personal" | "organization">("personal");
   const [promoCode, setPromoCode] = useState("");
   const [promoValidation, setPromoValidation] = useState<PromoValidation | null>(null);
   const [validatingPromo, setValidatingPromo] = useState(false);
@@ -313,35 +312,11 @@ export default function PremiumPage() {
           </Card>
         )}
 
-        <div className="flex justify-center gap-4 mb-8">
-          <button
-            onClick={() => setSubscriptionType("personal")}
-            className={cn(
-              "flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all",
-              subscriptionType === "personal"
-                ? "bg-gradient-to-r from-yellow-500 to-amber-500 text-white shadow-lg"
-                : "bg-card/50 hover:bg-card border border-border text-muted-foreground"
-            )}
-          >
-            <Crown className="w-5 h-5" />
-            Персональные
-          </button>
-          <button
-            onClick={() => setSubscriptionType("organization")}
-            className={cn(
-              "flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all",
-              subscriptionType === "organization"
-                ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                : "bg-card/50 hover:bg-card border border-border text-muted-foreground"
-            )}
-          >
-            <Building className="w-5 h-5" />
-            Для организаций
-          </button>
-        </div>
+        <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
+          <Crown className="w-6 h-6 text-yellow-500" />
+          Персональные подписки
+        </h2>
 
-        {subscriptionType === "personal" && (
-        <>
         <div className="flex justify-center gap-2 mb-8">
           {tiers.map((tier) => {
             const config = tierConfig[tier];
@@ -429,15 +404,14 @@ export default function PremiumPage() {
             );
           })}
         </div>
-        </>
-        )}
 
-        {subscriptionType === "organization" && (
-        <div className="mb-8">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-2">Подписки для образовательных организаций</h2>
-            <p className="text-muted-foreground">Планы для курсов, школ и учебных заведений</p>
-          </div>
+        <div className="border-t border-border my-12" />
+
+        <h2 className="text-2xl font-bold text-center mb-2 flex items-center justify-center gap-2">
+          <Building className="w-6 h-6 text-blue-500" />
+          Подписки для организаций
+        </h2>
+        <p className="text-muted-foreground text-center mb-6">Планы для курсов, школ и учебных заведений</p>
           
           <div className="grid gap-6 md:grid-cols-3">
             {orgPlans.map((plan) => {
@@ -556,11 +530,7 @@ export default function PremiumPage() {
               </div>
             </div>
           </Card>
-        </div>
-        )}
 
-        {subscriptionType === "personal" && (
-        <>
         <Card className="cosmic-border p-6 mb-8">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
@@ -665,8 +635,6 @@ export default function PremiumPage() {
           <p>Оплата производится через YooKassa. Подписка продлевается автоматически.</p>
           <p>Отменить подписку можно в любой момент в настройках аккаунта.</p>
         </div>
-        </>
-        )}
 
         {showGiftModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
