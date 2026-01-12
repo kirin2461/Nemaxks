@@ -773,12 +773,17 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('technology')
   const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [videoDuration, setVideoDuration] = useState<number>(0)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState('')
   const videoInputRef = useRef<HTMLInputElement>(null)
   const thumbnailInputRef = useRef<HTMLInputElement>(null)
+
+  const MAX_FILE_SIZE = 500 * 1024 * 1024
+  const MAX_DURATION_MINUTES = 120
+  const MAX_DURATION_SECONDS = MAX_DURATION_MINUTES * 60
 
   const categoryOptions = [
     { value: 'technology', label: 'Технологии' },
@@ -798,12 +803,28 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
         setError('Пожалуйста, выберите видео файл')
         return
       }
-      if (file.size > 500 * 1024 * 1024) {
+      if (file.size > MAX_FILE_SIZE) {
         setError('Размер файла не должен превышать 500 МБ')
         return
       }
-      setVideoFile(file)
-      setError('')
+      
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src)
+        const durationSeconds = Math.floor(video.duration)
+        if (durationSeconds > MAX_DURATION_SECONDS) {
+          setError(`Длительность видео не должна превышать ${MAX_DURATION_MINUTES} минут`)
+          return
+        }
+        setVideoDuration(durationSeconds)
+        setVideoFile(file)
+        setError('')
+      }
+      video.onerror = () => {
+        setError('Не удалось прочитать видео файл')
+      }
+      video.src = URL.createObjectURL(file)
     }
   }
 
@@ -854,6 +875,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
         description: description.trim(),
         video_url: videoUrl,
         thumbnail: thumbnailUrl,
+        duration: videoDuration,
         category,
         is_public: true,
       })
@@ -877,6 +899,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
     setDescription('')
     setCategory('technology')
     setVideoFile(null)
+    setVideoDuration(0)
     setThumbnailFile(null)
     setError('')
     setUploadProgress(0)
@@ -927,7 +950,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
                 <div className="text-left">
                   <p className="font-medium">{videoFile.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {(videoFile.size / (1024 * 1024)).toFixed(2)} МБ
+                    {(videoFile.size / (1024 * 1024)).toFixed(2)} МБ • {Math.floor(videoDuration / 60)}:{(videoDuration % 60).toString().padStart(2, '0')}
                   </p>
                 </div>
               </div>
@@ -936,7 +959,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
                 <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                 <p className="font-medium">Нажмите для выбора видео</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  MP4, WebM, MOV до 500 МБ
+                  MP4, WebM, MOV до 500 МБ, макс. 120 мин
                 </p>
               </>
             )}

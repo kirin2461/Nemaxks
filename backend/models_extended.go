@@ -728,3 +728,140 @@ func SaveToolSnapshot(toolID uint, name string, description string, userID uint,
                 // TODO: Implement snapshot saving to database
                 return nil
         }
+
+// Moderation System Models
+
+// ModerationCase represents a case opened for moderation review
+type ModerationCase struct {
+        ID             uint        `gorm:"primaryKey" json:"id"`
+        ReportID       uint        `gorm:"index" json:"report_id"`
+        Report         AbuseReport `gorm:"foreignKey:ReportID" json:"report,omitempty"`
+        TargetUserID   uint       `gorm:"index" json:"target_user_id"`
+        TargetUser     User       `gorm:"foreignKey:TargetUserID" json:"target_user,omitempty"`
+        ReporterID     uint       `gorm:"index" json:"reporter_id"`
+        Reporter       User       `gorm:"foreignKey:ReporterID" json:"reporter,omitempty"`
+        ContentType    string     `gorm:"size:50" json:"content_type"` // post, message, video, profile
+        ContentID      uint       `json:"content_id"`
+        ContentPreview string     `gorm:"type:text" json:"content_preview"`
+        Status         string     `gorm:"size:30;default:'pending'" json:"status"` // pending, in_review, resolved, escalated
+        Priority       string     `gorm:"size:20;default:'normal'" json:"priority"` // low, normal, high, critical
+        AssignedToAI   bool       `gorm:"default:true" json:"assigned_to_ai"`
+        ReviewedByID   *uint      `json:"reviewed_by_id,omitempty"`
+        ReviewedBy     *User      `gorm:"foreignKey:ReviewedByID" json:"reviewed_by,omitempty"`
+        CreatedAt      time.Time  `json:"created_at"`
+        UpdatedAt      time.Time  `json:"updated_at"`
+        ResolvedAt     *time.Time `json:"resolved_at,omitempty"`
+}
+
+// ModerationVerdict represents Jarvis AI's verdict on a case
+type ModerationVerdict struct {
+        ID              uint           `gorm:"primaryKey" json:"id"`
+        CaseID          uint           `gorm:"uniqueIndex" json:"case_id"`
+        Case            ModerationCase `gorm:"foreignKey:CaseID" json:"case,omitempty"`
+        VerdictType     string         `gorm:"size:30" json:"verdict_type"` // ban, warn, dismiss, escalate
+        Reason          string         `gorm:"type:text" json:"reason"`
+        ConfidenceScore float64        `json:"confidence_score"` // 0-1 AI confidence
+        PenaltyDuration *int           `json:"penalty_duration,omitempty"` // hours, null for permanent
+        AudioResponseID *uint          `json:"audio_response_id,omitempty"`
+        IsAutomatic     bool           `gorm:"default:true" json:"is_automatic"`
+        OverriddenByID  *uint          `json:"overridden_by_id,omitempty"`
+        OverriddenBy    *User          `gorm:"foreignKey:OverriddenByID" json:"overridden_by,omitempty"`
+        OverrideReason  string         `gorm:"type:text" json:"override_reason,omitempty"`
+        CreatedAt       time.Time      `json:"created_at"`
+        UpdatedAt       time.Time      `json:"updated_at"`
+}
+
+// ModerationActionLog logs all moderation actions for audit
+type ModerationActionLog struct {
+        ID          uint           `gorm:"primaryKey" json:"id"`
+        CaseID      uint           `gorm:"index" json:"case_id"`
+        Case        ModerationCase `gorm:"foreignKey:CaseID" json:"case,omitempty"`
+        Action      string         `gorm:"size:50" json:"action"` // verdict_issued, penalty_applied, appeal_filed, verdict_overridden
+        ActorType   string         `gorm:"size:20" json:"actor_type"` // jarvis, admin, system
+        ActorID     *uint          `json:"actor_id,omitempty"`
+        Actor       *User          `gorm:"foreignKey:ActorID" json:"actor,omitempty"`
+        Details     string         `gorm:"type:text" json:"details"`
+        IPAddress   string         `gorm:"size:45" json:"ip_address,omitempty"`
+        CreatedAt   time.Time      `json:"created_at"`
+}
+
+// Appeal represents user's appeal against a moderation verdict
+type Appeal struct {
+        ID              uint              `gorm:"primaryKey" json:"id"`
+        VerdictID       uint              `gorm:"index" json:"verdict_id"`
+        Verdict         ModerationVerdict `gorm:"foreignKey:VerdictID" json:"verdict,omitempty"`
+        UserID          uint              `gorm:"index" json:"user_id"`
+        User            User              `gorm:"foreignKey:UserID" json:"user,omitempty"`
+        Reason          string            `gorm:"type:text" json:"reason"`
+        Evidence        string            `gorm:"type:text" json:"evidence,omitempty"`
+        Status          string            `gorm:"size:30;default:'pending'" json:"status"` // pending, under_review, approved, rejected
+        ReviewerID      *uint             `json:"reviewer_id,omitempty"`
+        Reviewer        *User             `gorm:"foreignKey:ReviewerID" json:"reviewer,omitempty"`
+        ReviewerNotes   string            `gorm:"type:text" json:"reviewer_notes,omitempty"`
+        Resolution      string            `gorm:"type:text" json:"resolution,omitempty"`
+        CreatedAt       time.Time         `json:"created_at"`
+        UpdatedAt       time.Time         `json:"updated_at"`
+        ResolvedAt      *time.Time        `json:"resolved_at,omitempty"`
+}
+
+// JarvisAudioResponse stores pre-recorded audio responses for Jarvis
+type JarvisAudioResponse struct {
+        ID           uint      `gorm:"primaryKey" json:"id"`
+        Key          string    `gorm:"uniqueIndex;size:100" json:"key"` // e.g., "verdict_ban", "verdict_warn", "appeal_received"
+        Name         string    `gorm:"size:200" json:"name"`
+        Description  string    `gorm:"type:text" json:"description"`
+        AudioURL     string    `gorm:"size:500" json:"audio_url"`
+        Duration     int       `json:"duration"` // seconds
+        Category     string    `gorm:"size:50" json:"category"` // moderation, greeting, system
+        IsActive     bool      `gorm:"default:true" json:"is_active"`
+        CreatedAt    time.Time `json:"created_at"`
+        UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// JarvisVoiceCommand represents admin voice commands for Jarvis
+type JarvisVoiceCommand struct {
+        ID           uint      `gorm:"primaryKey" json:"id"`
+        UserID       uint      `gorm:"index" json:"user_id"`
+        User         User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
+        CommandText  string    `gorm:"type:text" json:"command_text"`
+        IntentType   string    `gorm:"size:50" json:"intent_type"` // ban_user, review_report, approve_appeal, etc.
+        Parameters   string    `gorm:"type:text" json:"parameters"` // JSON
+        Status       string    `gorm:"size:30" json:"status"` // processing, completed, failed
+        ResponseAudioID *uint  `json:"response_audio_id,omitempty"`
+        ResultMessage string   `gorm:"type:text" json:"result_message,omitempty"`
+        CreatedAt    time.Time `json:"created_at"`
+        CompletedAt  *time.Time `json:"completed_at,omitempty"`
+}
+
+// Voicemail represents recorded voice messages
+type Voicemail struct {
+        ID           uint      `gorm:"primaryKey" json:"id"`
+        FromUserID   *uint     `gorm:"index" json:"from_user_id,omitempty"` // null for anonymous/external
+        ToUserID     uint      `gorm:"index" json:"to_user_id"`
+        ToUser       User      `gorm:"foreignKey:ToUserID" json:"to_user,omitempty"`
+        AudioURL     string    `gorm:"size:500" json:"audio_url"`
+        Duration     int       `json:"duration"` // seconds
+        Transcription string   `gorm:"type:text" json:"transcription,omitempty"`
+        IsRead       bool      `gorm:"default:false" json:"is_read"`
+        CallerNumber string    `gorm:"size:50" json:"caller_number,omitempty"` // for external calls
+        CreatedAt    time.Time `json:"created_at"`
+}
+
+// JarvisCallSession represents Jarvis auto-answering a call
+type JarvisCallSession struct {
+        ID             uint       `gorm:"primaryKey" json:"id"`
+        CallID         uint       `gorm:"index" json:"call_id"`
+        Call           Call       `gorm:"foreignKey:CallID" json:"call,omitempty"`
+        CallerID       uint       `gorm:"index" json:"caller_id"`
+        Caller         User       `gorm:"foreignKey:CallerID" json:"caller,omitempty"`
+        TargetUserID   uint       `gorm:"index" json:"target_user_id"`
+        TargetUser     User       `gorm:"foreignKey:TargetUserID" json:"target_user,omitempty"`
+        Status         string     `gorm:"size:30" json:"status"` // greeting, recording, routing, completed
+        GreetingPlayed bool       `gorm:"default:false" json:"greeting_played"`
+        VoicemailID    *uint      `json:"voicemail_id,omitempty"`
+        Voicemail      *Voicemail `gorm:"foreignKey:VoicemailID" json:"voicemail,omitempty"`
+        RoutedTo       *uint      `json:"routed_to,omitempty"` // user/channel ID if routed
+        RoutedToType   string     `gorm:"size:20" json:"routed_to_type,omitempty"` // user, channel
+        StartedAt      time.Time  `json:"started_at"`
+        EndedAt        *time.Time `json:"ended_at,omitempty"`
+}

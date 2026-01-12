@@ -145,3 +145,42 @@ Only applies to Про and Премиум plans when used by organizations:
 - Template management
 - Manual payment verification
 - Donation tracking
+
+## Jarvis AI Moderation System (January 2026)
+
+### Automated Moderation
+- **ModerationCase**: Created from AbuseReport, tracks target user, reporter, content type, priority
+- **ModerationVerdict**: AI-generated verdict (ban, warn, dismiss, escalate) with confidence score
+- **ModerationActionLog**: Full audit trail of all moderation actions
+
+### Jarvis Review Process
+1. Report submitted → ModerationCase created automatically
+2. Jarvis analyzes content using ForbiddenWord patterns and report reason
+3. Severity score (0-1) determines verdict type:
+   - ≥0.8: Ban (24h default)
+   - ≥0.5: Warning
+   - ≥0.3: Escalate to admin
+   - <0.3: Dismiss
+4. Penalty applied automatically if ban/warn
+
+### Appeals System
+- Users can appeal verdicts via POST /api/appeals
+- Super admins review appeals in admin panel
+- Approved appeals: verdict overridden, ban removed
+- Rejected appeals: documented with notes
+
+### Pre-recorded Audio Responses
+- JarvisAudioResponse: Stores pre-recorded voice files for Jarvis
+- Categories: moderation, greeting, system
+- Used for verdicts, appeal confirmations, etc.
+
+### Voicemail System
+- JarvisCallSession: Auto-answer calls when user unavailable
+- Voicemail: Record and transcribe voice messages
+- Message routing to appropriate user/channel
+
+### Video Upload Restrictions
+- Maximum file size: 500 MB
+- Maximum duration: 120 minutes
+- Weekly quota: 3 videos per user (rolling 7-day window)
+- Duration validated client-side using HTML5 Video API

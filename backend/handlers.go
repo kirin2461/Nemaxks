@@ -99,6 +99,8 @@ func initDB() {
                 &StorageOverageDaily{}, &DonationSettings{}, &Donation{}, &PricingChangeLog{},
                 &GuildTemplate{}, &ChannelTemplate{}, &InteractiveBoard{}, &OnlineNotebook{},
                 &JarvisUsage{}, &ManualPayment{}, &GuildMember{},
+                &ModerationCase{}, &ModerationVerdict{}, &ModerationActionLog{},
+                &Appeal{}, &JarvisAudioResponse{}, &JarvisVoiceCommand{}, &Voicemail{}, &JarvisCallSession{},
         )
         log.Println("DB connected")
 

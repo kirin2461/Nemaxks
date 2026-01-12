@@ -4,6 +4,7 @@ import (
         "net/http"
         "os"
         "strconv"
+        "strings"
         "time"
 
         "github.com/gin-gonic/gin"
@@ -504,12 +505,6 @@ func uploadFileHandler(c *gin.Context) {
                 return
         }
 
-        maxSize := int64(50 * 1024 * 1024)
-        if file.Size > maxSize {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "File too large (max 50MB)"})
-                return
-        }
-
         src, err := file.Open()
         if err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
@@ -528,6 +523,22 @@ func uploadFileHandler(c *gin.Context) {
         if detectedType == "" {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "File type not allowed. Only JPEG, PNG, GIF, WebP, MP4, WebM, MOV, and audio files (WebM, OGG, MP3, WAV) are supported."})
                 return
+        }
+
+        isVideo := strings.HasPrefix(detectedType, "video/")
+        var maxSize int64
+        if isVideo {
+                maxSize = 500 * 1024 * 1024
+                if file.Size > maxSize {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Видео файл слишком большой (максимум 500 МБ)"})
+                        return
+                }
+        } else {
+                maxSize = 50 * 1024 * 1024
+                if file.Size > maxSize {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "File too large (max 50MB)"})
+                        return
+                }
         }
 
         // Check if client specified audio type for WebM container

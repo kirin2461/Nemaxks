@@ -267,21 +267,60 @@ func getVideoHandler(c *gin.Context) {
 
 func createVideoHandler(c *gin.Context) {
         userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        
         var req struct {
-                Title string `json:"title" binding:"required"`
-                URL   string `json:"url" binding:"required"`
+                Title       string   `json:"title" binding:"required"`
+                Description string   `json:"description"`
+                VideoURL    string   `json:"video_url" binding:"required"`
+                Thumbnail   string   `json:"thumbnail"`
+                Duration    int      `json:"duration"`
+                Category    string   `json:"category"`
+                Tags        []string `json:"tags"`
+                IsPublic    bool     `json:"is_public"`
         }
         if err := c.BindJSON(&req); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
                 return
         }
+        
+        const maxVideosPerWeek = 3
+        const maxDurationSeconds = 120 * 60
+        
+        if req.Duration > maxDurationSeconds {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Длительность видео не должна превышать 120 минут"})
+                return
+        }
+        
+        oneWeekAgo := time.Now().AddDate(0, 0, -7)
+        var videoCount int64
+        db.Model(&Video{}).Where("author_id = ? AND created_at > ?", uid, oneWeekAgo).Count(&videoCount)
+        
+        if videoCount >= maxVideosPerWeek {
+                c.JSON(http.StatusTooManyRequests, gin.H{
+                        "error": "Вы можете загружать не более 3 видео в неделю",
+                        "videos_this_week": videoCount,
+                        "limit": maxVideosPerWeek,
+                })
+                return
+        }
 
         video := Video{
-                AuthorID: uint(userID.(float64)),
-                Title:    req.Title,
-                VideoURL: req.URL,
+                AuthorID:    uid,
+                Title:       req.Title,
+                Description: req.Description,
+                VideoURL:    req.VideoURL,
+                Thumbnail:   req.Thumbnail,
+                Duration:    req.Duration,
+                Category:    req.Category,
+                IsPublic:    req.IsPublic,
         }
-        db.Create(&video)
+        
+        if err := db.Create(&video).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось создать видео"})
+                return
+        }
+        
         c.JSON(http.StatusCreated, video)
 }
 

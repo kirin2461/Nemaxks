@@ -314,6 +314,32 @@ func main() {
         // User reports (public endpoint for authenticated users)
         r.POST("/api/reports", authMiddleware(), createReportHandler)
 
+        // Jarvis Moderation System
+        r.GET("/api/admin/moderation/cases", authMiddleware(), adminMiddleware(), getModerationCasesHandler)
+        r.GET("/api/admin/moderation/cases/:id", authMiddleware(), adminMiddleware(), getModerationCaseHandler)
+        r.POST("/api/admin/moderation/cases", authMiddleware(), adminMiddleware(), createModerationCaseHandler)
+        r.POST("/api/admin/moderation/cases/:id/review", authMiddleware(), adminMiddleware(), jarvisReviewCaseHandler)
+        r.PUT("/api/admin/moderation/verdicts/:id/override", authMiddleware(), adminMiddleware(), overrideVerdictHandler)
+        r.GET("/api/admin/moderation/stats", authMiddleware(), adminMiddleware(), getModerationStatsHandler)
+
+        // Appeals (user-facing)
+        r.POST("/api/appeals", authMiddleware(), createAppealHandler)
+
+        // Appeals (admin)
+        r.GET("/api/admin/appeals", authMiddleware(), adminMiddleware(), getAppealsHandler)
+        r.PUT("/api/admin/appeals/:id", authMiddleware(), adminMiddleware(), reviewAppealHandler)
+
+        // Jarvis Audio Responses (admin)
+        r.GET("/api/admin/jarvis/audio-responses", authMiddleware(), adminMiddleware(), getJarvisAudioResponsesHandler)
+        r.POST("/api/admin/jarvis/audio-responses", authMiddleware(), adminMiddleware(), createJarvisAudioResponseHandler)
+        r.PUT("/api/admin/jarvis/audio-responses/:id", authMiddleware(), adminMiddleware(), updateJarvisAudioResponseHandler)
+        r.DELETE("/api/admin/jarvis/audio-responses/:id", authMiddleware(), adminMiddleware(), deleteJarvisAudioResponseHandler)
+
+        // Voicemails
+        r.GET("/api/voicemails", authMiddleware(), getVoicemailsHandler)
+        r.PUT("/api/voicemails/:id/read", authMiddleware(), markVoicemailReadHandler)
+        r.POST("/api/voicemails", authMiddleware(), createVoicemailHandler)
+
         // User Requests (general requests/reports to admins)
         r.POST("/api/requests", authMiddleware(), createUserRequestHandler)
         r.GET("/api/requests/my", authMiddleware(), getUserRequestsHandler)
