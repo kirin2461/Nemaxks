@@ -9,6 +9,12 @@ import (
 )
 
 func getChannelHandler(c *gin.Context) {
+        userID, exists := c.Get("user_id")
+        var uid uint
+        if exists {
+                uid = uint(userID.(float64))
+        }
+
         channelID, err := strconv.ParseUint(c.Param("channel_id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
@@ -21,7 +27,22 @@ func getChannelHandler(c *gin.Context) {
                 return
         }
 
+        if channel.IsPrivate && channel.Name != "Nemaks Общий" {
+                if uid == 0 {
+                        c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+                        return
+                }
+                if !hasChannelAccessSingle(uid, channel) {
+                        c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
+                        return
+                }
+        }
+
         c.JSON(http.StatusOK, channel)
+}
+
+func hasChannelAccessSingle(userID uint, channel Channel) bool {
+        return hasChannelAccess(userID, channel)
 }
 
 func updateChannelHandler(c *gin.Context) {
@@ -709,18 +730,295 @@ func GetVoiceChannelParticipants(c *gin.Context) {
         c.JSON(http.StatusOK, participants)
 }
 
+func hasChannelAccess(userID uint, channel Channel) bool {
+        if !channel.IsPrivate || channel.Name == "Nemaks Общий" {
+                return true
+        }
+
+        var user User
+        db.First(&user, userID)
+        if user.Role == "admin" {
+                return true
+        }
+
+        if channel.GuildID > 0 {
+                var guild Guild
+                db.First(&guild, channel.GuildID)
+                if guild.OwnerID == userID {
+                        return true
+                }
+
+                var memberRoles []GuildMemberRole
+                db.Where("guild_id = ? AND user_id = ?", channel.GuildID, userID).Find(&memberRoles)
+                for _, mr := range memberRoles {
+                        var role GuildRole
+                        if db.First(&role, mr.RoleID).Error == nil {
+                                if role.Permissions&PermAdministrator != 0 || role.Permissions&PermManageChannels != 0 {
+                                        return true
+                                }
+                        }
+                }
+        }
+
+        var member ChannelMember
+        return db.Where("channel_id = ? AND user_id = ?", channel.ID, userID).First(&member).Error == nil
+}
+
 func HandleCreateChannelTool(c *gin.Context) {
-        c.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented"})
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        channelID, err := strconv.ParseUint(c.Param("channel_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+                return
+        }
+
+        var channel Channel
+        if err := db.Preload("Guild").First(&channel, channelID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+                return
+        }
+
+        if !hasChannelAccess(uid, channel) {
+                c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
+                return
+        }
+
+        var req struct {
+                Type      string `json:"type" binding:"required"`
+                Title     string `json:"title" binding:"required"`
+                VisibleTo string `json:"visible_to"`
+        }
+        if err := c.BindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        if req.Type != "board" && req.Type != "notebook" {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tool type. Must be 'board' or 'notebook'"})
+                return
+        }
+
+        requiredPlan := "pro"
+        if req.Type == "notebook" {
+                requiredPlan = "premium"
+        }
+
+        userPlan := getUserPlan(uid)
+        planLevels := map[string]int{"start": 0, "pro": 1, "premium": 2}
+        if planLevels[userPlan] < planLevels[requiredPlan] {
+                c.JSON(http.StatusForbidden, gin.H{
+                        "error":         "Upgrade required",
+                        "required_plan": requiredPlan,
+                        "current_plan":  userPlan,
+                })
+                return
+        }
+
+        visibleTo := req.VisibleTo
+        if visibleTo == "" {
+                visibleTo = "all"
+        }
+
+        now := GetCurrentTimestamp()
+        tool := ChannelTool{
+                ChannelID: uint(channelID),
+                ToolType:  req.Type,
+                Title:     req.Title,
+                Content:   "{}",
+                OwnerID:   uid,
+                VisibleTo: visibleTo,
+                CreatedAt: now,
+                UpdatedAt: now,
+        }
+
+        if err := db.Create(&tool).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tool"})
+                return
+        }
+
+        c.JSON(http.StatusCreated, tool)
 }
 
 func HandleGetChannelTools(c *gin.Context) {
-        c.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented"})
+        userID, exists := c.Get("user_id")
+        var uid uint
+        if exists {
+                uid = uint(userID.(float64))
+        }
+        
+        channelID, err := strconv.ParseUint(c.Param("channel_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+                return
+        }
+
+        var channel Channel
+        if err := db.Preload("Guild").First(&channel, channelID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+                return
+        }
+
+        if channel.IsPrivate && channel.Name != "Nemaks Общий" {
+                if uid == 0 {
+                        c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+                        return
+                }
+                if !hasChannelAccess(uid, channel) {
+                        c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
+                        return
+                }
+        }
+
+        isAdmin := false
+        isModerator := false
+        if uid > 0 {
+                var user User
+                db.First(&user, uid)
+                isAdmin = user.Role == "admin"
+                isModerator = user.Role == "moderator"
+                if !isAdmin && channel.GuildID > 0 {
+                        var guild Guild
+                        db.First(&guild, channel.GuildID)
+                        isAdmin = guild.OwnerID == uid
+                }
+        }
+
+        var tools []ChannelTool
+        query := db.Where("channel_id = ?", channelID)
+        
+        if isAdmin {
+        } else if isModerator {
+                query = query.Where("visible_to IN ('all', 'moderators') OR owner_id = ?", uid)
+        } else if uid > 0 {
+                query = query.Where("visible_to = 'all' OR owner_id = ?", uid)
+        } else {
+                query = query.Where("visible_to = 'all'")
+        }
+        
+        query.Order("created_at DESC").Find(&tools)
+
+        c.JSON(http.StatusOK, tools)
 }
 
 func HandleUpdateChannelTool(c *gin.Context) {
-        c.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented"})
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        toolID, err := strconv.ParseUint(c.Param("tool_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tool ID"})
+                return
+        }
+
+        var tool ChannelTool
+        if err := db.First(&tool, toolID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Tool not found"})
+                return
+        }
+
+        var channel Channel
+        if err := db.First(&channel, tool.ChannelID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+                return
+        }
+
+        if !hasChannelAccess(uid, channel) {
+                c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
+                return
+        }
+
+        var user User
+        db.First(&user, uid)
+        isAdmin := user.Role == "admin"
+        isModerator := user.Role == "moderator"
+        if !isAdmin && channel.GuildID > 0 {
+                var guild Guild
+                db.First(&guild, channel.GuildID)
+                isAdmin = guild.OwnerID == uid
+        }
+
+        canEdit := tool.OwnerID == uid || isAdmin
+        if tool.VisibleTo == "moderators" && isModerator {
+                canEdit = true
+        }
+        if !canEdit {
+                c.JSON(http.StatusForbidden, gin.H{"error": "No permission to update this tool"})
+                return
+        }
+
+        var req struct {
+                Title     *string `json:"title"`
+                Content   *string `json:"content"`
+                VisibleTo *string `json:"visible_to"`
+        }
+        if err := c.BindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        updates := map[string]interface{}{"updated_at": GetCurrentTimestamp()}
+        if req.Title != nil {
+                updates["title"] = *req.Title
+        }
+        if req.Content != nil {
+                updates["content"] = *req.Content
+        }
+        if req.VisibleTo != nil && (tool.OwnerID == uid || isAdmin) {
+                updates["visible_to"] = *req.VisibleTo
+        }
+
+        db.Model(&tool).Updates(updates)
+        db.First(&tool, toolID)
+
+        c.JSON(http.StatusOK, tool)
 }
 
 func HandleDeleteChannelTool(c *gin.Context) {
-        c.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented"})
+        userID, _ := c.Get("user_id")
+        uid := uint(userID.(float64))
+        toolID, err := strconv.ParseUint(c.Param("tool_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tool ID"})
+                return
+        }
+
+        var tool ChannelTool
+        if err := db.First(&tool, toolID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Tool not found"})
+                return
+        }
+
+        var channel Channel
+        if err := db.First(&channel, tool.ChannelID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+                return
+        }
+
+        if !hasChannelAccess(uid, channel) {
+                c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
+                return
+        }
+
+        if tool.OwnerID != uid && !hasChannelPermission(uid, tool.ChannelID, channel.GuildID, "manage_channels") {
+                c.JSON(http.StatusForbidden, gin.H{"error": "No permission to delete this tool"})
+                return
+        }
+
+        db.Delete(&tool)
+        c.JSON(http.StatusOK, gin.H{"status": "deleted"})
+}
+
+func getUserPlan(userID uint) string {
+        var subscription struct {
+                PlanSlug string
+        }
+        err := db.Table("unified_subscriptions").
+                Where("user_id = ? AND is_active = true", userID).
+                Select("plan_slug").
+                First(&subscription).Error
+
+        if err != nil || subscription.PlanSlug == "" {
+                return "start"
+        }
+        return subscription.PlanSlug
 }

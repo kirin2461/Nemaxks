@@ -1223,4 +1223,30 @@ export const videosAPI = {
     request<{ views: number }>(`/videos/${id}/view`, { method: "POST" }),
 };
 
+export interface ChannelTool {
+  id: number;
+  channel_id: number;
+  tool_type: "board" | "notebook";
+  title: string;
+  content: string;
+  owner_id: number;
+  visible_to: "all" | "moderators" | "owner";
+  created_at: number;
+  updated_at: number;
+}
+
+export const channelToolsAPI = {
+  getTools: (channelId: number) =>
+    request<ChannelTool[]>(`/channels/${channelId}/tools`),
+
+  createTool: (channelId: number, data: { type: "board" | "notebook"; title: string; visible_to?: string }) =>
+    request<ChannelTool>(`/channels/${channelId}/tools`, { method: "POST", data }),
+
+  updateTool: (toolId: number, data: { title?: string; content?: string; visible_to?: string }) =>
+    request<ChannelTool>(`/channels/tools/${toolId}`, { method: "PUT", data }),
+
+  deleteTool: (toolId: number) =>
+    request<{ status: string }>(`/channels/tools/${toolId}`, { method: "DELETE" }),
+};
+
 export { APIError };

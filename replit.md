@@ -222,3 +222,36 @@ Only applies to Про and Премиум plans when used by organizations:
 - Reaction pills show emoji and count below messages
 - User's own reactions highlighted with primary color border
 - Access via Smile button on hover or context menu "Реакция"
+
+## Private Channels & Educational Tools (January 2026)
+
+### Private Channels
+- Channels with `is_private: true` visible only to invited members
+- Guild owners and platform admins/moderators see all private channels
+- "Nemaks Общий" channel always public regardless of private flag
+- Access controlled via ChannelMember table (channel_id + user_id)
+- Creator automatically added as channel member
+
+### Interactive Whiteboards (Pro+ Plan)
+- Canvas-based drawing tool for collaborative work
+- Tools: pencil, eraser, shapes (rectangle, ellipse, line), text, clear
+- Configurable colors and stroke widths
+- ChannelTool model with type="board"
+- Visibility options: all, moderators, owner
+
+### Online Notebooks (Premium Plan)
+- Rich-text block editor for notes and documentation
+- Block types: text, heading (h1-h3), list (bullet, numbered), code
+- ChannelTool model with type="notebook"
+- Content stored as JSON blocks
+
+### Subscription Plan Gating
+- getUserPlan function checks unified_subscriptions table
+- Returns: "start", "pro", or "premium"
+- HandleCreateChannelTool validates plan before creation
+- ChannelToolsPanel hides New button if plan insufficient
+
+### Channel Tools Security
+- HandleGetChannelTools filters by visibility permissions
+- Owner-only tools visible only to creator and guild admins
+- HandleUpdateChannelTool checks owner permission for visibility="owner" tools

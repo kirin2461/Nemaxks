@@ -328,14 +328,44 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           }));
         }
         break;
+      case 'dm':
+        {
+          const { updateConversationMessage, user: currentUser } = useStore.getState()
+          const senderId = data.from_user_id || data.sender_id
+          const isFromCurrentUser = String(senderId) === String(currentUser?.id)
+          if (!isFromCurrentUser) {
+            updateConversationMessage(String(senderId), {
+              content: data.content || data.message?.content,
+              created_at: data.created_at || new Date().toISOString()
+            }, false)
+            addNotification({
+              type: 'message',
+              title: 'Новое сообщение',
+              message: data.content || `Сообщение от ${data.username || 'пользователя'}`,
+              username: data.username
+            })
+          }
+        }
+        break
       case 'direct_message':
       case 'new_message':
-        addNotification({
-          type: 'message',
-          title: 'Новое сообщение',
-          message: data.content || `Сообщение от ${data.username || 'пользователя'}`,
-          username: data.username
-        })
+        {
+          const { updateConversationMessage, user: currentUser } = useStore.getState()
+          const senderId = data.from_user_id || data.sender_id
+          const isFromCurrentUser = String(senderId) === String(currentUser?.id)
+          if (!isFromCurrentUser) {
+            updateConversationMessage(String(senderId), {
+              content: data.content || data.message?.content,
+              created_at: data.created_at || new Date().toISOString()
+            }, false)
+            addNotification({
+              type: 'message',
+              title: 'Новое сообщение',
+              message: data.content || `Сообщение от ${data.username || 'пользователя'}`,
+              username: data.username
+            })
+          }
+        }
         break
       case 'friend_request':
         addNotification({

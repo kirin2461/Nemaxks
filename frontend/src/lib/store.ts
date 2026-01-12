@@ -25,6 +25,8 @@ interface AppState {
   checkAuth: () => Promise<void>
   updateProfile: (data: Partial<User>) => Promise<void>
   fetchConversations: () => Promise<void>
+  updateConversationMessage: (userId: string, message: any, isFromCurrentUser: boolean) => void
+  incrementChannelUnread: (channelId: string) => void
   setTheme: (theme: ThemeName) => void
   enableDemoMode: () => void
   setNotifications: (counts: Partial<NotificationCounts>) => void
@@ -131,6 +133,45 @@ export const useStore = create<AppState>((set, get) => ({
     } catch (error) {
       console.error('Failed to fetch conversations:', error)
     }
+  },
+
+  updateConversationMessage: (userId: string, message: any, isFromCurrentUser: boolean) => {
+    set((state) => {
+      const existingConv = state.conversations.find(c => String(c.user.id) === String(userId))
+      if (existingConv) {
+        return {
+          conversations: state.conversations.map(c => 
+            String(c.user.id) === String(userId)
+              ? {
+                  ...c,
+                  last_message: {
+                    ...c.last_message,
+                    content: message.content,
+                    created_at: message.created_at || new Date().toISOString()
+                  },
+                  unread_count: isFromCurrentUser ? c.unread_count : (c.unread_count || 0) + 1
+                }
+              : c
+          ).sort((a, b) => {
+            const aTime = a.last_message?.created_at ? new Date(a.last_message.created_at).getTime() : 0
+            const bTime = b.last_message?.created_at ? new Date(b.last_message.created_at).getTime() : 0
+            return bTime - aTime
+          })
+        }
+      }
+      return state
+    })
+    if (!isFromCurrentUser) {
+      set((state) => ({
+        notifications: { ...state.notifications, messages: state.notifications.messages + 1 }
+      }))
+    }
+  },
+
+  incrementChannelUnread: (channelId: string) => {
+    set((state) => ({
+      notifications: { ...state.notifications, channels: state.notifications.channels + 1 }
+    }))
   },
 
   setTheme: (theme) => {

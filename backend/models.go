@@ -74,6 +74,7 @@ type Channel struct {
         Description *string   `json:"description,omitempty"`
         Type        string    `json:"type" gorm:"default:'text'"`
         Position    int       `json:"position" gorm:"default:0"`
+        IsPrivate   bool      `json:"is_private" gorm:"default:false"`
         CreatedAt   time.Time `json:"created_at"`
         UpdatedAt   time.Time `json:"updated_at"`
         Guild       Guild     `json:"guild,omitempty" gorm:"foreignKey:GuildID"`

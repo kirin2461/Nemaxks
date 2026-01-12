@@ -101,6 +101,7 @@ func initDB() {
                 &JarvisUsage{}, &ManualPayment{}, &GuildMember{},
                 &ModerationCase{}, &ModerationVerdict{}, &ModerationActionLog{},
                 &Appeal{}, &JarvisAudioResponse{}, &JarvisVoiceCommand{}, &Voicemail{}, &JarvisCallSession{},
+                &ChannelTool{},
         )
         log.Println("DB connected")
 
@@ -410,9 +411,49 @@ func createGuildHandler(c *gin.Context) {
 
 func getChannelsHandler(c *gin.Context) {
         guildID := c.Param("guild_id")
+        userID, _ := getUserIDFromContext(c)
+
         var channels []Channel
         db.Where("guild_id = ?", guildID).Find(&channels)
-        c.JSON(http.StatusOK, channels)
+
+        var guild Guild
+        db.First(&guild, guildID)
+        isGuildOwner := guild.OwnerID == userID
+
+        var user User
+        db.First(&user, userID)
+        isAdmin := user.Role == "admin"
+
+        isGuildModerator := false
+        if !isAdmin && !isGuildOwner {
+                var memberRoles []GuildMemberRole
+                db.Where("guild_id = ? AND user_id = ?", guildID, userID).Find(&memberRoles)
+                for _, mr := range memberRoles {
+                        var role GuildRole
+                        if db.First(&role, mr.RoleID).Error == nil {
+                                if role.Permissions&PermAdministrator != 0 || role.Permissions&PermManageChannels != 0 || role.Permissions&PermBanMembers != 0 {
+                                        isGuildModerator = true
+                                        break
+                                }
+                        }
+                }
+        }
+
+        var visibleChannels []Channel
+        for _, ch := range channels {
+                if !ch.IsPrivate || ch.Name == "Nemaks Общий" {
+                        visibleChannels = append(visibleChannels, ch)
+                } else if isGuildOwner || isAdmin || isGuildModerator {
+                        visibleChannels = append(visibleChannels, ch)
+                } else {
+                        var member ChannelMember
+                        if db.Where("channel_id = ? AND user_id = ?", ch.ID, userID).First(&member).Error == nil {
+                                visibleChannels = append(visibleChannels, ch)
+                        }
+                }
+        }
+
+        c.JSON(http.StatusOK, visibleChannels)
 }
 
 func createChannelHandler(c *gin.Context) {
@@ -422,9 +463,12 @@ func createChannelHandler(c *gin.Context) {
                 return
         }
 
+        userID, _ := getUserIDFromContext(c)
+
         var req struct {
-                Name string `json:"name" binding:"required"`
-                Type string `json:"type"`
+                Name      string `json:"name" binding:"required"`
+                Type      string `json:"type"`
+                IsPrivate bool   `json:"is_private"`
         }
         if err := c.BindJSON(&req); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -436,14 +480,28 @@ func createChannelHandler(c *gin.Context) {
                 channelType = "text"
         }
 
+        isPrivate := req.IsPrivate
+        if req.Name == "Nemaks Общий" {
+                isPrivate = false
+        }
+
         channel := Channel{
-                GuildID: uint(guildID),
-                Name:    req.Name,
-                Type:    channelType,
+                GuildID:   uint(guildID),
+                Name:      req.Name,
+                Type:      channelType,
+                IsPrivate: isPrivate,
         }
         if err := db.Create(&channel).Error; err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create channel"})
                 return
+        }
+
+        if isPrivate {
+                member := ChannelMember{
+                        ChannelID: channel.ID,
+                        UserID:    userID,
+                }
+                db.Create(&member)
         }
 
         c.JSON(http.StatusCreated, channel)
