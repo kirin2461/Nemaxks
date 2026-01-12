@@ -1008,6 +1008,9 @@ export interface User {
   role?: string;
   alias?: string;
   created_at: string;
+  last_seen?: string;
+  is_online?: boolean;
+  is_premium?: boolean;
 }
 
 export interface Story {

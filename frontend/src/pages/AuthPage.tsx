@@ -70,6 +70,35 @@ export default function AuthPage() {
     }
   }, [showQR, qrToken, generateQRCode])
 
+  // Auto-regenerate QR code when it expires (10 minutes)
+  useEffect(() => {
+    if (!showQR || !qrExpires) return
+
+    const checkExpiry = () => {
+      if (new Date() >= qrExpires) {
+        generateQRCode()
+      }
+    }
+
+    // Check every 5 seconds
+    const expiryInterval = setInterval(checkExpiry, 5000)
+    
+    // Also set a timeout for exact expiry time
+    const timeUntilExpiry = qrExpires.getTime() - Date.now()
+    if (timeUntilExpiry > 0) {
+      const expiryTimeout = setTimeout(() => {
+        generateQRCode()
+      }, timeUntilExpiry)
+      
+      return () => {
+        clearInterval(expiryInterval)
+        clearTimeout(expiryTimeout)
+      }
+    }
+
+    return () => clearInterval(expiryInterval)
+  }, [showQR, qrExpires, generateQRCode])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')

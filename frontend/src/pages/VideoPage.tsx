@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Layout } from '@/components/Layout'
+import { useStore } from '@/lib/store'
 import {
   Play,
   Pause,
@@ -19,13 +20,21 @@ import {
   Share2,
   Bookmark,
   MoreVertical,
-  Loader2
+  Loader2,
+  ArrowLeft,
+  Eye,
+  Crown,
+  Lock,
+  Check
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { videosAPI, VideoWithAuthor, VideoChapter, VideoDetail } from '@/lib/api'
 import { formatDistanceToNow } from 'date-fns'
 
+type ViewMode = 'grid' | 'player'
+
 export default function VideoPage() {
+  const { user } = useStore()
   const [videos, setVideos] = useState<VideoWithAuthor[]>([])
   const [selectedVideo, setSelectedVideo] = useState<VideoDetail | null>(null)
   const [chapters, setChapters] = useState<VideoChapter[]>([])
@@ -39,9 +48,14 @@ export default function VideoPage() {
   const [showChapters, setShowChapters] = useState(true)
   const [isLiked, setIsLiked] = useState(false)
   const [isBookmarked, setIsBookmarked] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [selectedQuality, setSelectedQuality] = useState<'720p' | '1080p'>('720p')
+  const [showQualityMenu, setShowQualityMenu] = useState(false)
   const videoContainerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const progressRef = useRef<HTMLDivElement>(null)
+
+  const isPremium = user?.is_premium || false
 
   useEffect(() => {
     loadVideos()
@@ -50,11 +64,8 @@ export default function VideoPage() {
   const loadVideos = async () => {
     try {
       setLoading(true)
-      const data = await videosAPI.getVideos({ limit: 20 })
+      const data = await videosAPI.getVideos({ limit: 50 })
       setVideos(data || [])
-      if (data && data.length > 0) {
-        await selectVideo(data[0].id)
-      }
     } catch (error) {
       console.error('Failed to load videos:', error)
       setVideos([])
@@ -71,10 +82,17 @@ export default function VideoPage() {
       setDuration(detail.video.duration || 0)
       setCurrentTime(0)
       setIsPlaying(false)
+      setViewMode('player')
       videosAPI.incrementView(videoId).catch(() => {})
     } catch (error) {
       console.error('Failed to load video:', error)
     }
+  }
+
+  const backToGrid = () => {
+    setViewMode('grid')
+    setSelectedVideo(null)
+    setIsPlaying(false)
   }
 
   const formatTime = (seconds: number) => {
@@ -194,14 +212,91 @@ export default function VideoPage() {
     )
   }
 
-  if (!selectedVideo && videos.length === 0) {
+  if (videos.length === 0) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <Film className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No Videos Yet</h2>
-            <p className="text-muted-foreground">Be the first to upload a video!</p>
+            <h2 className="text-xl font-semibold mb-2">Видео пока нет</h2>
+            <p className="text-muted-foreground">Будьте первым, кто загрузит видео!</p>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  if (viewMode === 'grid') {
+    return (
+      <Layout>
+        <div className="min-h-screen p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold">Видео</h1>
+              <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                <Upload className="w-5 h-5" />
+                <span>Загрузить</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {videos.map((video) => (
+                <button
+                  key={video.id}
+                  onClick={() => selectVideo(video.id)}
+                  className="group text-left rounded-xl overflow-hidden bg-card hover:bg-card/80 transition-all hover:shadow-lg hover:scale-[1.02]"
+                >
+                  <div className="relative aspect-video bg-secondary overflow-hidden">
+                    {video.thumbnail ? (
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-secondary/50">
+                        <Film className="w-12 h-12 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100">
+                        <Play className="w-7 h-7 text-white ml-1" />
+                      </div>
+                    </div>
+                    <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/80 rounded text-xs text-white font-medium">
+                      {formatTime(video.duration)}
+                    </div>
+                    {video.quality === '1080p' && (
+                      <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded text-xs text-white font-bold flex items-center gap-1">
+                        <Crown className="w-3 h-3" />
+                        HD
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <div className="flex gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-sm font-bold">
+                        {video.author?.username?.[0]?.toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium line-clamp-2 text-sm leading-tight mb-1">
+                          {video.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {video.author?.display_name || video.author?.username}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                          <Eye className="w-3 h-3" />
+                          <span>{formatViews(video.views)} просмотров</span>
+                          <span>•</span>
+                          <span>{formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </Layout>
@@ -215,6 +310,14 @@ export default function VideoPage() {
     <Layout>
       <div className="min-h-screen p-6">
         <div className="max-w-7xl mx-auto">
+          <button
+            onClick={backToGrid}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Назад к видео</span>
+          </button>
+
           <div className="flex gap-6">
             <div className="flex-1">
               <div
@@ -310,9 +413,55 @@ export default function VideoPage() {
                           className="w-20 h-1 accent-primary"
                         />
                       </div>
-                      <button className="text-white hover:text-primary transition-colors">
-                        <Settings className="w-5 h-5" />
-                      </button>
+                      
+                      <div className="relative">
+                        <button 
+                          onClick={() => setShowQualityMenu(!showQualityMenu)}
+                          className="text-white hover:text-primary transition-colors flex items-center gap-1"
+                        >
+                          <Settings className="w-5 h-5" />
+                          <span className="text-xs">{selectedQuality}</span>
+                        </button>
+                        {showQualityMenu && (
+                          <div className="absolute bottom-full right-0 mb-2 bg-black/90 rounded-lg overflow-hidden min-w-[120px]">
+                            <button
+                              onClick={() => { setSelectedQuality('720p'); setShowQualityMenu(false) }}
+                              className="w-full px-4 py-2 text-sm text-white hover:bg-white/10 flex items-center justify-between"
+                            >
+                              <span>720p</span>
+                              {selectedQuality === '720p' && <Check className="w-4 h-4 text-primary" />}
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (isPremium) {
+                                  setSelectedQuality('1080p')
+                                  setShowQualityMenu(false)
+                                }
+                              }}
+                              disabled={!isPremium}
+                              className={cn(
+                                "w-full px-4 py-2 text-sm flex items-center justify-between",
+                                isPremium 
+                                  ? "text-white hover:bg-white/10" 
+                                  : "text-white/50 cursor-not-allowed"
+                              )}
+                            >
+                              <span className="flex items-center gap-2">
+                                1080p
+                                {!isPremium && <Lock className="w-3 h-3" />}
+                              </span>
+                              {selectedQuality === '1080p' && <Check className="w-4 h-4 text-primary" />}
+                            </button>
+                            {!isPremium && (
+                              <div className="px-4 py-2 text-xs text-amber-400 border-t border-white/10 flex items-center gap-1">
+                                <Crown className="w-3 h-3" />
+                                <span>Premium для 1080p</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
                       <button
                         onClick={toggleFullscreen}
                         className="text-white hover:text-primary transition-colors"
@@ -344,7 +493,7 @@ export default function VideoPage() {
                       <div>
                         <p className="font-medium">{author?.display_name || author?.username}</p>
                         <p className="text-sm text-muted-foreground">
-                          {video && formatViews(video.views)} views
+                          {video && formatViews(video.views)} просмотров
                           {video?.created_at && ` • ${formatDistanceToNow(new Date(video.created_at), { addSuffix: true })}`}
                         </p>
                       </div>
@@ -364,7 +513,7 @@ export default function VideoPage() {
                     </button>
                     <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary hover:bg-secondary/80 transition-colors">
                       <Share2 className="w-5 h-5" />
-                      <span>Share</span>
+                      <span>Поделиться</span>
                     </button>
                     <button
                       onClick={handleBookmark}
@@ -374,7 +523,7 @@ export default function VideoPage() {
                       )}
                     >
                       <Bookmark className="w-5 h-5" />
-                      <span>Save</span>
+                      <span>Сохранить</span>
                     </button>
                     <button className="p-2 rounded-full bg-secondary hover:bg-secondary/80 transition-colors">
                       <MoreVertical className="w-5 h-5" />
@@ -405,7 +554,7 @@ export default function VideoPage() {
                     className="flex items-center gap-2 text-lg font-semibold mb-3"
                   >
                     <List className="w-5 h-5" />
-                    <span>Chapters ({chapters.length})</span>
+                    <span>Главы ({chapters.length})</span>
                   </button>
                   {showChapters && (
                     <div className="grid gap-2">
@@ -446,34 +595,29 @@ export default function VideoPage() {
             </div>
 
             <div className="w-80 hidden lg:block">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Related Videos</h2>
-                <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
-                  <Upload className="w-5 h-5" />
-                </button>
-              </div>
+              <h2 className="text-lg font-semibold mb-4">Похожие видео</h2>
               <div className="space-y-3">
-                {videos.map((v) => (
+                {videos.filter(v => v.id !== video?.id).slice(0, 10).map((v) => (
                   <button
                     key={v.id}
                     onClick={() => selectVideo(v.id)}
-                    className={cn(
-                      "w-full flex gap-3 p-2 rounded-xl transition-colors text-left",
-                      video?.id === v.id ? "bg-primary/20" : "hover:bg-secondary"
-                    )}
+                    className="w-full flex gap-3 p-2 rounded-xl transition-colors text-left hover:bg-secondary"
                   >
-                    <div className="w-32 h-20 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <div className="w-32 h-20 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0 overflow-hidden relative">
                       {v.thumbnail ? (
                         <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
                       ) : (
                         <Film className="w-8 h-8 text-muted-foreground" />
                       )}
+                      <div className="absolute bottom-1 right-1 px-1 py-0.5 bg-black/80 rounded text-[10px] text-white">
+                        {formatTime(v.duration)}
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium line-clamp-2">{v.title}</p>
-                      <p className="text-sm text-muted-foreground">{v.author?.username}</p>
+                      <p className="font-medium line-clamp-2 text-sm">{v.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{v.author?.username}</p>
                       <p className="text-xs text-muted-foreground">
-                        {formatViews(v.views)} views • {formatTime(v.duration)}
+                        {formatViews(v.views)} просмотров
                       </p>
                     </div>
                   </button>

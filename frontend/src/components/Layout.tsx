@@ -139,18 +139,13 @@ export function Layout({ children }: LayoutProps) {
           {/* Logo and close button for mobile */}
           <div className="p-4 border-b border-border flex items-center justify-between">
             <Logo size="md" showText />
-            <div className="flex items-center gap-2">
-              <div className="hidden lg:block">
-                <NotificationCenter />
-              </div>
-              <button
-                onClick={closeSidebar}
-                className="lg:hidden p-2 hover:bg-accent rounded-lg transition-colors"
-                aria-label="Close menu"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            <button
+              onClick={closeSidebar}
+              className="lg:hidden p-2 hover:bg-accent rounded-lg transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Navigation */}

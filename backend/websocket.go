@@ -43,13 +43,14 @@ type WSDirectMessage struct {
 }
 
 type WSHub struct {
-        clients       map[*WSClient]bool
-        clientsByUser map[string]*WSClient
-        broadcast     chan interface{}
-        direct        chan WSDirectMessage
-        register      chan *WSClient
-        unregister    chan *WSClient
-        mu            sync.RWMutex
+        clients           map[*WSClient]bool
+        clientsByUser     map[string]*WSClient
+        userConnCount     map[string]int
+        broadcast         chan interface{}
+        direct            chan WSDirectMessage
+        register          chan *WSClient
+        unregister        chan *WSClient
+        mu                sync.RWMutex
 }
 
 type VoiceParticipant struct {
@@ -206,6 +207,7 @@ var upgrader = websocket.Upgrader{
 var hub = &WSHub{
         clients:       make(map[*WSClient]bool),
         clientsByUser: make(map[string]*WSClient),
+        userConnCount: make(map[string]int),
         broadcast:     make(chan interface{}, 256),
         direct:        make(chan WSDirectMessage, 256),
         register:      make(chan *WSClient),
@@ -223,18 +225,50 @@ func (h *WSHub) run() {
                         h.mu.Lock()
                         h.clients[client] = true
                         h.clientsByUser[client.UserID] = client
+                        h.userConnCount[client.UserID]++
+                        isFirstConnection := h.userConnCount[client.UserID] == 1
                         h.mu.Unlock()
-                        log.Printf("Client %s registered", client.UserID)
+                        log.Printf("Client %s registered (connections: %d)", client.UserID, h.userConnCount[client.UserID])
+                        
+                        // Update user status to online only on first connection
+                        if isFirstConnection {
+                                go func(userID string) {
+                                        now := time.Now()
+                                        db.Model(&User{}).Where("id = ?", userID).Updates(map[string]interface{}{
+                                                "last_seen": now,
+                                                "status":    "online",
+                                        })
+                                }(client.UserID)
+                        }
 
                 case client := <-h.unregister:
                         h.mu.Lock()
+                        var connCount int
+                        var shouldSetOffline bool
                         if _, ok := h.clients[client]; ok {
                                 delete(h.clients, client)
-                                delete(h.clientsByUser, client.UserID)
+                                h.userConnCount[client.UserID]--
+                                connCount = h.userConnCount[client.UserID]
+                                if connCount <= 0 {
+                                        delete(h.clientsByUser, client.UserID)
+                                        delete(h.userConnCount, client.UserID)
+                                        shouldSetOffline = true
+                                }
                                 close(client.Send)
                         }
                         h.mu.Unlock()
-                        log.Printf("Client %s unregistered", client.UserID)
+                        log.Printf("Client %s unregistered (remaining connections: %d)", client.UserID, connCount)
+                        
+                        // Update user status to offline only when no connections remain
+                        if shouldSetOffline {
+                                go func(userID string) {
+                                        now := time.Now()
+                                        db.Model(&User{}).Where("id = ?", userID).Updates(map[string]interface{}{
+                                                "last_seen": now,
+                                                "status":    "offline",
+                                        })
+                                }(client.UserID)
+                        }
 
                 case msg := <-h.broadcast:
                         h.mu.RLock()

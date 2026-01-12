@@ -97,6 +97,11 @@ func main() {
         r.POST("/api/auth/login", loginHandler)
         r.POST("/api/auth/logout", authMiddleware(), logoutHandler)
         r.GET("/api/auth/me", authMiddleware(), meHandler)
+        
+        // QR Login (10-minute expiration)
+        r.POST("/api/auth/qr/generate", generateQRLoginHandler)
+        r.GET("/api/auth/qr/status/:token", checkQRLoginStatusHandler)
+        r.POST("/api/auth/qr/confirm/:token", authMiddleware(), confirmQRLoginHandler)
 
         // Guilds
         r.GET("/api/guilds", authMiddleware(), getGuildsHandler)

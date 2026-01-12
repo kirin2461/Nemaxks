@@ -5,9 +5,11 @@ import (
         "net/http"
         "os"
         "strconv"
+        "strings"
         "time"
 
         "github.com/gin-gonic/gin"
+        "github.com/golang-jwt/jwt/v5"
         "gorm.io/gorm"
 )
 
@@ -226,7 +228,41 @@ func getVideoHandler(c *gin.Context) {
                 c.JSON(http.StatusNotFound, gin.H{"error": "Video not found"})
                 return
         }
-        c.JSON(http.StatusOK, video)
+        
+        // Determine max quality based on user's premium status
+        maxQuality := "720p"
+        authHeader := c.GetHeader("Authorization")
+        if authHeader != "" {
+                tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+                token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+                        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+                                return nil, jwt.ErrSignatureInvalid
+                        }
+                        return getJWTSecret(), nil
+                })
+                if err == nil && token.Valid {
+                        if claims, ok := token.Claims.(jwt.MapClaims); ok {
+                                userIDFloat, _ := claims["user_id"].(float64)
+                                var user User
+                                if err := db.First(&user, uint(userIDFloat)).Error; err == nil {
+                                        // Check if user has premium subscription
+                                        var sub PremiumSubscription
+                                        if err := db.Preload("Plan").Where("user_id = ? AND status IN ?", 
+                                                user.ID, []string{"active", "trialing"}).First(&sub).Error; err == nil {
+                                                // Pro and Premium plans get 1080p
+                                                if sub.Plan.Slug == "pro" || sub.Plan.Slug == "premium" || sub.Plan.Slug == "vip" {
+                                                        maxQuality = "1080p"
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "video":       video,
+                "max_quality": maxQuality,
+        })
 }
 
 func createVideoHandler(c *gin.Context) {

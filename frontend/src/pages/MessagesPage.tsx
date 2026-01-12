@@ -3,6 +3,7 @@ import { useLocation } from 'wouter'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Layout } from '@/components/Layout'
 import { Avatar } from '@/components/Avatar'
+import { OnlineIndicator } from '@/components/OnlineIndicator'
 import { ContextMenu, useContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
 import { NewMessageModal } from '@/components/NewMessageModal'
 import { useStore } from '@/lib/store'
@@ -634,16 +635,27 @@ export default function MessagesPage() {
                   }`}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <Avatar
-                    src={conv.user.avatar}
-                    alt={conv.user.username}
-                    userId={conv.user.id}
-                  />
+                  <div className="relative">
+                    <Avatar
+                      src={conv.user.avatar}
+                      alt={conv.user.username}
+                      userId={conv.user.id}
+                    />
+                    <div className="absolute -bottom-0.5 -right-0.5 border-2 border-card rounded-full">
+                      <OnlineIndicator 
+                        isOnline={conv.user.is_online} 
+                        lastSeen={conv.user.last_seen}
+                        size="sm"
+                      />
+                    </div>
+                  </div>
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="font-medium truncate">
-                        {conv.user.alias || conv.user.username}
-                      </p>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="font-medium truncate">
+                          {conv.user.alias || conv.user.username}
+                        </p>
+                      </div>
                       <span className="text-xs text-muted-foreground">
                         {formatTime(conv.last_message.created_at)}
                       </span>
@@ -690,15 +702,32 @@ export default function MessagesPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  <Avatar
-                    src={selectedUser.avatar}
-                    alt={selectedUser.username}
-                    userId={selectedUser.id}
-                    size="md"
-                  />
+                  <div className="relative">
+                    <Avatar
+                      src={selectedUser.avatar}
+                      alt={selectedUser.username}
+                      userId={selectedUser.id}
+                      size="md"
+                    />
+                    <div className="absolute -bottom-0.5 -right-0.5 border-2 border-card rounded-full">
+                      <OnlineIndicator 
+                        isOnline={selectedUser.is_online} 
+                        lastSeen={selectedUser.last_seen}
+                        size="sm"
+                      />
+                    </div>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-base sm:text-lg truncate">{selectedUser.alias || selectedUser.username}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">@{selectedUser.username}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs sm:text-sm text-muted-foreground">@{selectedUser.username}</p>
+                      <span className="text-xs">•</span>
+                      <OnlineIndicator 
+                        isOnline={selectedUser.is_online} 
+                        lastSeen={selectedUser.last_seen}
+                        showText
+                      />
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button

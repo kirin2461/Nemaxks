@@ -456,3 +456,137 @@ func getGuildHandler(c *gin.Context) {
         }
         c.JSON(http.StatusOK, guild)
 }
+
+// QR Login Handlers - 10 minute expiration
+
+func generateQRLoginHandler(c *gin.Context) {
+        // Generate unique token
+        token := generateRandomString(32)
+        
+        // Create session with 10-minute expiration
+        session := QRLoginSession{
+                Token:     token,
+                Status:    "pending",
+                ExpiresAt: time.Now().Add(10 * time.Minute),
+        }
+        
+        if err := db.Create(&session).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create QR session"})
+                return
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "token":      token,
+                "expires_at": session.ExpiresAt,
+        })
+}
+
+func checkQRLoginStatusHandler(c *gin.Context) {
+        token := c.Param("token")
+        
+        var session QRLoginSession
+        if err := db.Preload("User").Where("token = ?", token).First(&session).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Session not found"})
+                return
+        }
+        
+        // Check if expired
+        if time.Now().After(session.ExpiresAt) {
+                session.Status = "expired"
+                db.Save(&session)
+                c.JSON(http.StatusGone, gin.H{
+                        "status":     "expired",
+                        "expires_at": session.ExpiresAt,
+                })
+                return
+        }
+        
+        response := gin.H{
+                "status":     session.Status,
+                "expires_at": session.ExpiresAt,
+        }
+        
+        // If confirmed, include JWT token and user info
+        if session.Status == "confirmed" && session.JWTToken != nil {
+                response["jwt_token"] = *session.JWTToken
+                if session.User != nil {
+                        response["user"] = session.User.ToPublic()
+                }
+        }
+        
+        c.JSON(http.StatusOK, response)
+}
+
+func confirmQRLoginHandler(c *gin.Context) {
+        token := c.Param("token")
+        userID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
+        
+        var session QRLoginSession
+        if err := db.Where("token = ?", token).First(&session).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Session not found"})
+                return
+        }
+        
+        // Check if expired
+        if time.Now().After(session.ExpiresAt) {
+                session.Status = "expired"
+                db.Save(&session)
+                c.JSON(http.StatusGone, gin.H{"error": "QR code has expired"})
+                return
+        }
+        
+        // Check if already confirmed
+        if session.Status == "confirmed" {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Session already confirmed"})
+                return
+        }
+        
+        // Get user
+        var user User
+        if err := db.First(&user, userID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+                return
+        }
+        
+        // Generate JWT for the QR session
+        jwtToken, err := generateToken(&user)
+        if err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+                return
+        }
+        
+        // Update session
+        session.Status = "confirmed"
+        session.UserID = &user.ID
+        session.ConfirmedBy = &user.ID
+        session.JWTToken = &jwtToken
+        
+        if err := db.Save(&session).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to confirm session"})
+                return
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "message":  "Login confirmed",
+                "username": user.Username,
+        })
+}
+
+func generateRandomString(length int) string {
+        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        b := make([]byte, length)
+        randomBytes := make([]byte, length)
+        _, err := rand.Read(randomBytes)
+        if err != nil {
+                log.Printf("CRITICAL: crypto/rand failed: %v", err)
+                panic("crypto/rand unavailable - cannot generate secure tokens")
+        }
+        for i := range b {
+                b[i] = chars[int(randomBytes[i])%len(chars)]
+        }
+        return string(b)
+}
