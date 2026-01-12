@@ -94,12 +94,18 @@ func initDB() {
                 &PremiumPlan{}, &UserPremium{}, &CreatorDonation{},
                 &UserRequest{}, &PremiumSubscription{}, &PremiumTransaction{},
                 &PromoCode{}, &PromoCodeUsage{}, &GiftSubscription{}, &ReferralBonus{}, &PostBoost{},
+                &SubscriptionPlan{}, &SeatPricing{}, &OveragePricing{},
+                &Org{}, &OrgSubscription{}, &OrgEntitlement{}, &OrgMember{}, &ChannelACL{},
+                &StorageOverageDaily{}, &DonationSettings{}, &Donation{}, &PricingChangeLog{},
+                &GuildTemplate{}, &ChannelTemplate{}, &InteractiveBoard{}, &OnlineNotebook{},
+                &JarvisUsage{}, &ManualPayment{}, &GuildMember{},
         )
         log.Println("DB connected")
 
         initDefaultForbiddenWords()
         ensureGlobalGuild()
         seedPremiumPlans()
+        initOrgBillingSeeds()
 }
 
 func ensureGlobalGuild() {

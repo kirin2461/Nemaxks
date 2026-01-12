@@ -362,6 +362,12 @@ func main() {
         r.PUT("/api/guilds/:id/roles/:role_id", authMiddleware(), updateGuildRoleHandler)
         r.DELETE("/api/guilds/:id/roles/:role_id", authMiddleware(), deleteGuildRoleHandler)
 
+        // Organization Billing & Templates
+        setupOrgBillingRoutes(r, authMiddleware())
+
+        // Admin Organization & Billing Management
+        setupAdminOrgRoutes(r, authMiddleware(), adminMiddleware())
+
         port := os.Getenv("PORT")
         if port == "" {
                 port = "8000"

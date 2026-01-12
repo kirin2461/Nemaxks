@@ -31,6 +31,7 @@ const ServerJoinPage = React.lazy(() => import('./pages/ServerJoinPage'))
 const SupportPage = React.lazy(() => import('./pages/SupportPage'))
 const PremiumPage = React.lazy(() => import('./pages/PremiumPage'))
 const ReportsPage = React.lazy(() => import('./pages/ReportsPage'))
+const TemplatesPage = React.lazy(() => import('./pages/TemplatesPage'))
 
 // Loading component with skeleton animation
 function LoadingScreen() {
@@ -182,6 +183,12 @@ function App() {
                 <Route path="/reports">
                   <ProtectedRoute>
                     <ReportsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/templates">
+                  <ProtectedRoute>
+                    <TemplatesPage />
                   </ProtectedRoute>
                 </Route>
 

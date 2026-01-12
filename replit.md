@@ -94,3 +94,57 @@ Authentication relies on JWT tokens. User sessions and UI preferences are manage
 - Churn rate tracking
 - Transaction history with filtering
 - Refund processing
+
+## Educational Organization Subscriptions (January 2026)
+
+### Organization Structure
+- **Org**: Educational organization with owner, subscription, and members
+- **OrgMember**: Members with roles (owner, admin, student_editor, reader, staff)
+- **OrgSubscription**: Subscription status, plan, billing cycle
+- **OrgEntitlement**: Plan-specific feature access
+
+### Subscription Plans
+- **Free**: 7-day video retention, 30-day messages, 3 Jarvis requests/day
+- **Edu Basic**: 14-day video, 60-day messages, 10 Jarvis/day, overage storage enabled
+- **Edu Pro**: 60-day video, 180-day messages, 50 Jarvis/day, interactive boards/notebooks, 2000₽/month base
+
+### Seat-Based Billing
+- **student_editor**: 35₽/month - Full editing rights
+- **staff**: 500₽/month - Instructor/admin capabilities
+- **reader**: 0₽ - View-only access
+- Monthly billing calculated as: base_price + (student_editors × 35) + (staff × 500)
+
+### Content Retention & Overage Storage
+- Automatic content deletion after plan limits
+- Overage storage: 50₽/GB-month for keeping content beyond limits
+- Only available for Edu Basic and Edu Pro plans
+- Admin can enable/disable overage per organization
+
+### Jarvis AI Usage
+- Daily limits per plan (3/10/50 requests)
+- Usage tracked per organization
+- Resets at midnight each day
+
+### Templates System
+- **Guild Templates**: Pre-configured servers (community, edu-course, university, gaming, business)
+- **Channel Templates**: Ready-to-use channels (lecture, seminar, homework, whiteboard, notebook, voice, video, chat)
+- Plan-based access: Some templates require Edu Basic or Edu Pro
+
+### Donations System
+- Support platform author with donations
+- Minimum amount: 20₽
+- Quick donation buttons: 20, 50, 100, 500₽
+- Custom amount support
+
+### Manual Payment System
+- Card transfer option for users without online payment
+- Admin verification workflow
+- Status tracking: pending → approved/rejected
+- Subscription activation upon approval
+
+### Admin Organization Panel
+- Organization management (create, view, update)
+- Subscription management
+- Template management
+- Manual payment verification
+- Donation tracking
