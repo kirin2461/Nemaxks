@@ -56,6 +56,12 @@ type Guild = {
   channels: Array<{ id: string; name: string; type: string; category: string }>
 }
 
+type MessageReaction = {
+  emoji: string
+  count: number
+  users: string[]
+}
+
 type ChannelMessage = {
   id: string
   channel_id: string
@@ -63,6 +69,7 @@ type ChannelMessage = {
   author: { id: string; username: string; avatar: string | undefined }
   content: string
   created_at: string
+  reactions?: MessageReaction[]
 }
 
 export default function ChannelsPage() {
@@ -109,6 +116,7 @@ export default function ChannelsPage() {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState('')
   const [unreadChannels, setUnreadChannels] = useState<Set<string>>(new Set())
+  const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastTypingSentRef = useRef<number>(0)
   
@@ -159,6 +167,54 @@ export default function ChannelsPage() {
           return newMap
         })
       }
+    }
+
+    if (data.type === 'reaction_add' || data.type === 'reaction-add') {
+      const messageId = String(data.message_id)
+      const emoji = data.emoji
+      const reactUserId = String(data.user_id)
+      setMessages(prev => prev.map(m => {
+        if (m.id !== messageId) return m
+        const reactions = m.reactions || []
+        const existingReaction = reactions.find(r => r.emoji === emoji)
+        if (existingReaction) {
+          if (!existingReaction.users.includes(reactUserId)) {
+            return {
+              ...m,
+              reactions: reactions.map(r =>
+                r.emoji === emoji
+                  ? { ...r, count: r.count + 1, users: [...r.users, reactUserId] }
+                  : r
+              )
+            }
+          }
+          return m
+        }
+        return {
+          ...m,
+          reactions: [...reactions, { emoji, count: 1, users: [reactUserId] }]
+        }
+      }))
+    }
+
+    if (data.type === 'reaction_remove' || data.type === 'reaction-remove') {
+      const messageId = String(data.message_id)
+      const emoji = data.emoji
+      const reactUserId = String(data.user_id)
+      setMessages(prev => prev.map(m => {
+        if (m.id !== messageId) return m
+        const reactions = m.reactions || []
+        return {
+          ...m,
+          reactions: reactions
+            .map(r =>
+              r.emoji === emoji
+                ? { ...r, count: r.count - 1, users: r.users.filter(u => u !== reactUserId) }
+                : r
+            )
+            .filter(r => r.count > 0)
+        }
+      }))
     }
   }, [selectedChannel, user?.id])
 
@@ -228,7 +284,8 @@ export default function ChannelsPage() {
           author_id: String(m.author_id || m.AuthorID),
           author: m.author || m.Author || { id: String(m.author_id || m.AuthorID), username: 'User', avatar: undefined },
           content: m.content || m.Content,
-          created_at: m.created_at || m.CreatedAt
+          created_at: m.created_at || m.CreatedAt,
+          reactions: m.reactions || m.Reactions || []
         })))
       }
     } catch (error) {
@@ -486,6 +543,61 @@ export default function ChannelsPage() {
     console.log('Pin message:', messageId)
   }
 
+  const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '🎉', '🔥']
+
+  const handleAddReaction = async (messageId: string, emoji: string) => {
+    try {
+      await messagesAPI.addReaction(messageId, emoji)
+      setMessages(prev => prev.map(m => {
+        if (m.id !== messageId) return m
+        const reactions = m.reactions || []
+        const existingReaction = reactions.find(r => r.emoji === emoji)
+        if (existingReaction) {
+          if (!existingReaction.users.includes(user?.id?.toString() || '')) {
+            return {
+              ...m,
+              reactions: reactions.map(r =>
+                r.emoji === emoji
+                  ? { ...r, count: r.count + 1, users: [...r.users, user?.id?.toString() || ''] }
+                  : r
+              )
+            }
+          }
+          return m
+        }
+        return {
+          ...m,
+          reactions: [...reactions, { emoji, count: 1, users: [user?.id?.toString() || ''] }]
+        }
+      }))
+      setShowReactionPicker(null)
+    } catch (error) {
+      console.error('Failed to add reaction:', error)
+    }
+  }
+
+  const handleRemoveReaction = async (messageId: string, emoji: string) => {
+    try {
+      await messagesAPI.removeReaction(messageId, emoji)
+      setMessages(prev => prev.map(m => {
+        if (m.id !== messageId) return m
+        const reactions = m.reactions || []
+        return {
+          ...m,
+          reactions: reactions
+            .map(r =>
+              r.emoji === emoji
+                ? { ...r, count: r.count - 1, users: r.users.filter(u => u !== user?.id?.toString()) }
+                : r
+            )
+            .filter(r => r.count > 0)
+        }
+      }))
+    } catch (error) {
+      console.error('Failed to remove reaction:', error)
+    }
+  }
+
   // Guild actions
   const handleLeaveGuild = (guildId: string, guildName: string) => {
     setConfirmDialog({
@@ -695,7 +807,7 @@ export default function ChannelsPage() {
       {
         label: 'Реакция',
         icon: <Smile className="w-4 h-4" />,
-        onClick: () => {},
+        onClick: () => setShowReactionPicker(message.id),
       },
       {
         label: 'Копировать',
@@ -1187,15 +1299,55 @@ export default function ChannelsPage() {
                             </div>
                           </div>
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <>
+                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            {message.reactions && message.reactions.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {message.reactions.map((reaction) => {
+                                  const hasReacted = reaction.users.includes(user?.id?.toString() || '')
+                                  return (
+                                    <button
+                                      key={reaction.emoji}
+                                      onClick={() => hasReacted ? handleRemoveReaction(message.id, reaction.emoji) : handleAddReaction(message.id, reaction.emoji)}
+                                      className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
+                                        hasReacted ? 'bg-primary/20 border border-primary/50' : 'bg-accent/30 hover:bg-accent/50'
+                                      }`}
+                                    >
+                                      <span>{reaction.emoji}</span>
+                                      <span className="text-muted-foreground">{reaction.count}</span>
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                       
                       {editingMessageId !== message.id && (
-                        <div className="opacity-0 group-hover:opacity-100 flex gap-1">
+                        <div className="opacity-0 group-hover:opacity-100 flex gap-1 relative">
                           <button className="p-1 hover:bg-accent rounded" onClick={() => handleReplyToMessage(message)}>
                             <Reply className="w-4 h-4 text-muted-foreground" />
                           </button>
+                          <button 
+                            className="p-1 hover:bg-accent rounded" 
+                            onClick={() => setShowReactionPicker(showReactionPicker === message.id ? null : message.id)}
+                          >
+                            <Smile className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                          {showReactionPicker === message.id && (
+                            <div className="absolute top-8 right-0 z-50 bg-card border border-border rounded-lg shadow-lg p-2 flex gap-1">
+                              {commonEmojis.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleAddReaction(message.id, emoji)}
+                                  className="text-xl hover:bg-accent p-1 rounded transition-all hover:scale-110"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                           {String(message.author_id) === String(user?.id) && (
                             <button className="p-1 hover:bg-accent rounded" onClick={() => handleStartEditMessage(message)}>
                               <Edit3 className="w-4 h-4 text-muted-foreground" />
