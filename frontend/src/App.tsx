@@ -54,7 +54,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    return <Redirect to="/auth" />
+    return <Redirect to="/welcome" />
   }
 
   return <>{children}</>
