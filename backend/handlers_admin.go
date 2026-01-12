@@ -482,7 +482,7 @@ func updateUserSettingsHandler(c *gin.Context) {
         userID, _ := c.Get("user_id")
         uid := uint(userID.(float64))
 
-        var req UserSettings
+        var req map[string]interface{}
         if err := c.BindJSON(&req); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
                 return
@@ -490,11 +490,23 @@ func updateUserSettingsHandler(c *gin.Context) {
 
         var settings UserSettings
         if db.Where("user_id = ?", uid).First(&settings).RowsAffected == 0 {
-                req.UserID = uid
-                db.Create(&req)
-        } else {
-                db.Model(&settings).Updates(req)
+                settings = UserSettings{
+                        UserID:               uid,
+                        Language:             "ru",
+                        Theme:                "dark",
+                        NotificationsEnabled: true,
+                        SoundEnabled:         true,
+                        VoiceEnabled:         true,
+                        NoiseReduction:       true,
+                        JarvisPersonality:    "professional",
+                        JarvisWakeWord:       "Jarvis",
+                        ProfileVisibility:    "public",
+                        MessagePrivacy:       "everyone",
+                }
+                db.Create(&settings)
         }
+
+        db.Model(&settings).Updates(req)
 
         c.JSON(http.StatusOK, gin.H{"status": "updated"})
 }
