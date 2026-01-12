@@ -95,20 +95,17 @@ Authentication relies on JWT tokens. User sessions and UI preferences are manage
 - Transaction history with filtering
 - Refund processing
 
-## Educational Organization Subscriptions (January 2026)
+## Unified Subscription System (January 2026)
 
-### Organization Structure
-- **Org**: Educational organization with owner, subscription, and members
-- **OrgMember**: Members with roles (owner, admin, student_editor, reader, staff)
-- **OrgSubscription**: Subscription status, plan, billing cycle
-- **OrgEntitlement**: Plan-specific feature access
+### Unified Subscription Plans
+Three consolidated plans serving both individual users and organizations:
 
-### Subscription Plans
-- **Free**: Бесплатный план — 7 дней хранения видео, 30 дней сообщений, 3 запроса Jarvis AI в день. Доступ по инвайту. Без возможности докупки хранилища.
-- **Edu Basic**: Для курсов и малых групп — 14 дней видео, 60 дней сообщений, 10 Jarvis AI запросов/день. Оплата за места: студент-редактор 35₽/мес, преподаватель 500₽/мес. Возможность докупки хранилища 50₽/ГБ-месяц.
-- **Edu Pro**: Максимум для учебных заведений — 2000₽/мес базовая + места. 60 дней видео, 180 дней сообщений, 50 Jarvis AI запросов/день. Интерактивные доски и тетради с сохранением. Отчёты по трафику. Докупка хранилища 50₽/ГБ-месяц.
+- **Старт** (start): Бесплатный план — 7 дней хранения видео, 30 дней сообщений, 3 запроса Jarvis AI в день. Базовые функции для начала работы.
+- **Про** (pro): 499₽/мес — 30 дней видео, 90 дней сообщений, 20 Jarvis AI запросов/день. HD видео, эксклюзивные темы, докупка хранилища. Для активных пользователей и курсов.
+- **Премиум** (premium): 1990₽/мес — 90 дней видео, 365 дней сообщений, 999 (безлимит) Jarvis AI запросов/день. Интерактивные доски и тетради, отчёты по трафику, приоритетная поддержка. Для организаций и VIP-пользователей.
 
-### Seat-Based Billing
+### Seat-Based Billing (for Organizations)
+Only applies to Про and Премиум plans when used by organizations:
 - **student_editor**: 35₽/month - Full editing rights
 - **staff**: 500₽/month - Instructor/admin capabilities
 - **reader**: 0₽ - View-only access
@@ -117,18 +114,18 @@ Authentication relies on JWT tokens. User sessions and UI preferences are manage
 ### Content Retention & Overage Storage
 - Automatic content deletion after plan limits
 - Overage storage: 50₽/GB-month for keeping content beyond limits
-- Only available for Edu Basic and Edu Pro plans
+- Only available for Про and Премиум plans
 - Admin can enable/disable overage per organization
 
 ### Jarvis AI Usage
-- Daily limits per plan (3/10/50 requests)
-- Usage tracked per organization
+- Daily limits per plan (3/20/999 requests)
+- Usage tracked per user/organization
 - Resets at midnight each day
 
 ### Templates System
 - **Guild Templates**: Pre-configured servers (community, edu-course, university, gaming, business)
 - **Channel Templates**: Ready-to-use channels (lecture, seminar, homework, whiteboard, notebook, voice, video, chat)
-- Plan-based access: Some templates require Edu Basic or Edu Pro
+- Plan-based access: Some templates require Про or Премиум
 
 ### Donations System
 - Support platform author with donations
