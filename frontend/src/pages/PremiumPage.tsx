@@ -314,143 +314,56 @@ export default function PremiumPage() {
 
         <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
           <Crown className="w-6 h-6 text-yellow-500" />
-          Персональные подписки
+          Выберите подписку
         </h2>
+        <p className="text-muted-foreground text-center mb-8">
+          Единые тарифы для пользователей и организаций
+        </p>
 
-        <div className="flex justify-center gap-2 mb-8">
-          {tiers.map((tier) => {
-            const config = tierConfig[tier];
-            const Icon = config.icon;
-            return (
-              <button
-                key={tier}
-                onClick={() => setSelectedTier(tier)}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-full transition-all",
-                  selectedTier === tier
-                    ? `bg-gradient-to-r ${config.gradient} text-white`
-                    : "bg-card/50 hover:bg-card border border-border"
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                {config.name}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3 mb-8">
-          {getTierPlans(selectedTier).map((plan) => {
-            const tier = plan.tier || "basic";
-            const config = tierConfig[tier];
-            const features = parseFeatures(plan.features);
-            const isAnnual = plan.billing_cycle === "annual";
-            const isQuarterly = plan.billing_cycle === "quarterly";
-            const durationDays = isAnnual ? 365 : isQuarterly ? 90 : 30;
-            const monthlyPrice = Math.round(plan.price_rub / (durationDays / 30));
-            const discountPercent = isAnnual ? 25 : isQuarterly ? 15 : 0;
-
+        <div className="grid gap-6 md:grid-cols-3 mb-8">
+          {orgPlans.map((plan) => {
+            const isStart = plan.slug === "start";
+            const isPro = plan.slug === "pro";
+            const isPremium = plan.slug === "premium";
+            
             return (
               <Card
                 key={plan.id}
                 className={cn(
                   "cosmic-border relative overflow-hidden transition-all hover:scale-[1.02]",
-                  isAnnual && "ring-2 ring-green-500/50"
+                  isPro && "ring-2 ring-blue-500/50",
+                  isPremium && "ring-2 ring-purple-500/50"
                 )}
               >
-                {discountPercent > 0 && (
-                  <div className="absolute top-0 right-0 px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-bl-lg">
-                    -{discountPercent}%
+                {isPro && (
+                  <div className="absolute top-0 right-0 px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-bl-lg">
+                    Популярный
+                  </div>
+                )}
+                {isPremium && (
+                  <div className="absolute top-0 right-0 px-3 py-1 bg-purple-500 text-white text-xs font-medium rounded-bl-lg">
+                    Максимум
                   </div>
                 )}
                 
                 <div className="p-6">
-                  <div className="text-sm text-muted-foreground mb-2">
-                    {plan.billing_cycle === "monthly" ? "Ежемесячно" : 
-                     plan.billing_cycle === "quarterly" ? "Каждые 3 месяца" : "Ежегодно"}
+                  <div className="flex items-center gap-2 mb-3">
+                    {isStart && <Zap className="w-5 h-5 text-green-500" />}
+                    {isPro && <Star className="w-5 h-5 text-blue-500" />}
+                    {isPremium && <Crown className="w-5 h-5 text-purple-500" />}
+                    <h3 className="text-xl font-bold">{plan.name}</h3>
                   </div>
                   
                   <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-3xl font-bold">{plan.price_rub}₽</span>
+                    <span className="text-3xl font-bold">
+                      {plan.base_price_rub > 0 ? `${plan.base_price_rub}₽` : "Бесплатно"}
+                    </span>
+                    {plan.base_price_rub > 0 && <span className="text-muted-foreground">/мес</span>}
                   </div>
-                  <div className="text-sm text-muted-foreground mb-4">
-                    {(isQuarterly || isAnnual) && `~${monthlyPrice}₽/мес`}
-                  </div>
-
-                  <ul className="space-y-2 mb-6 text-sm">
-                    {features.slice(0, 4).map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    onClick={() => handlePurchase(plan.id)}
-                    loading={purchasing === plan.id}
-                    disabled={!isAuthenticated || userPremium?.has_premium}
-                    className={cn("w-full", `bg-gradient-to-r ${config.gradient}`)}
-                  >
-                    {userPremium?.has_premium ? "Активно" : (
-                      <>
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Оформить
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="border-t border-border my-12" />
-
-        <h2 className="text-2xl font-bold text-center mb-2 flex items-center justify-center gap-2">
-          <Building className="w-6 h-6 text-blue-500" />
-          Подписки для организаций
-        </h2>
-        <p className="text-muted-foreground text-center mb-6">Планы для курсов, школ и учебных заведений</p>
-          
-          <div className="grid gap-6 md:grid-cols-3">
-            {orgPlans.map((plan) => {
-              const isFree = plan.slug === "free";
-              const isBasic = plan.slug === "edu_basic";
-              const isPro = plan.slug === "edu_pro";
-              
-              return (
-                <Card
-                  key={plan.id}
-                  className={cn(
-                    "cosmic-border relative overflow-hidden transition-all hover:scale-[1.02]",
-                    isPro && "ring-2 ring-purple-500/50"
-                  )}
-                >
-                  {isPro && (
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-purple-500 text-white text-xs font-medium rounded-bl-lg">
-                      Популярный
-                    </div>
-                  )}
                   
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      {isFree && <Zap className="w-5 h-5 text-gray-500" />}
-                      {isBasic && <GraduationCap className="w-5 h-5 text-blue-500" />}
-                      {isPro && <Crown className="w-5 h-5 text-purple-500" />}
-                      <h3 className="text-xl font-bold">{plan.name}</h3>
-                    </div>
-                    
-                    <div className="flex items-baseline gap-1 mb-2">
-                      <span className="text-3xl font-bold">
-                        {plan.base_price_rub > 0 ? `${plan.base_price_rub}₽` : "Бесплатно"}
-                      </span>
-                      {plan.base_price_rub > 0 && <span className="text-muted-foreground">/мес</span>}
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground mb-4 min-h-[60px]">
-                      {plan.description}
-                    </p>
+                  <p className="text-sm text-muted-foreground mb-4 min-h-[40px]">
+                    {plan.description}
+                  </p>
                     
                     <ul className="space-y-2 mb-6 text-sm">
                       <li className="flex items-center gap-2">
@@ -488,31 +401,35 @@ export default function PremiumPage() {
                     <Button
                       className={cn(
                         "w-full",
-                        isFree && "bg-gray-600 hover:bg-gray-700",
-                        isBasic && "bg-gradient-to-r from-blue-500 to-cyan-500",
-                        isPro && "bg-gradient-to-r from-purple-500 to-pink-500"
+                        isStart && "bg-green-600 hover:bg-green-700",
+                        isPro && "bg-gradient-to-r from-blue-500 to-cyan-500",
+                        isPremium && "bg-gradient-to-r from-purple-500 to-pink-500"
                       )}
                       onClick={() => {
                         if (!isAuthenticated) {
-                          alert("Войдите в аккаунт для создания организации");
+                          alert("Войдите в аккаунт");
                           return;
                         }
-                        window.location.href = "/templates";
+                        if (isStart) {
+                          window.location.href = "/templates";
+                        } else {
+                          window.location.href = `/premium/checkout?plan=${plan.slug}`;
+                        }
                       }}
                     >
-                      {isFree ? "Начать бесплатно" : "Выбрать план"}
+                      {isStart ? "Начать бесплатно" : "Оформить подписку"}
                     </Button>
                   </div>
                 </Card>
               );
             })}
           </div>
-          
+
           <Card className="cosmic-border p-6 mt-6">
             <div className="text-center">
-              <h3 className="font-semibold mb-2">Seat-based биллинг</h3>
+              <h3 className="font-semibold mb-2">Для организаций: seat-based биллинг</h3>
               <p className="text-muted-foreground text-sm mb-4">
-                Для Edu Basic и Edu Pro оплата рассчитывается по количеству участников
+                Для планов Про и Премиум дополнительно оплачиваются места участников
               </p>
               <div className="flex justify-center gap-8">
                 <div className="text-center">
