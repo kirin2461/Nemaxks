@@ -104,9 +104,9 @@ Authentication relies on JWT tokens. User sessions and UI preferences are manage
 - **OrgEntitlement**: Plan-specific feature access
 
 ### Subscription Plans
-- **Free**: 7-day video retention, 30-day messages, 3 Jarvis requests/day
-- **Edu Basic**: 14-day video, 60-day messages, 10 Jarvis/day, overage storage enabled
-- **Edu Pro**: 60-day video, 180-day messages, 50 Jarvis/day, interactive boards/notebooks, 2000₽/month base
+- **Free**: Бесплатный план — 7 дней хранения видео, 30 дней сообщений, 3 запроса Jarvis AI в день. Доступ по инвайту. Без возможности докупки хранилища.
+- **Edu Basic**: Для курсов и малых групп — 14 дней видео, 60 дней сообщений, 10 Jarvis AI запросов/день. Оплата за места: студент-редактор 35₽/мес, преподаватель 500₽/мес. Возможность докупки хранилища 50₽/ГБ-месяц.
+- **Edu Pro**: Максимум для учебных заведений — 2000₽/мес базовая + места. 60 дней видео, 180 дней сообщений, 50 Jarvis AI запросов/день. Интерактивные доски и тетради с сохранением. Отчёты по трафику. Докупка хранилища 50₽/ГБ-месяц.
 
 ### Seat-Based Billing
 - **student_editor**: 35₽/month - Full editing rights
