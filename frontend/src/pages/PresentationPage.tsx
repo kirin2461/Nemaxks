@@ -51,12 +51,12 @@ export default function PresentationPage() {
             </span>
           </div>
           <div className="flex gap-4">
-            <Link href="/login">
+            <Link href="/auth">
               <button className="px-6 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-all">
                 Войти
               </button>
             </Link>
-            <Link href="/register">
+            <Link href="/auth">
               <button className="px-6 py-2 rounded-full bg-primary hover:bg-primary/80 transition-all shadow-lg shadow-primary/20">
                 Присоединиться
               </button>
@@ -98,13 +98,13 @@ export default function PresentationPage() {
             transition={{ delay: 0.4 }}
             className="flex flex-col md:flex-row gap-4 justify-center"
           >
-            <Link href="/register">
+            <Link href="/auth">
               <button className="px-10 py-4 bg-primary rounded-2xl text-lg font-bold hover:scale-105 transition-all shadow-xl shadow-primary/30 flex items-center justify-center gap-2 group">
                 Начать бесплатно
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
-            <Link href="/login">
+            <Link href="/auth">
               <button className="px-10 py-4 bg-white/5 rounded-2xl text-lg font-bold hover:bg-white/10 transition-all border border-white/10">
                 Посмотреть демо
               </button>
