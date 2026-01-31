@@ -506,6 +506,10 @@ func main() {
         // Phase 2: Badges, Rewards, Challenges, Streaks, Competitions, Profile Customization
         registerPhase2Routes(r, authMiddleware())
 
+        // Phase 3: Gifts, Trading, Activity Feed, Events, Clans, Mini-Games, Quests, Mentorship, Collections
+        initPhase3()
+        registerPhase3Routes(r, authMiddleware())
+
         port := os.Getenv("PORT")
         if port == "" {
                 port = "8000"

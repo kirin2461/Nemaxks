@@ -38,6 +38,16 @@ const ShopPage = React.lazy(() => import('./pages/ShopPage'))
 const ChallengesPage = React.lazy(() => import('./pages/ChallengesPage'))
 const CompetitionsPage = React.lazy(() => import('./pages/CompetitionsPage'))
 const ProfileCustomizationPage = React.lazy(() => import('./pages/ProfileCustomizationPage'))
+const EventsPage = React.lazy(() => import('./pages/EventsPage'))
+const MiniGamesPage = React.lazy(() => import('./pages/MiniGamesPage'))
+const QuestsPage = React.lazy(() => import('./pages/QuestsPage'))
+const ActivityFeedPage = React.lazy(() => import('./pages/ActivityFeedPage'))
+const GiftsPage = React.lazy(() => import('./pages/GiftsPage'))
+const TradesPage = React.lazy(() => import('./pages/TradesPage'))
+const ClansPage = React.lazy(() => import('./pages/ClansPage'))
+const CollectionsPage = React.lazy(() => import('./pages/CollectionsPage'))
+const MentorshipPage = React.lazy(() => import('./pages/MentorshipPage'))
+const TrendingPage = React.lazy(() => import('./pages/TrendingPage'))
 
 // Loading component with skeleton animation
 function LoadingScreen() {
@@ -197,6 +207,66 @@ function App() {
                 <Route path="/profile/customize">
                   <ProtectedRoute>
                     <ProfileCustomizationPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/events">
+                  <ProtectedRoute>
+                    <EventsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/minigames">
+                  <ProtectedRoute>
+                    <MiniGamesPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/quests">
+                  <ProtectedRoute>
+                    <QuestsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/activity">
+                  <ProtectedRoute>
+                    <ActivityFeedPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/gifts">
+                  <ProtectedRoute>
+                    <GiftsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/trades">
+                  <ProtectedRoute>
+                    <TradesPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/clans">
+                  <ProtectedRoute>
+                    <ClansPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/collections">
+                  <ProtectedRoute>
+                    <CollectionsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/mentorship">
+                  <ProtectedRoute>
+                    <MentorshipPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/trending">
+                  <ProtectedRoute>
+                    <TrendingPage />
                   </ProtectedRoute>
                 </Route>
 

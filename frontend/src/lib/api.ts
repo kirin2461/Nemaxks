@@ -1803,4 +1803,337 @@ export const levelRewardsAPI = {
   get: () => request<{ level: number; coins: number; gems?: number; unlock?: string; description: string }[]>('/level-rewards'),
 };
 
+// ============= PHASE 3 APIs =============
+
+// Gift System
+export interface UserGift {
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  item_id: number;
+  message: string;
+  is_opened: boolean;
+  opened_at?: string;
+  created_at: string;
+  sender?: { id: number; username: string; avatar?: string };
+  item?: ShopItem;
+}
+
+export const giftsAPI = {
+  send: (receiverId: number, itemId: number, message?: string) =>
+    request<UserGift>('/gifts/send', { method: 'POST', body: JSON.stringify({ receiver_id: receiverId, item_id: itemId, message }) }),
+  getReceived: () => request<UserGift[]>('/gifts/received'),
+  open: (id: number) => request<UserGift>(`/gifts/${id}/open`, { method: 'POST' }),
+};
+
+// Trading System
+export interface Trade {
+  id: number;
+  initiator_id: number;
+  receiver_id: number;
+  status: string;
+  initiator_note: string;
+  receiver_note: string;
+  expires_at: string;
+  completed_at?: string;
+  created_at: string;
+  initiator?: { id: number; username: string; avatar?: string };
+  receiver?: { id: number; username: string; avatar?: string };
+}
+
+export const tradesAPI = {
+  create: (data: { receiver_id: number; offer_items?: number[]; offer_coins?: number; request_items?: number[]; request_coins?: number; note?: string }) =>
+    request<Trade>('/trades', { method: 'POST', body: JSON.stringify(data) }),
+  getAll: (status?: string) => request<Trade[]>(`/trades${status ? `?status=${status}` : ''}`),
+  respond: (id: number, action: 'accept' | 'reject', note?: string) =>
+    request<Trade>(`/trades/${id}/respond`, { method: 'POST', body: JSON.stringify({ action, note }) }),
+};
+
+// Activity Feed
+export interface ActivityFeedItem {
+  id: number;
+  user_id: number;
+  actor_id: number;
+  action_type: string;
+  target_type: string;
+  target_id: number;
+  metadata?: string;
+  is_read: boolean;
+  created_at: string;
+  actor?: { id: number; username: string; avatar?: string };
+}
+
+export const activityFeedAPI = {
+  get: (limit?: number) => request<ActivityFeedItem[]>(`/activity-feed${limit ? `?limit=${limit}` : ''}`),
+  markRead: (id: number) => request<{ success: boolean }>(`/activity-feed/${id}/read`, { method: 'POST' }),
+  markAllRead: () => request<{ success: boolean }>('/activity-feed/read-all', { method: 'POST' }),
+};
+
+// Enhanced Friends
+export interface BestFriend {
+  id: number;
+  user_id: number;
+  friend_id: number;
+  score: number;
+  rank: number;
+  friend?: { id: number; username: string; avatar?: string };
+}
+
+export const enhancedFriendsAPI = {
+  getBestFriends: () => request<BestFriend[]>('/friends/best'),
+  getInteractions: () => request<{ user_id: number; friend_id: number; interaction_type: string; count: number }[]>('/friends/interactions'),
+};
+
+// Events System
+export interface GameEvent {
+  id: number;
+  name: string;
+  description: string;
+  event_type: string;
+  theme: string;
+  banner_url: string;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  coin_bonus: number;
+  xp_bonus: number;
+}
+
+export interface EventReward {
+  id: number;
+  event_id: number;
+  name: string;
+  description: string;
+  reward_type: string;
+  reward_value: number;
+  requirement: string;
+  threshold: number;
+}
+
+export interface EventParticipant {
+  id: number;
+  event_id: number;
+  user_id: number;
+  points: number;
+  rank: number;
+  user?: { id: number; username: string; avatar?: string };
+}
+
+export const eventsAPI = {
+  getAll: (activeOnly?: boolean) => request<GameEvent[]>(`/events${activeOnly ? '?active=true' : ''}`),
+  get: (id: number) => request<{ event: GameEvent; rewards: EventReward[] }>(`/events/${id}`),
+  join: (id: number) => request<EventParticipant>(`/events/${id}/join`, { method: 'POST' }),
+  getLeaderboard: (id: number, limit?: number) => request<EventParticipant[]>(`/events/${id}/leaderboard${limit ? `?limit=${limit}` : ''}`),
+  claimReward: (eventId: number, rewardId: number) => request<{ success: boolean; reward: EventReward }>(`/events/${eventId}/rewards/${rewardId}/claim`, { method: 'POST' }),
+};
+
+// Clans
+export interface Clan {
+  id: number;
+  guild_id: number;
+  name: string;
+  description: string;
+  icon_url: string;
+  color: string;
+  leader_id: number;
+  max_members: number;
+  total_xp: number;
+  is_public: boolean;
+  leader?: { id: number; username: string; avatar?: string };
+}
+
+export interface ClanChallenge {
+  id: number;
+  clan_id: number;
+  name: string;
+  description: string;
+  goal: number;
+  progress: number;
+  reward_coins: number;
+  reward_xp: number;
+  is_completed: boolean;
+  expires_at?: string;
+}
+
+export const clansAPI = {
+  getGuildClans: (guildId: number) => request<Clan[]>(`/guild-clans/${guildId}`),
+  create: (data: { guild_id: number; name: string; description?: string; color?: string; is_public?: boolean }) =>
+    request<Clan>('/clans', { method: 'POST', body: JSON.stringify(data) }),
+  join: (id: number) => request<{ clan_id: number; user_id: number }>(`/clans/${id}/join`, { method: 'POST' }),
+  getChallenges: (id: number) => request<ClanChallenge[]>(`/clans/${id}/challenges`),
+};
+
+// Mini-Games
+export interface MiniGame {
+  id: number;
+  name: string;
+  description: string;
+  game_type: string;
+  difficulty: string;
+  coin_reward: number;
+  xp_reward: number;
+  cooldown_min: number;
+}
+
+export interface GameSession {
+  id: number;
+  game_id: number;
+  user_id: number;
+  score: number;
+  high_score: number;
+  coins_earned: number;
+  xp_earned: number;
+}
+
+export interface TriviaQuestion {
+  id: number;
+  question: string;
+  options: string;
+  correct_idx: number;
+  category: string;
+  difficulty: string;
+  points: number;
+}
+
+export const miniGamesAPI = {
+  getAll: () => request<MiniGame[]>('/minigames'),
+  start: (id: number) => request<{ session: GameSession; game: MiniGame; game_data?: TriviaQuestion[] }>(`/minigames/${id}/start`, { method: 'POST' }),
+  complete: (sessionId: number, score: number) =>
+    request<{ session: GameSession; coins_earned: number; xp_earned: number }>(`/minigames/session/${sessionId}/complete`, { method: 'POST', body: JSON.stringify({ score }) }),
+};
+
+// Quest Chains
+export interface QuestChain {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  total_steps: number;
+  final_reward: string;
+  is_active: boolean;
+}
+
+export interface QuestStep {
+  id: number;
+  chain_id: number;
+  step_order: number;
+  name: string;
+  description: string;
+  action_type: string;
+  requirement: number;
+  reward_coins: number;
+  reward_xp: number;
+  reward_gems: number;
+}
+
+export interface UserQuestProgress {
+  id: number;
+  user_id: number;
+  chain_id: number;
+  current_step: number;
+  step_progress: number;
+  is_completed: boolean;
+  started_at: string;
+  completed_at?: string;
+  chain?: QuestChain;
+}
+
+export const questsAPI = {
+  getAll: () => request<QuestChain[]>('/quests'),
+  getMy: () => request<UserQuestProgress[]>('/quests/my'),
+  start: (id: number) => request<{ progress: UserQuestProgress; current_step: QuestStep }>(`/quests/${id}/start`, { method: 'POST' }),
+  getSteps: (id: number) => request<QuestStep[]>(`/quests/${id}/steps`),
+};
+
+// Mentorship
+export interface Mentorship {
+  id: number;
+  mentor_id: number;
+  mentee_id: number;
+  status: string;
+  mentor_xp: number;
+  mentee_level: number;
+  tasks_done: number;
+  started_at: string;
+  completed_at?: string;
+  mentor?: { id: number; username: string; avatar?: string; level?: number };
+  mentee?: { id: number; username: string; avatar?: string };
+}
+
+export const mentorshipAPI = {
+  getMentors: () => request<{ id: number; username: string; avatar?: string; level: number }[]>('/mentors'),
+  request: (mentorId: number) => request<Mentorship>(`/mentors/${mentorId}/request`, { method: 'POST' }),
+  getMy: () => request<{ mentorship: Mentorship; tasks: unknown[]; progress: unknown[] }>('/mentorship'),
+};
+
+// Trending & Recommendations
+export interface TrendingContent {
+  id: number;
+  content_type: string;
+  content_id: number;
+  score: number;
+  views: number;
+  likes: number;
+  comments: number;
+}
+
+export interface UserRecommendation {
+  id: number;
+  user_id: number;
+  content_type: string;
+  content_id: number;
+  reason: string;
+  score: number;
+  is_viewed: boolean;
+}
+
+export const trendingAPI = {
+  get: (type?: string, limit?: number) => {
+    const params = new URLSearchParams();
+    if (type) params.append('type', type);
+    if (limit) params.append('limit', limit.toString());
+    return request<TrendingContent[]>(`/trending?${params}`);
+  },
+  getRecommendations: (type?: string, limit?: number) => {
+    const params = new URLSearchParams();
+    if (type) params.append('type', type);
+    if (limit) params.append('limit', limit.toString());
+    return request<UserRecommendation[]>(`/recommendations?${params}`);
+  },
+  dismissRecommendation: (id: number) => request<{ success: boolean }>(`/recommendations/${id}/dismiss`, { method: 'POST' }),
+};
+
+// Collections
+export interface Collection {
+  id: number;
+  user_id: number;
+  name: string;
+  description: string;
+  icon_emoji: string;
+  is_private: boolean;
+  item_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CollectionItem {
+  id: number;
+  collection_id: number;
+  content_type: string;
+  content_id: number;
+  note: string;
+  added_at: string;
+}
+
+export const collectionsAPI = {
+  getAll: () => request<Collection[]>('/collections'),
+  create: (data: { name: string; description?: string; icon_emoji?: string; is_private?: boolean }) =>
+    request<Collection>('/collections', { method: 'POST', body: JSON.stringify(data) }),
+  addItem: (id: number, contentType: string, contentId: number, note?: string) =>
+    request<CollectionItem>(`/collections/${id}/items`, { method: 'POST', body: JSON.stringify({ content_type: contentType, content_id: contentId, note }) }),
+  getItems: (id: number) => request<{ collection: Collection; items: CollectionItem[] }>(`/collections/${id}/items`),
+  removeItem: (collectionId: number, itemId: number) => request<{ success: boolean }>(`/collections/${collectionId}/items/${itemId}`, { method: 'DELETE' }),
+  delete: (id: number) => request<{ success: boolean }>(`/collections/${id}`, { method: 'DELETE' }),
+};
+
 export { APIError };

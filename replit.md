@@ -107,6 +107,70 @@ All super admin endpoints are protected by `superAdminMiddleware()` which enforc
 - **Badges**: Special icons for achievements and roles
 - **Privacy controls**: Toggle visibility of level, achievements, activity
 
+### Phase 3 Features: Social & Advanced Engagement
+
+#### Gift System
+- **Item gifting**: Send owned items to other users with personalized messages
+- **Gift inbox**: View and open received gifts
+- **Gift history**: Track sent and received gifts
+
+#### Trading System
+- **Trade offers**: Propose trades with items and/or coins
+- **Trade approval**: Accept or reject incoming trades
+- **Trade history**: Track all trade activities
+- **Expiration**: Trades auto-expire after 24 hours
+
+#### Activity Feed
+- **Real-time updates**: See level-ups, achievements, gifts, trades, friend additions
+- **Read status**: Mark activities as read individually or all at once
+- **Actor tracking**: See who triggered each activity
+
+#### Enhanced Friends
+- **Best friends**: Automatic ranking based on interaction frequency
+- **Interaction tracking**: Track messages, reactions, gifts between friends
+- **Friend scores**: Quantified friendship strength
+
+#### Events System
+- **Timed events**: Seasonal and special events with start/end dates
+- **Event rewards**: Points-based rewards with multiple tiers
+- **Event leaderboards**: Compete for top positions
+- **Bonus multipliers**: Coin and XP bonuses during events
+
+#### Clans/Teams
+- **Clan creation**: Create clans within guilds
+- **Clan challenges**: Collaborative goals with shared rewards
+- **Clan XP**: Combined XP tracking for clan rankings
+- **Public/Private**: Control clan visibility and membership
+
+#### Mini-Games
+- **Trivia games**: Answer questions for coins and XP
+- **Cooldown system**: Prevent spam with timed cooldowns
+- **Difficulty levels**: Easy, medium, hard with scaled rewards
+- **High scores**: Track personal best scores
+
+#### Quest Chains
+- **Multi-step quests**: Progressive challenges with cumulative rewards
+- **Categories**: Tutorial, social, content, exploration quests
+- **Step tracking**: Progress saved across sessions
+- **Final rewards**: Bonus rewards for completing entire chains
+
+#### Mentorship System
+- **Mentor matching**: High-level users mentor newcomers
+- **Task progression**: Guided tasks for new users
+- **Dual rewards**: Mentors earn XP, mentees earn coins
+- **Level requirements**: Mentees must be below level 5
+
+#### Trending & Recommendations
+- **Trending algorithm**: Score-based content ranking
+- **Personalized recommendations**: Based on user activity
+- **Dismissible suggestions**: Hide unwanted recommendations
+
+#### Collections System
+- **Custom collections**: Organize bookmarked content
+- **Multiple content types**: Posts, videos, messages, channels
+- **Privacy controls**: Public or private collections
+- **Notes**: Add personal notes to collected items
+
 The system incorporates a unified subscription model with "Старт", "Про", and "Премиум" plans, offering varying content retention, AI requests, and features like interactive whiteboards and online notebooks. Seat-based billing is available for organizations. A donation system, promo codes, referral bonuses, and a manual payment system with admin verification are also integrated.
 
 ### AI Moderation and Communication Tools
