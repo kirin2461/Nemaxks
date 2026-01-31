@@ -116,14 +116,15 @@ export default function ServerJoinPage() {
                 <button
                   onClick={handleJoin}
                   disabled={joining}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  className="btn-primary w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm sm:text-base"
                 >
                   {joining ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
                   ) : (
                     <>
-                      <Users className="w-5 h-5" />
-                      Присоединиться к серверу
+                      <Users className="w-5 h-5 flex-shrink-0" />
+                      <span className="hidden sm:inline">Присоединиться к серверу</span>
+                      <span className="sm:hidden">Присоединиться</span>
                     </>
                   )}
                 </button>
@@ -131,10 +132,11 @@ export default function ServerJoinPage() {
                 <>
                   <button
                     onClick={handleJoin}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
+                    className="btn-primary w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm sm:text-base"
                   >
-                    <LogIn className="w-5 h-5" />
-                    Войти и присоединиться
+                    <LogIn className="w-5 h-5 flex-shrink-0" />
+                    <span className="hidden sm:inline">Войти и присоединиться</span>
+                    <span className="sm:hidden">Войти</span>
                   </button>
                   <p className="text-sm text-muted-foreground">
                     Войдите или создайте аккаунт, чтобы присоединиться

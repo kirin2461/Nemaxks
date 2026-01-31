@@ -50,15 +50,16 @@ export default function PresentationPage() {
               Nemaks
             </span>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-2 sm:gap-4">
             <Link href="/auth">
-              <button className="px-6 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-all">
+              <button className="px-4 sm:px-6 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-sm sm:text-base whitespace-nowrap">
                 Войти
               </button>
             </Link>
             <Link href="/auth">
-              <button className="px-6 py-2 rounded-full bg-primary hover:bg-primary/80 transition-all shadow-lg shadow-primary/20">
-                Присоединиться
+              <button className="px-4 sm:px-6 py-2 rounded-full bg-primary hover:bg-primary/80 transition-all shadow-lg shadow-primary/20 text-sm sm:text-base whitespace-nowrap">
+                <span className="hidden sm:inline">Присоединиться</span>
+                <span className="sm:hidden">Join</span>
               </button>
             </Link>
           </div>

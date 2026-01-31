@@ -227,9 +227,10 @@ export default function ProfilePage() {
                       <p className="text-muted-foreground">@{displayUser?.username}</p>
                     </div>
                     {isOwnProfile && !isEditing && (
-                      <Button onClick={() => setIsEditing(true)}>
-                        <Edit className="w-4 h-4" />
-                        Edit Profile
+                      <Button onClick={() => setIsEditing(true)} className="px-3 sm:px-4 text-sm whitespace-nowrap">
+                        <Edit className="w-4 h-4 flex-shrink-0" />
+                        <span className="hidden xs:inline">Edit Profile</span>
+                        <span className="xs:hidden">Edit</span>
                       </Button>
                     )}
                     {isOwnProfile && isEditing && (
