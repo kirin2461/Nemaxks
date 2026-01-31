@@ -48,6 +48,7 @@ const ClansPage = React.lazy(() => import('./pages/ClansPage'))
 const CollectionsPage = React.lazy(() => import('./pages/CollectionsPage'))
 const MentorshipPage = React.lazy(() => import('./pages/MentorshipPage'))
 const TrendingPage = React.lazy(() => import('./pages/TrendingPage'))
+const FraudDashboardPage = React.lazy(() => import('./pages/FraudDashboardPage'))
 
 // Loading component with skeleton animation
 function LoadingScreen() {
@@ -283,6 +284,12 @@ function App() {
                 <Route path="/reports">
                   <ProtectedRoute>
                     <ReportsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/admin/fraud">
+                  <ProtectedRoute>
+                    <FraudDashboardPage />
                   </ProtectedRoute>
                 </Route>
 

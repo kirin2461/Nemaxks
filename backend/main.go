@@ -509,6 +509,10 @@ func main() {
         // Phase 3: Gifts, Trading, Activity Feed, Events, Clans, Mini-Games, Quests, Mentorship, Collections
         initPhase3()
         registerPhase3Routes(r, authMiddleware())
+        
+        // Anti-Fraud System
+        initFraudModels()
+        registerFraudRoutes(r, authMiddleware(), adminMiddleware())
 
         port := os.Getenv("PORT")
         if port == "" {

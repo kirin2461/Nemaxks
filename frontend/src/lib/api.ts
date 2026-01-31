@@ -2136,4 +2136,99 @@ export const collectionsAPI = {
   delete: (id: number) => request<{ success: boolean }>(`/collections/${id}`, { method: 'DELETE' }),
 };
 
+// Anti-Fraud System
+export interface FraudStats {
+  total_alerts: number;
+  pending_alerts: number;
+  alerts_today: number;
+  impersonation_bans: number;
+  blocked_ips: number;
+  banned_devices: number;
+  high_risk_users: number;
+  average_risk_score: number;
+}
+
+export interface FraudAlert {
+  id: number;
+  user_id: number;
+  alert_type: string;
+  severity: string;
+  description: string;
+  evidence: string;
+  source_ip: string;
+  device_fingerprint: string;
+  status: string;
+  action_taken: string;
+  reviewed_by?: number;
+  reviewed_at?: string;
+  review_notes: string;
+  created_at: string;
+  user?: { id: number; username: string };
+}
+
+export interface FraudRule {
+  id: number;
+  name: string;
+  description: string;
+  rule_type: string;
+  condition: string;
+  action: string;
+  severity: string;
+  is_active: boolean;
+  priority: number;
+}
+
+export interface UserRiskScore {
+  id: number;
+  user_id: number;
+  score: number;
+  spam_score: number;
+  phishing_score: number;
+  impersonation_score: number;
+  scam_score: number;
+  behavior_score: number;
+  total_alerts: number;
+  total_warnings: number;
+  total_mutes: number;
+  total_bans: number;
+  user?: { id: number; username: string };
+}
+
+export interface ImpersonationBan {
+  id: number;
+  user_id: number;
+  username: string;
+  detected_keywords: string;
+  original_message: string;
+  normalized_message: string;
+  source_ip: string;
+  device_fingerprint: string;
+  banned_at: string;
+  banned_by: string;
+}
+
+export const fraudAPI = {
+  getStats: () => request<FraudStats>('/fraud/stats'),
+  getAlerts: (page = 1, limit = 20, status?: string, type?: string, severity?: string) => {
+    const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+    if (status) params.append('status', status);
+    if (type) params.append('type', type);
+    if (severity) params.append('severity', severity);
+    return request<{ alerts: FraudAlert[]; total: number }>(`/fraud/alerts?${params}`);
+  },
+  getAlert: (id: number) => request<FraudAlert>(`/fraud/alerts/${id}`),
+  reviewAlert: (id: number, status: string, action: string, notes: string) =>
+    request<FraudAlert>(`/fraud/alerts/${id}/review`, { method: 'PUT', body: JSON.stringify({ status, action_taken: action, notes }) }),
+  getRules: () => request<FraudRule[]>('/fraud/rules'),
+  createRule: (rule: Partial<FraudRule>) => request<FraudRule>('/fraud/rules', { method: 'POST', body: JSON.stringify(rule) }),
+  updateRule: (id: number, rule: Partial<FraudRule>) => request<FraudRule>(`/fraud/rules/${id}`, { method: 'PUT', body: JSON.stringify(rule) }),
+  deleteRule: (id: number) => request<{ success: boolean }>(`/fraud/rules/${id}`, { method: 'DELETE' }),
+  getRiskScores: (minScore = 0, limit = 50) => request<UserRiskScore[]>(`/fraud/risk-scores?min_score=${minScore}&limit=${limit}`),
+  getUserRiskScore: (userId: number) => request<UserRiskScore>(`/fraud/risk-scores/${userId}`),
+  getImpersonationBans: (page = 1, limit = 20) =>
+    request<{ bans: ImpersonationBan[]; total: number }>(`/fraud/impersonation-bans?page=${page}&limit=${limit}`),
+  analyzeContent: (content: string) =>
+    request<{ original: string; normalized: string; results: any[]; is_fraud: boolean }>('/fraud/analyze', { method: 'POST', body: JSON.stringify({ content }) }),
+};
+
 export { APIError };
