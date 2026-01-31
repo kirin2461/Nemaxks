@@ -485,7 +485,7 @@ export default function MessagesPage() {
     if (isDemoMode) {
       setMessages(prev => prev.map(msg => {
         if (msg.id === messageId) {
-          const reactions = msg.reactions || []
+          const reactions = (msg as any).reactions || []
           return { ...msg, reactions: [...reactions, { emoji: reaction, user_id: user?.id }] }
         }
         return msg
@@ -497,7 +497,7 @@ export default function MessagesPage() {
       await messagesAPI.addReaction(messageId, reaction)
       setMessages(prev => prev.map(msg => {
         if (msg.id === messageId) {
-          const reactions = msg.reactions || []
+          const reactions = (msg as any).reactions || []
           return { ...msg, reactions: [...reactions, { emoji: reaction, user_id: user?.id }] }
         }
         return msg
@@ -538,7 +538,7 @@ export default function MessagesPage() {
     try {
       const messagesToDelete = messages.filter(m => 
         (m.from_user_id === userId || m.to_user_id === userId) ||
-        (m.sender_id === userId || m.recipient_id === userId)
+        (m.sender_id === userId || (m as any).recipient_id === userId)
       )
       
       for (const msg of messagesToDelete) {

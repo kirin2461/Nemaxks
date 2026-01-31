@@ -1,18 +1,9 @@
 use crate::models::Message;
 use anyhow::Result;
 use uuid::Uuid;
+use tokio_postgres::Client;
 
-pub async fn save_message(pool: &Option<deadpool_postgres::Pool>, message: &Message) -> Result<()> {
-    let pool = match pool {
-        Some(p) => p,
-        None => {
-            tracing::warn!("Database pool not available, message not persisted");
-            return Ok(());
-        }
-    };
-
-    let client = pool.get().await?;
-    
+pub async fn save_message(client: &Client, message: &Message) -> Result<()> {
     client.execute(
         "INSERT INTO messages (id, channel_id, user_id, content, created_at, updated_at) 
          VALUES ($1, $2, $3, $4, $5, $6)
@@ -31,17 +22,7 @@ pub async fn save_message(pool: &Option<deadpool_postgres::Pool>, message: &Mess
     Ok(())
 }
 
-pub async fn get_message(pool: &Option<deadpool_postgres::Pool>, id: &Uuid) -> Result<Option<Message>> {
-    let pool = match pool {
-        Some(p) => p,
-        None => {
-            tracing::warn!("Database pool not available");
-            return Ok(None);
-        }
-    };
-
-    let client = pool.get().await?;
-    
+pub async fn get_message(client: &Client, id: &Uuid) -> Result<Option<Message>> {
     let row = client.query_opt(
         "SELECT id, channel_id, user_id, content, created_at, updated_at 
          FROM messages WHERE id = $1",
@@ -61,17 +42,7 @@ pub async fn get_message(pool: &Option<deadpool_postgres::Pool>, id: &Uuid) -> R
     }
 }
 
-pub async fn get_messages_by_channel(pool: &Option<deadpool_postgres::Pool>, channel_id: &Uuid) -> Result<Vec<Message>> {
-    let pool = match pool {
-        Some(p) => p,
-        None => {
-            tracing::warn!("Database pool not available");
-            return Ok(vec![]);
-        }
-    };
-
-    let client = pool.get().await?;
-    
+pub async fn get_messages_by_channel(client: &Client, channel_id: &Uuid) -> Result<Vec<Message>> {
     let rows = client.query(
         "SELECT id, channel_id, user_id, content, created_at, updated_at 
          FROM messages WHERE channel_id = $1 ORDER BY created_at DESC LIMIT 100",
@@ -90,17 +61,7 @@ pub async fn get_messages_by_channel(pool: &Option<deadpool_postgres::Pool>, cha
     Ok(messages)
 }
 
-pub async fn delete_message(pool: &Option<deadpool_postgres::Pool>, id: &Uuid) -> Result<bool> {
-    let pool = match pool {
-        Some(p) => p,
-        None => {
-            tracing::warn!("Database pool not available");
-            return Ok(false);
-        }
-    };
-
-    let client = pool.get().await?;
-    
+pub async fn delete_message(client: &Client, id: &Uuid) -> Result<bool> {
     let result = client.execute(
         "DELETE FROM messages WHERE id = $1",
         &[id],

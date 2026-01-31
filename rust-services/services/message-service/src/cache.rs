@@ -1,17 +1,10 @@
 use anyhow::Result;
+use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
 
 const MESSAGE_CACHE_TTL: u64 = 3600;
 
-pub async fn cache_message(redis: &Option<redis::aio::ConnectionManager>, key: &str, value: &str) -> Result<()> {
-    let redis = match redis {
-        Some(r) => r,
-        None => {
-            tracing::debug!("Redis not available, skipping cache");
-            return Ok(());
-        }
-    };
-
+pub async fn cache_message(redis: &ConnectionManager, key: &str, value: &str) -> Result<()> {
     let mut conn = redis.clone();
     let cache_key = format!("message:{}", key);
     
@@ -21,15 +14,7 @@ pub async fn cache_message(redis: &Option<redis::aio::ConnectionManager>, key: &
     Ok(())
 }
 
-pub async fn get_cached(redis: &Option<redis::aio::ConnectionManager>, key: &str) -> Result<Option<String>> {
-    let redis = match redis {
-        Some(r) => r,
-        None => {
-            tracing::debug!("Redis not available");
-            return Ok(None);
-        }
-    };
-
+pub async fn get_cached(redis: &ConnectionManager, key: &str) -> Result<Option<String>> {
     let mut conn = redis.clone();
     let cache_key = format!("message:{}", key);
     
@@ -42,12 +27,7 @@ pub async fn get_cached(redis: &Option<redis::aio::ConnectionManager>, key: &str
     Ok(result)
 }
 
-pub async fn invalidate_cache(redis: &Option<redis::aio::ConnectionManager>, key: &str) -> Result<()> {
-    let redis = match redis {
-        Some(r) => r,
-        None => return Ok(()),
-    };
-
+pub async fn invalidate_cache(redis: &ConnectionManager, key: &str) -> Result<()> {
     let mut conn = redis.clone();
     let cache_key = format!("message:{}", key);
     
@@ -57,12 +37,7 @@ pub async fn invalidate_cache(redis: &Option<redis::aio::ConnectionManager>, key
     Ok(())
 }
 
-pub async fn cache_channel_messages(redis: &Option<redis::aio::ConnectionManager>, channel_id: &str, messages_json: &str) -> Result<()> {
-    let redis = match redis {
-        Some(r) => r,
-        None => return Ok(()),
-    };
-
+pub async fn cache_channel_messages(redis: &ConnectionManager, channel_id: &str, messages_json: &str) -> Result<()> {
     let mut conn = redis.clone();
     let cache_key = format!("channel:{}:messages", channel_id);
     

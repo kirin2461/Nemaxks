@@ -9,15 +9,11 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::models::{CreateMessageRequest, Message};
+use crate::MessageService;
 use crate::db;
 use crate::cache;
 
-pub struct MessageServiceState {
-    pub db_pool: Option<deadpool_postgres::Pool>,
-    pub redis_client: Option<redis::aio::ConnectionManager>,
-}
-
-pub type SharedState = Arc<RwLock<MessageServiceState>>;
+pub type SharedState = Arc<RwLock<MessageService>>;
 
 pub async fn create_message(
     State(state): State<SharedState>,
@@ -34,7 +30,7 @@ pub async fn create_message(
 
     let state_guard = state.read().await;
     
-    if let Err(e) = db::save_message(&state_guard.db_pool, &message).await {
+    if let Err(e) = db::save_message(&state_guard.db_client, &message).await {
         tracing::error!("Failed to save message: {}", e);
         return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({
             "success": false,
@@ -60,7 +56,7 @@ pub async fn get_messages(
 ) -> Json<serde_json::Value> {
     let state_guard = state.read().await;
 
-    match db::get_messages_by_channel(&state_guard.db_pool, &channel_id).await {
+    match db::get_messages_by_channel(&state_guard.db_client, &channel_id).await {
         Ok(messages) => Json(json!({
             "success": true,
             "channel_id": channel_id,
@@ -94,7 +90,7 @@ pub async fn get_message_by_id(
         }
     }
 
-    match db::get_message(&state_guard.db_pool, &id).await {
+    match db::get_message(&state_guard.db_client, &id).await {
         Ok(Some(message)) => {
             if let Ok(json_str) = serde_json::to_string(&message) {
                 let _ = cache::cache_message(&state_guard.redis_client, &id.to_string(), &json_str).await;
