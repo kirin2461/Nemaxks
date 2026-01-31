@@ -481,32 +481,103 @@ export default function MessagesPage() {
     navigator.clipboard.writeText(content)
   }
 
-  const handleReactToMessage = (messageId: string, reaction: string) => {
-    console.log('React to message:', messageId, reaction)
-    // TODO: Implement reaction functionality
+  const handleReactToMessage = async (messageId: string, reaction: string) => {
+    if (isDemoMode) {
+      setMessages(prev => prev.map(msg => {
+        if (msg.id === messageId) {
+          const reactions = msg.reactions || []
+          return { ...msg, reactions: [...reactions, { emoji: reaction, user_id: user?.id }] }
+        }
+        return msg
+      }))
+      return
+    }
+
+    try {
+      await messagesAPI.addReaction(messageId, reaction)
+      setMessages(prev => prev.map(msg => {
+        if (msg.id === messageId) {
+          const reactions = msg.reactions || []
+          return { ...msg, reactions: [...reactions, { emoji: reaction, user_id: user?.id }] }
+        }
+        return msg
+      }))
+    } catch (error) {
+      console.error('Failed to add reaction:', error)
+    }
   }
 
   // Conversation context menu actions
   const handleArchiveConversation = (userId: string) => {
-    console.log('Archive conversation:', userId)
-    // TODO: Implement archive functionality
+    const archivedKey = `archived_conversations_${user?.id}`
+    const archived = JSON.parse(localStorage.getItem(archivedKey) || '[]')
+    if (!archived.includes(userId)) {
+      archived.push(userId)
+      localStorage.setItem(archivedKey, JSON.stringify(archived))
+    }
+    if (selectedUser?.id === userId) {
+      setSelectedUser(null)
+    }
+    fetchConversations()
   }
 
   const handleDeleteConversation = async (userId: string) => {
-    if (confirm('Delete this conversation?')) {
-      console.log('Delete conversation:', userId)
-      // TODO: Implement delete functionality
+    if (!confirm('Delete this conversation? All messages will be permanently deleted.')) {
+      return
+    }
+
+    if (isDemoMode) {
+      if (selectedUser?.id === userId) {
+        setSelectedUser(null)
+        setMessages([])
+      }
+      fetchConversations()
+      return
+    }
+
+    try {
+      const messagesToDelete = messages.filter(m => 
+        (m.from_user_id === userId || m.to_user_id === userId) ||
+        (m.sender_id === userId || m.recipient_id === userId)
+      )
+      
+      for (const msg of messagesToDelete) {
+        await messagesAPI.deleteMessage(msg.id)
+      }
+      
+      if (selectedUser?.id === userId) {
+        setSelectedUser(null)
+        setMessages([])
+      }
+      fetchConversations()
+    } catch (error) {
+      console.error('Failed to delete conversation:', error)
     }
   }
 
   const handleMuteConversation = (userId: string) => {
-    console.log('Mute conversation:', userId)
-    // TODO: Implement mute functionality
+    const mutedKey = `muted_conversations_${user?.id}`
+    const muted = JSON.parse(localStorage.getItem(mutedKey) || '[]')
+    const index = muted.indexOf(userId)
+    if (index === -1) {
+      muted.push(userId)
+    } else {
+      muted.splice(index, 1)
+    }
+    localStorage.setItem(mutedKey, JSON.stringify(muted))
   }
 
   const handlePinConversation = (userId: string) => {
-    console.log('Pin conversation:', userId)
-    // TODO: Implement pin functionality
+    const pinnedKey = `pinned_conversations_${user?.id}`
+    const pinned = JSON.parse(localStorage.getItem(pinnedKey) || '[]')
+    const index = pinned.indexOf(userId)
+    if (index === -1) {
+      pinned.push(userId)
+    } else {
+      pinned.splice(index, 1)
+    }
+    localStorage.setItem(pinnedKey, JSON.stringify(pinned))
+    fetchConversations()
   }
 
   // Generate message context menu items

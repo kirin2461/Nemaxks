@@ -6,24 +6,22 @@ use axum::{
 };
 use serde_json::json;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use uuid::Uuid;
 
 #[derive(Clone)]
 struct AppState {
-    _dummy: Arc<RwLock<String>>,
+    service_name: Arc<String>,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
-    env_logger::init();
 
     let port = std::env::var("SERVICE_PORT")
         .unwrap_or_else(|_| "8002".to_string());
 
     let state = AppState {
-        _dummy: Arc::new(RwLock::new("channel-service".to_string())),
+        service_name: Arc::new("channel-service".to_string()),
     };
 
     let app = Router::new()
@@ -40,10 +38,11 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn health_check() -> Json<serde_json::Value> {
+async fn health_check(State(state): State<AppState>) -> Json<serde_json::Value> {
     Json(json!({
         "status": "healthy",
-        "service": "channel-service"
+        "service": state.service_name.as_str(),
+        "timestamp": chrono::Utc::now()
     }))
 }
 
