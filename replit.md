@@ -17,6 +17,16 @@ The frontend is built with React 18.3, TypeScript 5.6, and Vite 6. It utilizes Z
 ### Backend and Core Functionality
 
 The backend is developed in Go using the Gin framework, providing a RESTful API secured with JWT-based authentication. PostgreSQL, managed by GORM, serves as the database. The architecture supports user and guild/channel management, real-time messaging, 24-hour expiring stories, and a 5-star rating system. Robust content filtering, IP banning, abuse reporting, and audit logging are implemented. WebSocket integration facilitates real-time features such as messaging, typing indicators, and online status. Security includes bcrypt for password hashing and JWT validation. WebRTC is used for voice and video calls with a mesh network topology and STUN/TURN server support.
+
+### Security Features (Phase 10)
+
+- **TOTP Two-Factor Authentication (2FA)**: Users can enable 2FA using authenticator apps (Google Authenticator, Authy). Setup generates QR code and 8 recovery codes stored as bcrypt hashes. Login flow checks 2FA status before issuing tokens.
+- **JWT Refresh Token Rotation**: Access tokens expire in 15 minutes, refresh tokens in 7 days. Tokens are rotated on each refresh to prevent token reuse attacks.
+- **Session Management**: User sessions tracked with device info, IP address, and last activity. Users can view active sessions and revoke individual or all sessions.
+- **Token Blacklist**: Revoked tokens are tracked in Redis (with memory fallback) for immediate invalidation. Automatic cleanup of expired blacklist entries.
+- **Account Lockout**: 5 failed login attempts trigger a 15-minute lockout to prevent brute force attacks.
+- **Security Headers**: CSP, X-Frame-Options, HSTS, X-Content-Type-Options applied globally.
+- **HTML Sanitization**: All user-generated content (messages, posts, stories) sanitized to prevent XSS.
 The system incorporates a unified subscription model with "Старт", "Про", and "Премиум" plans, offering varying content retention, AI requests, and features like interactive whiteboards and online notebooks. Seat-based billing is available for organizations. A donation system, promo codes, referral bonuses, and a manual payment system with admin verification are also integrated.
 
 ### AI Moderation and Communication Tools

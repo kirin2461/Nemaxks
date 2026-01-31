@@ -122,14 +122,15 @@ type Settings struct {
 }
 
 type QRLoginSession struct {
-        ID          uint      `json:"id" gorm:"primaryKey"`
-        Token       string    `json:"token" gorm:"uniqueIndex;not null"`
-        Status      string    `json:"status" gorm:"default:'pending'"` // pending, confirmed, expired
-        UserID      *uint     `json:"user_id,omitempty"`
-        User        *User     `json:"user,omitempty" gorm:"foreignKey:UserID"`
-        ConfirmedBy *uint     `json:"confirmed_by,omitempty"`
-        JWTToken    *string   `json:"-"` // Hidden from JSON for security
-        ExpiresAt   time.Time `json:"expires_at"`
-        CreatedAt   time.Time `json:"created_at"`
-        UpdatedAt   time.Time `json:"updated_at"`
+        ID           uint      `json:"id" gorm:"primaryKey"`
+        Token        string    `json:"token" gorm:"uniqueIndex;not null"`
+        Status       string    `json:"status" gorm:"default:'pending'"` // pending, confirmed, expired
+        UserID       *uint     `json:"user_id,omitempty"`
+        User         *User     `json:"user,omitempty" gorm:"foreignKey:UserID"`
+        ConfirmedBy  *uint     `json:"confirmed_by,omitempty"`
+        JWTToken     *string   `json:"-"` // Hidden from JSON for security
+        RefreshToken *string   `json:"-"` // Hidden from JSON for security
+        ExpiresAt    time.Time `json:"expires_at"`
+        CreatedAt    time.Time `json:"created_at"`
+        UpdatedAt    time.Time `json:"updated_at"`
 }

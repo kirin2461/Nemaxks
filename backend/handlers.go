@@ -97,6 +97,8 @@ func initDB() {
                 &AdminRole{}, &AdminUserRole{}, &BanHistory{}, &Ban{}, &BlockedUser{},
                 &BotActivityLog{}, &BotRateLimit{}, &BotToken{}, &BotWebhook{}, &BotWebhookDelivery{},
                 &Call{}, &CallParticipant{}, &CallRecording{}, &CallSignaling{},
+                &TwoFactorAuth{}, &TwoFactorRecoveryCode{},
+                &RefreshToken{}, &UserSession{},
                 &ChannelCategory{}, &ChannelInvitation{}, &ChannelMember{}, &ChannelMessageReaction{},
                 &JarvisCommand{}, &JarvisContext{}, &JarvisReminder{}, &JarvisSession{},
                 &Story{}, &StoryView{}, &PostRating{}, &PostComment{}, &PostLike{}, &Subscription{}, &PostBookmark{},
@@ -268,14 +270,24 @@ func registerHandler(c *gin.Context) {
                 }
         }
 
-        token, err := generateToken(&user)
+        deviceInfo := c.GetHeader("X-Device-Info")
+        if deviceInfo == "" {
+                deviceInfo = c.GetHeader("User-Agent")
+        }
+
+        accessToken, refreshToken, err := generateTokenPair(&user, "", deviceInfo, c.ClientIP())
         if err != nil {
                 log.Printf("Token generation error: %v", err)
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
                 return
         }
 
-        c.JSON(http.StatusCreated, gin.H{"token": token, "user": user.ToPublic()})
+        c.JSON(http.StatusCreated, gin.H{
+                "access_token":  accessToken,
+                "refresh_token": refreshToken,
+                "expires_in":    int(accessTokenExpiry.Seconds()),
+                "user":          user.ToPublic(),
+        })
 }
 
 func loginHandler(c *gin.Context) {
@@ -316,17 +328,37 @@ func loginHandler(c *gin.Context) {
                 return
         }
 
-        // Clear failed login attempts on successful login
+        // Clear failed login attempts on successful password verification
         ClearFailedLogins(c.ClientIP())
 
-        token, err := generateToken(&user)
-        if err != nil {
-                log.Printf("Token generation error: %v", err)
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+        // Check if 2FA is enabled
+        if is2FAEnabled(user.ID) {
+                c.JSON(http.StatusOK, gin.H{
+                        "requires_2fa": true,
+                        "user_id":      user.ID,
+                        "message":      "Please provide your 2FA code",
+                })
                 return
         }
 
-        c.JSON(http.StatusOK, gin.H{"token": token, "user": user.ToPublic()})
+        deviceInfo := c.GetHeader("X-Device-Info")
+        if deviceInfo == "" {
+                deviceInfo = c.GetHeader("User-Agent")
+        }
+
+        accessToken, refreshToken, err := generateTokenPair(&user, "", deviceInfo, c.ClientIP())
+        if err != nil {
+                log.Printf("Token generation error: %v", err)
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
+                return
+        }
+
+        c.JSON(http.StatusOK, gin.H{
+                "access_token":  accessToken,
+                "refresh_token": refreshToken,
+                "expires_in":    int(accessTokenExpiry.Seconds()),
+                "user":          user.ToPublic(),
+        })
 }
 
 func logoutHandler(c *gin.Context) {
@@ -654,7 +686,11 @@ func confirmQRLoginHandler(c *gin.Context) {
         }
         
         // Generate JWT for the QR session
-        jwtToken, err := generateToken(&user)
+        deviceInfo := c.GetHeader("X-Device-Info")
+        if deviceInfo == "" {
+                deviceInfo = c.GetHeader("User-Agent")
+        }
+        accessToken, refreshToken, err := generateTokenPair(&user, "", deviceInfo, c.ClientIP())
         if err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
                 return
@@ -664,7 +700,8 @@ func confirmQRLoginHandler(c *gin.Context) {
         session.Status = "confirmed"
         session.UserID = &user.ID
         session.ConfirmedBy = &user.ID
-        session.JWTToken = &jwtToken
+        session.JWTToken = &accessToken
+        session.RefreshToken = &refreshToken
         
         if err := db.Save(&session).Error; err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to confirm session"})

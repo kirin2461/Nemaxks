@@ -152,6 +152,19 @@ func main() {
         r.GET("/api/auth/qr/status/:token", checkQRLoginStatusHandler)
         r.POST("/api/auth/qr/confirm/:token", authMiddleware(), confirmQRLoginHandler)
 
+        // Two-Factor Authentication (2FA)
+        r.POST("/api/auth/2fa/setup", authMiddleware(), setup2FAHandler)
+        r.POST("/api/auth/2fa/verify-setup", authMiddleware(), verify2FASetupHandler)
+        r.POST("/api/auth/2fa/disable", authMiddleware(), disable2FAHandler)
+        r.GET("/api/auth/2fa/status", authMiddleware(), get2FAStatusHandler)
+        r.POST("/api/auth/2fa/recovery-codes", authMiddleware(), regenerateRecoveryCodesHandler)
+        r.POST("/api/auth/2fa/verify", verify2FALoginHandler)
+
+        // Token Management (Refresh tokens, sessions)
+        r.POST("/api/auth/refresh", refreshTokenHandler)
+        r.POST("/api/auth/revoke", authMiddleware(), revokeTokenHandler)
+        r.GET("/api/auth/sessions", authMiddleware(), getSessionsHandler)
+
         // Guilds
         r.GET("/api/guilds", authMiddleware(), getGuildsHandler)
         r.POST("/api/guilds", authMiddleware(), createGuildHandler)
