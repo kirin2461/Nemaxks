@@ -17,14 +17,34 @@ import (
         "gorm.io/gorm"
 )
 
-// getJWTSecret returns the JWT secret from environment or a default for development
+// jwtSecretCache caches the generated JWT secret for the session
+var jwtSecretCache []byte
+
+// getJWTSecret returns the JWT secret from environment or generates a secure random one
 func getJWTSecret() []byte {
         secret := os.Getenv("JWT_SECRET")
-        if secret == "" {
-                log.Println("WARNING: JWT_SECRET not set, using insecure default. Set JWT_SECRET in production!")
-                secret = "development-only-secret-change-in-production"
+        if secret != "" {
+                return []byte(secret)
         }
-        return []byte(secret)
+
+        // Use cached secret if already generated this session
+        if jwtSecretCache != nil {
+                return jwtSecretCache
+        }
+
+        // Generate a secure random secret for this session
+        randomBytes := make([]byte, 32) // 256 bits
+        if _, err := rand.Read(randomBytes); err != nil {
+                log.Printf("CRITICAL: Failed to generate secure JWT secret: %v", err)
+                log.Println("WARNING: Using fallback insecure secret. Set JWT_SECRET in production!")
+                jwtSecretCache = []byte("development-only-secret-change-in-production")
+        } else {
+                jwtSecretCache = []byte(hex.EncodeToString(randomBytes))
+                log.Println("WARNING: JWT_SECRET not set. Generated random secret for this session.")
+                log.Println("NOTE: Users will need to re-login after server restart. Set JWT_SECRET for persistent sessions.")
+        }
+
+        return jwtSecretCache
 }
 
 // generateSecurePassword generates a cryptographically secure random password

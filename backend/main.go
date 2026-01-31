@@ -6,6 +6,7 @@ import (
         "net/http"
         "os"
         "os/signal"
+        "strings"
         "syscall"
         "time"
 
@@ -23,17 +24,26 @@ func main() {
         // Initialize Redis (optional, non-fatal)
         if os.Getenv("REDIS_URL") != "" {
                 if err := InitRedis(); err != nil {
-                        log.Printf("Warning: Redis not available: %v", err)
+                        log.Printf("[DEGRADED MODE] Redis not available: %v", err)
+                        log.Println("[DEGRADED MODE] Caching features disabled. Session persistence may be affected.")
                 } else {
+                        log.Println("[Redis] Successfully connected")
                         defer CloseRedis()
                 }
+        } else {
+                log.Println("[DEGRADED MODE] Redis not configured. Caching and session persistence disabled.")
         }
 
         // Initialize LiveKit (optional, non-fatal)
         if os.Getenv("LIVEKIT_API_KEY") != "" {
                 if err := InitLiveKit(); err != nil {
-                        log.Printf("Warning: LiveKit not configured: %v", err)
+                        log.Printf("[DEGRADED MODE] LiveKit not configured: %v", err)
+                        log.Println("[DEGRADED MODE] Advanced voice features disabled. Using WebRTC P2P fallback.")
+                } else {
+                        log.Println("[LiveKit] Successfully connected")
                 }
+        } else {
+                log.Println("[DEGRADED MODE] LiveKit not configured. Using WebRTC P2P for voice channels.")
         }
 
         // Initialize Email Service
@@ -63,14 +73,43 @@ func main() {
         r := gin.Default()
         r.SetTrustedProxies(nil) // Trust all proxies for Replit reverse proxy
 
-        // Configure CORS properly
+        // Configure CORS with proper origin restrictions
         corsConfig := cors.Config{
                 AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
                 AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Cache-Control"},
                 ExposeHeaders:    []string{"Content-Length"},
                 MaxAge:           12 * time.Hour,
-                AllowAllOrigins:  true,
                 AllowCredentials: true,
+        }
+
+        // Get allowed origins from environment or use defaults for development
+        allowedOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")
+        if allowedOrigins != "" {
+                corsConfig.AllowOrigins = strings.Split(allowedOrigins, ",")
+                log.Printf("CORS: Restricting to origins: %v", corsConfig.AllowOrigins)
+        } else {
+                // In development/Replit, allow the Replit domain and localhost
+                replitDomain := os.Getenv("REPL_SLUG")
+                replitOwner := os.Getenv("REPL_OWNER")
+                if replitDomain != "" && replitOwner != "" {
+                        corsConfig.AllowOrigins = []string{
+                                "https://" + replitDomain + "." + replitOwner + ".repl.co",
+                                "https://*.replit.dev",
+                                "http://localhost:5000",
+                                "http://127.0.0.1:5000",
+                        }
+                        corsConfig.AllowOriginFunc = func(origin string) bool {
+                                // Allow Replit preview domains
+                                return strings.Contains(origin, ".replit.dev") ||
+                                        strings.Contains(origin, ".repl.co") ||
+                                        strings.HasPrefix(origin, "http://localhost") ||
+                                        strings.HasPrefix(origin, "http://127.0.0.1")
+                        }
+                        log.Println("CORS: Using Replit-compatible origins with dynamic matching")
+                } else {
+                        corsConfig.AllowAllOrigins = true
+                        log.Println("WARNING: CORS_ALLOWED_ORIGINS not set, allowing all origins. Set this in production!")
+                }
         }
 
         r.Use(cors.New(corsConfig))
@@ -93,8 +132,8 @@ func main() {
         })
 
         // Auth routes with rate limiting to prevent brute force attacks
-        r.POST("/api/auth/register", registerHandler)
-        r.POST("/api/auth/login", loginHandler)
+        r.POST("/api/auth/register", AuthRateLimitMiddleware(), registerHandler)
+        r.POST("/api/auth/login", AuthRateLimitMiddleware(), loginHandler)
         r.POST("/api/auth/logout", authMiddleware(), logoutHandler)
         r.GET("/api/auth/me", authMiddleware(), meHandler)
         
