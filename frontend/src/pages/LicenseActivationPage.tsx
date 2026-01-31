@@ -90,26 +90,34 @@ export default function LicenseActivationPage() {
       return;
     }
 
+    if (!licenseKey.startsWith('NEMKS-')) {
+      setError('Ключ должен начинаться с NEMKS-');
+      return;
+    }
+
     setIsValidating(true);
     setError('');
 
     try {
-      const response = await fetch('/api/license/validate', {
+      const validateResponse = await fetch('/api/license/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: licenseKey }),
       });
 
-      const data = await response.json();
+      const validateData = await validateResponse.json();
 
-      if (data.valid) {
-        setSuccess(true);
-        setTimeout(() => {
-          setLocation('/login');
-        }, 2000);
-      } else {
-        setError(data.error || 'Недействительный ключ лицензии');
+      if (!validateData.valid) {
+        setError(validateData.error || 'Недействительный ключ лицензии');
+        setIsValidating(false);
+        return;
       }
+
+      localStorage.setItem('pendingLicenseKey', licenseKey);
+      setSuccess(true);
+      setTimeout(() => {
+        setLocation('/auth');
+      }, 1500);
     } catch {
       setError('Ошибка при проверке ключа');
     } finally {
@@ -272,7 +280,7 @@ export default function LicenseActivationPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-400 text-center"
                 >
-                  Ключ успешно проверен! Перенаправление...
+                  Ключ проверен! После регистрации лицензия будет активирована.
                 </motion.div>
               )}
 
