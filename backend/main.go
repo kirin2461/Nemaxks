@@ -513,6 +513,11 @@ func main() {
         // Anti-Fraud System
         initFraudModels()
         registerFraudRoutes(r, authMiddleware(), adminMiddleware())
+        
+        // License System
+        initLicenseModels()
+        registerLicenseRoutes(r, authMiddleware(), adminMiddleware())
+        go cleanupExpiredLicenses()
 
         port := os.Getenv("PORT")
         if port == "" {

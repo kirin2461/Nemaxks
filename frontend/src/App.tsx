@@ -49,6 +49,7 @@ const CollectionsPage = React.lazy(() => import('./pages/CollectionsPage'))
 const MentorshipPage = React.lazy(() => import('./pages/MentorshipPage'))
 const TrendingPage = React.lazy(() => import('./pages/TrendingPage'))
 const FraudDashboardPage = React.lazy(() => import('./pages/FraudDashboardPage'))
+const LicenseActivationPage = React.lazy(() => import('./pages/LicenseActivationPage'))
 
 // Loading component with skeleton animation
 function LoadingScreen() {
@@ -113,6 +114,10 @@ function App() {
                 {/* Public routes */}
                 <Route path="/welcome">
                   <PresentationPage />
+                </Route>
+
+                <Route path="/activate">
+                  <LicenseActivationPage />
                 </Route>
 
                 <Route path="/auth">

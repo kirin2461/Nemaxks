@@ -1,0 +1,104 @@
+Понял! Уточняю план:
+
+***
+
+# 🔑 План: Система лицензий Nemaks (уточнённый)
+
+## 💳 Тарифы
+
+| Тип | Длительность | Цена (RUB) | Цена (USD) |
+|-----|--------------|------------|------------|
+| **MONTHLY** | 30 дней | 50₽ | $1 |
+| **QUARTERLY** | 90 дней | 125₽ | $1.50 |
+| **YEARLY** | 365 дней | 600₽ | $8 |
+
+## ✨ Что даёт лицензия:
+- ✅ Доступ к регистрации/авторизации
+- ✅ **Без системной рекламы от платформы Nemaks**
+- ✅ Пользовательская реклама (посты/гильдии) — разрешена по согласованию с Super Admin
+
+***
+
+## 📢 Типы рекламы в Nemaks
+
+| Тип рекламы | Описание | Кто видит | Условия |
+|-------------|----------|-----------|---------|
+| **Системная (платформенная)** | Баннеры, уведомления от Nemaks | Все без лицензии | Отключается при покупке лицензии |
+| **Пользовательская** | Рекламные посты, продвижение гильдий | Все пользователи | Согласование с Super Admin |
+
+***
+
+## 🛠️ Реализация пользовательской рекламы
+
+### Модель для заявок на рекламу:
+```go
+type AdRequest struct {
+    ID           uuid.UUID
+    UserID       uuid.UUID  // Кто подал заявку
+    Type         string     // POST, GUILD, BANNER
+    Content      string     // Описание/контент рекламы
+    TargetURL    string     // Ссылка (если есть)
+    Status       string     // PENDING, APPROVED, REJECTED
+    
+    // Согласование
+    ReviewedBy   *uuid.UUID // Super Admin который рассмотрел
+    ReviewedAt   *time.Time
+    ReviewNote   string     // Комментарий от админа
+    
+    // Условия (заполняет Super Admin)
+    Price        *int       // Цена в Nemcoins или рублях
+    Duration     *int       // Длительность показа (дней)
+    
+    CreatedAt    time.Time
+}
+```
+
+### Страница в админке Super Admin:
+- Список заявок на рекламу
+- Одобрение/отклонение
+- Установка условий (цена, срок)
+
+***
+
+## 📝 Обновлённое указание для Replit Agent
+
+```
+Implement license system for Nemaks:
+
+1. License types (subscription to access platform):
+   - MONTHLY: 30 days, 50 RUB / $1
+   - QUARTERLY: 90 days, 125 RUB / $1.50
+   - YEARLY: 365 days, 600 RUB / $8
+
+2. What license provides:
+   - Access to /login and /register pages
+   - NO PLATFORM/SYSTEM ADS from Nemaks itself
+   - Note: User-generated advertising (promoted posts, guilds) is allowed but requires Super Admin approval
+
+3. Flow: /welcome → /activate (if no valid license) → /login or /register
+
+4. Backend:
+   - models_license.go: LicenseKey model
+   - handlers_license.go: activate, validate, pricing endpoints
+   - middleware_license.go: block auth pages without valid license
+
+5. Frontend:
+   - LicenseActivation.tsx at /activate with 3 pricing tiers
+   - Show "No platform ads" as benefit
+   - License status in user profile
+
+6. Key format: NEMKS-XXXXX-XXXXX-XXXXX
+
+7. System ads:
+   - Show platform ads to users WITHOUT valid license (future feature)
+   - Hide platform ads for licensed users
+   - User advertising (posts, guilds promotion) = separate system, requires Super Admin approval
+
+8. Add to Super Admin panel:
+   - Section for managing ad requests from users
+   - Approve/reject user advertising with custom terms
+```
+
+***
+
+Готово! Отправить это агенту Replit?

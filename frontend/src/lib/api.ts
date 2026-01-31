@@ -2231,4 +2231,113 @@ export const fraudAPI = {
     request<{ original: string; normalized: string; results: any[]; is_fraud: boolean }>('/fraud/analyze', { method: 'POST', body: JSON.stringify({ content }) }),
 };
 
+// License System
+export interface LicensePricing {
+  type: string;
+  duration_days: number;
+  price_rub: number;
+  price_usd: number;
+  label: string;
+  label_ru: string;
+  description: string;
+  description_ru: string;
+  popular: boolean;
+}
+
+export interface LicenseKey {
+  id: number;
+  key: string;
+  type: string;
+  duration_days: number;
+  price_rub: number;
+  price_usd: number;
+  is_used: boolean;
+  used_by?: number;
+  used_at?: string;
+  expires_at?: string;
+  created_at: string;
+}
+
+export interface UserLicense {
+  id: number;
+  user_id: number;
+  type: string;
+  activated_at: string;
+  expires_at: string;
+  is_active: boolean;
+  days_remaining?: number;
+}
+
+export interface AdRequest {
+  id: number;
+  user_id: number;
+  type: string;
+  title: string;
+  content: string;
+  target_url: string;
+  image_url: string;
+  status: string;
+  reviewed_by?: number;
+  reviewed_at?: string;
+  review_note: string;
+  price_coins?: number;
+  price_rub?: number;
+  duration_days?: number;
+  starts_at?: string;
+  ends_at?: string;
+  impressions: number;
+  clicks: number;
+  created_at: string;
+  user?: { id: number; username: string };
+}
+
+export interface SystemAd {
+  id: number;
+  title: string;
+  content: string;
+  image_url: string;
+  target_url: string;
+  type: string;
+  is_active: boolean;
+  impressions: number;
+  clicks: number;
+}
+
+export const licenseAPI = {
+  getPricing: () => request<{ pricing: LicensePricing[]; benefits: string[]; benefits_ru: string[] }>('/license/pricing'),
+  validate: (key: string) => request<{ valid: boolean; type?: string; duration_days?: number; error?: string }>('/license/validate', { method: 'POST', body: JSON.stringify({ key }) }),
+  activate: (key: string) => request<{ success: boolean; license: UserLicense }>('/license/activate', { method: 'POST', body: JSON.stringify({ key }) }),
+  getStatus: () => request<{ has_license: boolean; is_active: boolean; type?: string; expires_at?: string; days_remaining?: number }>('/license/status'),
+};
+
+export const adsAPI = {
+  getSystemAds: () => request<SystemAd[]>('/ads/system'),
+  recordClick: (id: number) => request<{ success: boolean }>(`/ads/${id}/click`, { method: 'POST' }),
+  createRequest: (data: { type: string; title: string; content: string; target_url?: string; image_url?: string }) =>
+    request<AdRequest>('/ads/request', { method: 'POST', body: JSON.stringify(data) }),
+  getMyRequests: () => request<AdRequest[]>('/ads/my-requests'),
+};
+
+export const adminLicenseAPI = {
+  getAll: (page = 1, limit = 50) => request<{ licenses: LicenseKey[]; total: number }>(`/admin/licenses?page=${page}&limit=${limit}`),
+  generate: (type: string) => request<LicenseKey>('/admin/licenses/generate', { method: 'POST', body: JSON.stringify({ type }) }),
+  generateBatch: (type: string, count: number) => request<{ licenses: LicenseKey[]; count: number }>('/admin/licenses/generate-batch', { method: 'POST', body: JSON.stringify({ type, count }) }),
+  getStats: () => request<{ total_keys: number; used_keys: number; unused_keys: number; active_users: number; revenue_rub: number }>('/admin/licenses/stats'),
+};
+
+export const adminAdsAPI = {
+  getRequests: (status?: string, page = 1, limit = 20) => {
+    const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+    if (status) params.append('status', status);
+    return request<{ requests: AdRequest[]; total: number }>(`/admin/ads/requests?${params}`);
+  },
+  getRequest: (id: number) => request<AdRequest>(`/admin/ads/requests/${id}`),
+  reviewRequest: (id: number, data: { status: string; review_note?: string; price_coins?: number; price_rub?: number; duration_days?: number }) =>
+    request<AdRequest>(`/admin/ads/requests/${id}/review`, { method: 'PUT', body: JSON.stringify(data) }),
+  getSystemAds: () => request<SystemAd[]>('/admin/ads/system'),
+  createSystemAd: (ad: Partial<SystemAd>) => request<SystemAd>('/admin/ads/system', { method: 'POST', body: JSON.stringify(ad) }),
+  updateSystemAd: (id: number, ad: Partial<SystemAd>) => request<SystemAd>(`/admin/ads/system/${id}`, { method: 'PUT', body: JSON.stringify(ad) }),
+  deleteSystemAd: (id: number) => request<{ success: boolean }>(`/admin/ads/system/${id}`, { method: 'DELETE' }),
+};
+
 export { APIError };
