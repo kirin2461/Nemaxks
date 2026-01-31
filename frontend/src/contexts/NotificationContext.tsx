@@ -300,7 +300,16 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
             break
           }
           if (outgoingCall) {
-            setOutgoingCall(prev => prev ? { ...prev, status: 'connected' } : null)
+            // Store call info for the call page
+            sessionStorage.setItem('callConnected', JSON.stringify({
+              callId: acceptedCallId,
+              targetUserId: outgoingCall.targetUserId,
+              targetUserName: outgoingCall.targetUserName
+            }))
+            // Navigate caller to the call page
+            setLocation(`/call/${outgoingCall.targetUserId}?connected=true&callId=${acceptedCallId}`)
+            // Clear outgoing call modal
+            setOutgoingCall(null)
           }
         }
         break
