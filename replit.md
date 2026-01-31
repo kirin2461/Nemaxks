@@ -47,6 +47,33 @@ A comprehensive super admin panel at `/admin/super` with the following capabilit
 
 All super admin endpoints are protected by `superAdminMiddleware()` which enforces `super_admin` role requirement.
 
+### Phase 1 Features: Gamification & Engagement (New)
+
+#### Achievement & Level System
+- **Achievements**: 16 default achievements across categories (social, voice, content, progression, reputation, loyalty)
+- **XP System**: Users earn XP for messages, reactions, voice time, posts, and poll participation
+- **Levels**: Progressive leveling with increasing XP requirements (1.15x multiplier per level)
+- **Leaderboards**: Global and per-guild leaderboards with weekly/monthly/all-time filters
+- **Rarity tiers**: common, uncommon, rare, epic, legendary achievements
+
+#### Polls & Voting
+- **Poll creation**: Multi-option polls with optional expiration time
+- **Voting options**: Single or multiple choice, anonymous voting support
+- **Poll management**: Authors can close polls, results show percentages and vote counts
+- **XP rewards**: Users earn XP for creating polls (+15) and voting (+5)
+
+#### Custom Statuses
+- **Status messages**: Custom text + emoji status visible to other users
+- **Auto-expiry**: Optional duration (30min, 1hr, 4hr, today)
+- **Presets**: Default presets (Working, Gaming, Music, etc.) + custom user presets
+- **Status persistence**: Automatic cleanup of expired statuses
+
+#### Disappearing Messages
+- **Per-conversation toggle**: Enable/disable per DM conversation
+- **Duration options**: 1 minute, 5 minutes, 1 hour, 1 day, 1 week
+- **Background cleanup**: Automated job cleans up expired messages every minute
+- **Privacy focused**: Messages permanently deleted after expiry
+
 The system incorporates a unified subscription model with "Старт", "Про", and "Премиум" plans, offering varying content retention, AI requests, and features like interactive whiteboards and online notebooks. Seat-based billing is available for organizations. A donation system, promo codes, referral bonuses, and a manual payment system with admin verification are also integrated.
 
 ### AI Moderation and Communication Tools

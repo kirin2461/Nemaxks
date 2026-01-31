@@ -1427,4 +1427,167 @@ export const channelToolsAPI = {
     request<{ status: string }>(`/channels/tools/${toolId}`, { method: "DELETE" }),
 };
 
+// Phase 1: Achievements, Levels, Polls, Custom Statuses, Disappearing Messages
+
+export interface Achievement {
+  id: number;
+  name: string;
+  name_ru: string;
+  description: string;
+  description_ru: string;
+  icon: string;
+  category: string;
+  xp_reward: number;
+  rarity: string;
+  condition: string;
+  threshold: number;
+}
+
+export interface UserAchievement {
+  id: number;
+  user_id: number;
+  achievement_id: number;
+  unlocked_at: string;
+  achievement: Achievement;
+}
+
+export interface UserLevel {
+  level: number;
+  current_xp: number;
+  total_xp: number;
+  xp_needed: number;
+  progress: number;
+  messages: number;
+  voice_mins: number;
+  reactions: number;
+  posts: number;
+}
+
+export interface LeaderboardEntry {
+  user_id: number;
+  username: string;
+  avatar: string;
+  level: number;
+  total_xp: number;
+  rank: number;
+}
+
+export interface Poll {
+  id: number;
+  channel_id?: number;
+  guild_id?: number;
+  author_id: number;
+  question: string;
+  description: string;
+  multi_choice: boolean;
+  anonymous: boolean;
+  expires_at?: string;
+  is_closed: boolean;
+  created_at: string;
+  author: User;
+  options: PollOption[];
+  votes_count: number;
+}
+
+export interface PollOption {
+  id: number;
+  poll_id: number;
+  text: string;
+  position: number;
+  votes_count: number;
+}
+
+export interface CustomStatus {
+  text: string;
+  emoji: string;
+  expires_at?: string;
+}
+
+export interface StatusPreset {
+  id?: number;
+  name: string;
+  text: string;
+  emoji: string;
+}
+
+export interface DisappearingSettings {
+  enabled: boolean;
+  duration: number;
+}
+
+export const achievementsAPI = {
+  getAll: () => request<Achievement[]>('/achievements'),
+  getUserAchievements: (userId: number | string) => 
+    request<UserAchievement[]>(`/achievements/${userId}`),
+  getUserLevel: (userId: number | string) => 
+    request<UserLevel>(`/level/${userId}`),
+  getLeaderboard: (scope?: string, period?: string) => {
+    const params = new URLSearchParams();
+    if (scope) params.append('scope', scope);
+    if (period) params.append('period', period);
+    return request<LeaderboardEntry[]>(`/leaderboard?${params}`);
+  },
+};
+
+export const pollsAPI = {
+  create: (data: {
+    channel_id?: number;
+    guild_id?: number;
+    question: string;
+    description?: string;
+    options: string[];
+    multi_choice?: boolean;
+    anonymous?: boolean;
+    duration?: number;
+  }) => request<Poll>('/polls', { method: 'POST', data }),
+  
+  getPolls: (channelId?: number, guildId?: number, active?: boolean) => {
+    const params = new URLSearchParams();
+    if (channelId) params.append('channel_id', channelId.toString());
+    if (guildId) params.append('guild_id', guildId.toString());
+    if (active !== undefined) params.append('active', active.toString());
+    return request<Poll[]>(`/polls?${params}`);
+  },
+  
+  getPoll: (id: number) => 
+    request<{ poll: Poll; my_votes: number[] }>(`/polls/${id}`),
+  
+  vote: (id: number, optionIds: number[]) => 
+    request<{ message: string }>(`/polls/${id}/vote`, { 
+      method: 'POST', 
+      data: { option_ids: optionIds } 
+    }),
+  
+  close: (id: number) => 
+    request<{ message: string }>(`/polls/${id}/close`, { method: 'POST' }),
+};
+
+export const statusAPI = {
+  get: (userId: number | string) => 
+    request<CustomStatus>(`/status/${userId}`),
+  
+  update: (data: { text: string; emoji: string; duration?: number }) => 
+    request<CustomStatus>('/status', { method: 'PUT', data }),
+  
+  clear: () => 
+    request<{ message: string }>('/status', { method: 'DELETE' }),
+  
+  getPresets: () => 
+    request<{ custom: StatusPreset[]; default: StatusPreset[] }>('/status-presets'),
+  
+  createPreset: (data: { name: string; text: string; emoji: string }) => 
+    request<StatusPreset>('/status-presets', { method: 'POST', data }),
+  
+  deletePreset: (id: number) => 
+    request<{ message: string }>(`/status-presets/${id}`, { method: 'DELETE' }),
+};
+
+export const disappearingAPI = {
+  getSettings: (userId: number) => 
+    request<DisappearingSettings>(`/disappearing/${userId}`),
+  
+  updateSettings: (userId: number, data: { enabled: boolean; duration: number }) => 
+    request<DisappearingSettings>(`/disappearing/${userId}`, { method: 'PUT', data }),
+};
+
 export { APIError };

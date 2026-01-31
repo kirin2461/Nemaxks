@@ -1,0 +1,284 @@
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Clock, Plus, Trash2 } from 'lucide-react';
+import { statusAPI, StatusPreset } from '../lib/api';
+
+interface CustomStatusModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentStatus?: { text: string; emoji: string };
+  onUpdate?: (status: { text: string; emoji: string }) => void;
+  language?: 'en' | 'ru';
+}
+
+const EMOJI_LIST = ['💼', '🎮', '🎧', '📚', '🍔', '😴', '🏃', '✈️', '🎬', '💻', '☕', '🎉', '🤒', '🏠', '📱'];
+
+const DURATION_OPTIONS = [
+  { value: 0, label: { en: "Don't clear", ru: 'Не очищать' } },
+  { value: 1800, label: { en: '30 minutes', ru: '30 минут' } },
+  { value: 3600, label: { en: '1 hour', ru: '1 час' } },
+  { value: 14400, label: { en: '4 hours', ru: '4 часа' } },
+  { value: 86400, label: { en: 'Today', ru: 'Сегодня' } },
+];
+
+export default function CustomStatusModal({ 
+  isOpen, 
+  onClose, 
+  currentStatus,
+  onUpdate,
+  language = 'ru' 
+}: CustomStatusModalProps) {
+  const [text, setText] = useState(currentStatus?.text || '');
+  const [emoji, setEmoji] = useState(currentStatus?.emoji || '💬');
+  const [duration, setDuration] = useState(0);
+  const [presets, setPresets] = useState<{ custom: StatusPreset[]; default: StatusPreset[] }>({ custom: [], default: [] });
+  const [showPresetForm, setShowPresetForm] = useState(false);
+  const [presetName, setPresetName] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadPresets();
+    }
+  }, [isOpen]);
+
+  async function loadPresets() {
+    try {
+      const data = await statusAPI.getPresets();
+      setPresets(data);
+    } catch (error) {
+      console.error('Failed to load presets:', error);
+    }
+  }
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const result = await statusAPI.update({ text, emoji, duration: duration > 0 ? duration : undefined });
+      onUpdate?.({ text: result.text, emoji: result.emoji });
+      onClose();
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
+    setSaving(false);
+  };
+
+  const handleClear = async () => {
+    setSaving(true);
+    try {
+      await statusAPI.clear();
+      onUpdate?.({ text: '', emoji: '' });
+      setText('');
+      setEmoji('💬');
+      onClose();
+    } catch (error) {
+      console.error('Failed to clear status:', error);
+    }
+    setSaving(false);
+  };
+
+  const handlePresetClick = (preset: StatusPreset) => {
+    setText(preset.text);
+    setEmoji(preset.emoji);
+  };
+
+  const handleSavePreset = async () => {
+    if (!presetName.trim() || !text.trim()) return;
+    
+    try {
+      await statusAPI.createPreset({ name: presetName, text, emoji });
+      setShowPresetForm(false);
+      setPresetName('');
+      loadPresets();
+    } catch (error) {
+      console.error('Failed to save preset:', error);
+    }
+  };
+
+  const handleDeletePreset = async (id: number) => {
+    try {
+      await statusAPI.deletePreset(id);
+      loadPresets();
+    } catch (error) {
+      console.error('Failed to delete preset:', error);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-purple-500/20"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">
+              {language === 'ru' ? 'Установить статус' : 'Set Status'}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm text-gray-400 mb-2">
+              {language === 'ru' ? 'Эмодзи' : 'Emoji'}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {EMOJI_LIST.map(e => (
+                <button
+                  key={e}
+                  onClick={() => setEmoji(e)}
+                  className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all ${
+                    emoji === e 
+                      ? 'bg-purple-600 ring-2 ring-purple-400' 
+                      : 'bg-gray-700 hover:bg-gray-600'
+                  }`}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm text-gray-400 mb-2">
+              {language === 'ru' ? 'Текст статуса' : 'Status text'}
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">{emoji}</span>
+              <input
+                type="text"
+                value={text}
+                onChange={e => setText(e.target.value)}
+                placeholder={language === 'ru' ? 'Что вы делаете?' : 'What are you doing?'}
+                maxLength={100}
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm text-gray-400 mb-2">
+              <Clock className="w-4 h-4 inline-block mr-1" />
+              {language === 'ru' ? 'Очистить через' : 'Clear after'}
+            </label>
+            <select
+              value={duration}
+              onChange={e => setDuration(Number(e.target.value))}
+              className="w-full px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+            >
+              {DURATION_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label[language]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {(presets.default.length > 0 || presets.custom.length > 0) && (
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2">
+                {language === 'ru' ? 'Быстрый выбор' : 'Quick select'}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[...presets.default, ...presets.custom].map((preset, i) => (
+                  <div key={preset.id || `default-${i}`} className="relative group">
+                    <button
+                      onClick={() => handlePresetClick(preset)}
+                      className="px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm text-white transition-colors"
+                    >
+                      {preset.emoji} {preset.text}
+                    </button>
+                    {preset.id && (
+                      <button
+                        onClick={() => handleDeletePreset(preset.id!)}
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {showPresetForm ? (
+            <div className="mb-4 p-3 bg-gray-700/50 rounded-xl">
+              <input
+                type="text"
+                value={presetName}
+                onChange={e => setPresetName(e.target.value)}
+                placeholder={language === 'ru' ? 'Название пресета' : 'Preset name'}
+                className="w-full px-3 py-2 rounded-lg bg-gray-600 border border-gray-500 text-white placeholder-gray-400 mb-2"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSavePreset}
+                  disabled={!presetName.trim() || !text.trim()}
+                  className="flex-1 px-3 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {language === 'ru' ? 'Сохранить' : 'Save'}
+                </button>
+                <button
+                  onClick={() => setShowPresetForm(false)}
+                  className="px-3 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-500"
+                >
+                  {language === 'ru' ? 'Отмена' : 'Cancel'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowPresetForm(true)}
+              disabled={!text.trim()}
+              className="w-full mb-4 px-4 py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-purple-500 hover:text-purple-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              {language === 'ru' ? 'Сохранить как пресет' : 'Save as preset'}
+            </button>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleClear}
+              disabled={saving}
+              className="px-4 py-3 rounded-xl bg-gray-700 text-gray-300 font-semibold hover:bg-gray-600 transition-colors"
+            >
+              {language === 'ru' ? 'Очистить' : 'Clear'}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 px-4 py-3 rounded-xl bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50 transition-colors"
+            >
+              {saving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {language === 'ru' ? 'Сохранение...' : 'Saving...'}
+                </span>
+              ) : (
+                language === 'ru' ? 'Сохранить' : 'Save'
+              )}
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}

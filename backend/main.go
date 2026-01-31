@@ -20,6 +20,7 @@ var db *gorm.DB
 func main() {
         // godotenv.Load() // Not needed in Replit
         initDB()
+        initPhase1()
 
         // Initialize Redis (optional, non-fatal)
         if os.Getenv("REDIS_URL") != "" {
@@ -497,6 +498,9 @@ func main() {
 
         // Admin Organization & Billing Management
         setupAdminOrgRoutes(r, authMiddleware(), adminMiddleware())
+
+        // Phase 1: Achievements, Polls, Custom Statuses, Disappearing Messages
+        registerPhase1Routes(r, authMiddleware())
 
         port := os.Getenv("PORT")
         if port == "" {
