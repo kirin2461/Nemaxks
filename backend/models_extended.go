@@ -726,18 +726,59 @@ type ChannelTool struct {
         UpdatedAt int64  `json:"updated_at"`
 }
 
+// ToolSnapshot stores version history for collaborative tools
+type ToolSnapshot struct {
+        ID          uint      `gorm:"primaryKey" json:"id"`
+        ToolID      uint      `gorm:"index" json:"tool_id"`
+        Name        string    `gorm:"size:255" json:"name"`
+        Content     string    `gorm:"type:text" json:"content"`
+        UserID      uint      `gorm:"index" json:"user_id"`
+        ChangeType  string    `gorm:"size:50" json:"change_type"`
+        Description string    `gorm:"type:text" json:"description"`
+        CreatedAt   time.Time `json:"created_at"`
+}
+
 // Helper functions for real-time collaboration
 
 // GetCurrentTimestamp returns current timestamp in milliseconds
 func GetCurrentTimestamp() int64 {
-                return time.Now().UnixNano() / int64(time.Millisecond)
-        }
+        return time.Now().UnixNano() / int64(time.Millisecond)
+}
 
 // SaveToolSnapshot saves a snapshot of tool state for version history
 func SaveToolSnapshot(toolID uint, name string, description string, userID uint, changeType string) error {
-                // TODO: Implement snapshot saving to database
-                return nil
+        var tool ChannelTool
+        if err := db.First(&tool, toolID).Error; err != nil {
+                return err
         }
+
+        snapshot := ToolSnapshot{
+                ToolID:      toolID,
+                Name:        name,
+                Content:     tool.Content,
+                UserID:      userID,
+                ChangeType:  changeType,
+                Description: description,
+                CreatedAt:   time.Now(),
+        }
+
+        if err := db.Create(&snapshot).Error; err != nil {
+                return err
+        }
+
+        // Keep only last 100 snapshots per tool to prevent unlimited growth
+        var count int64
+        db.Model(&ToolSnapshot{}).Where("tool_id = ?", toolID).Count(&count)
+        if count > 100 {
+                var oldestSnapshots []ToolSnapshot
+                db.Where("tool_id = ?", toolID).Order("created_at ASC").Limit(int(count - 100)).Find(&oldestSnapshots)
+                for _, s := range oldestSnapshots {
+                        db.Delete(&s)
+                }
+        }
+
+        return nil
+}
 
 // Moderation System Models
 
