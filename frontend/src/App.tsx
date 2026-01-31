@@ -17,7 +17,7 @@ const FeedPage = React.lazy(() => import('./pages/FeedPage'))
 const VideoPage = React.lazy(() => import('./pages/VideoPage'))
 const VideoCallPage = React.lazy(() => import('./pages/VideoCallPage'))
 const JarvisPage = React.lazy(() => import('./pages/JarvisPage'))
-const MessagesPage = React.lazy(() => import('./pages/MessagesPage'))
+const DirectMessagesPage = React.lazy(() => import('./pages/DirectMessagesPage'))
 const ChannelsPage = React.lazy(() => import('./pages/ChannelsPage'))
 const FriendsPage = React.lazy(() => import('./pages/FriendsPage'))
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'))
@@ -142,7 +142,7 @@ function App() {
 
                 <Route path="/messages">
                   <ProtectedRoute>
-                    <MessagesPage />
+                    <DirectMessagesPage />
                   </ProtectedRoute>
                 </Route>
 
