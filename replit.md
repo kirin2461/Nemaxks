@@ -35,6 +35,18 @@ The backend is developed in Go using the Gin framework, providing a RESTful API 
 - **JARVIS Chats**: No E2E (with user consent) - AI requires access to message content.
 - **Public Channels**: No E2E - content is publicly visible.
 - **Admin Access Permission**: Users can grant super admins temporary access to their DMs by sharing an encrypted key. Permissions can be revoked and expire automatically.
+
+### Super Admin Dashboard (Phase 12)
+
+A comprehensive super admin panel at `/admin/super` with the following capabilities:
+- **User Management**: List, search, filter users by role/status; view detailed profiles; block/unblock; reset passwords; change roles (user/moderator/admin/super_admin); view and revoke active sessions
+- **Guild Management**: List all guilds with statistics; transfer ownership; delete guilds with cascade cleanup
+- **Content Moderation**: View abuse reports; delete messages/posts; integrated with existing moderation system
+- **System Monitoring**: Real-time service status (Database, Redis, LiveKit); security logs with action filtering; failed login tracking
+- **JARVIS Administration**: Usage statistics; top users by request count; per-user usage analysis
+
+All super admin endpoints are protected by `superAdminMiddleware()` which enforces `super_admin` role requirement.
+
 The system incorporates a unified subscription model with "Старт", "Про", and "Премиум" plans, offering varying content retention, AI requests, and features like interactive whiteboards and online notebooks. Seat-based billing is available for organizations. A donation system, promo codes, referral bonuses, and a manual payment system with admin verification are also integrated.
 
 ### AI Moderation and Communication Tools

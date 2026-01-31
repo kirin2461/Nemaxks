@@ -596,6 +596,177 @@ export const adminAPI = {
     }),
 };
 
+export interface SuperAdminStats {
+  users: number;
+  posts: number;
+  messages: number;
+  guilds: number;
+  channels: number;
+  stories: number;
+  online_users: number;
+  active_bans: number;
+  pending_reports: number;
+  today_messages: number;
+  today_new_users: number;
+  active_sessions: number;
+}
+
+export interface UserWithStatus {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  avatar: string;
+  created_at: string;
+  last_seen: string;
+  is_banned: boolean;
+  has_2fa: boolean;
+}
+
+export interface UserDetail {
+  user: User;
+  is_banned: boolean;
+  has_2fa: boolean;
+  stats: {
+    posts: number;
+    messages: number;
+    guilds: number;
+  };
+  sessions: UserSession[];
+  ban_history: BanHistory[];
+}
+
+export interface UserSession {
+  id: string;
+  user_id: number;
+  device_info: string;
+  ip_address: string;
+  last_activity: string;
+  is_active: boolean;
+  expires_at: string;
+}
+
+export interface BanHistory {
+  id: number;
+  user_id: number;
+  reason: string;
+  banned_by: number;
+  created_at: string;
+  expires_at?: string;
+}
+
+export interface GuildWithStats {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  owner_id: number;
+  owner?: User;
+  created_at: string;
+  member_count: number;
+  channel_count: number;
+  message_count: number;
+}
+
+export interface ServiceStatus {
+  services: {
+    database: string;
+    redis: string;
+    livekit: string;
+  };
+  timestamp: string;
+}
+
+export interface JarvisStats {
+  total_requests: number;
+  today_requests: number;
+  top_users: {
+    user_id: number;
+    username: string;
+    requests: number;
+  }[];
+}
+
+export const superAdminAPI = {
+  getStats: () => request<SuperAdminStats>("/super-admin/stats"),
+
+  getUsers: (page = 1, limit = 50, search = "", role = "", status = "") =>
+    request<{ users: UserWithStatus[]; total: number; page: number; limit: number }>(
+      `/super-admin/users?page=${page}&limit=${limit}&search=${search}&role=${role}&status=${status}`,
+    ),
+
+  getUserDetail: (userId: number) =>
+    request<UserDetail>(`/super-admin/users/${userId}`),
+
+  getUserSessions: (userId: number) =>
+    request<{ sessions: UserSession[] }>(`/super-admin/users/${userId}/sessions`),
+
+  revokeSession: (userId: number, sessionId: string) =>
+    request<{ message: string }>(`/super-admin/users/${userId}/sessions/${sessionId}`, {
+      method: "DELETE",
+    }),
+
+  revokeAllSessions: (userId: number) =>
+    request<{ message: string }>(`/super-admin/users/${userId}/sessions`, {
+      method: "DELETE",
+    }),
+
+  resetPassword: (userId: number) =>
+    request<{ message: string; temp_password: string }>(`/super-admin/users/${userId}/reset-password`, {
+      method: "POST",
+    }),
+
+  changeRole: (userId: number, role: string) =>
+    request<{ message: string; old_role: string; new_role: string }>(`/super-admin/users/${userId}/role`, {
+      method: "PUT",
+      data: { role },
+    }),
+
+  getGuilds: (page = 1, limit = 50, search = "") =>
+    request<{ guilds: GuildWithStats[]; total: number; page: number; limit: number }>(
+      `/super-admin/guilds?page=${page}&limit=${limit}&search=${search}`,
+    ),
+
+  getGuildDetail: (guildId: number) =>
+    request<{ guild: any; stats: any; channels: any[]; recent_members: any[] }>(`/super-admin/guilds/${guildId}`),
+
+  transferGuild: (guildId: number, newOwnerId: number) =>
+    request<{ message: string }>(`/super-admin/guilds/${guildId}/transfer`, {
+      method: "POST",
+      data: { new_owner_id: newOwnerId },
+    }),
+
+  deleteGuild: (guildId: number) =>
+    request<{ message: string }>(`/super-admin/guilds/${guildId}`, {
+      method: "DELETE",
+    }),
+
+  getSecurityLogs: (page = 1, limit = 100, eventType = "") =>
+    request<{ logs: AuditLog[]; total: number }>(`/super-admin/security-logs?page=${page}&limit=${limit}&event_type=${eventType}`),
+
+  getFailedLogins: () =>
+    request<{ logs: AuditLog[] }>("/super-admin/failed-logins"),
+
+  getServiceStatus: () =>
+    request<ServiceStatus>("/super-admin/service-status"),
+
+  getJarvisStats: () =>
+    request<JarvisStats>("/super-admin/jarvis/stats"),
+
+  getJarvisUserUsage: (userId: number) =>
+    request<{ user: string; total_requests: number; today_requests: number; recent_sessions: any[] }>(`/super-admin/jarvis/users/${userId}`),
+
+  deleteMessage: (messageId: number, type: "dm" | "channel") =>
+    request<{ message: string }>(`/super-admin/messages/${messageId}?type=${type}`, {
+      method: "DELETE",
+    }),
+
+  deletePost: (postId: number) =>
+    request<{ message: string }>(`/super-admin/posts/${postId}`, {
+      method: "DELETE",
+    }),
+};
+
 export interface BillingStats {
   active_subscriptions: number;
   monthly_revenue: number;

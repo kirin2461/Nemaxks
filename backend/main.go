@@ -375,6 +375,27 @@ func main() {
         r.GET("/api/users/search", authMiddleware(), searchUsersHandler)
         r.GET("/api/users/all", authMiddleware(), getAllUsersHandler)
 
+        // Super Admin Panel
+        r.GET("/api/super-admin/stats", authMiddleware(), superAdminMiddleware(), getSuperAdminStatsHandler)
+        r.GET("/api/super-admin/users", authMiddleware(), superAdminMiddleware(), getSuperAdminUsersHandler)
+        r.GET("/api/super-admin/users/:id", authMiddleware(), superAdminMiddleware(), getUserDetailHandler)
+        r.GET("/api/super-admin/users/:id/sessions", authMiddleware(), superAdminMiddleware(), getUserSessionsHandler)
+        r.DELETE("/api/super-admin/users/:id/sessions/:session_id", authMiddleware(), superAdminMiddleware(), revokeUserSessionHandler)
+        r.DELETE("/api/super-admin/users/:id/sessions", authMiddleware(), superAdminMiddleware(), revokeAllUserSessionsHandler)
+        r.POST("/api/super-admin/users/:id/reset-password", authMiddleware(), superAdminMiddleware(), resetUserPasswordHandler)
+        r.PUT("/api/super-admin/users/:id/role", authMiddleware(), superAdminMiddleware(), changeUserRoleHandler)
+        r.GET("/api/super-admin/guilds", authMiddleware(), superAdminMiddleware(), getSuperAdminGuildsHandler)
+        r.GET("/api/super-admin/guilds/:id", authMiddleware(), superAdminMiddleware(), getGuildDetailHandler)
+        r.POST("/api/super-admin/guilds/:id/transfer", authMiddleware(), superAdminMiddleware(), transferGuildOwnershipHandler)
+        r.DELETE("/api/super-admin/guilds/:id", authMiddleware(), superAdminMiddleware(), deleteGuildHandler)
+        r.GET("/api/super-admin/security-logs", authMiddleware(), superAdminMiddleware(), getSecurityLogsHandler)
+        r.GET("/api/super-admin/failed-logins", authMiddleware(), superAdminMiddleware(), getFailedLoginsHandler)
+        r.GET("/api/super-admin/service-status", authMiddleware(), superAdminMiddleware(), getServiceStatusHandler)
+        r.GET("/api/super-admin/jarvis/stats", authMiddleware(), superAdminMiddleware(), getJarvisStatsHandler)
+        r.GET("/api/super-admin/jarvis/users/:user_id", authMiddleware(), superAdminMiddleware(), getJarvisUserUsageHandler)
+        r.DELETE("/api/super-admin/messages/:id", authMiddleware(), superAdminMiddleware(), deleteMessageAdminHandler)
+        r.DELETE("/api/super-admin/posts/:id", authMiddleware(), superAdminMiddleware(), deletePostAdminHandler)
+
         // Admin Panel
         r.GET("/api/admin/stats", authMiddleware(), adminMiddleware(), getAdminStatsHandler)
         r.GET("/api/stats/platform", getPlatformStatsHandler)
