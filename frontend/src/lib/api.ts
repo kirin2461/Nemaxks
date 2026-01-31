@@ -1064,7 +1064,7 @@ export const postsAPI = {
   addComment: (postId: string, content: string) =>
     request<{ id: number; message: string }>(`/posts/${postId}/comments`, {
       method: "POST",
-      body: JSON.stringify({ content }),
+      data: { content },
     }),
 };
 
@@ -1821,7 +1821,7 @@ export interface UserGift {
 
 export const giftsAPI = {
   send: (receiverId: number, itemId: number, message?: string) =>
-    request<UserGift>('/gifts/send', { method: 'POST', body: JSON.stringify({ receiver_id: receiverId, item_id: itemId, message }) }),
+    request<UserGift>('/gifts/send', { method: 'POST', data: { receiver_id: receiverId, item_id: itemId, message } }),
   getReceived: () => request<UserGift[]>('/gifts/received'),
   open: (id: number) => request<UserGift>(`/gifts/${id}/open`, { method: 'POST' }),
 };
@@ -1842,11 +1842,11 @@ export interface Trade {
 }
 
 export const tradesAPI = {
-  create: (data: { receiver_id: number; offer_items?: number[]; offer_coins?: number; request_items?: number[]; request_coins?: number; note?: string }) =>
-    request<Trade>('/trades', { method: 'POST', body: JSON.stringify(data) }),
+  create: (tradeData: { receiver_id: number; offer_items?: number[]; offer_coins?: number; request_items?: number[]; request_coins?: number; note?: string }) =>
+    request<Trade>('/trades', { method: 'POST', data: tradeData }),
   getAll: (status?: string) => request<Trade[]>(`/trades${status ? `?status=${status}` : ''}`),
   respond: (id: number, action: 'accept' | 'reject', note?: string) =>
-    request<Trade>(`/trades/${id}/respond`, { method: 'POST', body: JSON.stringify({ action, note }) }),
+    request<Trade>(`/trades/${id}/respond`, { method: 'POST', data: { action, note } }),
 };
 
 // Activity Feed
@@ -1957,8 +1957,8 @@ export interface ClanChallenge {
 
 export const clansAPI = {
   getGuildClans: (guildId: number) => request<Clan[]>(`/guild-clans/${guildId}`),
-  create: (data: { guild_id: number; name: string; description?: string; color?: string; is_public?: boolean }) =>
-    request<Clan>('/clans', { method: 'POST', body: JSON.stringify(data) }),
+  create: (clanData: { guild_id: number; name: string; description?: string; color?: string; is_public?: boolean }) =>
+    request<Clan>('/clans', { method: 'POST', data: clanData }),
   join: (id: number) => request<{ clan_id: number; user_id: number }>(`/clans/${id}/join`, { method: 'POST' }),
   getChallenges: (id: number) => request<ClanChallenge[]>(`/clans/${id}/challenges`),
 };
@@ -1999,7 +1999,7 @@ export const miniGamesAPI = {
   getAll: () => request<MiniGame[]>('/minigames'),
   start: (id: number) => request<{ session: GameSession; game: MiniGame; game_data?: TriviaQuestion[] }>(`/minigames/${id}/start`, { method: 'POST' }),
   complete: (sessionId: number, score: number) =>
-    request<{ session: GameSession; coins_earned: number; xp_earned: number }>(`/minigames/session/${sessionId}/complete`, { method: 'POST', body: JSON.stringify({ score }) }),
+    request<{ session: GameSession; coins_earned: number; xp_earned: number }>(`/minigames/session/${sessionId}/complete`, { method: 'POST', data: { score } }),
 };
 
 // Quest Chains
@@ -2127,10 +2127,10 @@ export interface CollectionItem {
 
 export const collectionsAPI = {
   getAll: () => request<Collection[]>('/collections'),
-  create: (data: { name: string; description?: string; icon_emoji?: string; is_private?: boolean }) =>
-    request<Collection>('/collections', { method: 'POST', body: JSON.stringify(data) }),
+  create: (collectionData: { name: string; description?: string; icon_emoji?: string; is_private?: boolean }) =>
+    request<Collection>('/collections', { method: 'POST', data: collectionData }),
   addItem: (id: number, contentType: string, contentId: number, note?: string) =>
-    request<CollectionItem>(`/collections/${id}/items`, { method: 'POST', body: JSON.stringify({ content_type: contentType, content_id: contentId, note }) }),
+    request<CollectionItem>(`/collections/${id}/items`, { method: 'POST', data: { content_type: contentType, content_id: contentId, note } }),
   getItems: (id: number) => request<{ collection: Collection; items: CollectionItem[] }>(`/collections/${id}/items`),
   removeItem: (collectionId: number, itemId: number) => request<{ success: boolean }>(`/collections/${collectionId}/items/${itemId}`, { method: 'DELETE' }),
   delete: (id: number) => request<{ success: boolean }>(`/collections/${id}`, { method: 'DELETE' }),
@@ -2218,17 +2218,17 @@ export const fraudAPI = {
   },
   getAlert: (id: number) => request<FraudAlert>(`/fraud/alerts/${id}`),
   reviewAlert: (id: number, status: string, action: string, notes: string) =>
-    request<FraudAlert>(`/fraud/alerts/${id}/review`, { method: 'PUT', body: JSON.stringify({ status, action_taken: action, notes }) }),
+    request<FraudAlert>(`/fraud/alerts/${id}/review`, { method: 'PUT', data: { status, action_taken: action, notes } }),
   getRules: () => request<FraudRule[]>('/fraud/rules'),
-  createRule: (rule: Partial<FraudRule>) => request<FraudRule>('/fraud/rules', { method: 'POST', body: JSON.stringify(rule) }),
-  updateRule: (id: number, rule: Partial<FraudRule>) => request<FraudRule>(`/fraud/rules/${id}`, { method: 'PUT', body: JSON.stringify(rule) }),
+  createRule: (rule: Partial<FraudRule>) => request<FraudRule>('/fraud/rules', { method: 'POST', data: rule }),
+  updateRule: (id: number, rule: Partial<FraudRule>) => request<FraudRule>(`/fraud/rules/${id}`, { method: 'PUT', data: rule }),
   deleteRule: (id: number) => request<{ success: boolean }>(`/fraud/rules/${id}`, { method: 'DELETE' }),
   getRiskScores: (minScore = 0, limit = 50) => request<UserRiskScore[]>(`/fraud/risk-scores?min_score=${minScore}&limit=${limit}`),
   getUserRiskScore: (userId: number) => request<UserRiskScore>(`/fraud/risk-scores/${userId}`),
   getImpersonationBans: (page = 1, limit = 20) =>
     request<{ bans: ImpersonationBan[]; total: number }>(`/fraud/impersonation-bans?page=${page}&limit=${limit}`),
   analyzeContent: (content: string) =>
-    request<{ original: string; normalized: string; results: any[]; is_fraud: boolean }>('/fraud/analyze', { method: 'POST', body: JSON.stringify({ content }) }),
+    request<{ original: string; normalized: string; results: any[]; is_fraud: boolean }>('/fraud/analyze', { method: 'POST', data: { content } }),
 };
 
 // License System
@@ -2305,23 +2305,23 @@ export interface SystemAd {
 
 export const licenseAPI = {
   getPricing: () => request<{ pricing: LicensePricing[]; benefits: string[]; benefits_ru: string[] }>('/license/pricing'),
-  validate: (key: string) => request<{ valid: boolean; type?: string; duration_days?: number; error?: string }>('/license/validate', { method: 'POST', body: JSON.stringify({ key }) }),
-  activate: (key: string) => request<{ success: boolean; license: UserLicense }>('/license/activate', { method: 'POST', body: JSON.stringify({ key }) }),
+  validate: (key: string) => request<{ valid: boolean; type?: string; duration_days?: number; error?: string }>('/license/validate', { method: 'POST', data: { key } }),
+  activate: (key: string) => request<{ success: boolean; license: UserLicense }>('/license/activate', { method: 'POST', data: { key } }),
   getStatus: () => request<{ has_license: boolean; is_active: boolean; type?: string; expires_at?: string; days_remaining?: number }>('/license/status'),
 };
 
 export const adsAPI = {
   getSystemAds: () => request<SystemAd[]>('/ads/system'),
   recordClick: (id: number) => request<{ success: boolean }>(`/ads/${id}/click`, { method: 'POST' }),
-  createRequest: (data: { type: string; title: string; content: string; target_url?: string; image_url?: string }) =>
-    request<AdRequest>('/ads/request', { method: 'POST', body: JSON.stringify(data) }),
+  createRequest: (reqData: { type: string; title: string; content: string; target_url?: string; image_url?: string }) =>
+    request<AdRequest>('/ads/request', { method: 'POST', data: reqData }),
   getMyRequests: () => request<AdRequest[]>('/ads/my-requests'),
 };
 
 export const adminLicenseAPI = {
   getAll: (page = 1, limit = 50) => request<{ licenses: LicenseKey[]; total: number }>(`/admin/licenses?page=${page}&limit=${limit}`),
-  generate: (type: string) => request<LicenseKey>('/admin/licenses/generate', { method: 'POST', body: JSON.stringify({ type }) }),
-  generateBatch: (type: string, count: number) => request<{ licenses: LicenseKey[]; count: number }>('/admin/licenses/generate-batch', { method: 'POST', body: JSON.stringify({ type, count }) }),
+  generate: (type: string) => request<LicenseKey>('/admin/licenses/generate', { method: 'POST', data: { type } }),
+  generateBatch: (type: string, count: number) => request<{ licenses: LicenseKey[]; count: number }>('/admin/licenses/generate-batch', { method: 'POST', data: { type, count } }),
   getStats: () => request<{ total_keys: number; used_keys: number; unused_keys: number; active_users: number; revenue_rub: number }>('/admin/licenses/stats'),
 };
 
@@ -2332,11 +2332,11 @@ export const adminAdsAPI = {
     return request<{ requests: AdRequest[]; total: number }>(`/admin/ads/requests?${params}`);
   },
   getRequest: (id: number) => request<AdRequest>(`/admin/ads/requests/${id}`),
-  reviewRequest: (id: number, data: { status: string; review_note?: string; price_coins?: number; price_rub?: number; duration_days?: number }) =>
-    request<AdRequest>(`/admin/ads/requests/${id}/review`, { method: 'PUT', body: JSON.stringify(data) }),
+  reviewRequest: (id: number, reviewData: { status: string; review_note?: string; price_coins?: number; price_rub?: number; duration_days?: number }) =>
+    request<AdRequest>(`/admin/ads/requests/${id}/review`, { method: 'PUT', data: reviewData }),
   getSystemAds: () => request<SystemAd[]>('/admin/ads/system'),
-  createSystemAd: (ad: Partial<SystemAd>) => request<SystemAd>('/admin/ads/system', { method: 'POST', body: JSON.stringify(ad) }),
-  updateSystemAd: (id: number, ad: Partial<SystemAd>) => request<SystemAd>(`/admin/ads/system/${id}`, { method: 'PUT', body: JSON.stringify(ad) }),
+  createSystemAd: (ad: Partial<SystemAd>) => request<SystemAd>('/admin/ads/system', { method: 'POST', data: ad }),
+  updateSystemAd: (id: number, ad: Partial<SystemAd>) => request<SystemAd>(`/admin/ads/system/${id}`, { method: 'PUT', data: ad }),
   deleteSystemAd: (id: number) => request<{ success: boolean }>(`/admin/ads/system/${id}`, { method: 'DELETE' }),
 };
 

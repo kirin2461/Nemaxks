@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { authAPI, userAPI, messagesAPI, type User, type Conversation, type Settings } from './api'
+import { authAPI, userAPI, messagesAPI, licenseAPI, type User, type Conversation, type Settings } from './api'
 
 type ThemeName = 'dark' | 'light' | 'cosmic' | 'nebula-winter' | 'glass' | 'midnight-ocean' | 'forest-night' | 'sunset-glow' | 'neon-tokyo' | 'arctic-aurora'
 
@@ -59,9 +59,18 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const response = await authAPI.login(username, password)
       if (response && response.token) {
-        // localStorage is already set by api.ts but we'll be explicit
         localStorage.setItem('token', response.token)
         set({ user: response.user, isAuthenticated: true, isDemoMode: false })
+        
+        const pendingKey = localStorage.getItem('pendingLicenseKey')
+        if (pendingKey) {
+          try {
+            await licenseAPI.activate(pendingKey)
+            localStorage.removeItem('pendingLicenseKey')
+          } catch (err) {
+            console.error('License activation failed:', err)
+          }
+        }
       }
     } catch (error) {
       console.error('Login failed:', error)
@@ -75,6 +84,16 @@ export const useStore = create<AppState>((set, get) => ({
       if (response && response.token) {
         localStorage.setItem('token', response.token)
         set({ user: response.user, isAuthenticated: true, isDemoMode: false })
+        
+        const pendingKey = localStorage.getItem('pendingLicenseKey')
+        if (pendingKey) {
+          try {
+            await licenseAPI.activate(pendingKey)
+            localStorage.removeItem('pendingLicenseKey')
+          } catch (err) {
+            console.error('License activation failed:', err)
+          }
+        }
       }
     } catch (error) {
       console.error('Registration failed:', error)
