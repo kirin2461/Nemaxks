@@ -232,6 +232,24 @@ func registerHandler(c *gin.Context) {
                 return
         }
 
+        // Auto-add new user to the global guild's general channel
+        var globalGuild Guild
+        if db.Where("name = ?", "Nemaks Общий").First(&globalGuild).RowsAffected > 0 {
+                var generalChannel Channel
+                if db.Where("guild_id = ? AND name = ?", globalGuild.ID, "general").First(&generalChannel).RowsAffected > 0 {
+                        var existingMember ChannelMember
+                        if db.Where("channel_id = ? AND user_id = ?", generalChannel.ID, user.ID).First(&existingMember).RowsAffected == 0 {
+                                db.Create(&ChannelMember{
+                                        ChannelID: generalChannel.ID,
+                                        UserID:    user.ID,
+                                        Role:      "member",
+                                        JoinedAt:  time.Now(),
+                                })
+                                log.Printf("Added user %s to general channel", user.Username)
+                        }
+                }
+        }
+
         token, err := generateToken(&user)
         if err != nil {
                 log.Printf("Token generation error: %v", err)

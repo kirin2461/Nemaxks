@@ -18,7 +18,40 @@ func getMessagesByChannelHandler(c *gin.Context) {
         channelID := c.Param("channel_id")
         var messages []Message
         db.Where("channel_id = ?", channelID).Order("created_at asc").Find(&messages)
-        c.JSON(http.StatusOK, messages)
+
+        // Enrich messages with author info
+        type MessageResponse struct {
+                ID        uint      `json:"id"`
+                ChannelID uint      `json:"channel_id"`
+                AuthorID  uint      `json:"author_id"`
+                Content   string    `json:"content"`
+                CreatedAt time.Time `json:"created_at"`
+                Author    struct {
+                        ID       uint    `json:"id"`
+                        Username string  `json:"username"`
+                        Avatar   *string `json:"avatar"`
+                } `json:"author"`
+        }
+
+        var result []MessageResponse
+        for _, msg := range messages {
+                var author User
+                db.First(&author, msg.AuthorID)
+
+                resp := MessageResponse{
+                        ID:        msg.ID,
+                        ChannelID: msg.ChannelID,
+                        AuthorID:  msg.AuthorID,
+                        Content:   msg.Content,
+                        CreatedAt: msg.CreatedAt,
+                }
+                resp.Author.ID = author.ID
+                resp.Author.Username = author.Username
+                resp.Author.Avatar = author.Avatar
+                result = append(result, resp)
+        }
+
+        c.JSON(http.StatusOK, result)
 }
 
 func createChannelMessageHandler(c *gin.Context) {
@@ -38,8 +71,36 @@ func createChannelMessageHandler(c *gin.Context) {
                 AuthorID:  uint(userID.(float64)),
                 Content:   req.Content,
         }
-        db.Create(&msg)
-        c.JSON(http.StatusCreated, msg)
+        if err := db.Create(&msg).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create message"})
+                return
+        }
+
+        // Load author info for the response
+        var author User
+        db.First(&author, msg.AuthorID)
+
+        messageResponse := gin.H{
+                "id":         msg.ID,
+                "channel_id": msg.ChannelID,
+                "author_id":  msg.AuthorID,
+                "content":    msg.Content,
+                "created_at": msg.CreatedAt,
+                "author": gin.H{
+                        "id":       author.ID,
+                        "username": author.Username,
+                        "avatar":   author.Avatar,
+                },
+        }
+
+        // Broadcast to WebSocket clients
+        hub.broadcast <- map[string]interface{}{
+                "type":       "channel-message",
+                "channel_id": channelID,
+                "message":    messageResponse,
+        }
+
+        c.JSON(http.StatusCreated, messageResponse)
 }
 
 // RTC
@@ -173,24 +234,58 @@ func getPostsHandler(c *gin.Context) {
 func createPostHandler(c *gin.Context) {
         userID, _ := c.Get("user_id")
         var req struct {
-                Title   string `json:"title" binding:"required"`
-                Content string `json:"content" binding:"required"`
+                Title   string   `json:"title"`
+                Content string   `json:"content" binding:"required"`
+                Tags    []string `json:"tags"`
+                Media   []struct {
+                        Type string `json:"type"`
+                        URL  string `json:"url"`
+                } `json:"media"`
         }
         if err := c.ShouldBindJSON(&req); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
                 return
         }
 
+        // Use content as title if title is empty
+        title := req.Title
+        if title == "" {
+                title = req.Content
+                if len(title) > 100 {
+                        title = title[:100] + "..."
+                }
+        }
+
         post := Post{
                 AuthorID: uint(userID.(float64)),
-                Title:    req.Title,
+                Title:    title,
                 Content:  req.Content,
+                Tags:     req.Tags,
         }
         if err := db.Create(&post).Error; err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
                 return
         }
-        c.JSON(http.StatusCreated, post)
+
+        // Load author info
+        var author User
+        db.First(&author, post.AuthorID)
+
+        c.JSON(http.StatusCreated, gin.H{
+                "id":         post.ID,
+                "title":      post.Title,
+                "content":    post.Content,
+                "tags":       req.Tags,
+                "likes":      0,
+                "comments":   0,
+                "shares":     0,
+                "created_at": post.CreatedAt,
+                "author": gin.H{
+                        "id":       author.ID,
+                        "username": author.Username,
+                        "avatar":   author.Avatar,
+                },
+        })
 }
 
 func getPlatformStatsHandler(c *gin.Context) {
