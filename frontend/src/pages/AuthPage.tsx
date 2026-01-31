@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useStore } from '@/lib/store'
 import { authAPI } from '@/lib/api'
 import { Logo } from '@/components/Logo'
-import { Moon, Sun, Zap, Snowflake, Droplet, Waves, TreePine, Sunset, Cpu, Wind, QrCode, RefreshCw, Smartphone } from 'lucide-react'
+import { Moon, Sun, Zap, Snowflake, Droplet, Waves, TreePine, Sunset, Cpu, Wind, QrCode, RefreshCw, Smartphone, Palette, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { QRCodeSVG } from 'qrcode.react'
 
@@ -18,8 +18,20 @@ export default function AuthPage() {
   const [qrToken, setQrToken] = useState<string | null>(null)
   const [qrExpires, setQrExpires] = useState<Date | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
+  const [showThemeMenu, setShowThemeMenu] = useState(false)
+  const themeMenuRef = useRef<HTMLDivElement>(null)
 
   const { login, register, theme, setTheme, enableDemoMode, checkAuth } = useStore()
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (themeMenuRef.current && !themeMenuRef.current.contains(event.target as Node)) {
+        setShowThemeMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const generateQRCode = useCallback(async () => {
     setQrLoading(true)
@@ -146,31 +158,59 @@ export default function AuthPage() {
     { value: 'arctic-aurora', label: 'Aurora', icon: Wind },
   ]
 
+  const currentTheme = themes.find(t => t.value === theme) || themes[0]
+  const CurrentThemeIcon = currentTheme.icon
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background/50 p-4 pt-16 sm:pt-4 relative z-10">
-      {/* Theme selector - responsive */}
-      <div className="fixed top-2 sm:top-4 left-2 right-2 sm:left-auto sm:right-4 flex flex-wrap justify-center sm:justify-end gap-1 sm:gap-1.5 max-w-full sm:max-w-md z-50">
-        {themes.map((t) => {
-          const Icon = t.icon
-          const isActive = theme === t.value
-          return (
-            <button
-              key={t.value}
-              onClick={() => setTheme(t.value)}
-              className={cn(
-                'flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg transition-all duration-300',
-                'border backdrop-blur-sm text-[10px] sm:text-xs',
-                isActive
-                  ? 'bg-primary text-primary-foreground border-primary shadow-lg scale-105'
-                  : 'bg-card/80 hover:bg-accent/20 border-border hover:border-primary/50 hover:scale-105'
-              )}
-              title={t.label}
-            >
-              <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline font-medium">{t.label}</span>
-            </button>
-          )
-        })}
+    <div className="min-h-screen flex items-center justify-center bg-background/50 p-4 relative z-10">
+      {/* Theme selector - single button with dropdown */}
+      <div ref={themeMenuRef} className="fixed top-4 right-4 z-50">
+        <button
+          onClick={() => setShowThemeMenu(!showThemeMenu)}
+          className={cn(
+            'flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300',
+            'border backdrop-blur-sm',
+            'bg-card/80 hover:bg-accent/20 border-border hover:border-primary/50'
+          )}
+          title="Change theme"
+        >
+          <Palette className="w-4 h-4" />
+          <CurrentThemeIcon className="w-4 h-4 text-primary" />
+        </button>
+
+        {showThemeMenu && (
+          <div className="absolute top-full right-0 mt-2 w-48 bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-xl overflow-hidden animate-slide-in">
+            <div className="p-2 border-b border-border">
+              <span className="text-xs font-medium text-muted-foreground px-2">Choose Theme</span>
+            </div>
+            <div className="py-1 max-h-[60vh] overflow-y-auto">
+              {themes.map((t) => {
+                const Icon = t.icon
+                const isActive = theme === t.value
+                return (
+                  <button
+                    key={t.value}
+                    onClick={() => {
+                      setTheme(t.value)
+                      setShowThemeMenu(false)
+                    }}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-200',
+                      'hover:bg-accent/20',
+                      isActive && 'bg-primary/10'
+                    )}
+                  >
+                    <Icon className={cn('w-4 h-4', isActive ? 'text-primary' : 'text-muted-foreground')} />
+                    <span className={cn('flex-1 text-left text-sm', isActive && 'font-medium text-primary')}>
+                      {t.label}
+                    </span>
+                    {isActive && <Check className="w-4 h-4 text-primary" />}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="w-full max-w-md relative z-10 px-2 sm:px-0">
