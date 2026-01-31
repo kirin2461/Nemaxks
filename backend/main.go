@@ -120,6 +120,10 @@ func main() {
 
         r.Use(cors.New(corsConfig))
 
+        // Security middleware
+        r.Use(SecurityHeadersMiddleware())
+        r.Use(HTTPSEnforcementMiddleware())
+
         r.NoRoute(func(c *gin.Context) {
                 log.Printf("404 Not Found: %s %s from %s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
                 c.JSON(http.StatusNotFound, gin.H{"error": "Route not found"})
@@ -137,9 +141,9 @@ func main() {
                 c.JSON(http.StatusOK, gin.H{"status": "ok"})
         })
 
-        // Auth routes with rate limiting to prevent brute force attacks
+        // Auth routes with rate limiting and account lockout to prevent brute force attacks
         r.POST("/api/auth/register", AuthRateLimitMiddleware(), registerHandler)
-        r.POST("/api/auth/login", AuthRateLimitMiddleware(), loginHandler)
+        r.POST("/api/auth/login", AuthRateLimitMiddleware(), AccountLockoutMiddleware(), loginHandler)
         r.POST("/api/auth/logout", authMiddleware(), logoutHandler)
         r.GET("/api/auth/me", authMiddleware(), meHandler)
         

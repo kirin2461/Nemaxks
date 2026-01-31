@@ -488,6 +488,16 @@ func updateUserSettingsHandler(c *gin.Context) {
                 return
         }
 
+        // Sanitize string fields that may contain user input
+        textFields := []string{"bio", "status", "custom_status", "jarvis_wake_word"}
+        for _, field := range textFields {
+                if val, ok := req[field]; ok {
+                        if str, isString := val.(string); isString {
+                                req[field] = SanitizeBio(str)
+                        }
+                }
+        }
+
         var settings UserSettings
         if db.Where("user_id = ?", uid).First(&settings).RowsAffected == 0 {
                 settings = UserSettings{

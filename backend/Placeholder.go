@@ -66,10 +66,13 @@ func createChannelMessageHandler(c *gin.Context) {
                 return
         }
 
+        // Sanitize content before storing
+        sanitizedContent := SanitizeMessageContent(req.Content)
+
         msg := Message{
                 ChannelID: uint(channelID),
                 AuthorID:  uint(userID.(float64)),
-                Content:   req.Content,
+                Content:   sanitizedContent,
         }
         if err := db.Create(&msg).Error; err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create message"})
@@ -247,10 +250,14 @@ func createPostHandler(c *gin.Context) {
                 return
         }
 
+        // Sanitize content before storing
+        sanitizedContent := SanitizeForDisplay(req.Content)
+        sanitizedTitle := SanitizeForDisplay(req.Title)
+
         // Use content as title if title is empty
-        title := req.Title
+        title := sanitizedTitle
         if title == "" {
-                title = req.Content
+                title = sanitizedContent
                 if len(title) > 100 {
                         title = title[:100] + "..."
                 }
@@ -259,7 +266,7 @@ func createPostHandler(c *gin.Context) {
         post := Post{
                 AuthorID: uint(userID.(float64)),
                 Title:    title,
-                Content:  req.Content,
+                Content:  sanitizedContent,
                 Tags:     req.Tags,
         }
         if err := db.Create(&post).Error; err != nil {
@@ -405,10 +412,14 @@ func createVideoHandler(c *gin.Context) {
                 return
         }
 
+        // Sanitize video title and description
+        sanitizedTitle := SanitizeForDisplay(req.Title)
+        sanitizedDescription := SanitizeForDisplay(req.Description)
+
         video := Video{
                 AuthorID:    uid,
-                Title:       req.Title,
-                Description: req.Description,
+                Title:       sanitizedTitle,
+                Description: sanitizedDescription,
                 VideoURL:    req.VideoURL,
                 Thumbnail:   req.Thumbnail,
                 Duration:    req.Duration,
@@ -431,7 +442,24 @@ func updateVideoHandler(c *gin.Context) {
                 c.JSON(http.StatusNotFound, gin.H{"error": "Video not found"})
                 return
         }
-        c.BindJSON(&video)
+
+        var req struct {
+                Title       string `json:"title"`
+                Description string `json:"description"`
+        }
+        if err := c.BindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        // Sanitize video title and description
+        if req.Title != "" {
+                video.Title = SanitizeForDisplay(req.Title)
+        }
+        if req.Description != "" {
+                video.Description = SanitizeForDisplay(req.Description)
+        }
+
         db.Save(&video)
         c.JSON(http.StatusOK, video)
 }

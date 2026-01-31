@@ -50,10 +50,13 @@ func createMessageHandler(c *gin.Context) {
     }
   }
 
+  // Sanitize content before storing
+  sanitizedContent := SanitizeMessageContent(req.Content)
+
   message := DirectMessage{
     SenderID:        senderID,
     ReceiverID:      uint(receiverID),
-    Content:         req.Content,
+    Content:         sanitizedContent,
     ReplyToID:       req.ReplyToID,
     ForwardedFromID: req.ForwardedFromID,
     VoiceURL:        req.VoiceURL,
@@ -180,8 +183,11 @@ func updateMessageHandler(c *gin.Context) {
     return
   }
 
+  // Sanitize content before storing
+  sanitizedContent := SanitizeMessageContent(req.Content)
+
   if err := db.Model(&DirectMessage{}).Where("id = ? AND sender_id = ?", messageID, uid).
-    Updates(map[string]interface{}{"content": req.Content, "edited": true, "updated_at": time.Now()}).Error; err != nil {
+    Updates(map[string]interface{}{"content": sanitizedContent, "edited": true, "updated_at": time.Now()}).Error; err != nil {
     c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update message"})
     return
   }

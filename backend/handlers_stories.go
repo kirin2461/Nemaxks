@@ -33,9 +33,13 @@ func createStoryHandler(c *gin.Context) {
         }
 
         uid := uint(userID.(float64))
+
+        // Sanitize story content
+        sanitizedContent := SanitizeForDisplay(req.Content)
+
         story := Story{
                 UserID:    uid,
-                Content:   req.Content,
+                Content:   sanitizedContent,
                 MediaType: req.MediaType,
                 ExpiresAt: time.Now().Add(24 * time.Hour),
         }
@@ -171,10 +175,14 @@ func createCommentHandler(c *gin.Context) {
         }
 
         uid := uint(userID.(float64))
+
+        // Sanitize comment content
+        sanitizedContent := SanitizeForDisplay(req.Content)
+
         comment := PostComment{
                 PostID:    uint(postID),
                 UserID:    uid,
-                Content:   req.Content,
+                Content:   sanitizedContent,
                 ParentID:  req.ParentID,
                 CreatedAt: time.Now(),
         }
