@@ -34,6 +34,10 @@ const ReportsPage = React.lazy(() => import('./pages/ReportsPage'))
 const TemplatesPage = React.lazy(() => import('./pages/TemplatesPage'))
 const SuperAdminPage = React.lazy(() => import('./pages/SuperAdminPage'))
 const AchievementsPage = React.lazy(() => import('./pages/AchievementsPage'))
+const ShopPage = React.lazy(() => import('./pages/ShopPage'))
+const ChallengesPage = React.lazy(() => import('./pages/ChallengesPage'))
+const CompetitionsPage = React.lazy(() => import('./pages/CompetitionsPage'))
+const ProfileCustomizationPage = React.lazy(() => import('./pages/ProfileCustomizationPage'))
 
 // Loading component with skeleton animation
 function LoadingScreen() {
@@ -169,6 +173,30 @@ function App() {
                 <Route path="/achievements/:userId?">
                   <ProtectedRoute>
                     <AchievementsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/shop">
+                  <ProtectedRoute>
+                    <ShopPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/challenges">
+                  <ProtectedRoute>
+                    <ChallengesPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/competitions">
+                  <ProtectedRoute>
+                    <CompetitionsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/profile/customize">
+                  <ProtectedRoute>
+                    <ProfileCustomizationPage />
                   </ProtectedRoute>
                 </Route>
 

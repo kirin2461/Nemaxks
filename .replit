@@ -14,6 +14,7 @@ build = [
   "-c",
   "cd backend && go build -o server cmd/server/main.go && cd ../frontend && npm install && npm run build",
 ]
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 3000

@@ -21,6 +21,7 @@ func main() {
         // godotenv.Load() // Not needed in Replit
         initDB()
         initPhase1()
+        initPhase2()
 
         // Initialize Redis (optional, non-fatal)
         if os.Getenv("REDIS_URL") != "" {
@@ -501,6 +502,9 @@ func main() {
 
         // Phase 1: Achievements, Polls, Custom Statuses, Disappearing Messages
         registerPhase1Routes(r, authMiddleware())
+
+        // Phase 2: Badges, Rewards, Challenges, Streaks, Competitions, Profile Customization
+        registerPhase2Routes(r, authMiddleware())
 
         port := os.Getenv("PORT")
         if port == "" {

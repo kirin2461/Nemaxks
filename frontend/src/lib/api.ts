@@ -1590,4 +1590,217 @@ export const disappearingAPI = {
     request<DisappearingSettings>(`/disappearing/${userId}`, { method: 'PUT', data }),
 };
 
+export interface VirtualCurrency {
+  id: number;
+  user_id: number;
+  coins: number;
+  gems: number;
+}
+
+export interface ShopItem {
+  id: number;
+  name: string;
+  name_ru: string;
+  description: string;
+  description_ru: string;
+  type: string;
+  category: string;
+  price_coins: number;
+  price_gems: number;
+  rarity: string;
+  image_url: string;
+}
+
+export interface UserInventory {
+  id: number;
+  user_id: number;
+  item_id: number;
+  is_equipped: boolean;
+  acquired_at: string;
+  item: ShopItem;
+}
+
+export interface Challenge {
+  id: number;
+  name: string;
+  name_ru: string;
+  description: string;
+  description_ru: string;
+  type: string;
+  category: string;
+  condition: string;
+  target: number;
+  xp_reward: number;
+  coin_reward: number;
+  gem_reward: number;
+  reset_period: string;
+  is_active: boolean;
+  progress?: number;
+  is_completed?: boolean;
+  completed_at?: string;
+}
+
+export interface UserStreak {
+  id: number;
+  user_id: number;
+  login_streak: number;
+  max_login_streak: number;
+  message_streak: number;
+  max_message_streak: number;
+  last_login_date?: string;
+  last_message_date?: string;
+}
+
+export interface GuildCompetition {
+  id: number;
+  name: string;
+  name_ru: string;
+  description: string;
+  description_ru: string;
+  type: string;
+  metric: string;
+  starts_at: string;
+  ends_at: string;
+  prizes: string;
+  is_active: boolean;
+}
+
+export interface GuildCompetitionEntry {
+  id: number;
+  competition_id: number;
+  guild_id: number;
+  score: number;
+  rank: number;
+  guild?: { name: string; icon?: string };
+}
+
+export interface Badge {
+  id: number;
+  name: string;
+  name_ru: string;
+  description: string;
+  description_ru: string;
+  icon: string;
+  rarity: string;
+  is_special: boolean;
+}
+
+export interface UserBadge {
+  id: number;
+  user_id: number;
+  badge_id: number;
+  acquired_at: string;
+  badge: Badge;
+}
+
+export interface UserProfileCustomization {
+  id: number;
+  user_id: number;
+  theme_id?: number;
+  frame_id?: number;
+  banner_id?: number;
+  badge_ids: string;
+  profile_color: string;
+  bio: string;
+  show_level: boolean;
+  show_achievements: boolean;
+  show_activity: boolean;
+}
+
+export const currencyAPI = {
+  get: () => request<VirtualCurrency>('/currency'),
+};
+
+export const shopAPI = {
+  getItems: (category?: string, type?: string) => {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (type) params.append('type', type);
+    return request<ShopItem[]>(`/shop?${params}`);
+  },
+  
+  purchase: (id: number, payWith: 'coins' | 'gems' = 'coins') =>
+    request<{ message: string; item: ShopItem; balance: VirtualCurrency }>(`/shop/${id}/purchase`, {
+      method: 'POST',
+      data: { pay_with: payWith },
+    }),
+};
+
+export const inventoryAPI = {
+  get: () => request<UserInventory[]>('/inventory'),
+  
+  equip: (id: number) =>
+    request<{ message: string }>(`/inventory/${id}/equip`, { method: 'POST' }),
+};
+
+export const challengesAPI = {
+  getAll: (type?: string) => {
+    const params = new URLSearchParams();
+    if (type) params.append('type', type);
+    return request<Challenge[]>(`/challenges?${params}`);
+  },
+  
+  claim: (id: number) =>
+    request<{ message: string }>(`/challenges/${id}/claim`, { method: 'POST' }),
+};
+
+export const streaksAPI = {
+  get: () => request<UserStreak>('/streaks'),
+  
+  claimDailyReward: () =>
+    request<{ claimed: boolean; streak: number; reward: { coins: number; xp: number; gems?: number } }>('/daily-reward', { method: 'POST' }),
+  
+  spinWheel: () =>
+    request<{ prize: { name: string; coins: number; gems: number; xp: number }; balance: VirtualCurrency }>('/spin-wheel', { method: 'POST' }),
+};
+
+export const competitionsAPI = {
+  getAll: (status?: 'active' | 'upcoming' | 'ended') => {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    return request<GuildCompetition[]>(`/competitions?${params}`);
+  },
+  
+  get: (id: number) =>
+    request<{ competition: GuildCompetition; leaderboard: GuildCompetitionEntry[] }>(`/competitions/${id}`),
+  
+  join: (id: number, guildId: number) =>
+    request<{ message: string }>(`/competitions/${id}/join`, {
+      method: 'POST',
+      data: { guild_id: guildId },
+    }),
+};
+
+export const profileCustomizationAPI = {
+  get: (userId?: number | string) =>
+    request<{ profile: UserProfileCustomization; equipped_items: UserInventory[]; badges: UserBadge[] }>(`/profile/${userId || 'me'}/customization`),
+  
+  update: (data: Partial<{
+    bio: string;
+    profile_color: string;
+    show_level: boolean;
+    show_achievements: boolean;
+    show_activity: boolean;
+  }>) => request<UserProfileCustomization>('/profile/customization', { method: 'PUT', data }),
+};
+
+export const badgesAPI = {
+  getAll: () => request<Badge[]>('/badges'),
+  
+  getUserBadges: (userId: number | string) =>
+    request<UserBadge[]>(`/badges/${userId}`),
+};
+
+export const guildLeaderboardAPI = {
+  get: (guildId: number, period?: string) => {
+    const params = new URLSearchParams();
+    if (period) params.append('period', period);
+    return request<LeaderboardEntry[]>(`/guild-leaderboard/${guildId}?${params}`);
+  },
+};
+
+export const levelRewardsAPI = {
+  get: () => request<{ level: number; coins: number; gems?: number; unlock?: string; description: string }[]>('/level-rewards'),
+};
+
 export { APIError };

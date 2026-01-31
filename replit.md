@@ -74,6 +74,39 @@ All super admin endpoints are protected by `superAdminMiddleware()` which enforc
 - **Background cleanup**: Automated job cleans up expired messages every minute
 - **Privacy focused**: Messages permanently deleted after expiry
 
+### Phase 2 Features: Advanced Gamification (New)
+
+#### Virtual Currency & Rewards Store
+- **Dual currency**: Coins (earned through activity) and Gems (premium/rare rewards)
+- **Shop system**: Themes, frames, and banners purchasable with coins or gems
+- **Inventory management**: Track owned items and equipped customizations
+- **Rarity tiers**: common, uncommon, rare, epic, legendary items
+
+#### Challenges & Quests
+- **Daily challenges**: Quick tasks like sending messages, adding reactions
+- **Weekly challenges**: Larger goals with bigger rewards
+- **Special challenges**: Unique achievements like login streaks
+- **Auto-reset**: Daily challenges reset at midnight, weekly on Mondays
+
+#### Streaks & Activity Tracking
+- **Login streaks**: Track consecutive login days with milestone rewards
+- **Message streaks**: Track daily messaging activity
+- **Streak rewards**: Bonus coins, gems, and XP for maintaining streaks
+- **Lucky wheel**: Spin for random prizes using coins
+
+#### Guild Competitions
+- **Tournament system**: Guilds compete on metrics like messages, voice time
+- **Leaderboards**: Real-time ranking of participating guilds
+- **Prize pools**: Winners receive coins, gems, and exclusive rewards
+- **Competition lifecycle**: Active, upcoming, and ended competitions
+
+#### Profile Customization
+- **Themes**: Custom color schemes for profile appearance
+- **Frames**: Decorative borders around profile pictures
+- **Banners**: Custom header images for profiles
+- **Badges**: Special icons for achievements and roles
+- **Privacy controls**: Toggle visibility of level, achievements, activity
+
 The system incorporates a unified subscription model with "Старт", "Про", and "Премиум" plans, offering varying content retention, AI requests, and features like interactive whiteboards and online notebooks. Seat-based billing is available for organizations. A donation system, promo codes, referral bonuses, and a manual payment system with admin verification are also integrated.
 
 ### AI Moderation and Communication Tools
