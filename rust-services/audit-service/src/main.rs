@@ -1,8 +1,11 @@
 use tonic::{transport::Server, Request, Response, Status};
+use tonic_health::server::health_reporter;
 use sqlx::postgres::PgPoolOptions;
 use dotenv::dotenv;
 use std::env;
 use chrono::Utc;
+use tracing::{info, warn, error};
+use tracing_subscriber;
 
 pub mod audit {
     tonic::include_proto!("audit");
@@ -43,14 +46,14 @@ impl AuditService for MyAuditService {
 
         match result {
             Ok(record) => {
-                println!("[AuditService] Logged event with id={}", record.id);
+                info!("[AuditService] Logged event with id={}", record.id);
                 Ok(Response::new(LogEventResponse {
                     success: true,
                     id: record.id as u64,
                 }))
             },
             Err(e) => {
-                eprintln!("[AuditService] Failed to log event: {}", e);
+                error!("[AuditService] Failed to log event: {}", e);
                 Err(Status::internal(format!("Database error: {}", e)))
             }
         }
@@ -65,41 +68,98 @@ impl AuditService for MyAuditService {
         let limit = req.limit.max(1).min(100) as i64;
         let offset = (page - 1) * limit;
 
-        // Build dynamic query based on filters
-        let mut query = "SELECT id, user_id, action, target_type, target_id, scope, details, ip_address, created_at 
-                         FROM extended_audit_logs WHERE 1=1".to_string();
-        let mut count_query = "SELECT COUNT(*) as cnt FROM extended_audit_logs WHERE 1=1".to_string();
-        
-        let mut filters = Vec::new();
-        
-        if req.user_id != 0 {
-            filters.push(format!(" AND user_id = {}", req.user_id));
-        }
-        if !req.action.is_empty() {
-            filters.push(format!(" AND action = '{}'", req.action));
-        }
+        // Build parameterized query based on filters (SQL injection safe)
+        let has_user_filter = req.user_id != 0;
+        let has_action_filter = !req.action.is_empty();
 
-        for filter in &filters {
-            query.push_str(filter);
-            count_query.push_str(filter);
-        }
+        let (logs_result, count_result) = match (has_user_filter, has_action_filter) {
+            (true, true) => {
+                // Both filters
+                let logs = sqlx::query(
+                    r#"SELECT id, user_id, action, target_type, target_id, scope, details, ip_address, 
+                              to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at
+                       FROM extended_audit_logs 
+                       WHERE user_id = $1 AND action = $2
+                       ORDER BY created_at DESC LIMIT $3 OFFSET $4"#,
+                )
+                .bind(req.user_id as i64)
+                .bind(&req.action)
+                .bind(limit)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await;
 
-        query.push_str(&format!(" ORDER BY created_at DESC LIMIT {} OFFSET {}", limit, offset));
+                let count = sqlx::query("SELECT COUNT(*) as cnt FROM extended_audit_logs WHERE user_id = $1 AND action = $2")
+                    .bind(req.user_id as i64)
+                    .bind(&req.action)
+                    .fetch_one(&self.pool)
+                    .await;
+                (logs, count)
+            },
+            (true, false) => {
+                // Only user_id filter
+                let logs = sqlx::query(
+                    r#"SELECT id, user_id, action, target_type, target_id, scope, details, ip_address, 
+                              to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at
+                       FROM extended_audit_logs 
+                       WHERE user_id = $1
+                       ORDER BY created_at DESC LIMIT $2 OFFSET $3"#,
+                )
+                .bind(req.user_id as i64)
+                .bind(limit)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await;
 
-        let logs_result = sqlx::query(
-            r#"SELECT id, user_id, action, target_type, target_id, scope, details, ip_address, 
-                      to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at
-               FROM extended_audit_logs 
-               ORDER BY created_at DESC LIMIT $1 OFFSET $2"#,
-        )
-        .bind(limit)
-        .bind(offset)
-        .fetch_all(&self.pool)
-        .await;
+                let count = sqlx::query("SELECT COUNT(*) as cnt FROM extended_audit_logs WHERE user_id = $1")
+                    .bind(req.user_id as i64)
+                    .fetch_one(&self.pool)
+                    .await;
+                (logs, count)
+            },
+            (false, true) => {
+                // Only action filter
+                let logs = sqlx::query(
+                    r#"SELECT id, user_id, action, target_type, target_id, scope, details, ip_address, 
+                              to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at
+                       FROM extended_audit_logs 
+                       WHERE action = $1
+                       ORDER BY created_at DESC LIMIT $2 OFFSET $3"#,
+                )
+                .bind(&req.action)
+                .bind(limit)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await;
 
-        let count_result = sqlx::query("SELECT COUNT(*) as cnt FROM extended_audit_logs")
-            .fetch_one(&self.pool)
-            .await;
+                let count = sqlx::query("SELECT COUNT(*) as cnt FROM extended_audit_logs WHERE action = $1")
+                    .bind(&req.action)
+                    .fetch_one(&self.pool)
+                    .await;
+                (logs, count)
+            },
+            (false, false) => {
+                // No filters
+                let logs = sqlx::query(
+                    r#"SELECT id, user_id, action, target_type, target_id, scope, details, ip_address, 
+                              to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at
+                       FROM extended_audit_logs 
+                       ORDER BY created_at DESC LIMIT $1 OFFSET $2"#,
+                )
+                .bind(limit)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await;
+
+                let count = sqlx::query("SELECT COUNT(*) as cnt FROM extended_audit_logs")
+                    .fetch_one(&self.pool)
+                    .await;
+                (logs, count)
+            },
+        };
+
+        let logs_result = logs_result;
+        let count_result = count_result;
 
         match (logs_result, count_result) {
             (Ok(logs), Ok(count_row)) => {
@@ -161,34 +221,53 @@ impl AuditService for MyAuditService {
         tx.commit().await
             .map_err(|e| Status::internal(format!("Transaction commit failed: {}", e)))?;
 
-        println!("[AuditService] Batch logged {} events", count);
+        info!("[AuditService] Batch logged {} events", count);
         Ok(Response::new(BatchLogEventsResponse { count }))
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize structured logging
+    tracing_subscriber::fmt::init();
+    
     dotenv().ok();
     
     let database_url = env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "postgres://user:password@localhost:5432/nemaks".to_string());
+        .expect("DATABASE_URL environment variable must be set");
+    
+    let max_connections: u32 = env::var("DB_MAX_CONNECTIONS")
+        .unwrap_or_else(|_| "10".to_string())
+        .parse()
+        .unwrap_or(10);
     
     let pool = PgPoolOptions::new()
-        .max_connections(10)
+        .max_connections(max_connections)
         .connect(&database_url)
         .await?;
 
-    println!("[AuditService] Connected to database");
+    info!("[AuditService] Connected to database with {} max connections", max_connections);
+
+    // Setup health check
+    let (mut health_reporter, health_service) = health_reporter();
+    health_reporter.set_serving::<AuditServiceServer<MyAuditService>>().await;
 
     let addr = "0.0.0.0:50051".parse()?;
     let service = MyAuditService { pool };
 
-    println!("[AuditService] Listening on {}", addr);
+    info!("[AuditService] Listening on {}", addr);
 
-    Server::builder()
+    // Graceful shutdown handling
+    let server = Server::builder()
+        .add_service(health_service)
         .add_service(AuditServiceServer::new(service))
-        .serve(addr)
-        .await?;
+        .serve_with_shutdown(addr, async {
+            tokio::signal::ctrl_c().await.ok();
+            info!("[AuditService] Received shutdown signal, gracefully stopping...");
+        });
+
+    server.await?;
+    info!("[AuditService] Server stopped");
 
     Ok(())
 }

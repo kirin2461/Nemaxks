@@ -1,0 +1,132 @@
+# 🦀 АНАЛИЗ RUST МИКРОСЕРВИСОВ - ОТЧЁТ ОБ ОШИБКАХ
+
+## 📁 СТРУКТУРА ПРОЕКТА
+
+**Workspace (Cargo.toml):** [replit](https://replit.com/t/ss-12/repls/Nemaxks-3#rust-services/Cargo.toml)
+```toml
+[workspace]
+members = ["audit-service", "search-service"]
+resolver = "2"
+```
+
+**Микросервисы:**
+| Сервис | Назначение | Порт |
+|--------|------------|------|
+| audit-service | Аудит логов | 50051 |
+| search-service | Полнотекстовый поиск | 50052 |
+
+***
+
+## 🔴 КРИТИЧЕСКИЕ УЯЗВИМОСТИ
+
+### 1. **SQL INJECTION в audit-service** [replit](https://replit.com/t/ss-12/repls/Nemaxks-3#rust-services/audit-service/src/main.rs)
+**Файл:** `rust-services/audit-service/src/main.rs` (строки 76, 79)
+
+```rust
+// УЯЗВИМЫЙ КОД:
+filters.push(format!(" AND user_id = {}", req.user_id));
+filters.push(format!(" AND action = '{}'", req.action));
+```
+
+**Проблема:** Прямая интерполяция пользовательского ввода в SQL запрос.
+**Риск:** Критический - злоумышленник может выполнить произвольный SQL.
+**Решение:** Использовать параметризованные запросы через `.bind()`:
+```rust
+.bind(req.user_id)
+.bind(&req.action)
+```
+
+### 2. **Hardcoded Database Credentials** [replit](https://replit.com/t/ss-12/repls/Nemaxks-3#rust-services/audit-service/src/main.rs)
+**Файл:** `rust-services/audit-service/src/main.rs` (строка 174)
+
+```rust
+.unwrap_or_else(|_| "postgres://user:password@localhost:5432/nemaks".to_string());
+```
+
+**Проблема:** Дефолтные credentials в production коде.
+**Риск:** Высокий - утечка credentials при деплое.
+**Решение:** Удалить fallback или использовать безопасные дефолты.
+
+***
+
+## 🟠 АРХИТЕКТУРНЫЕ ПРОБЛЕМЫ
+
+### 3. **Неиспользуемый Tantivy индекс** [replit](https://replit.com/t/ss-12/repls/Nemaxks-3#rust-services/search-service/src/main.rs)
+**Файл:** `rust-services/search-service/src/main.rs` (строка 61)
+
+```rust
+// Fallback to SQL search if Tantivy index not ready
+```
+
+**Проблема:** Tantivy индекс инициализируется, но всегда используется SQL fallback.
+**Влияние:** Потеря производительности полнотекстового поиска.
+**Решение:** Реализовать полноценную интеграцию Tantivy поиска.
+
+### 4. **Отсутствие health checks**
+Оба сервиса не имеют endpoint для проверки здоровья.
+**Решение:** Добавить gRPC health checking или HTTP endpoint.
+
+### 5. **Жёсткий пул соединений**
+```rust
+.max_connections(10)
+```
+**Проблема:** Hardcoded лимит соединений не масштабируется.
+**Решение:** Вынести в конфигурацию через environment variables.
+
+***
+
+## 🟡 ПОТЕНЦИАЛЬНЫЕ УЛУЧШЕНИЯ
+
+### 6. **Отсутствие retry логики**
+При недоступности базы данных сервис падает без попытки переподключения.
+
+### 7. **Нет graceful shutdown**
+Отсутствует обработка SIGTERM для корректного завершения.
+
+### 8. **Статический путь индекса**
+```rust
+let index_path = "./data/search_index";
+```
+**Решение:** Конфигурируемый путь через env var.
+
+### 9. **Отсутствие логирования**
+Используется только `println!()` вместо структурированного логирования (tracing/log).
+
+***
+
+## ✅ ЧТО РЕАЛИЗОВАНО ХОРОШО
+
+1. ✅ **Workspace организация** - правильная структура монорепо
+2. ✅ **Async/await** - корректное использование tokio runtime
+3. ✅ **gRPC через Tonic** - современный RPC фреймворк
+4. ✅ **SQLx с compile-time checking** - безопасные SQL запросы (в большинстве мест)
+5. ✅ **Транзакции** - batch_log_events использует транзакции
+6. ✅ **Пагинация** - корректные лимиты (1-100)
+7. ✅ **Tantivy интеграция** - профессиональная настройка схемы поиска
+
+***
+
+## 📊 СВОДКА
+
+| Категория | Количество |
+|-----------|------------|
+| Критические уязвимости | 2 |
+| Архитектурные проблемы | 3 |
+| Улучшения | 4 |
+| Хорошие практики | 7 |
+
+***
+
+## 🎯 РЕКОМЕНДАЦИИ ПО ПРИОРИТЕТУ
+
+1. **СРОЧНО:** Исправить SQL injection в audit-service (строки 76, 79)
+2. **СРОЧНО:** Удалить hardcoded credentials
+3. **ВЫСОКИЙ:** Добавить health checks
+4. **СРЕДНИЙ:** Активировать Tantivy поиск
+5. **НИЗКИЙ:** Добавить структурированное логирование
+
+***
+
+## 📝 ЗАКЛЮЧЕНИЕ
+
+Rust микросервисы имеют **хорошую архитектурную основу** с использованием современного стека (Tonic, SQLx, Tantivy). Однако обнаружены **критические уязвимости безопасности** (SQL injection, hardcoded credentials), которые необходимо исправить перед production использованием. После устранения уязвимостей сервисы будут готовы к деплою.

@@ -1,10 +1,13 @@
 use tonic::{transport::Server, Request, Response, Status};
+use tonic_health::server::health_reporter;
 use sqlx::postgres::PgPoolOptions;
 use dotenv::dotenv;
 use std::env;
 use tantivy::{Index, IndexWriter, Term, field};
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use tracing::{info, warn, error};
+use tracing_subscriber;
 
 pub mod search {
     tonic::include_proto!("search");
@@ -16,15 +19,15 @@ use search::{SearchMessagesRequest, SearchMessagesResponse, IndexMessageRequest,
 pub struct MySearchService {
     pool: sqlx::PgPool,
     index: Arc<Mutex<Option<tantivy::Index>>>,
+    index_path: String,
 }
 
 impl MySearchService {
     async fn init_index(&self) -> Result<(), Box<dyn std::error::Error>> {
         let mut index_opt = self.index.lock().await;
         
-        // Create or open Tantivy index
-        let index_path = "./data/search_index";
-        std::fs::create_dir_all(index_path)?;
+        // Create or open Tantivy index (path configurable via env)
+        std::fs::create_dir_all(&self.index_path)?;
         
         let mut schema_builder = tantivy::schema::Schema::builder();
         schema_builder.add_text_field("content", field::TEXT | field::STORED);
@@ -35,10 +38,10 @@ impl MySearchService {
         schema_builder.add_text_field("created_at", field::STORED);
         
         let schema = schema_builder.build();
-        let index = Index::create_in_dir(index_path, schema)?;
+        let index = Index::create_in_dir(&self.index_path, schema)?;
         
         *index_opt = Some(index);
-        println!("[SearchService] Index initialized");
+        info!("[SearchService] Index initialized");
         Ok(())
     }
 }
@@ -114,7 +117,7 @@ impl SearchService for MySearchService {
                 }).collect();
 
                 let total = search_results.len() as i64;
-                println!("[SearchService] Found {} results for query: {}", total, req.query);
+                info!("[SearchService] Found {} results for query: {}", total, req.query);
                 
                 Ok(Response::new(SearchMessagesResponse {
                     results: search_results,
@@ -122,7 +125,7 @@ impl SearchService for MySearchService {
                 }))
             },
             Err(e) => {
-                eprintln!("[SearchService] Search failed: {}", e);
+                error!("[SearchService] Search failed: {}", e);
                 Err(Status::internal(format!("Search error: {}", e)))
             }
         }
@@ -141,33 +144,55 @@ impl SearchService for MySearchService {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize structured logging
+    tracing_subscriber::fmt::init();
+    
     dotenv().ok();
     
     let database_url = env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "postgres://user:password@localhost:5432/nemaks".to_string());
+        .expect("DATABASE_URL environment variable must be set");
+    
+    let max_connections: u32 = env::var("DB_MAX_CONNECTIONS")
+        .unwrap_or_else(|_| "10".to_string())
+        .parse()
+        .unwrap_or(10);
     
     let pool = PgPoolOptions::new()
-        .max_connections(10)
+        .max_connections(max_connections)
         .connect(&database_url)
         .await?;
 
-    println!("[SearchService] Connected to database");
+    info!("[SearchService] Connected to database with {} max connections", max_connections);
 
     let index = Arc::new(Mutex::new(None));
-    let service = MySearchService { pool, index };
+    let index_path = env::var("TANTIVY_INDEX_PATH")
+        .unwrap_or_else(|_| "./data/search_index".to_string());
+    let service = MySearchService { pool, index, index_path: index_path.clone() };
 
     // Initialize index
+    info!("[SearchService] Using index path: {}", index_path);
     if let Err(e) = service.init_index().await {
-        eprintln!("[SearchService] Warning: Could not initialize Tantivy index: {}", e);
+        warn!("[SearchService] Could not initialize Tantivy index: {}", e);
     }
 
-    let addr = "0.0.0.0:50052".parse()?;
-    println!("[SearchService] Listening on {}", addr);
+    // Setup health check
+    let (mut health_reporter, health_service) = health_reporter();
+    health_reporter.set_serving::<SearchServiceServer<MySearchService>>().await;
 
-    Server::builder()
+    let addr = "0.0.0.0:50052".parse()?;
+    info!("[SearchService] Listening on {}", addr);
+
+    // Graceful shutdown handling
+    let server = Server::builder()
+        .add_service(health_service)
         .add_service(SearchServiceServer::new(service))
-        .serve(addr)
-        .await?;
+        .serve_with_shutdown(addr, async {
+            tokio::signal::ctrl_c().await.ok();
+            info!("[SearchService] Received shutdown signal, gracefully stopping...");
+        });
+
+    server.await?;
+    info!("[SearchService] Server stopped");
 
     Ok(())
 }
