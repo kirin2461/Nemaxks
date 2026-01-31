@@ -8,6 +8,7 @@ import (
         "log"
         "net/http"
         "os"
+        "strconv"
         "strings"
         "sync"
         "time"
@@ -57,10 +58,23 @@ type ChatCompletionResponse struct {
 
 var (
         tokenUsage      int
-        tokenLimit      = 100000
+        tokenLimit      int
         tokenUsageMutex sync.Mutex
         lastResetTime   = time.Now()
 )
+
+func init() {
+        // Configure token limit from environment, default to 100000
+        limitStr := os.Getenv("JARVIS_TOKEN_LIMIT")
+        if limitStr != "" {
+                if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
+                        tokenLimit = limit
+                        log.Printf("[Jarvis] Token limit configured: %d", tokenLimit)
+                        return
+                }
+        }
+        tokenLimit = 100000 // Default fallback
+}
 
 const jarvisSystemPrompt = `You are J.A.R.V.I.S. (Just A Rather Very Intelligent System), the advanced AI assistant from Iron Man.
 

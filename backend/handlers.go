@@ -35,14 +35,12 @@ func getJWTSecret() []byte {
         // Generate a secure random secret for this session
         randomBytes := make([]byte, 32) // 256 bits
         if _, err := rand.Read(randomBytes); err != nil {
-                log.Printf("CRITICAL: Failed to generate secure JWT secret: %v", err)
-                log.Println("WARNING: Using fallback insecure secret. Set JWT_SECRET in production!")
-                jwtSecretCache = []byte("development-only-secret-change-in-production")
-        } else {
-                jwtSecretCache = []byte(hex.EncodeToString(randomBytes))
-                log.Println("WARNING: JWT_SECRET not set. Generated random secret for this session.")
-                log.Println("NOTE: Users will need to re-login after server restart. Set JWT_SECRET for persistent sessions.")
+                // Critical failure - cannot continue without secure secret
+                log.Fatalf("CRITICAL: Failed to generate secure JWT secret: %v. Cannot start server securely.", err)
         }
+        jwtSecretCache = []byte(hex.EncodeToString(randomBytes))
+        log.Println("WARNING: JWT_SECRET not set. Generated random secret for this session.")
+        log.Println("NOTE: Users will need to re-login after server restart. Set JWT_SECRET for persistent sessions.")
 
         return jwtSecretCache
 }
