@@ -27,6 +27,14 @@ The backend is developed in Go using the Gin framework, providing a RESTful API 
 - **Account Lockout**: 5 failed login attempts trigger a 15-minute lockout to prevent brute force attacks.
 - **Security Headers**: CSP, X-Frame-Options, HSTS, X-Content-Type-Options applied globally.
 - **HTML Sanitization**: All user-generated content (messages, posts, stories) sanitized to prevent XSS.
+
+### End-to-End Encryption (Phase 11)
+
+- **DM Encryption**: Direct messages use E2E encryption (X25519-XSalsa20-Poly1305). Keys are generated client-side and only the encrypted private key is stored on server.
+- **Group Channel E2E**: Optional per-channel. Guild owners can enable E2E and distribute group keys encrypted to each member's public key.
+- **JARVIS Chats**: No E2E (with user consent) - AI requires access to message content.
+- **Public Channels**: No E2E - content is publicly visible.
+- **Admin Access Permission**: Users can grant super admins temporary access to their DMs by sharing an encrypted key. Permissions can be revoked and expire automatically.
 The system incorporates a unified subscription model with "Старт", "Про", and "Премиум" plans, offering varying content retention, AI requests, and features like interactive whiteboards and online notebooks. Seat-based billing is available for organizations. A donation system, promo codes, referral bonuses, and a manual payment system with admin verification are also integrated.
 
 ### AI Moderation and Communication Tools

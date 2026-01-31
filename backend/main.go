@@ -165,6 +165,22 @@ func main() {
         r.POST("/api/auth/revoke", authMiddleware(), revokeTokenHandler)
         r.GET("/api/auth/sessions", authMiddleware(), getSessionsHandler)
 
+        // E2E Encryption
+        r.GET("/api/encryption/status", getEncryptionStatusHandler)
+        r.POST("/api/encryption/keys", authMiddleware(), registerUserKeysHandler)
+        r.GET("/api/encryption/keys/me", authMiddleware(), getMyEncryptedPrivateKeyHandler)
+        r.GET("/api/encryption/keys/:user_id", authMiddleware(), getUserPublicKeyHandler)
+        r.POST("/api/encryption/dm", authMiddleware(), sendEncryptedDMHandler)
+        r.GET("/api/encryption/dm/:user_id", authMiddleware(), getEncryptedDMsHandler)
+        r.POST("/api/encryption/admin-access", authMiddleware(), grantAdminAccessHandler)
+        r.DELETE("/api/encryption/admin-access/:permission_id", authMiddleware(), revokeAdminAccessHandler)
+        r.GET("/api/encryption/admin-access/my", authMiddleware(), getMyAdminPermissionsHandler)
+        r.GET("/api/encryption/admin-access/accessible", authMiddleware(), getAdminAccessibleDMsHandler)
+        r.PUT("/api/channels/:channel_id/e2e", authMiddleware(), setChannelE2EHandler)
+        r.GET("/api/channels/:channel_id/e2e", authMiddleware(), getChannelE2EStatusHandler)
+        r.POST("/api/channels/:channel_id/group-keys", authMiddleware(), distributeChannelGroupKeyHandler)
+        r.GET("/api/channels/:channel_id/group-key", authMiddleware(), getMyChannelGroupKeyHandler)
+
         // Guilds
         r.GET("/api/guilds", authMiddleware(), getGuildsHandler)
         r.POST("/api/guilds", authMiddleware(), createGuildHandler)

@@ -99,6 +99,8 @@ func initDB() {
                 &Call{}, &CallParticipant{}, &CallRecording{}, &CallSignaling{},
                 &TwoFactorAuth{}, &TwoFactorRecoveryCode{},
                 &RefreshToken{}, &UserSession{},
+                &UserKeyPair{}, &ChannelEncryptionSettings{}, &ChannelGroupKey{},
+                &AdminAccessPermission{}, &ConversationEncryption{}, &EncryptedDirectMessage{},
                 &ChannelCategory{}, &ChannelInvitation{}, &ChannelMember{}, &ChannelMessageReaction{},
                 &JarvisCommand{}, &JarvisContext{}, &JarvisReminder{}, &JarvisSession{},
                 &Story{}, &StoryView{}, &PostRating{}, &PostComment{}, &PostLike{}, &Subscription{}, &PostBookmark{},
