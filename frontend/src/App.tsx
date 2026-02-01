@@ -8,6 +8,7 @@ import { VoiceProvider } from './contexts/VoiceContext'
 import { AppStateProvider } from './contexts/AppStateContext'
 import { IncomingCallNotification } from './components/IncomingCallNotification'
 import { ConnectionStatusIndicator } from './components/ConnectionStatusIndicator'
+import { ToastContainer } from './components/Toast'
 
 
 // Pages
@@ -53,6 +54,8 @@ const LicenseActivationPage = React.lazy(() => import('./pages/LicenseActivation
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage'))
 const TermsPage = React.lazy(() => import('./pages/TermsPage'))
 const ContactPage = React.lazy(() => import('./pages/ContactPage'))
+const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'))
+const NotificationSettingsPage = React.lazy(() => import('./pages/NotificationSettingsPage'))
 
 // Loading component with skeleton animation
 function LoadingScreen() {
@@ -192,6 +195,18 @@ function App() {
                 <Route path="/friends">
                   <ProtectedRoute>
                     <FriendsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/notifications">
+                  <ProtectedRoute>
+                    <NotificationsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/notifications/settings">
+                  <ProtectedRoute>
+                    <NotificationSettingsPage />
                   </ProtectedRoute>
                 </Route>
 
@@ -371,6 +386,7 @@ function App() {
                   </div>
                 </Route>
               </Switch>
+              <ToastContainer />
             </React.Suspense>
           </JarvisVoiceProvider>
         </VoiceProvider>

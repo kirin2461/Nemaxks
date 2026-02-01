@@ -429,6 +429,24 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           username: data.username
         })
         break
+      case 'notification':
+        {
+          const notifData = data.data || data
+          window.dispatchEvent(new CustomEvent('ws:notification', { detail: notifData }))
+          if (notifData.title) {
+            addNotification({
+              type: notifData.type || 'system',
+              title: notifData.title,
+              message: notifData.content || notifData.message || '',
+              username: notifData.actor?.username
+            })
+          }
+        }
+        break
+      case 'notification_read':
+      case 'all_notifications_read':
+        window.dispatchEvent(new CustomEvent('ws:notification_read', { detail: data.data || data }))
+        break
       default:
         if (data.title && data.message) {
           addNotification({

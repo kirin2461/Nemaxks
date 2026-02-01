@@ -111,6 +111,7 @@ func initDB() {
                 &UserSettings{}, &QRLoginSession{},
                 &ForbiddenWord{}, &ForbiddenAttempt{},
                 &TelegramLink{}, &TelegramNotification{},
+                &Notification{}, &NotificationPreferences{},
                 &UserReferral{}, &ReferralUse{},
                 &Video{}, &VideoChapter{}, &VideoLike{}, &VideoBookmark{},
                 &PremiumPlan{}, &UserPremium{}, &CreatorDonation{},

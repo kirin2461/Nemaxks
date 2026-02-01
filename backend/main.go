@@ -470,6 +470,16 @@ func main() {
         r.POST("/api/telegram/verify", verifyTelegramLinkHandler)
         r.PUT("/api/telegram/settings", authMiddleware(), updateTelegramSettingsHandler)
         r.GET("/api/notifications", authMiddleware(), getNotificationsHandler)
+        r.GET("/api/notifications/full", authMiddleware(), getNotificationsFullHandler)
+        r.GET("/api/notifications/groups", authMiddleware(), getNotificationGroupsHandler)
+        r.GET("/api/notifications/unread-count", authMiddleware(), getUnreadCountHandler)
+        r.PATCH("/api/notifications/:id/read", authMiddleware(), markNotificationReadHandler)
+        r.POST("/api/notifications/read-all", authMiddleware(), markAllNotificationsReadHandler)
+        r.DELETE("/api/notifications/:id", authMiddleware(), deleteNotificationHandler)
+        r.DELETE("/api/notifications", authMiddleware(), deleteAllNotificationsHandler)
+        r.GET("/api/notifications/preferences", authMiddleware(), getNotificationPreferencesHandler)
+        r.PUT("/api/notifications/preferences", authMiddleware(), updateNotificationPreferencesHandler)
+        r.POST("/api/notifications/test", authMiddleware(), sendTestNotificationHandler)
         r.POST("/api/1470", getTelegramWebhookHandler)
 
         // File uploads
