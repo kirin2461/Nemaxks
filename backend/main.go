@@ -148,6 +148,7 @@ func main() {
         r.POST("/api/auth/login", AuthRateLimitMiddleware(), AccountLockoutMiddleware(), loginHandler)
         r.POST("/api/auth/logout", authMiddleware(), logoutHandler)
         r.GET("/api/auth/me", authMiddleware(), meHandler)
+        r.PUT("/api/users/me", authMiddleware(), updateMeHandler)
         
         // QR Login (10-minute expiration)
         r.POST("/api/auth/qr/generate", generateQRLoginHandler)

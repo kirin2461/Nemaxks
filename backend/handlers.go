@@ -384,6 +384,47 @@ func meHandler(c *gin.Context) {
         c.JSON(http.StatusOK, user.ToPublic())
 }
 
+func updateMeHandler(c *gin.Context) {
+        userID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Недействительная сессия"})
+                return
+        }
+
+        var user User
+        if err := db.First(&user, userID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
+                return
+        }
+
+        var req struct {
+                Bio    *string `json:"bio"`
+                Avatar *string `json:"avatar"`
+                Status *string `json:"status"`
+        }
+        if err := c.ShouldBindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные"})
+                return
+        }
+
+        if req.Bio != nil {
+                user.Bio = req.Bio
+        }
+        if req.Avatar != nil {
+                user.Avatar = req.Avatar
+        }
+        if req.Status != nil {
+                user.Status = *req.Status
+        }
+
+        if err := db.Save(&user).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить профиль"})
+                return
+        }
+
+        c.JSON(http.StatusOK, user.ToPublic())
+}
+
 func authMiddleware() gin.HandlerFunc {
         return func(c *gin.Context) {
                 authHeader := c.GetHeader("Authorization")
