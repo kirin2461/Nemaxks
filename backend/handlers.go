@@ -398,9 +398,10 @@ func updateMeHandler(c *gin.Context) {
         }
 
         var req struct {
-                Bio    *string `json:"bio"`
-                Avatar *string `json:"avatar"`
-                Status *string `json:"status"`
+                Bio         *string `json:"bio"`
+                Avatar      *string `json:"avatar"`
+                Status      *string `json:"status"`
+                DisplayName *string `json:"display_name"`
         }
         if err := c.ShouldBindJSON(&req); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные"})
@@ -415,6 +416,9 @@ func updateMeHandler(c *gin.Context) {
         }
         if req.Status != nil {
                 user.Status = *req.Status
+        }
+        if req.DisplayName != nil {
+                user.DisplayName = req.DisplayName
         }
 
         if err := db.Save(&user).Error; err != nil {

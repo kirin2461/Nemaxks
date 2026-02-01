@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   Layout, Search, Users, GraduationCap, Gamepad2, Briefcase,
   BookOpen, MessageCircle, Video, PenTool, Mic, FileText,
-  ChevronRight, Star, Crown, Zap, Building
+  ChevronRight, Star, Crown, Zap, Building, Lock
 } from "lucide-react";
+import { useStore } from "@/lib/store";
+import { premiumAPI } from "@/lib/api";
 
 interface GuildTemplate {
   id: number;
@@ -52,16 +55,39 @@ const planBadges: Record<string, { label: string; color: string; icon: React.Rea
 };
 
 export function TemplatesPage() {
+  const [, setLocation] = useLocation();
+  const { user } = useStore();
   const [guildTemplates, setGuildTemplates] = useState<GuildTemplate[]>([]);
   const [channelTemplates, setChannelTemplates] = useState<ChannelTemplate[]>([]);
   const [activeTab, setActiveTab] = useState<"guild" | "channel">("guild");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [planFilter, setPlanFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [hasPremium, setHasPremium] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTemplates();
-  }, [categoryFilter, planFilter]);
+    async function checkPremium() {
+      if (!user?.id) {
+        setLocation("/auth");
+        return;
+      }
+      try {
+        const res = await premiumAPI.getUserPremium(String(user.id));
+        setHasPremium(res.has_premium);
+      } catch {
+        setHasPremium(false);
+      }
+      setLoading(false);
+    }
+    checkPremium();
+  }, [user?.id, setLocation]);
+
+  useEffect(() => {
+    if (hasPremium) {
+      fetchTemplates();
+    }
+  }, [categoryFilter, planFilter, hasPremium]);
 
   async function fetchTemplates() {
     try {
@@ -90,6 +116,44 @@ export function TemplatesPage() {
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+      </div>
+    );
+  }
+
+  if (!hasPremium) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white p-6">
+        <div className="max-w-2xl mx-auto text-center py-20">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-800/50 border border-gray-700 rounded-2xl p-10"
+          >
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Lock size={40} className="text-white" />
+            </div>
+            <h1 className="text-3xl font-bold mb-4">Премиум функция</h1>
+            <p className="text-gray-400 mb-8">
+              Шаблоны серверов и каналов доступны только для премиум пользователей. 
+              Оформите подписку, чтобы получить доступ к готовым шаблонам.
+            </p>
+            <button
+              onClick={() => setLocation("/premium")}
+              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg font-medium transition-all flex items-center gap-2 mx-auto"
+            >
+              <Crown size={20} />
+              Оформить премиум
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white p-6">

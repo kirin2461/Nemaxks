@@ -6,31 +6,33 @@ import (
 
 // UserPublic represents the safe public view of a User (without password)
 type UserPublic struct {
-        ID        uint       `json:"id"`
-        Username  string     `json:"username"`
-        Email     *string    `json:"email,omitempty"`
-        Avatar    *string    `json:"avatar,omitempty"`
-        Status    string     `json:"status"`
-        Bio       *string    `json:"bio,omitempty"`
-        CreatedAt time.Time  `json:"created_at"`
-        UpdatedAt time.Time  `json:"updated_at"`
-        Role      string     `json:"role"`
-        LastSeen  *time.Time `json:"last_seen,omitempty"`
-        IsOnline  bool       `json:"is_online"`
+        ID          uint       `json:"id"`
+        Username    string     `json:"username"`
+        DisplayName *string    `json:"display_name,omitempty"`
+        Email       *string    `json:"email,omitempty"`
+        Avatar      *string    `json:"avatar,omitempty"`
+        Status      string     `json:"status"`
+        Bio         *string    `json:"bio,omitempty"`
+        CreatedAt   time.Time  `json:"created_at"`
+        UpdatedAt   time.Time  `json:"updated_at"`
+        Role        string     `json:"role"`
+        LastSeen    *time.Time `json:"last_seen,omitempty"`
+        IsOnline    bool       `json:"is_online"`
 }
 
 type User struct {
-        ID        uint       `json:"id" gorm:"primaryKey"`
-        Username  string     `json:"username" gorm:"unique;not null"`
-        Email     *string    `json:"email,omitempty" gorm:"unique"`
-        Password  string     `json:"-" gorm:"not null"` // Hidden from JSON responses
-        Avatar    *string    `json:"avatar,omitempty"`
-        Status    string     `json:"status" gorm:"default:'offline'"`
-        Bio       *string    `json:"bio,omitempty"`
-        CreatedAt time.Time  `json:"created_at"`
-        UpdatedAt time.Time  `json:"updated_at"`
-        Role      string     `json:"role" gorm:"default:'user'"`
-        LastSeen  *time.Time `json:"last_seen,omitempty"`
+        ID          uint       `json:"id" gorm:"primaryKey"`
+        Username    string     `json:"username" gorm:"unique;not null"`
+        DisplayName *string    `json:"display_name,omitempty"`
+        Email       *string    `json:"email,omitempty" gorm:"unique"`
+        Password    string     `json:"-" gorm:"not null"` // Hidden from JSON responses
+        Avatar      *string    `json:"avatar,omitempty"`
+        Status      string     `json:"status" gorm:"default:'offline'"`
+        Bio         *string    `json:"bio,omitempty"`
+        CreatedAt   time.Time  `json:"created_at"`
+        UpdatedAt   time.Time  `json:"updated_at"`
+        Role        string     `json:"role" gorm:"default:'user'"`
+        LastSeen    *time.Time `json:"last_seen,omitempty"`
 }
 
 // ToPublic converts User to a safe public representation
@@ -40,17 +42,18 @@ func (u *User) ToPublic() UserPublic {
                 isOnline = time.Since(*u.LastSeen) < 5*time.Minute
         }
         return UserPublic{
-                ID:        u.ID,
-                Username:  u.Username,
-                Email:     u.Email,
-                Avatar:    u.Avatar,
-                Status:    u.Status,
-                Bio:       u.Bio,
-                CreatedAt: u.CreatedAt,
-                UpdatedAt: u.UpdatedAt,
-                Role:      u.Role,
-                LastSeen:  u.LastSeen,
-                IsOnline:  isOnline,
+                ID:          u.ID,
+                Username:    u.Username,
+                DisplayName: u.DisplayName,
+                Email:       u.Email,
+                Avatar:      u.Avatar,
+                Status:      u.Status,
+                Bio:         u.Bio,
+                CreatedAt:   u.CreatedAt,
+                UpdatedAt:   u.UpdatedAt,
+                Role:        u.Role,
+                LastSeen:    u.LastSeen,
+                IsOnline:    isOnline,
         }
 }
 
