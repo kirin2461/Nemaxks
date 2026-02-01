@@ -304,6 +304,14 @@ func (h *WSHub) sendToUser(targetUserID string, message interface{}) {
         }
 }
 
+func BroadcastToUser(userID uint, eventType string, data interface{}) {
+        message := map[string]interface{}{
+                "type": eventType,
+                "data": data,
+        }
+        hub.sendToUser(fmt.Sprintf("%d", userID), message)
+}
+
 func (c *WSClient) readPump() {
         defer func() {
                 voiceRoster.RemoveUser(c.UserID)
