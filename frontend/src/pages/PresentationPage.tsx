@@ -7,7 +7,7 @@ const features = [
   {
     icon: <Key className="w-8 h-8 text-amber-400" />,
     title: "Система лицензий",
-    description: "Гибкие тарифы: месяц (50₽), квартал (125₽), год (600₽). Уникальные ключи NEMKS-XXXXX-XXXXX-XXXXX."
+    description: "Гибкие тарифы: месяц (50₽), квартал (125₽), год (500₽). Уникальные ключи NEMKS-XXXXX-XXXXX-XXXXX."
   },
   {
     icon: <MessageSquare className="w-8 h-8 text-blue-400" />,

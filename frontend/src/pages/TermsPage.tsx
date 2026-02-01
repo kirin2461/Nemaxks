@@ -80,7 +80,7 @@ const content = {
         content: `4.1. Тарифные планы:
 💳 Месяц: 50₽
 💳 Квартал: 125₽ (-17%)
-💳 Год: 600₽ (-17%)
+💳 Год: 500₽
 
 4.2. Преимущества подписки:
 • Уникальные ключи лицензий
@@ -261,7 +261,7 @@ Telegram: https://t.me/neMaxks
         content: `4.1. Pricing plans:
 💳 Monthly: 50₽
 💳 Quarterly: 125₽ (-17%)
-💳 Yearly: 600₽ (-17%)
+💳 Yearly: 500₽
 
 4.2. Subscription benefits:
 • Unique license keys
@@ -431,7 +431,7 @@ Response time: up to 48 hours`
         content: `4.1. 价格计划：
 💳 月付：50₽
 💳 季付：125₽ (-17%)
-💳 年付：600₽ (-17%)
+💳 年付：500₽
 
 4.2. 订阅优势：
 • 独特的许可证密钥

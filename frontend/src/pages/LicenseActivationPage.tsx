@@ -41,8 +41,8 @@ const pricingTiers: LicensePricing[] = [
   {
     type: "YEARLY",
     duration_days: 365,
-    price_rub: 600,
-    price_usd: 8.00,
+    price_rub: 500,
+    price_usd: 7.00,
     label: "Yearly",
     label_ru: "Годовая",
     description: "365 days of full access",
