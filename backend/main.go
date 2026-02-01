@@ -175,6 +175,8 @@ func main() {
         r.GET("/api/encryption/keys/:user_id", authMiddleware(), getUserPublicKeyHandler)
         r.POST("/api/encryption/dm", authMiddleware(), sendEncryptedDMHandler)
         r.GET("/api/encryption/dm/:user_id", authMiddleware(), getEncryptedDMsHandler)
+        r.POST("/api/encryption/dm/:user_id/read", authMiddleware(), markMessagesReadHandler)
+        r.GET("/api/encryption/dm/unread-counts", authMiddleware(), getUnreadMessagesCountHandler)
         r.POST("/api/encryption/admin-access", authMiddleware(), grantAdminAccessHandler)
         r.DELETE("/api/encryption/admin-access/:permission_id", authMiddleware(), revokeAdminAccessHandler)
         r.GET("/api/encryption/admin-access/my", authMiddleware(), getMyAdminPermissionsHandler)

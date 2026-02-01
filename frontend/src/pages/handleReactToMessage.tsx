@@ -181,6 +181,15 @@ export default function MessagesPage() {
           ))
         }
         break
+      case 'messages-read':
+        if (data.reader_id && selectedUserRef.current) {
+          if (String(data.reader_id) === String(selectedUserRef.current.id)) {
+            setMessages(prev => prev.map(m => 
+              String(m.sender_id) === String(user?.id) ? { ...m, read: true } : m
+            ))
+          }
+        }
+        break
     }
   }, [user?.id, fetchConversations])
 

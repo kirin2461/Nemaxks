@@ -72,6 +72,7 @@ type EncryptedDirectMessage struct {
         KeyVersion         int    `json:"key_version" gorm:"default:1"`
         IsE2E              bool   `json:"is_e2e" gorm:"default:true"`
         PlaintextContent   string `json:"-" gorm:"type:text"`
+        Read               bool   `json:"read" gorm:"default:false"`
 }
 
 func generateNonce() (string, error) {
@@ -216,6 +217,57 @@ func getEncryptedDMsHandler(c *gin.Context) {
         ).Order("created_at desc").Limit(100).Find(&messages)
 
         c.JSON(http.StatusOK, gin.H{"messages": messages})
+}
+
+func markMessagesReadHandler(c *gin.Context) {
+        userID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
+
+        otherUserID := c.Param("user_id")
+
+        result := db.Model(&EncryptedDirectMessage{}).
+                Where("sender_id = ? AND recipient_id = ? AND read = false", otherUserID, userID).
+                Update("read", true)
+
+        if result.Error != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark messages as read"})
+                return
+        }
+
+        db.Model(&Notification{}).
+                Where("user_id = ? AND actor_id = ? AND type = ? AND is_read = false", userID, otherUserID, NotifTypeMessage).
+                Update("is_read", true)
+
+        hub.sendToUser(otherUserID, map[string]interface{}{
+                "type":      "messages-read",
+                "reader_id": userID,
+        })
+
+        c.JSON(http.StatusOK, gin.H{"marked_count": result.RowsAffected})
+}
+
+func getUnreadMessagesCountHandler(c *gin.Context) {
+        userID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
+
+        var counts []struct {
+                SenderID uint `json:"sender_id"`
+                Count    int  `json:"count"`
+        }
+
+        db.Model(&EncryptedDirectMessage{}).
+                Select("sender_id, COUNT(*) as count").
+                Where("recipient_id = ? AND read = false", userID).
+                Group("sender_id").
+                Scan(&counts)
+
+        c.JSON(http.StatusOK, gin.H{"unread_counts": counts})
 }
 
 func grantAdminAccessHandler(c *gin.Context) {

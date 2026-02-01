@@ -400,6 +400,14 @@ export const messagesAPI = {
 
   getPinnedMessages: (userId: string) =>
     request<Message[]>(`/messages/pinned/${userId}`),
+
+  markAllAsReadFromUser: (userId: string) =>
+    request<{ marked_count: number }>(`/encryption/dm/${userId}/read`, {
+      method: "POST",
+    }),
+
+  getUnreadCounts: () =>
+    request<{ unread_counts: Array<{ sender_id: number; count: number }> }>("/encryption/dm/unread-counts"),
 };
 
 // Stories API

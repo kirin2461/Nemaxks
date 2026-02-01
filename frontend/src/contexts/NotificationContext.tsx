@@ -118,13 +118,25 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     setNotifications([])
   }, [])
 
-  const clearMessageNotificationsFromUser = useCallback((userId: string) => {
+  const clearMessageNotificationsFromUser = useCallback(async (userId: string) => {
     setNotifications(prev => prev.filter(n => 
       !(n.type === 'message' && n.userId === userId)
     ))
     setToasts(prev => prev.filter(n => 
       !(n.type === 'message' && n.userId === userId)
     ))
+    
+    const token = localStorage.getItem('token')
+    if (token) {
+      try {
+        await fetch(`/api/encryption/dm/${userId}/read`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      } catch (e) {
+        console.error('[NotificationContext] Failed to mark messages as read:', e)
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -449,6 +461,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         break
       case 'new_post':
         window.dispatchEvent(new CustomEvent('ws:new_post', { detail: data.data || data }))
+        break
+      case 'messages-read':
+        window.dispatchEvent(new CustomEvent('ws:messages-read', { detail: { reader_id: data.reader_id } }))
         break
       default:
         if (data.title && data.message) {
