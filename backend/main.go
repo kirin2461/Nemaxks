@@ -239,6 +239,9 @@ func main() {
         // Posts
         r.GET("/api/posts", getPostsHandler)
         r.POST("/api/posts", authMiddleware(), createPostHandler)
+        r.PUT("/api/posts/:id", authMiddleware(), updatePostHandler)
+        r.DELETE("/api/posts/:id", authMiddleware(), deletePostHandler)
+        r.GET("/api/posts/tags/popular", getPopularTagsHandler)
         r.GET("/api/settings", authMiddleware(), getUserSettingsHandler)
         r.PUT("/api/settings", authMiddleware(), updateUserSettingsHandler)
 

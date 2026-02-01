@@ -24,6 +24,8 @@ import {
   Trash2,
   UserPlus,
   UserMinus,
+  Pencil,
+  RefreshCw,
 } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
 
@@ -82,6 +84,10 @@ export default function FeedPage() {
   const [selectedMedia, setSelectedMedia] = useState<MediaFile | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [subscriptions, setSubscriptions] = useState<Set<string>>(new Set());
+  const [popularTags, setPopularTags] = useState<{ name: string; count: number }[]>([]);
+  const [editModal, setEditModal] = useState<{ postId: string; content: string; open: boolean }>({ postId: "", content: "", open: false });
+  const [editContent, setEditContent] = useState("");
+  const [newPostsCount, setNewPostsCount] = useState(0);
   const feedRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const POSTS_PER_PAGE = 20;
@@ -197,6 +203,29 @@ export default function FeedPage() {
     };
     loadSubscriptions();
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const loadPopularTags = async () => {
+      try {
+        const data = await postsAPI.getPopularTags(10);
+        setPopularTags(data.tags || []);
+      } catch (error) {
+        console.error("Failed to load popular tags:", error);
+      }
+    };
+    loadPopularTags();
+  }, []);
+
+  useEffect(() => {
+    const handleNewPost = (event: CustomEvent) => {
+      const newPost = event.detail;
+      if (newPost && newPost.author?.id !== user?.id?.toString()) {
+        setNewPostsCount(prev => prev + 1);
+      }
+    };
+    window.addEventListener('ws:new_post' as any, handleNewPost);
+    return () => window.removeEventListener('ws:new_post' as any, handleNewPost);
+  }, [user?.id]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -327,6 +356,36 @@ export default function FeedPage() {
     } catch (error) {
       console.error("Failed to toggle subscription:", error);
     }
+  };
+
+  const handleOpenEdit = (post: Post) => {
+    setEditModal({ postId: post.id, content: post.content, open: true });
+    setEditContent(post.content);
+  };
+
+  const handleCloseEdit = () => {
+    setEditModal({ postId: "", content: "", open: false });
+    setEditContent("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editContent.trim()) return;
+    try {
+      await postsAPI.updatePost(editModal.postId, { content: editContent });
+      setPosts(posts.map(p => 
+        p.id === editModal.postId ? { ...p, content: editContent } : p
+      ));
+      handleCloseEdit();
+    } catch (error) {
+      console.error("Failed to update post:", error);
+      alert("Не удалось обновить пост");
+    }
+  };
+
+  const loadNewPosts = () => {
+    setNewPostsCount(0);
+    loadPosts(selectedFilter, selectedTag);
+    feedRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCreatePost = async () => {
@@ -600,18 +659,21 @@ export default function FeedPage() {
                 </div>
               </div>
             )}
-            {["react", "webdev", "design", "typescript", "ai"].map((tag) => (
+            {popularTags.length > 0 ? popularTags.map((tag) => (
               <button
-                key={tag}
-                onClick={() => handleTagClick(tag)}
+                key={tag.name}
+                onClick={() => handleTagClick(tag.name)}
                 className={cn(
-                  "badge-cosmic block w-full text-left transition-colors",
-                  selectedTag === tag && "bg-primary/40 ring-1 ring-primary"
+                  "badge-cosmic block w-full text-left transition-colors flex items-center justify-between",
+                  selectedTag === tag.name && "bg-primary/40 ring-1 ring-primary"
                 )}
               >
-                #{tag}
+                <span>#{tag.name}</span>
+                <span className="text-xs text-muted-foreground">{tag.count}</span>
               </button>
-            ))}
+            )) : (
+              <p className="text-sm text-muted-foreground">Пока нет тегов</p>
+            )}
           </div>
         </aside>
 
@@ -625,6 +687,17 @@ export default function FeedPage() {
                 onCloseViewer={() => setViewingUserStory(null)} 
               />
             </div>
+
+            {/* New Posts Banner */}
+            {newPostsCount > 0 && (
+              <button
+                onClick={loadNewPosts}
+                className="w-full glass-cosmic rounded-xl p-3 flex items-center justify-center gap-2 text-primary hover:bg-primary/20 transition-colors animate-pulse"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>{newPostsCount} {newPostsCount === 1 ? 'новый пост' : newPostsCount < 5 ? 'новых поста' : 'новых постов'}</span>
+              </button>
+            )}
 
             {/* Fixed Header - Create Post */}
             <div className="sticky top-0 z-10 mb-6 animate-fade-in">
@@ -822,13 +895,22 @@ export default function FeedPage() {
                     <div className="flex items-center gap-1">
                       {(post.author.id === user?.id?.toString() ||
                         post.author.username === user?.username) && (
-                        <button
-                          onClick={() => handleDeletePost(post.id)}
-                          className="p-2 rounded-lg hover:bg-red-500/20 transition-colors"
-                          title="Удалить пост"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleOpenEdit(post)}
+                            className="p-2 rounded-lg hover:bg-primary/20 transition-colors"
+                            title="Редактировать пост"
+                          >
+                            <Pencil className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePost(post.id)}
+                            className="p-2 rounded-lg hover:bg-red-500/20 transition-colors"
+                            title="Удалить пост"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </button>
+                        </>
                       )}
                       <button
                         onClick={() => handleShare(post.id)}
@@ -1069,6 +1151,55 @@ export default function FeedPage() {
                   <Send className="w-4 h-4" />
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editModal.open && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]"
+          onClick={handleCloseEdit}
+        >
+          <div
+            className="bg-card border border-border rounded-2xl w-full max-w-lg mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h3 className="text-lg font-semibold">Редактировать пост</h3>
+              <button
+                type="button"
+                onClick={handleCloseEdit}
+                className="p-2 hover:bg-accent/20 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary resize-none min-h-[120px]"
+                placeholder="Текст поста..."
+              />
+            </div>
+            <div className="flex justify-end gap-2 p-4 border-t border-border">
+              <button
+                type="button"
+                onClick={handleCloseEdit}
+                className="px-4 py-2 rounded-lg hover:bg-accent/20 transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={!editContent.trim()}
+                className="btn-primary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Сохранить
+              </button>
             </div>
           </div>
         </div>

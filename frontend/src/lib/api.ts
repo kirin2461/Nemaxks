@@ -1072,6 +1072,15 @@ export const postsAPI = {
       method: "POST",
       data: { content },
     }),
+
+  updatePost: (postId: string, data: { content?: string; tags?: string[] }) =>
+    request<Post>(`/posts/${postId}`, {
+      method: "PUT",
+      data,
+    }),
+
+  getPopularTags: (limit?: number) =>
+    request<{ tags: { name: string; count: number }[] }>(`/posts/tags/popular${limit ? `?limit=${limit}` : ''}`),
 };
 
 export interface Post {

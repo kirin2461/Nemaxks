@@ -447,6 +447,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       case 'all_notifications_read':
         window.dispatchEvent(new CustomEvent('ws:notification_read', { detail: data.data || data }))
         break
+      case 'new_post':
+        window.dispatchEvent(new CustomEvent('ws:new_post', { detail: data.data || data }))
+        break
       default:
         if (data.title && data.message) {
           addNotification({

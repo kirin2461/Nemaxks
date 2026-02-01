@@ -4,6 +4,7 @@ import (
         "log"
         "net/http"
         "os"
+        "sort"
         "strconv"
         "strings"
         "time"
@@ -278,7 +279,7 @@ func createPostHandler(c *gin.Context) {
         var author User
         db.First(&author, post.AuthorID)
 
-        c.JSON(http.StatusCreated, gin.H{
+        postData := gin.H{
                 "id":         post.ID,
                 "title":      post.Title,
                 "content":    post.Content,
@@ -292,7 +293,16 @@ func createPostHandler(c *gin.Context) {
                         "username": author.Username,
                         "avatar":   author.Avatar,
                 },
-        })
+        }
+
+        // Broadcast new post to all connected users (followers)
+        var followers []Subscription
+        db.Where("following_id = ?", post.AuthorID).Find(&followers)
+        for _, follower := range followers {
+                BroadcastToUser(follower.FollowerID, "new_post", postData)
+        }
+
+        c.JSON(http.StatusCreated, postData)
 }
 
 func getPlatformStatsHandler(c *gin.Context) {
@@ -485,6 +495,129 @@ func bookmarkPostHandler(c *gin.Context) {
 }
 func unbookmarkPostHandler(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{"status": "unbookmarked"})
+}
+
+// Popular Tags
+func getPopularTagsHandler(c *gin.Context) {
+        limit := 20
+        if l := c.Query("limit"); l != "" {
+                if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 50 {
+                        limit = parsed
+                }
+        }
+
+        var posts []Post
+        db.Select("tags").Where("tags IS NOT NULL AND array_length(tags, 1) > 0").Find(&posts)
+
+        tagCounts := make(map[string]int)
+        for _, post := range posts {
+                for _, tag := range post.Tags {
+                        if tag != "" {
+                                tagCounts[tag]++
+                        }
+                }
+        }
+
+        type TagInfo struct {
+                Name  string `json:"name"`
+                Count int    `json:"count"`
+        }
+        var tags []TagInfo
+        for name, count := range tagCounts {
+                tags = append(tags, TagInfo{Name: name, Count: count})
+        }
+
+        sort.Slice(tags, func(i, j int) bool {
+                return tags[i].Count > tags[j].Count
+        })
+
+        if len(tags) > limit {
+                tags = tags[:limit]
+        }
+
+        c.JSON(http.StatusOK, gin.H{"tags": tags})
+}
+
+// Edit Post
+func updatePostHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        postID := c.Param("id")
+
+        var post Post
+        if err := db.First(&post, postID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Пост не найден"})
+                return
+        }
+
+        if post.AuthorID != uint(userID.(float64)) {
+                c.JSON(http.StatusForbidden, gin.H{"error": "Вы можете редактировать только свои посты"})
+                return
+        }
+
+        var req struct {
+                Content string   `json:"content"`
+                Tags    []string `json:"tags"`
+        }
+        if err := c.ShouldBindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        if req.Content != "" {
+                post.Content = SanitizeForDisplay(req.Content)
+                if len(post.Content) > 100 {
+                        post.Title = post.Content[:100] + "..."
+                } else {
+                        post.Title = post.Content
+                }
+        }
+        if req.Tags != nil {
+                post.Tags = req.Tags
+        }
+
+        if err := db.Save(&post).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить пост"})
+                return
+        }
+
+        var author User
+        db.First(&author, post.AuthorID)
+
+        c.JSON(http.StatusOK, gin.H{
+                "id":         post.ID,
+                "content":    post.Content,
+                "tags":       post.Tags,
+                "updated_at": post.UpdatedAt,
+                "author": gin.H{
+                        "id":       author.ID,
+                        "username": author.Username,
+                        "avatar":   author.Avatar,
+                },
+        })
+}
+
+// Delete Post
+func deletePostHandler(c *gin.Context) {
+        userID, _ := c.Get("user_id")
+        postID := c.Param("id")
+
+        var post Post
+        if err := db.First(&post, postID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Пост не найден"})
+                return
+        }
+
+        if post.AuthorID != uint(userID.(float64)) {
+                c.JSON(http.StatusForbidden, gin.H{"error": "Вы можете удалять только свои посты"})
+                return
+        }
+
+        if err := db.Delete(&post).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить пост"})
+                return
+        }
+
+        c.JSON(http.StatusOK, gin.H{"message": "Пост удалён"})
 }
 
 // Subscriptions
