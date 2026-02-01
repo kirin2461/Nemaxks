@@ -114,6 +114,7 @@ export default function VideoCallPage() {
   const [remoteMuted, setRemoteMuted] = useState(false)
   const [remoteVideoOff, setRemoteVideoOff] = useState(false)
   const [showAudioLogs, setShowAudioLogs] = useState(false)
+  const [remoteVideoStream, setRemoteVideoStream] = useState<MediaStream | null>(null)
   const audioLogger = useAudioLogger()
   const pendingCallProcessed = useRef(false)
   const callEndSent = useRef(false)
@@ -149,6 +150,14 @@ export default function VideoCallPage() {
       }
     }
   }, [userIdFromRoute, friends])
+
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteVideoStream) {
+      console.log('[Video Debug] Applying remote video stream to element')
+      remoteVideoRef.current.srcObject = remoteVideoStream
+      remoteVideoRef.current.play().catch(e => console.log('Video play error:', e))
+    }
+  }, [remoteVideoStream])
 
   useEffect(() => {
     if (shouldAccept && wsConnected && !pendingCallProcessed.current) {
@@ -419,12 +428,10 @@ export default function VideoCallPage() {
       
       const playMedia = () => {
         if (event.track.kind === 'video') {
-          console.log('[Audio Debug] Setting up video, remoteVideoRef exists:', !!remoteVideoRef.current)
+          console.log('[Video Debug] Setting up video, remoteVideoRef exists:', !!remoteVideoRef.current)
+          setRemoteVideoStream(stream)
           if (remoteVideoRef.current) {
-            if (!remoteVideoRef.current.srcObject) {
-              remoteVideoRef.current.srcObject = stream
-            }
-            remoteVideoRef.current.muted = true
+            remoteVideoRef.current.srcObject = stream
             remoteVideoRef.current.play().catch(e => console.log('Video play error:', e))
           }
         }
