@@ -203,8 +203,8 @@ type EducationalToolTemplate struct {
         SubCategory    string    `gorm:"size:50" json:"sub_category"` // более детальная категория
         Icon           string    `json:"icon"`
         PreviewImage   string    `json:"preview_image"`
-        ConfigJSON     string    `gorm:"type:jsonb" json:"config_json"` // начальная конфигурация инструмента
-        FeaturesJSON   string    `gorm:"type:jsonb" json:"features_json"` // список доступных функций
+        ConfigJSON     string    `gorm:"type:text" json:"config_json"` // начальная конфигурация инструмента
+        FeaturesJSON   string    `gorm:"type:text" json:"features_json"` // список доступных функций
         RequiredPlan   string    `gorm:"size:30" json:"required_plan"` // free, edu_basic, edu_pro
         IsActive       bool      `gorm:"default:true" json:"is_active"`
         UsageCount     int       `gorm:"default:0" json:"usage_count"`
