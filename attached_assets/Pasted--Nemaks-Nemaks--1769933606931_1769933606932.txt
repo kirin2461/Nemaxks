@@ -1,0 +1,124 @@
+# Полный отчёт по анализу кода проекта Nemaks
+
+## Обзор проекта
+Проект Nemaks — это многокомпонентная платформа, включающая:
+- **Backend**: Go (Gin framework) — основной сервер API
+- **Frontend**: React + TypeScript + Vite
+- **Rust Services**: audit-service, search-service
+- **Jarvis**: MCP сервер для AI интеграции
+
+***
+
+## 🔴 КРИТИЧЕСКИЕ УЯЗВИМОСТИ БЕЗОПАСНОСТИ
+
+### 1. Захардкоженный JWT секрет (CRITICAL)
+**Файл:** `backend/grpc_server.go:131` [replit](https://replit.com/t/ss-12/repls/Nemaxks-3)
+```go
+return []byte("your-secret-key"), nil
+```
+**Проблема:** Захардкоженный секретный ключ в функции validateToken позволяет любому, кто знает этот ключ, подделывать JWT токены и получать неавторизованный доступ к системе.
+
+**Исправление:** Использовать `getJWTSecret()` функцию (как было исправлено в websocket.go:452).
+
+### 2. Отсутствие конфигурации сервисов (HIGH)
+**Консоль показывает предупреждения:**
+- Redis не сконфигурирован — отключены rate limiting и кэширование
+- LiveKit не сконфигурирован — голосовые/видео звонки не работают
+- Email SMTP не сконфигурирован — нет отправки писем
+- YooKassa не сконфигурирован — платежи не работают
+
+***
+
+## 🟠 ЗАГЛУШКИ (STUBS/PLACEHOLDERS)
+
+### 1. gRPC клиенты
+**Файл:** `backend/grpc_clients.go:82`
+```
+"For now, placeholder"
+```
+
+### 2. Live Streams интеграция
+**Файл:** `backend/Placeholder.go:320`
+```
+"Placeholder for live streams integration"
+```
+
+### 3. Тестовые заглушки
+**Файл:** `backend/internal/billing/manual_transfer_service_test.go:40-41`
+- "placeholder test"
+- "mock database"
+
+***
+
+## 🟡 БАГИ И ПРОБЛЕМЫ
+
+### 1. Ранее исправленный баг с API запросами
+В левой панели истории виден аудит, где было исправлено 13 мест с неправильным форматом API запросов — использовался `body: JSON.stringify(...)` вместо `data: {...}`, что приводило к тому, что токен авторизации не отправлялся. [replit](https://replit.com/t/ss-12/repls/Nemaxks-3)
+
+**Затронутые модули:**
+- Лицензии (validate, activate)
+- Реклама (create request)
+- Подарки (send)
+- Сделки (create, respond)
+- Кланы (create)
+- Мини-игры (complete)
+- Коллекции (create, add item)
+- Антифрод (review alert, rules)
+- Админские API
+
+### 2. Потеря лицензионного ключа
+При переходе со страницы активации к регистрации/входу сохранённый ключ (`pendingLicenseKey`) не активировался — исправлено добавлением автоматической активации после авторизации. [replit](https://replit.com/t/ss-12/repls/Nemaxks-3)
+
+### 3. XXX маркер в тестах
+**Файл:** `backend/internal/billing/manual_transfer_service_test.go:126`
+```
+"XXX" с "invalid currency", 50.00
+```
+
+***
+
+## 🔵 АРХИТЕКТУРНЫЕ ЗАМЕЧАНИЯ
+
+### 1. CORS конфигурация
+В main.go используется cors.Config — требует проверки на корректность настроек для production.
+
+### 2. Rate Limiting
+Реализован в `middleware_ratelimit.go`, но зависит от Redis. При отсутствии Redis — rate limiting не работает, что делает систему уязвимой к DDoS атакам.
+
+### 3. Обработка паник
+Найдены вызовы `log.Fatal()` в main.go — нормально для инициализации, но требует внимания для graceful shutdown.
+
+### 4. Шифрование
+`encryption.go` содержит реализацию E2E шифрования — код требует внешнего аудита криптографических практик.
+
+***
+
+## ✅ ПОЛОЖИТЕЛЬНЫЕ АСПЕКТЫ
+
+1. **Middleware безопасности**: `middleware_security.go`, `middleware_rbac.go` — присутствует RBAC система
+2. **2FA аутентификация**: `handlers_2fa.go` — реализована двухфакторная аутентификация
+3. **Антифрод система**: `fraud_detector.go`, `middleware_fraud.go` — реализована защита от мошенничества
+4. **Система модерации**: `handlers_moderation.go`, `models_moderation.go`
+5. **LSP проверки**: Ошибок компиляции нет
+6. **Backend/Frontend**: Запускаются и работают стабильно
+
+***
+
+## 📋 РЕКОМЕНДАЦИИ ПО ИСПРАВЛЕНИЮ
+
+| Приоритет | Проблема | Файл | Действие |
+|-----------|----------|------|----------|
+| 🔴 Critical | Hardcoded JWT secret | grpc_server.go:131 | Заменить на `getJWTSecret()` |
+| 🟠 High | Redis не настроен | — | Настроить Redis или добавить fallback |
+| 🟠 High | LiveKit/SMTP/YooKassa | — | Настроить env переменные |
+| 🟡 Medium | Placeholder в gRPC | grpc_clients.go | Реализовать полную функциональность |
+| 🟡 Medium | Live streams placeholder | Placeholder.go | Реализовать интеграцию |
+| 🔵 Low | XXX в тестах | manual_transfer_service_test.go | Исправить тест или удалить маркер |
+
+***
+
+## Статистика проекта
+- **Go файлы backend**: ~60+ файлов
+- **Rust сервисы**: 2 (audit-service, search-service)
+- **Модели данных**: Более 80 таблиц в БД (видно из Database панели)
+- **Handlers**: 25+ файлов обработчиков API
