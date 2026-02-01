@@ -19,6 +19,7 @@ interface AppState {
   isDemoMode: boolean
   notifications: NotificationCounts
   soundEnabled: boolean
+  liteMode: boolean
   login: (username: string, password: string) => Promise<void>
   register: (username: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -32,6 +33,7 @@ interface AppState {
   setNotifications: (counts: Partial<NotificationCounts>) => void
   clearNotification: (type: keyof NotificationCounts) => void
   setSoundEnabled: (enabled: boolean) => void
+  setLiteMode: (enabled: boolean) => void
   playNotificationSound: () => void
 }
 
@@ -54,6 +56,7 @@ export const useStore = create<AppState>((set, get) => ({
   isDemoMode: false,
   notifications: { messages: 0, friends: 0, channels: 0 },
   soundEnabled: localStorage.getItem('soundEnabled') !== 'false',
+  liteMode: localStorage.getItem('liteMode') === 'true',
 
   login: async (username, password) => {
     try {
@@ -225,6 +228,16 @@ export const useStore = create<AppState>((set, get) => ({
   setSoundEnabled: (enabled) => {
     set({ soundEnabled: enabled })
     localStorage.setItem('soundEnabled', String(enabled))
+  },
+
+  setLiteMode: (enabled) => {
+    set({ liteMode: enabled })
+    localStorage.setItem('liteMode', String(enabled))
+    if (enabled) {
+      document.documentElement.classList.add('lite-mode')
+    } else {
+      document.documentElement.classList.remove('lite-mode')
+    }
   },
 
   playNotificationSound: () => {

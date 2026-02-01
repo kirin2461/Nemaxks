@@ -229,7 +229,10 @@
     "pushNotifications": "Push notifications",
     "soundEffects": "Sound effects",
     "messageSound": "Message sound",
-    "callSound": "Call sound"
+    "callSound": "Call sound",
+    "interface": "Interface",
+    "liteMode": "Lite Mode",
+    "liteModeDesc": "Reduces animations and effects for better performance"
   },
   "jarvis": {
     "greeting": "Hello! I'm Jarvis, your AI assistant.",

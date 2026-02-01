@@ -6,6 +6,7 @@ import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { settingsAPI, type Settings as SettingsType } from '@/lib/api'
 import { changeLanguage, languages } from '@/lib/i18n'
+import { useStore } from '@/lib/store'
 import {
   Bell,
   Shield,
@@ -14,6 +15,7 @@ import {
   Bot,
   Save,
   Check,
+  Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -36,6 +38,7 @@ const defaultSettings: SettingsType = {
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
+  const { liteMode, setLiteMode } = useStore()
   const [settings, setSettings] = useState<SettingsType>(defaultSettings)
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -174,6 +177,23 @@ export default function SettingsPage() {
                   ))}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-primary" />
+                <CardTitle>{t('settings.interface')}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="divide-y divide-border">
+              <SettingToggle
+                label={t('settings.liteMode')}
+                description={t('settings.liteModeDesc')}
+                checked={liteMode}
+                onChange={() => setLiteMode(!liteMode)}
+              />
             </CardContent>
           </Card>
 

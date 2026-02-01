@@ -229,7 +229,10 @@
     "pushNotifications": "Push уведомления",
     "soundEffects": "Звуковые эффекты",
     "messageSound": "Звук сообщения",
-    "callSound": "Звук звонка"
+    "callSound": "Звук звонка",
+    "interface": "Интерфейс",
+    "liteMode": "Облегчённый режим",
+    "liteModeDesc": "Уменьшает анимации и эффекты для быстрой работы"
   },
   "jarvis": {
     "greeting": "Привет! Я Jarvis, ваш AI-помощник.",

@@ -229,7 +229,10 @@
     "pushNotifications": "推送通知",
     "soundEffects": "音效",
     "messageSound": "消息提示音",
-    "callSound": "来电铃声"
+    "callSound": "来电铃声",
+    "interface": "界面",
+    "liteMode": "精简模式",
+    "liteModeDesc": "减少动画和特效以提升性能"
   },
   "jarvis": {
     "greeting": "你好！我是 Jarvis，你的 AI 助手。",
