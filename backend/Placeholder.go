@@ -317,7 +317,8 @@ func getPlatformStatsHandler(c *gin.Context) {
 var startTime = time.Now()
 
 func getLiveStreamsHandler(c *gin.Context) {
-        // Placeholder for live streams integration
+        // Live streams require LiveKit integration (LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
+        // Returns empty array when LiveKit is not configured
         c.JSON(http.StatusOK, []gin.H{})
 }
 

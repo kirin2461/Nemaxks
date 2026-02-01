@@ -64,21 +64,59 @@ func LogAuditViaGRPC(userID uint, action, targetType, targetID, scope, details, 
         }()
 }
 
-// SearchMessagesViaGRPC calls Rust search service
+// SearchMessagesViaGRPC calls Rust search service with SQL fallback
 func SearchMessagesViaGRPC(query, channelID, guildID, authorID string, limit, offset int) (interface{}, error) {
+        // Validate query to prevent expensive searches
+        if len(query) < 3 {
+                return nil, fmt.Errorf("query must be at least 3 characters")
+        }
+        if len(query) > 100 {
+                query = query[:100] // Truncate to prevent oversized queries
+        }
+        
         grpcMutex.RLock()
         defer grpcMutex.RUnlock()
 
-        if searchClient == nil {
-                // Fallback to SQL search
-                log.Println("[gRPC] Search client not initialized, falling back to SQL")
-                return nil, fmt.Errorf("search service unavailable")
-        }
-
-        _, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
         defer cancel()
 
-        // Call would be: searchClient.SearchMessages(ctx, &pb.SearchMessagesRequest{...})
-        // For now, placeholder
-        return nil, fmt.Errorf("search service call not yet implemented")
+        if searchClient == nil {
+                // Fallback to SQL LIKE search when gRPC service is unavailable
+                log.Println("[gRPC] Search client not initialized, using SQL fallback")
+                return searchMessagesSQL(ctx, query, channelID, guildID, authorID, limit, offset)
+        }
+
+        // TODO: Call gRPC client when proto is implemented
+        // result, err := searchClient.SearchMessages(ctx, &pb.SearchMessagesRequest{...})
+        // For now, fallback to SQL until gRPC proto is implemented
+        return searchMessagesSQL(ctx, query, channelID, guildID, authorID, limit, offset)
+}
+
+// searchMessagesSQL performs SQL-based message search as fallback
+func searchMessagesSQL(ctx context.Context, query, channelID, guildID, authorID string, limit, offset int) ([]Message, error) {
+        var messages []Message
+        
+        // Use context for database query cancellation
+        dbQuery := db.WithContext(ctx).Model(&Message{}).Where("content ILIKE ?", "%"+query+"%")
+        
+        if channelID != "" {
+                dbQuery = dbQuery.Where("channel_id = ?", channelID)
+        }
+        if guildID != "" {
+                dbQuery = dbQuery.Joins("JOIN channels ON messages.channel_id = channels.id").
+                        Where("channels.guild_id = ?", guildID)
+        }
+        if authorID != "" {
+                dbQuery = dbQuery.Where("user_id = ?", authorID)
+        }
+        
+        if limit <= 0 || limit > 100 {
+                limit = 50 // Cap at 100 for performance
+        }
+        
+        if err := dbQuery.Order("created_at DESC").Limit(limit).Offset(offset).Find(&messages).Error; err != nil {
+                return nil, err
+        }
+        
+        return messages, nil
 }
