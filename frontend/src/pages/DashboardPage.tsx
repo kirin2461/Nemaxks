@@ -112,7 +112,6 @@ export default function DashboardPage() {
   const totalUnreadMessages = (conversations || []).reduce((sum, c) => sum + (c.unread_count || 0), 0)
 
   const stats = [
-    { name: 'Новые сообщения', value: String(totalUnreadMessages || platformStats.totalMessages || 0), icon: MessageSquare, color: 'from-blue-500 to-cyan-500', change: '' },
     { name: 'Друзья', value: String(friendsCount), icon: Users, color: 'from-purple-500 to-pink-500', change: 'добавлено' },
     { name: 'В сети', value: String(platformStats.onlineUsers || 0), icon: Wifi, color: 'from-green-500 to-emerald-500', change: 'пользователей' },
     { name: 'Стримов', value: String(liveStreams.length || platformStats.activeStreams || 0), icon: Radio, color: 'from-orange-500 to-red-500', change: 'активных' },
