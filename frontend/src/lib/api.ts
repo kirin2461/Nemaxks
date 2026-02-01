@@ -84,23 +84,29 @@ async function request<T>(
 // Authentication API
 export const authAPI = {
   login: (username: string, password: string) =>
-    request<{ user: User; token: string; message: string }>("/auth/login", {
+    request<{ user: User; access_token: string; refresh_token: string; expires_in: number; requires_2fa?: boolean }>("/auth/login", {
       method: "POST",
       data: { username, password },
     }).then((res) => {
-      if (res.token) {
-        localStorage.setItem("token", res.token);
+      if (res.access_token) {
+        localStorage.setItem("token", res.access_token);
+        if (res.refresh_token) {
+          localStorage.setItem("refresh_token", res.refresh_token);
+        }
       }
       return res;
     }),
 
   register: (username: string, password: string) =>
-    request<{ user: User; token: string; message: string }>("/auth/register", {
+    request<{ user: User; access_token: string; refresh_token: string; expires_in: number }>("/auth/register", {
       method: "POST",
       data: { username, password },
     }).then((res) => {
-      if (res.token) {
-        localStorage.setItem("token", res.token);
+      if (res.access_token) {
+        localStorage.setItem("token", res.access_token);
+        if (res.refresh_token) {
+          localStorage.setItem("refresh_token", res.refresh_token);
+        }
       }
       return res;
     }),

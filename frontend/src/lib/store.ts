@@ -58,8 +58,8 @@ export const useStore = create<AppState>((set, get) => ({
   login: async (username, password) => {
     try {
       const response = await authAPI.login(username, password)
-      if (response && response.token) {
-        localStorage.setItem('token', response.token)
+      if (response && response.access_token) {
+        localStorage.setItem('token', response.access_token)
         set({ user: response.user, isAuthenticated: true, isDemoMode: false })
         
         const pendingKey = localStorage.getItem('pendingLicenseKey')
@@ -81,8 +81,8 @@ export const useStore = create<AppState>((set, get) => ({
   register: async (username, password) => {
     try {
       const response = await authAPI.register(username, password)
-      if (response && response.token) {
-        localStorage.setItem('token', response.token)
+      if (response && response.access_token) {
+        localStorage.setItem('token', response.access_token)
         set({ user: response.user, isAuthenticated: true, isDemoMode: false })
         
         const pendingKey = localStorage.getItem('pendingLicenseKey')
