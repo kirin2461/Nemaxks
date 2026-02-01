@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'wouter'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { Avatar } from './Avatar'
@@ -34,6 +35,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
+  const { t } = useTranslation()
   const { user, logout, theme, setTheme, isDemoMode, notifications } = useStore()
   const { unreadCount } = useNotifications()
   const [location] = useLocation()
@@ -44,28 +46,28 @@ export function Layout({ children }: LayoutProps) {
   const totalMessageBadge = Math.max(notifications.messages, unreadCount)
 
   const navigation = [
-    { name: 'Home', href: '/', icon: Home, badge: 0 },
-    { name: 'Feed', href: '/feed', icon: Rss, badge: 0 },
-    { name: 'Video', href: '/video', icon: Video, badge: 0 },
-    { name: 'Calls', href: '/call', icon: Phone, badge: 0 },
-    { name: 'Jarvis AI', href: '/jarvis', icon: Sparkles, badge: 0 },
-    { name: 'Friends', href: '/friends', icon: Users, badge: notifications.friends },
-    { name: 'Messages', href: '/messages', icon: MessageSquare, badge: totalMessageBadge },
-    { name: 'Channels', href: '/channels', icon: Hash, badge: notifications.channels },
-    { name: 'Profile', href: '/profile', icon: User, badge: 0 },
-    { name: 'Premium', href: '/premium', icon: Crown, badge: 0 },
-    { name: 'Reports', href: '/reports', icon: FileText, badge: 0 },
-    { name: 'Invite', href: '/invite', icon: UserPlus, badge: 0 },
-    { name: 'Settings', href: '/settings', icon: Settings, badge: 0 },
-    ...(isAdmin ? [{ name: 'Админ', href: '/admin', icon: Shield, badge: 0 }] : []),
+    { name: t('nav.home'), href: '/', icon: Home, badge: 0 },
+    { name: t('nav.feed'), href: '/feed', icon: Rss, badge: 0 },
+    { name: t('nav.video'), href: '/video', icon: Video, badge: 0 },
+    { name: t('nav.calls'), href: '/call', icon: Phone, badge: 0 },
+    { name: t('nav.jarvis'), href: '/jarvis', icon: Sparkles, badge: 0 },
+    { name: t('nav.friends'), href: '/friends', icon: Users, badge: notifications.friends },
+    { name: t('nav.messages'), href: '/messages', icon: MessageSquare, badge: totalMessageBadge },
+    { name: t('nav.channels'), href: '/channels', icon: Hash, badge: notifications.channels },
+    { name: t('common.profile'), href: '/profile', icon: User, badge: 0 },
+    { name: t('nav.premium'), href: '/premium', icon: Crown, badge: 0 },
+    { name: t('nav.reports'), href: '/reports', icon: FileText, badge: 0 },
+    { name: t('nav.invite'), href: '/invite', icon: UserPlus, badge: 0 },
+    { name: t('common.settings'), href: '/settings', icon: Settings, badge: 0 },
+    ...(isAdmin ? [{ name: t('nav.admin'), href: '/admin', icon: Shield, badge: 0 }] : []),
   ]
 
   const bottomNavItems = [
-    { name: 'Home', href: '/', icon: Home },
-    { name: 'Feed', href: '/feed', icon: Rss },
-    { name: 'Messages', href: '/messages', icon: MessageSquare, badge: totalMessageBadge },
-    { name: 'Friends', href: '/friends', icon: Users, badge: notifications.friends },
-    { name: 'Profile', href: '/profile', icon: User },
+    { name: t('nav.home'), href: '/', icon: Home },
+    { name: t('nav.feed'), href: '/feed', icon: Rss },
+    { name: t('nav.messages'), href: '/messages', icon: MessageSquare, badge: totalMessageBadge },
+    { name: t('nav.friends'), href: '/friends', icon: Users, badge: notifications.friends },
+    { name: t('common.profile'), href: '/profile', icon: User },
   ]
 
   const handleThemeChange = (e: React.MouseEvent) => {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { useStore } from "@/lib/store";
 import { useLocation, useSearch } from "wouter";
@@ -31,6 +32,7 @@ interface PromoValidation {
 }
 
 export default function PremiumCheckoutPage() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const { user, isAuthenticated } = useStore();

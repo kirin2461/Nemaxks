@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layout, Search, Users, GraduationCap, Gamepad2, Briefcase,
@@ -54,17 +55,18 @@ interface ChannelTemplate {
 
 type TabType = "notebooks" | "whiteboards" | "editors" | "servers" | "channels";
 
-const tabs = [
-  { id: "notebooks" as TabType, label: "Тетради", icon: <BookOpen size={18} />, toolType: "notebook", color: "blue" },
-  { id: "whiteboards" as TabType, label: "Доски", icon: <PenTool size={18} />, toolType: "whiteboard", color: "green" },
-  { id: "editors" as TabType, label: "Редакторы", icon: <Code size={18} />, toolType: "editor", color: "orange" },
-  { id: "servers" as TabType, label: "Серверы", icon: <Building size={18} />, toolType: null, color: "purple" },
-  { id: "channels" as TabType, label: "Каналы", icon: <MessageCircle size={18} />, toolType: null, color: "cyan" },
-];
-
 export function TemplatesPage() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { user } = useStore();
+  
+  const tabs = [
+    { id: "notebooks" as TabType, label: t("templates.notebooks"), icon: <BookOpen size={18} />, toolType: "notebook", color: "blue" },
+    { id: "whiteboards" as TabType, label: t("templates.whiteboards"), icon: <PenTool size={18} />, toolType: "whiteboard", color: "green" },
+    { id: "editors" as TabType, label: t("templates.editors"), icon: <Code size={18} />, toolType: "editor", color: "orange" },
+    { id: "servers" as TabType, label: t("nav.servers"), icon: <Building size={18} />, toolType: null, color: "purple" },
+    { id: "channels" as TabType, label: t("nav.channels"), icon: <MessageCircle size={18} />, toolType: null, color: "cyan" },
+  ];
   const [educationalTemplates, setEducationalTemplates] = useState<EducationalToolTemplate[]>([]);
   const [guildTemplates, setGuildTemplates] = useState<GuildTemplate[]>([]);
   const [channelTemplates, setChannelTemplates] = useState<ChannelTemplate[]>([]);
@@ -86,7 +88,7 @@ export function TemplatesPage() {
       try {
         const res = await premiumAPI.getUserPremium(String(user.id));
         setHasPremium(res.has_premium);
-        setUserPlan(res.plan_type || "free");
+        setUserPlan(res.plan_name || "free");
       } catch {
         setHasPremium(false);
       }
@@ -196,7 +198,7 @@ export function TemplatesPage() {
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
-          <p className="text-gray-400">Загрузка шаблонов...</p>
+          <p className="text-gray-400">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -214,15 +216,15 @@ export function TemplatesPage() {
             <Crown className="text-purple-400" size={24} />
           </div>
           <div>
-            <p className="text-white font-medium">Разблокируйте все шаблоны</p>
-            <p className="text-gray-400 text-sm">Сейчас доступно {freeTemplatesCount} бесплатных шаблонов. Оформите премиум для доступа ко всем 40+</p>
+            <p className="text-white font-medium">{t("templates.unlockWith")} {t("common.premium")}</p>
+            <p className="text-gray-400 text-sm">{freeTemplatesCount} {t("templates.access.free")}</p>
           </div>
         </div>
         <button
           onClick={() => setLocation("/premium")}
           className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-medium text-sm whitespace-nowrap"
         >
-          Улучшить план
+          {t("premium.upgrade")}
         </button>
       </div>
     </motion.div>
@@ -288,13 +290,13 @@ export function TemplatesPage() {
         >
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/20 px-4 py-2 rounded-full mb-4">
             <Sparkles size={18} className="text-purple-400" />
-            <span className="text-purple-300 font-medium text-sm">Образовательная платформа</span>
+            <span className="text-purple-300 font-medium text-sm">{t("nav.templates")}</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3">
-            Шаблоны и инструменты
+            {t("templates.title")}
           </h1>
           <p className="text-gray-400 max-w-xl mx-auto text-lg">
-            Интерактивные тетради, доски для совместной работы и редакторы кода для обучения
+            {t("templates.subtitle")}
           </p>
         </motion.div>
 
@@ -334,7 +336,7 @@ export function TemplatesPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Поиск шаблонов..."
+              placeholder={t("templates.search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3.5 bg-gray-800/50 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"

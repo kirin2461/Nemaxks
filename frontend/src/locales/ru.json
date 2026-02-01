@@ -51,7 +51,12 @@
     "premium": "Премиум",
     "settings": "Настройки",
     "guilds": "Гильдии",
-    "notifications": "Уведомления"
+    "notifications": "Уведомления",
+    "video": "Видео",
+    "servers": "Серверы",
+    "calls": "Звонки",
+    "invite": "Пригласить",
+    "reports": "Отчёты"
   },
   "auth": {
     "login": "Войти",
