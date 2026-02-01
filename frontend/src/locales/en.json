@@ -232,7 +232,7 @@
     "callSound": "Call sound",
     "interface": "Interface",
     "liteMode": "Lite Mode",
-    "liteModeDesc": "Reduces animations and effects for better performance"
+    "liteModeDesc": "Simplified navigation with essential features only"
   },
   "jarvis": {
     "greeting": "Hello! I'm Jarvis, your AI assistant.",

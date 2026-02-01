@@ -232,7 +232,7 @@
     "callSound": "来电铃声",
     "interface": "界面",
     "liteMode": "精简模式",
-    "liteModeDesc": "减少动画和特效以提升性能"
+    "liteModeDesc": "简化导航，仅显示核心功能"
   },
   "jarvis": {
     "greeting": "你好！我是 Jarvis，你的 AI 助手。",

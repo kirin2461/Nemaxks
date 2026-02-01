@@ -36,7 +36,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { t } = useTranslation()
-  const { user, logout, theme, setTheme, isDemoMode, notifications } = useStore()
+  const { user, logout, theme, setTheme, isDemoMode, notifications, liteMode } = useStore()
   const { unreadCount } = useNotifications()
   const [location] = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -45,7 +45,8 @@ export function Layout({ children }: LayoutProps) {
 
   const totalMessageBadge = Math.max(notifications.messages, unreadCount)
 
-  const navigation = [
+  // Full navigation for standard mode
+  const fullNavigation = [
     { name: t('nav.home'), href: '/', icon: Home, badge: 0 },
     { name: t('nav.feed'), href: '/feed', icon: Rss, badge: 0 },
     { name: t('nav.video'), href: '/video', icon: Video, badge: 0 },
@@ -62,7 +63,24 @@ export function Layout({ children }: LayoutProps) {
     ...(isAdmin ? [{ name: t('nav.admin'), href: '/admin', icon: Shield, badge: 0 }] : []),
   ]
 
-  const bottomNavItems = [
+  // Simplified navigation for lite mode - only essential items
+  const liteNavigation = [
+    { name: t('nav.home'), href: '/', icon: Home, badge: 0 },
+    { name: t('nav.messages'), href: '/messages', icon: MessageSquare, badge: totalMessageBadge },
+    { name: t('nav.friends'), href: '/friends', icon: Users, badge: notifications.friends },
+    { name: t('nav.channels'), href: '/channels', icon: Hash, badge: notifications.channels },
+    { name: t('common.profile'), href: '/profile', icon: User, badge: 0 },
+    { name: t('common.settings'), href: '/settings', icon: Settings, badge: 0 },
+  ]
+
+  const navigation = liteMode ? liteNavigation : fullNavigation
+
+  const bottomNavItems = liteMode ? [
+    { name: t('nav.home'), href: '/', icon: Home },
+    { name: t('nav.messages'), href: '/messages', icon: MessageSquare, badge: totalMessageBadge },
+    { name: t('nav.friends'), href: '/friends', icon: Users, badge: notifications.friends },
+    { name: t('common.settings'), href: '/settings', icon: Settings },
+  ] : [
     { name: t('nav.home'), href: '/', icon: Home },
     { name: t('nav.feed'), href: '/feed', icon: Rss },
     { name: t('nav.messages'), href: '/messages', icon: MessageSquare, badge: totalMessageBadge },
