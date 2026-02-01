@@ -238,7 +238,7 @@ func ActivateLicense(userID uint, key string) (*UserLicense, error) {
         // Тестовый ключ для разработчиков/тестеров - многоразовый
         if key == TestLicenseKey {
                 now := time.Now()
-                expiresAt := now.AddDate(0, 0, 30) // 30 дней
+                expiresAt := now.AddDate(0, 0, 10) // 10 дней
                 
                 // Проверяем существующую лицензию
                 var existingLicense UserLicense

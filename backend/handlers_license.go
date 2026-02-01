@@ -93,8 +93,8 @@ func validateLicenseKeyHandler(c *gin.Context) {
         if req.Key == TestLicenseKey {
                 c.JSON(http.StatusOK, gin.H{
                         "valid":         true,
-                        "type":          "MONTHLY",
-                        "duration_days": 30,
+                        "type":          "TEST",
+                        "duration_days": 10,
                         "test_key":      true,
                 })
                 return
