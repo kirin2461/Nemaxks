@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layout, Search, Users, GraduationCap, Gamepad2, Briefcase,
   BookOpen, MessageCircle, Video, PenTool, Mic, FileText,
-  ChevronRight, Star, Crown, Zap, Building, Lock, Code, Calculator,
-  Beaker, Globe, Landmark, BookMarked, Lightbulb, Presentation,
-  Music, Languages, Database, Puzzle, BarChart, ClipboardList,
-  Home, Scroll, FlaskConical, Atom, Dna, MapPin, CheckCircle
+  ChevronRight, Star, Crown, Zap, Building, Lock, Code,
+  Sparkles, Filter, Grid3X3, List
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { premiumAPI } from "@/lib/api";
+import { TemplateCard, TemplateCardSkeleton, FeaturedTemplateCard } from "@/components/educational/TemplateCard";
+import { CategoryFilter } from "@/components/educational/CategoryFilter";
+import { TemplatePreviewModal } from "@/components/educational/TemplatePreviewModal";
 
 interface EducationalToolTemplate {
   id: number;
@@ -51,72 +52,15 @@ interface ChannelTemplate {
   usage_count: number;
 }
 
-const toolTypeLabels: Record<string, string> = {
-  notebook: "Тетради",
-  whiteboard: "Доски",
-  editor: "Редакторы",
-};
-
-const categoryLabels: Record<string, string> = {
-  subjects: "Предметы",
-  universal: "Универсальные",
-  educational: "Учебные",
-  creative: "Творческие",
-  specialized: "Специализированные",
-  programming: "Программирование",
-  scientific: "Научные",
-  documents: "Документы",
-  teachers: "Для учителей",
-  students: "Для учеников",
-  group: "Групповая работа",
-};
-
-const iconMap: Record<string, React.ReactNode> = {
-  calculator: <Calculator size={20} />,
-  atom: <Atom size={20} />,
-  flask: <Beaker size={20} />,
-  dna: <Dna size={20} />,
-  landmark: <Landmark size={20} />,
-  globe: <Globe size={20} />,
-  "book-open": <BookOpen size={20} />,
-  "file-text": <FileText size={20} />,
-  "graduation-cap": <GraduationCap size={20} />,
-  microscope: <FlaskConical size={20} />,
-  calendar: <ClipboardList size={20} />,
-  ruler: <PenTool size={20} />,
-  compass: <MapPin size={20} />,
-  "test-tube": <Beaker size={20} />,
-  map: <MapPin size={20} />,
-  lightbulb: <Lightbulb size={20} />,
-  "layout-kanban": <Layout size={20} />,
-  presentation: <Presentation size={20} />,
-  users: <Users size={20} />,
-  music: <Music size={20} />,
-  crown: <Crown size={20} />,
-  languages: <Languages size={20} />,
-  code: <Code size={20} />,
-  puzzle: <Puzzle size={20} />,
-  database: <Database size={20} />,
-  trophy: <Star size={20} />,
-  cpu: <Code size={20} />,
-  "bar-chart": <BarChart size={20} />,
-  sigma: <Calculator size={20} />,
-  "clipboard-list": <ClipboardList size={20} />,
-  "check-circle": <CheckCircle size={20} />,
-  book: <BookMarked size={20} />,
-  home: <Home size={20} />,
-  scroll: <Scroll size={20} />,
-  beaker: <Beaker size={20} />,
-  "message-square": <MessageCircle size={20} />,
-};
-
-const planBadges: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  free: { label: "Бесплатно", color: "bg-gray-600", icon: <Zap size={12} /> },
-  edu_basic: { label: "Базовый", color: "bg-blue-600", icon: <Star size={12} /> },
-  edu_pro: { label: "Про", color: "bg-purple-600", icon: <Crown size={12} /> },
-};
-
 type TabType = "notebooks" | "whiteboards" | "editors" | "servers" | "channels";
+
+const tabs = [
+  { id: "notebooks" as TabType, label: "Тетради", icon: <BookOpen size={18} />, toolType: "notebook", color: "blue" },
+  { id: "whiteboards" as TabType, label: "Доски", icon: <PenTool size={18} />, toolType: "whiteboard", color: "green" },
+  { id: "editors" as TabType, label: "Редакторы", icon: <Code size={18} />, toolType: "editor", color: "orange" },
+  { id: "servers" as TabType, label: "Серверы", icon: <Building size={18} />, toolType: null, color: "purple" },
+  { id: "channels" as TabType, label: "Каналы", icon: <MessageCircle size={18} />, toolType: null, color: "cyan" },
+];
 
 export function TemplatesPage() {
   const [, setLocation] = useLocation();
@@ -128,7 +72,10 @@ export function TemplatesPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [hasPremium, setHasPremium] = useState(false);
+  const [userPlan, setUserPlan] = useState<string>("free");
   const [loading, setLoading] = useState(true);
+  const [previewTemplate, setPreviewTemplate] = useState<EducationalToolTemplate | null>(null);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     async function checkPremium() {
@@ -139,6 +86,7 @@ export function TemplatesPage() {
       try {
         const res = await premiumAPI.getUserPremium(String(user.id));
         setHasPremium(res.has_premium);
+        setUserPlan(res.plan_type || "free");
       } catch {
         setHasPremium(false);
       }
@@ -148,10 +96,10 @@ export function TemplatesPage() {
   }, [user?.id, setLocation]);
 
   useEffect(() => {
-    if (hasPremium) {
+    if (user?.id) {
       fetchTemplates();
     }
-  }, [hasPremium]);
+  }, [user?.id]);
 
   async function fetchTemplates() {
     try {
@@ -169,12 +117,36 @@ export function TemplatesPage() {
     }
   }
 
+  async function applyTemplate(template: EducationalToolTemplate) {
+    if (applying) return;
+    setApplying(true);
+    
+    try {
+      const res = await fetch(`/api/templates/educational/${template.slug}/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.channel_id) {
+          setLocation(`/channels?channel=${data.channel_id}`);
+        }
+      } else {
+        console.error("Failed to apply template");
+      }
+    } catch (err) {
+      console.error("Error applying template:", err);
+    } finally {
+      setApplying(false);
+    }
+  }
+
   const getFilteredEducationalTemplates = (toolType: string) => {
     return educationalTemplates
       .filter((t) => t.tool_type === toolType)
-      .filter((t) => 
-        !categoryFilter || t.category === categoryFilter
-      )
+      .filter((t) => !categoryFilter || t.category === categoryFilter)
       .filter((t) =>
         t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -189,14 +161,74 @@ export function TemplatesPage() {
     return Array.from(categories);
   };
 
+  const currentToolType = tabs.find(t => t.id === activeTab)?.toolType || "notebook";
+  const filteredTemplates = useMemo(() => {
+    if (activeTab === "servers" || activeTab === "channels") return [];
+    return getFilteredEducationalTemplates(currentToolType);
+  }, [educationalTemplates, activeTab, categoryFilter, searchQuery, currentToolType]);
+
+  const featuredTemplate = useMemo(() => {
+    return filteredTemplates.find(t => t.required_plan === "free" && t.usage_count > 0) || filteredTemplates[0];
+  }, [filteredTemplates]);
+
+  const templateCounts = useMemo(() => ({
+    notebooks: educationalTemplates.filter(t => t.tool_type === "notebook").length,
+    whiteboards: educationalTemplates.filter(t => t.tool_type === "whiteboard").length,
+    editors: educationalTemplates.filter(t => t.tool_type === "editor").length,
+    servers: guildTemplates.length,
+    channels: channelTemplates.length,
+  }), [educationalTemplates, guildTemplates, channelTemplates]);
+
+  const freeTemplatesCount = useMemo(() => 
+    educationalTemplates.filter(t => t.required_plan === "free").length, 
+    [educationalTemplates]
+  );
+
+  const canAccessTemplate = (plan: string) => {
+    if (plan === "free") return true;
+    if (plan === "edu_basic" && (userPlan === "edu_basic" || userPlan === "edu_pro" || hasPremium)) return true;
+    if (plan === "edu_pro" && (userPlan === "edu_pro" || hasPremium)) return true;
+    return false;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+          <p className="text-gray-400">Загрузка шаблонов...</p>
+        </div>
       </div>
     );
   }
 
+  const premiumBanner = !hasPremium && (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-8 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-2xl"
+    >
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-600/20 rounded-lg">
+            <Crown className="text-purple-400" size={24} />
+          </div>
+          <div>
+            <p className="text-white font-medium">Разблокируйте все шаблоны</p>
+            <p className="text-gray-400 text-sm">Сейчас доступно {freeTemplatesCount} бесплатных шаблонов. Оформите премиум для доступа ко всем 40+</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setLocation("/premium")}
+          className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-medium text-sm whitespace-nowrap"
+        >
+          Улучшить план
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  /* Previously blocked non-premium users entirely - now showing all templates with access control
   if (!hasPremium) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white p-6">
@@ -204,21 +236,39 @@ export function TemplatesPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-800/50 border border-gray-700 rounded-2xl p-10"
+            className="bg-gradient-to-b from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-3xl p-12"
           >
-            <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Lock size={40} className="text-white" />
+            <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-purple-600/30">
+              <Lock size={48} className="text-white" />
             </div>
-            <h1 className="text-3xl font-bold mb-4">Премиум функция</h1>
-            <p className="text-gray-400 mb-8">
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              Премиум функция
+            </h1>
+            <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
               Образовательные шаблоны доступны только для премиум пользователей. 
               Оформите подписку, чтобы получить доступ к тетрадям, доскам и редакторам.
             </p>
+            
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="p-4 bg-blue-600/10 rounded-xl border border-blue-600/20">
+                <BookOpen className="text-blue-400 mx-auto mb-2" size={28} />
+                <p className="text-sm text-gray-300">11 тетрадей</p>
+              </div>
+              <div className="p-4 bg-green-600/10 rounded-xl border border-green-600/20">
+                <PenTool className="text-green-400 mx-auto mb-2" size={28} />
+                <p className="text-sm text-gray-300">12 досок</p>
+              </div>
+              <div className="p-4 bg-orange-600/10 rounded-xl border border-orange-600/20">
+                <Code className="text-orange-400 mx-auto mb-2" size={28} />
+                <p className="text-sm text-gray-300">10 редакторов</p>
+              </div>
+            </div>
+            
             <button
               onClick={() => setLocation("/premium")}
-              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg font-medium transition-all flex items-center gap-2 mx-auto"
+              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-medium text-lg transition-all flex items-center gap-2 mx-auto shadow-lg shadow-purple-600/30"
             >
-              <Crown size={20} />
+              <Crown size={22} />
               Оформить премиум
             </button>
           </motion.div>
@@ -226,36 +276,31 @@ export function TemplatesPage() {
       </div>
     );
   }
-
-  const tabs = [
-    { id: "notebooks" as TabType, label: "Тетради", icon: <BookOpen size={18} />, count: educationalTemplates.filter(t => t.tool_type === "notebook").length },
-    { id: "whiteboards" as TabType, label: "Доски", icon: <PenTool size={18} />, count: educationalTemplates.filter(t => t.tool_type === "whiteboard").length },
-    { id: "editors" as TabType, label: "Редакторы", icon: <Code size={18} />, count: educationalTemplates.filter(t => t.tool_type === "editor").length },
-    { id: "servers" as TabType, label: "Серверы", icon: <Building size={18} />, count: guildTemplates.length },
-    { id: "channels" as TabType, label: "Каналы", icon: <MessageCircle size={18} />, count: channelTemplates.length },
-  ];
+  */
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 text-white">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-blue-600/20 px-4 py-2 rounded-full mb-4">
-            <Layout size={20} className="text-purple-400" />
-            <span className="text-purple-300 font-medium">Образовательные инструменты</span>
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/20 px-4 py-2 rounded-full mb-4">
+            <Sparkles size={18} className="text-purple-400" />
+            <span className="text-purple-300 font-medium text-sm">Образовательная платформа</span>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3">
             Шаблоны и инструменты
           </h1>
-          <p className="text-gray-400 max-w-xl mx-auto">
-            Интерактивные тетради, доски для совместной работы и редакторы для обучения
+          <p className="text-gray-400 max-w-xl mx-auto text-lg">
+            Интерактивные тетради, доски для совместной работы и редакторы кода для обучения
           </p>
         </motion.div>
 
-        <div className="flex flex-wrap gap-2 mb-6 justify-center">
+        {premiumBanner}
+
+        <div className="flex flex-wrap gap-2 mb-8 justify-center">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -263,10 +308,14 @@ export function TemplatesPage() {
                 setActiveTab(tab.id);
                 setCategoryFilter("");
               }}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
                 activeTab === tab.id
-                  ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"
+                  ? tab.color === "blue" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30" :
+                    tab.color === "green" ? "bg-green-600 text-white shadow-lg shadow-green-600/30" :
+                    tab.color === "orange" ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30" :
+                    tab.color === "purple" ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30" :
+                    "bg-cyan-600 text-white shadow-lg shadow-cyan-600/30"
+                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 hover:text-white"
               }`}
             >
               {tab.icon}
@@ -274,91 +323,75 @@ export function TemplatesPage() {
               <span className={`text-xs px-2 py-0.5 rounded-full ${
                 activeTab === tab.id ? "bg-white/20" : "bg-gray-700"
               }`}>
-                {tab.count}
+                {templateCounts[tab.id]}
               </span>
             </button>
           ))}
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex flex-col lg:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
               placeholder="Поиск шаблонов..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:outline-none focus:border-purple-500"
+              className="w-full pl-12 pr-4 py-3.5 bg-gray-800/50 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
             />
           </div>
-
-          {(activeTab === "notebooks" || activeTab === "whiteboards" || activeTab === "editors") && (
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:outline-none focus:border-purple-500"
-            >
-              <option value="">Все категории</option>
-              {getCategoriesForType(activeTab === "notebooks" ? "notebook" : activeTab === "whiteboards" ? "whiteboard" : "editor").map((cat) => (
-                <option key={cat} value={cat}>{categoryLabels[cat] || cat}</option>
-              ))}
-            </select>
-          )}
         </div>
 
+        {(activeTab === "notebooks" || activeTab === "whiteboards" || activeTab === "editors") && (
+          <div className="mb-8">
+            <CategoryFilter
+              categories={getCategoriesForType(currentToolType)}
+              selectedCategory={categoryFilter}
+              onSelect={setCategoryFilter}
+              toolType={currentToolType}
+            />
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
-          {activeTab === "notebooks" && (
+          {(activeTab === "notebooks" || activeTab === "whiteboards" || activeTab === "editors") && (
             <motion.div
-              key="notebooks"
+              key={activeTab}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+              className="space-y-8"
             >
-              {getFilteredEducationalTemplates("notebook").map((template) => (
-                <EducationalTemplateCard key={template.id} template={template} />
-              ))}
-              {getFilteredEducationalTemplates("notebook").length === 0 && (
-                <div className="col-span-full text-center py-12 text-gray-400">
-                  Шаблоны не найдены
-                </div>
+              {featuredTemplate && !categoryFilter && !searchQuery && (
+                <FeaturedTemplateCard
+                  template={featuredTemplate}
+                  onApply={applyTemplate}
+                  userPlan={userPlan}
+                  hasPremium={hasPremium}
+                />
               )}
-            </motion.div>
-          )}
 
-          {activeTab === "whiteboards" && (
-            <motion.div
-              key="whiteboards"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
-              {getFilteredEducationalTemplates("whiteboard").map((template) => (
-                <EducationalTemplateCard key={template.id} template={template} />
-              ))}
-              {getFilteredEducationalTemplates("whiteboard").length === 0 && (
-                <div className="col-span-full text-center py-12 text-gray-400">
-                  Шаблоны не найдены
-                </div>
-              )}
-            </motion.div>
-          )}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredTemplates
+                  .filter(t => t.id !== featuredTemplate?.id || categoryFilter || searchQuery)
+                  .map((template) => (
+                    <TemplateCard
+                      key={template.id}
+                      template={template}
+                      userPlan={userPlan}
+                      onApply={applyTemplate}
+                      onPreview={setPreviewTemplate}
+                    />
+                  ))}
+              </div>
 
-          {activeTab === "editors" && (
-            <motion.div
-              key="editors"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
-              {getFilteredEducationalTemplates("editor").map((template) => (
-                <EducationalTemplateCard key={template.id} template={template} />
-              ))}
-              {getFilteredEducationalTemplates("editor").length === 0 && (
-                <div className="col-span-full text-center py-12 text-gray-400">
-                  Шаблоны не найдены
+              {filteredTemplates.length === 0 && (
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search size={28} className="text-gray-500" />
+                  </div>
+                  <p className="text-gray-400 text-lg">Шаблоны не найдены</p>
+                  <p className="text-gray-500 text-sm mt-1">Попробуйте изменить фильтры или поисковый запрос</p>
                 </div>
               )}
             </motion.div>
@@ -370,7 +403,7 @@ export function TemplatesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+              className="grid md:grid-cols-2 lg:grid-cols-3 gap-5"
             >
               {guildTemplates
                 .filter((t) =>
@@ -381,7 +414,7 @@ export function TemplatesPage() {
                   <GuildTemplateCard key={template.id} template={template} />
                 ))}
               {guildTemplates.length === 0 && (
-                <div className="col-span-full text-center py-12 text-gray-400">
+                <div className="col-span-full text-center py-16 text-gray-400">
                   Шаблоны серверов не найдены
                 </div>
               )}
@@ -394,7 +427,7 @@ export function TemplatesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+              className="grid md:grid-cols-2 lg:grid-cols-3 gap-5"
             >
               {channelTemplates
                 .filter((t) =>
@@ -405,7 +438,7 @@ export function TemplatesPage() {
                   <ChannelTemplateCard key={template.id} template={template} />
                 ))}
               {channelTemplates.length === 0 && (
-                <div className="col-span-full text-center py-12 text-gray-400">
+                <div className="col-span-full text-center py-16 text-gray-400">
                   Шаблоны каналов не найдены
                 </div>
               )}
@@ -413,63 +446,25 @@ export function TemplatesPage() {
           )}
         </AnimatePresence>
       </div>
+
+      <TemplatePreviewModal
+        template={previewTemplate}
+        isOpen={!!previewTemplate}
+        onClose={() => setPreviewTemplate(null)}
+        onApply={applyTemplate}
+        userPlan={userPlan}
+      />
     </div>
   );
 }
 
-function EducationalTemplateCard({ template }: { template: EducationalToolTemplate }) {
-  const plan = planBadges[template.required_plan] || planBadges.free;
-  const icon = iconMap[template.icon] || <FileText size={20} />;
-
-  const typeColors: Record<string, string> = {
-    notebook: "from-blue-600/20 to-cyan-600/20 text-blue-400",
-    whiteboard: "from-green-600/20 to-emerald-600/20 text-green-400",
-    editor: "from-orange-600/20 to-amber-600/20 text-orange-400",
-  };
-
-  const buttonColors: Record<string, string> = {
-    notebook: "bg-blue-600 hover:bg-blue-700",
-    whiteboard: "bg-green-600 hover:bg-green-700",
-    editor: "bg-orange-600 hover:bg-orange-700",
-  };
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-purple-500/50 transition-colors"
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 bg-gradient-to-br ${typeColors[template.tool_type]} rounded-lg`}>
-            {icon}
-          </div>
-          <div>
-            <h3 className="font-semibold text-white">{template.name}</h3>
-            <p className="text-xs text-gray-400">
-              {categoryLabels[template.category] || template.category}
-            </p>
-          </div>
-        </div>
-        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${plan.color}`}>
-          {plan.icon}
-          {plan.label}
-        </span>
-      </div>
-
-      <p className="text-sm text-gray-400 mb-4 line-clamp-2">{template.description}</p>
-
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">{template.usage_count} использований</span>
-        <button className={`flex items-center gap-2 px-4 py-2 ${buttonColors[template.tool_type]} rounded-lg text-sm font-medium transition-colors`}>
-          Использовать
-          <ChevronRight size={14} />
-        </button>
-      </div>
-    </motion.div>
-  );
-}
-
 function GuildTemplateCard({ template }: { template: GuildTemplate }) {
+  const planBadges: Record<string, { label: string; color: string }> = {
+    free: { label: "Бесплатно", color: "bg-gray-600" },
+    edu_basic: { label: "Базовый", color: "bg-blue-600" },
+    edu_pro: { label: "Про", color: "bg-purple-600" },
+  };
+  
   const plan = planBadges[template.required_plan] || planBadges.free;
 
   const categoryIcons: Record<string, React.ReactNode> = {
@@ -486,12 +481,12 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-purple-500/50 transition-colors"
+      whileHover={{ y: -4 }}
+      className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-5 hover:border-purple-500/50 transition-all"
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-600/20 rounded-lg text-purple-400">
+          <div className="p-2.5 bg-purple-600/20 rounded-xl text-purple-400">
             {categoryIcons[template.category] || <Building size={20} />}
           </div>
           <div>
@@ -499,8 +494,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
             <p className="text-xs text-gray-400">{template.usage_count} использований</p>
           </div>
         </div>
-        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${plan.color}`}>
-          {plan.icon}
+        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color} text-white`}>
           {plan.label}
         </span>
       </div>
@@ -510,7 +504,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
       {channels.length > 0 && (
         <div className="mb-4">
           <p className="text-xs text-gray-500 mb-2">Каналы ({channels.length}):</p>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5">
             {channels.slice(0, 5).map((ch, i) => (
               <span key={i} className="px-2 py-1 bg-gray-700/50 rounded text-xs text-gray-300">
                 #{ch.name}
@@ -523,7 +517,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
         </div>
       )}
 
-      <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors">
+      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl font-medium transition-colors">
         Использовать шаблон
         <ChevronRight size={16} />
       </button>
@@ -532,6 +526,12 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
 }
 
 function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
+  const planBadges: Record<string, { label: string; color: string }> = {
+    free: { label: "Бесплатно", color: "bg-gray-600" },
+    edu_basic: { label: "Базовый", color: "bg-blue-600" },
+    edu_pro: { label: "Про", color: "bg-purple-600" },
+  };
+  
   const plan = planBadges[template.required_plan] || planBadges.free;
 
   const typeIcons: Record<string, React.ReactNode> = {
@@ -544,12 +544,12 @@ function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-blue-500/50 transition-colors"
+      whileHover={{ y: -4 }}
+      className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-5 hover:border-cyan-500/50 transition-all"
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-600/20 rounded-lg text-blue-400">
+          <div className="p-2.5 bg-cyan-600/20 rounded-xl text-cyan-400">
             {typeIcons[template.type] || <MessageCircle size={20} />}
           </div>
           <div>
@@ -557,15 +557,14 @@ function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
             <p className="text-xs text-gray-400">{template.type} · {template.usage_count} использований</p>
           </div>
         </div>
-        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${plan.color}`}>
-          {plan.icon}
+        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color} text-white`}>
           {plan.label}
         </span>
       </div>
 
       <p className="text-sm text-gray-400 mb-4">{template.description}</p>
 
-      <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors">
+      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-medium transition-colors">
         Добавить канал
         <ChevronRight size={16} />
       </button>
