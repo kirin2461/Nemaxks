@@ -19,7 +19,7 @@ export default function GiftsPage() {
 
   const { data: inventory = [] } = useQuery({
     queryKey: ['inventory'],
-    queryFn: () => inventoryAPI.getAll(),
+    queryFn: () => inventoryAPI.get(),
   });
 
   const openMutation = useMutation({
@@ -109,7 +109,7 @@ export default function GiftsPage() {
                   {gift.is_opened && gift.item && (
                     <div className="mt-3 p-2 bg-gray-700/50 rounded-lg">
                       <p className="text-sm font-medium">{gift.item.name}</p>
-                      <p className="text-xs text-gray-400 capitalize">{gift.item.item_type}</p>
+                      <p className="text-xs text-gray-400 capitalize">{gift.item.type}</p>
                     </div>
                   )}
 

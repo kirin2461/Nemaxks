@@ -132,6 +132,11 @@ func main() {
         })
 
         r.GET("/", func(c *gin.Context) {
+                // In production with frontend, serve index.html; in dev, return API status
+                if _, err := os.Stat("../frontend/dist/index.html"); err == nil {
+                        c.File("../frontend/dist/index.html")
+                        return
+                }
                 c.JSON(http.StatusOK, gin.H{
                         "status":  "ok",
                         "message": "Nemaks API Server",
@@ -537,6 +542,20 @@ func main() {
         initLicenseModels()
         registerLicenseRoutes(r, authMiddleware(), adminMiddleware())
         go cleanupExpiredLicenses()
+
+        // Serve frontend static files in production
+        if _, err := os.Stat("../frontend/dist"); err == nil {
+                r.Static("/assets", "../frontend/dist/assets")
+                r.Static("/audio", "../frontend/dist/audio")
+                r.Static("/jarvis-audio", "../frontend/dist/jarvis-audio")
+                r.Static("/logos", "../frontend/dist/logos")
+                r.NoRoute(func(c *gin.Context) {
+                        // Serve index.html for SPA routing (except API and WebSocket routes)
+                        if !strings.HasPrefix(c.Request.URL.Path, "/api") && !strings.HasPrefix(c.Request.URL.Path, "/ws") && !strings.HasPrefix(c.Request.URL.Path, "/uploads") {
+                                c.File("../frontend/dist/index.html")
+                        }
+                })
+        }
 
         port := os.Getenv("PORT")
         if port == "" {

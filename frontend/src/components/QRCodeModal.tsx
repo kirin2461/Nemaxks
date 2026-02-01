@@ -83,7 +83,7 @@ export function QRCodeModal({
               </>
             )}
           </button>
-          {navigator.share && (
+          {typeof navigator.share === 'function' && (
             <button
               onClick={handleShare}
               className="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white transition-colors flex items-center justify-center gap-2"

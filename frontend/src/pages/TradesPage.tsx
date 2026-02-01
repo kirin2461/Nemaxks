@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 import { ArrowLeftRight, Check, X, Clock, User, Package } from 'lucide-react';
 import { tradesAPI, Trade } from '../lib/api';
 import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from '../contexts/AuthContext';
+import { useStore } from '../lib/store';
 
 export default function TradesPage() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const user = useStore(state => state.user);
   const [statusFilter, setStatusFilter] = useState<string>('pending');
 
   const { data: trades = [], isLoading } = useQuery({
@@ -76,7 +76,7 @@ export default function TradesPage() {
         <div className="space-y-4">
           {trades.map((trade: Trade) => {
             const status = getStatusBadge(trade.status);
-            const isReceiver = trade.receiver_id === user?.id;
+            const isReceiver = trade.receiver_id === Number(user?.id);
             const canRespond = isReceiver && trade.status === 'pending';
 
             return (

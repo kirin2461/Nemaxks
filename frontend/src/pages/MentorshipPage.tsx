@@ -86,7 +86,7 @@ export default function MentorshipPage() {
                 <Target className="w-4 h-4" />
                 Current Tasks
               </h3>
-              {myMentorship.progress?.map((task: MentorTask & { is_completed?: boolean }) => (
+              {(myMentorship.progress as (MentorTask & { is_completed?: boolean })[])?.map((task) => (
                 <div
                   key={task.id}
                   className={`p-4 rounded-lg ${

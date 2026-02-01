@@ -4,17 +4,9 @@ modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash", "postgresql-16"
 channel = "stable-25_05"
 
 [deployment]
-run = [
-  "sh",
-  "-c",
-  "cd backend && go run cmd/server/main.go & cd frontend && npm run dev",
-]
-build = [
-  "sh",
-  "-c",
-  "cd backend && go build -o server cmd/server/main.go && cd ../frontend && npm install && npm run build",
-]
-deploymentTarget = "cloudrun"
+run = ["bash", "-c", "cd backend && ./nemaks-server"]
+build = ["bash", "-c", "cd frontend && npm run build && cd ../backend && go build -o nemaks-server ."]
+deploymentTarget = "autoscale"
 
 [[ports]]
 localPort = 3000
