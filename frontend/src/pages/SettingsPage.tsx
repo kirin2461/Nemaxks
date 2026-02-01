@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Layout } from '@/components/Layout'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 import { settingsAPI, type Settings as SettingsType } from '@/lib/api'
-import { getLanguage, setLanguage } from '@/lib/i18n'
+import { changeLanguage, languages } from '@/lib/i18n'
 import {
   Bell,
   Shield,
@@ -34,6 +35,7 @@ const defaultSettings: SettingsType = {
 }
 
 export default function SettingsPage() {
+  const { t, i18n } = useTranslation()
   const [settings, setSettings] = useState<SettingsType>(defaultSettings)
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -80,6 +82,11 @@ export default function SettingsPage() {
       ...settings,
       [key]: value,
     })
+  }
+
+  const handleLanguageChange = (lang: string) => {
+    changeLanguage(lang)
+    updateSetting('language', lang)
   }
 
   const SettingToggle = ({
@@ -129,9 +136,9 @@ export default function SettingsPage() {
     <Layout>
       <div className="p-8 max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold gradient-text mb-2">Настройки</h1>
+          <h1 className="text-3xl font-bold gradient-text mb-2">{t('common.settings')}</h1>
           <p className="text-muted-foreground">
-            Управление настройками аккаунта
+            {t('settings.account')}
           </p>
         </div>
 
@@ -140,23 +147,32 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Globe className="w-5 h-5 text-primary" />
-                <CardTitle>Язык / Language</CardTitle>
+                <CardTitle>{t('settings.language')}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <div>
-                <p className="font-medium mb-3">Язык интерфейса</p>
-                <select 
-                  className="input-field"
-                  value={getLanguage()}
-                  onChange={(e) => {
-                    setLanguage(e.target.value as 'ru' | 'en')
-                    window.location.reload()
-                  }}
-                >
-                  <option value="ru">Русский</option>
-                  <option value="en">English</option>
-                </select>
+                <p className="font-medium mb-3">{t('settings.language')}</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      className={cn(
+                        'flex items-center gap-3 p-4 rounded-xl border-2 transition-all',
+                        i18n.language === lang.code
+                          ? 'border-primary bg-primary/10'
+                          : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
+                      )}
+                    >
+                      <span className="text-2xl">{lang.flag}</span>
+                      <span className="font-medium">{lang.name}</span>
+                      {i18n.language === lang.code && (
+                        <Check className="w-5 h-5 text-primary ml-auto" />
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -165,19 +181,19 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-primary" />
-                <CardTitle>Уведомления</CardTitle>
+                <CardTitle>{t('settings.notifications')}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="divide-y divide-border">
               <SettingToggle
-                label="Включить уведомления"
-                description="Получать уведомления о новых сообщениях и упоминаниях"
+                label={t('settings.enableNotifications')}
+                description={t('settings.pushNotifications')}
                 checked={settings.notifications_enabled}
                 onChange={() => toggleSetting('notifications_enabled')}
               />
               <SettingToggle
-                label="Звуковые уведомления"
-                description="Воспроизводить звук при получении уведомлений"
+                label={t('settings.soundEffects')}
+                description={t('settings.messageSound')}
                 checked={settings.sound_enabled}
                 onChange={() => toggleSetting('sound_enabled')}
               />
@@ -188,19 +204,19 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Mic className="w-5 h-5 text-primary" />
-                <CardTitle>Голос и аудио</CardTitle>
+                <CardTitle>{t('voice.call')}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="divide-y divide-border">
               <SettingToggle
-                label="Голосовые сообщения"
-                description="Включить запись и воспроизведение голосовых сообщений"
+                label={t('messages.voiceMessage')}
+                description={t('settings.voiceActivation')}
                 checked={settings.voice_enabled}
                 onChange={() => toggleSetting('voice_enabled')}
               />
               <SettingToggle
-                label="Шумоподавление"
-                description="Уменьшить фоновый шум при записи голоса"
+                label={t('settings.noiseReduction')}
+                description={t('settings.noiseReduction')}
                 checked={settings.noise_reduction}
                 onChange={() => toggleSetting('noise_reduction')}
               />
@@ -211,31 +227,31 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Bot className="w-5 h-5 text-primary" />
-                <CardTitle>Jarvis AI Ассистент</CardTitle>
+                <CardTitle>Jarvis AI</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Настройки AI ассистента
+                {t('jarvis.capabilities')}
               </p>
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium mb-2">Стиль общения</p>
+                  <p className="text-sm font-medium mb-2">{t('jarvis.greeting')}</p>
                   <select 
                     className="input-field"
                     value={settings.jarvis_personality}
                     onChange={(e) => updateSetting('jarvis_personality', e.target.value)}
                   >
-                    <option value="professional">Профессиональный</option>
-                    <option value="friendly">Дружелюбный</option>
-                    <option value="casual">Неформальный</option>
-                    <option value="technical">Технический</option>
+                    <option value="professional">Professional</option>
+                    <option value="friendly">Friendly</option>
+                    <option value="casual">Casual</option>
+                    <option value="technical">Technical</option>
                   </select>
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">Слово активации</p>
+                  <p className="text-sm font-medium mb-2">{t('jarvis.voiceActivated')}</p>
                   <Input
-                    placeholder="Например: Jarvis, Привет ассистент"
+                    placeholder="Jarvis"
                     value={settings.jarvis_wake_word}
                     onChange={(e) => updateSetting('jarvis_wake_word', e.target.value)}
                   />
@@ -243,7 +259,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="mt-6 space-y-4 pt-6 border-t border-border">
-                <h4 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">API Ключи (пользовательские)</h4>
+                <h4 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">API Keys</h4>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm font-medium mb-2">Hugging Face API Key</p>
@@ -253,7 +269,6 @@ export default function SettingsPage() {
                       value={settings.huggingface_key}
                       onChange={(e) => updateSetting('huggingface_key', e.target.value)}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">Используется для Jarvis по умолчанию (бесплатно)</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium mb-2">OpenAI API Key</p>
@@ -274,9 +289,6 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
-                <p className="text-xs text-amber-500/80 italic">
-                  * Jarvis будет использовать ваши ключи, если они указаны.
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -285,32 +297,32 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
-                <CardTitle>Приватность и безопасность</CardTitle>
+                <CardTitle>{t('settings.privacy')}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium mb-2">Видимость профиля</p>
+                  <p className="text-sm font-medium mb-2">{t('common.profile')}</p>
                   <select 
                     className="input-field"
                     value={settings.profile_visibility}
                     onChange={(e) => updateSetting('profile_visibility', e.target.value)}
                   >
-                    <option value="public">Публичный</option>
-                    <option value="friends">Только друзья</option>
-                    <option value="private">Приватный</option>
+                    <option value="public">{t('channels.public')}</option>
+                    <option value="friends">{t('friends.all')}</option>
+                    <option value="private">{t('channels.private')}</option>
                   </select>
                 </div>
                 <div>
-                  <p className="text-sm font-medium mb-2">Кто может писать вам</p>
+                  <p className="text-sm font-medium mb-2">{t('messages.newMessage')}</p>
                   <select 
                     className="input-field"
                     value={settings.message_privacy}
                     onChange={(e) => updateSetting('message_privacy', e.target.value)}
                   >
-                    <option value="everyone">Все</option>
-                    <option value="friends">Только друзья</option>
+                    <option value="everyone">{t('common.all')}</option>
+                    <option value="friends">{t('friends.all')}</option>
                   </select>
                 </div>
               </div>
@@ -321,12 +333,12 @@ export default function SettingsPage() {
             {saved && (
               <div className="flex items-center gap-2 text-green-500">
                 <Check className="w-5 h-5" />
-                <span className="text-sm font-medium">Настройки сохранены!</span>
+                <span className="text-sm font-medium">{t('common.success')}</span>
               </div>
             )}
             <Button onClick={handleSave} loading={loading}>
               <Save className="w-4 h-4" />
-              Сохранить
+              {t('common.save')}
             </Button>
           </div>
         </div>
