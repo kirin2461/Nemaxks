@@ -316,6 +316,12 @@ function App() {
                   <PremiumPage />
                 </Route>
 
+                <Route path="/premium/checkout">
+                  <ProtectedRoute>
+                    <PremiumPage />
+                  </ProtectedRoute>
+                </Route>
+
                 <Route path="/reports">
                   <ProtectedRoute>
                     <ReportsPage />
