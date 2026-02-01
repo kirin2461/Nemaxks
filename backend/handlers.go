@@ -411,7 +411,12 @@ func authMiddleware() gin.HandlerFunc {
                         return
                 }
 
-                c.Set("user_id", claims["user_id"])
+                // Support both "user_id" and "uid" claims
+                if uid, ok := claims["user_id"]; ok {
+                        c.Set("user_id", uid)
+                } else if uid, ok := claims["uid"]; ok {
+                        c.Set("user_id", uid)
+                }
                 c.Next()
         }
 }
@@ -435,7 +440,12 @@ func optionalAuthMiddleware() gin.HandlerFunc {
 
                 if err == nil && token.Valid {
                         if claims, ok := token.Claims.(jwt.MapClaims); ok {
-                                c.Set("user_id", claims["user_id"])
+                                // Support both "user_id" and "uid" claims
+                                if uid, ok := claims["user_id"]; ok {
+                                        c.Set("user_id", uid)
+                                } else if uid, ok := claims["uid"]; ok {
+                                        c.Set("user_id", uid)
+                                }
                         }
                 }
                 c.Next()
