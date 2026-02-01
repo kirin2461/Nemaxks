@@ -91,6 +91,16 @@ func initDB() {
                 return
         }
 
+        // Configure connection pool for serverless Postgres (Neon)
+        sqlDB, err := db.DB()
+        if err != nil {
+                log.Printf("Failed to get DB instance: %v", err)
+                return
+        }
+        sqlDB.SetMaxOpenConns(10)
+        sqlDB.SetMaxIdleConns(5)
+        sqlDB.SetConnMaxLifetime(5 * time.Minute)
+
         db.AutoMigrate(
                 &User{}, &Guild{}, &Channel{}, &Message{}, &Post{},
                 &Friend{}, &FriendRequest{}, &DirectMessage{}, &MessageReaction{}, &Settings{},
