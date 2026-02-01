@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "wouter";
 import { useStore } from "../lib/store";
 import { messagesAPI } from "../lib/api";
 import { Avatar } from "../components/Avatar";
@@ -23,7 +23,8 @@ interface Message {
 }
 
 const DirectMessagesPage: React.FC = () => {
-  const { userId } = useParams<{ userId: string }>();
+  const params = useParams<{ userId: string }>();
+  const userId = params.userId;
   const { user: currentUser } = useStore();
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -174,7 +175,7 @@ const DirectMessagesPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-xl text-gray-400">Loading messages...</div>
+        <div className="text-xl text-gray-400">Загрузка сообщений...</div>
       </div>
     );
   }
@@ -184,7 +185,7 @@ const DirectMessagesPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400">
-            <p>No messages yet. Start a conversation!</p>
+            <p>Сообщений пока нет. Начните диалог!</p>
           </div>
         ) : (
           messages.map((message) => (
@@ -256,7 +257,7 @@ const DirectMessagesPage: React.FC = () => {
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
+            placeholder="Введите сообщение..."
             className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
           />
           <button
