@@ -231,7 +231,37 @@ func CreateLicenseKey(licenseType LicenseType, createdBy uint) (*LicenseKey, err
         return key, nil
 }
 
+// TestLicenseKey - ключ для тестирования (многоразовый)
+const TestLicenseKey = "NEMKS-TEST0-TEST0-TEST0"
+
 func ActivateLicense(userID uint, key string) (*UserLicense, error) {
+        // Тестовый ключ для разработчиков/тестеров - многоразовый
+        if key == TestLicenseKey {
+                now := time.Now()
+                expiresAt := now.AddDate(0, 0, 30) // 30 дней
+                
+                // Проверяем существующую лицензию
+                var existingLicense UserLicense
+                if db.Where("user_id = ?", userID).First(&existingLicense).Error == nil {
+                        existingLicense.ExpiresAt = expiresAt
+                        existingLicense.IsActive = true
+                        db.Save(&existingLicense)
+                        return &existingLicense, nil
+                }
+                
+                userLicense := &UserLicense{
+                        UserID:      userID,
+                        Type:        LicenseMonthly,
+                        ActivatedAt: now,
+                        ExpiresAt:   expiresAt,
+                        IsActive:    true,
+                }
+                if err := db.Create(userLicense).Error; err != nil {
+                        return nil, err
+                }
+                return userLicense, nil
+        }
+        
         var licenseKey LicenseKey
         if err := db.Where("key = ? AND is_used = ?", key, false).First(&licenseKey).Error; err != nil {
                 return nil, fmt.Errorf("invalid or already used license key")

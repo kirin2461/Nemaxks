@@ -89,6 +89,17 @@ func validateLicenseKeyHandler(c *gin.Context) {
                 return
         }
         
+        // Тестовый ключ для разработчиков/тестеров
+        if req.Key == TestLicenseKey {
+                c.JSON(http.StatusOK, gin.H{
+                        "valid":         true,
+                        "type":          "MONTHLY",
+                        "duration_days": 30,
+                        "test_key":      true,
+                })
+                return
+        }
+        
         var licenseKey LicenseKey
         if err := db.Where("key = ?", req.Key).First(&licenseKey).Error; err != nil {
                 c.JSON(http.StatusNotFound, gin.H{"valid": false, "error": "License key not found"})
