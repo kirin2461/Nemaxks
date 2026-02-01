@@ -4,8 +4,8 @@ modules = ["nodejs-20", "go-1.21", "web", "rust-stable", "bash", "postgresql-16"
 channel = "stable-25_05"
 
 [deployment]
-run = ["sh", "-c", "cd backend && PORT=5000 ./nemaks-server"]
-build = ["sh", "-c", "cd frontend && npm install && npm run build && cd ../backend && go build -o ./nemaks-server ."]
+run = ["sh", "-c", "PORT=5000 backend/nemaks-server"]
+build = ["sh", "-c", "(cd frontend && npm install && npm run build) ; (cd backend && go build -o nemaks-server .)"]
 deploymentTarget = "autoscale"
 
 [[ports]]
