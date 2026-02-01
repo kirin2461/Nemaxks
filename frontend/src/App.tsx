@@ -50,6 +50,9 @@ const MentorshipPage = React.lazy(() => import('./pages/MentorshipPage'))
 const TrendingPage = React.lazy(() => import('./pages/TrendingPage'))
 const FraudDashboardPage = React.lazy(() => import('./pages/FraudDashboardPage'))
 const LicenseActivationPage = React.lazy(() => import('./pages/LicenseActivationPage'))
+const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage'))
+const TermsPage = React.lazy(() => import('./pages/TermsPage'))
+const ContactPage = React.lazy(() => import('./pages/ContactPage'))
 
 // Loading component with skeleton animation
 function LoadingScreen() {
@@ -118,6 +121,18 @@ function App() {
 
                 <Route path="/activate">
                   <LicenseActivationPage />
+                </Route>
+
+                <Route path="/privacy">
+                  <PrivacyPage />
+                </Route>
+
+                <Route path="/terms">
+                  <TermsPage />
+                </Route>
+
+                <Route path="/contact">
+                  <ContactPage />
                 </Route>
 
                 <Route path="/auth">

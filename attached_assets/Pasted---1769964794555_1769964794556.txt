@@ -1,0 +1,320 @@
+Отлично! Теперь у меня есть вся информация. Вот финальный план с готовыми текстами документов:
+
+***
+
+# 📋 Финальный План: Privacy, Terms, Contact
+
+## Данные для документов:
+- **Оператор**: Самозанятый Умаров Курбанбек
+- **Telegram поддержка**: @neMaxks (https://t.me/neMaxks)
+- **Email поддержки**: @kirin2461 (Telegram)
+- **Дата вступления в силу**: 01 февраля 2026 г.
+- **Версия документов**: v1.0
+
+***
+
+## 📄 PRIVACY POLICY / ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ
+
+### 🇷🇺 Русская версия (v1.0)
+
+```
+ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ
+Платформа Nemaks
+Дата вступления в силу: 01 февраля 2026 г.
+Версия: 1.0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ОБЩИЕ ПОЛОЖЕНИЯ
+
+1.1. Оператор персональных данных: Самозанятый Умаров Курбанбек (далее — «Оператор»).
+
+1.2. Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей платформы Nemaks.
+
+1.3. Платформа предназначена для лиц, достигших 16 лет. Регистрируясь, вы подтверждаете достижение указанного возраста.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. СОБИРАЕМЫЕ ДАННЫЕ
+
+2.1. Обязательные данные:
+   • Имя пользователя (username)
+   • Пароль (хранится в зашифрованном виде bcrypt)
+
+2.2. Автоматически собираемые данные:
+   • IP-адрес
+   • User-Agent (тип браузера и устройства)
+   • Цифровой отпечаток устройства (для безопасности)
+
+2.3. Опциональные данные:
+   • Данные двухфакторной аутентификации (2FA)
+   • Аватар профиля
+   • Биография (до 500 символов)
+
+2.4. Платёжные данные:
+   • Обрабатываются платёжной системой YooKassa
+   • Nemaks хранит только ID транзакции и статус платежа
+   • Данные банковских карт НЕ хранятся на серверах Nemaks
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. ШИФРОВАНИЕ СООБЩЕНИЙ
+
+3.1. Личные сообщения защищены сквозным шифрованием (E2E) по алгоритму X25519-XSalsa20-Poly1305.
+
+3.2. При E2E шифровании сервер Nemaks НЕ имеет технической возможности прочитать содержимое сообщений.
+
+3.3. Групповые каналы поддерживают опциональное E2E шифрование по выбору администратора канала.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. AI-АССИСТЕНТ JARVIS
+
+4.1. Переписка с AI-ассистентом Jarvis НЕ защищена сквозным шифрованием.
+
+4.2. Данные чатов с Jarvis могут использоваться для улучшения качества ответов.
+
+4.3. Используя Jarvis, вы даёте согласие на обработку данных переписки.
+
+4.4. Не передавайте Jarvis конфиденциальную информацию (пароли, финансовые данные).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. СРОКИ ХРАНЕНИЯ ДАННЫХ
+
+5.1. Данные активных аккаунтов хранятся в течение всего периода использования.
+
+5.2. После удаления аккаунта:
+   • Обычные пользователи: данные удаляются через 45 дней
+   • Пользователи с активной подпиской: через 90 дней
+   
+5.3. При подозрительной активности (мошенничество, нарушения) данные могут храниться до 90 дней для расследования.
+
+5.4. Аудит-логи безопасности хранятся 45 дней.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6. ПЕРЕДАЧА ДАННЫХ ТРЕТЬИМ ЛИЦАМ
+
+6.1. Nemaks передаёт данные следующим партнёрам:
+   • YooKassa — для обработки платежей
+   • LiveKit — для голосовых и видеозвонков
+
+6.2. Nemaks НЕ продаёт персональные данные третьим лицам.
+
+6.3. Данные могут быть предоставлены правоохранительным органам по официальному запросу в соответствии с законодательством РФ.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7. ПРАВА ПОЛЬЗОВАТЕЛЯ
+
+7.1. Вы имеете право:
+   • Запросить удаление своих данных
+   • Запросить экспорт своих данных
+   • Отозвать согласие на обработку данных
+   • Отключить двухфакторную аутентификацию
+
+7.2. Для реализации прав обратитесь: https://t.me/neMaxks
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+8. COOKIES И ТЕХНОЛОГИИ
+
+8.1. Nemaks использует сессионные cookies для поддержания авторизации.
+
+8.2. Сторонние рекламные и аналитические трекеры НЕ используются.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+9. БЕЗОПАСНОСТЬ
+
+9.1. Пароли хранятся с использованием bcrypt хэширования.
+
+9.2. Все соединения защищены протоколом HTTPS/TLS.
+
+9.3. Реализована защита от brute-force атак (блокировка после 5 неудачных попыток на 15 минут).
+
+9.4. Работает автоматическая система обнаружения мошенничества.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+10. ИЗМЕНЕНИЯ ПОЛИТИКИ
+
+10.1. Оператор вправе вносить изменения в настоящую Политику.
+
+10.2. Уведомление об изменениях публикуется за 7 дней до вступления в силу.
+
+10.3. Продолжение использования платформы означает согласие с обновлённой Политикой.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+11. КОНТАКТЫ
+
+По вопросам конфиденциальности обращайтесь:
+Telegram: https://t.me/neMaxks
+Срок ответа: до 48 часов
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+© 2026 Nemaks. Все права защищены.
+```
+
+***
+
+### 🇬🇧 English Version (v1.0)
+
+```
+PRIVACY POLICY
+Nemaks Platform
+Effective Date: February 01, 2026
+Version: 1.0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. GENERAL PROVISIONS
+
+1.1. Data Controller: Self-employed Umarov Kurbanbek (hereinafter — "Operator").
+
+1.2. This Privacy Policy defines the procedure for processing and protecting personal data of Nemaks platform users.
+
+1.3. The platform is intended for persons who have reached 16 years of age. By registering, you confirm that you have reached this age.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. DATA WE COLLECT
+
+2.1. Required data:
+   • Username
+   • Password (stored encrypted with bcrypt)
+
+2.2. Automatically collected data:
+   • IP address
+   • User-Agent (browser and device type)
+   • Device fingerprint (for security)
+
+2.3. Optional data:
+   • Two-factor authentication (2FA) data
+   • Profile avatar
+   • Biography (up to 500 characters)
+
+2.4. Payment data:
+   • Processed by YooKassa payment system
+   • Nemaks only stores transaction ID and payment status
+   • Bank card data is NOT stored on Nemaks servers
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. MESSAGE ENCRYPTION
+
+3.1. Direct messages are protected by end-to-end encryption (E2E) using X25519-XSalsa20-Poly1305 algorithm.
+
+3.2. With E2E encryption, Nemaks server has NO technical ability to read message content.
+
+3.3. Group channels support optional E2E encryption at channel administrator's choice.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. AI ASSISTANT JARVIS
+
+4.1. Conversations with AI assistant Jarvis are NOT protected by end-to-end encryption.
+
+4.2. Jarvis chat data may be used to improve response quality.
+
+4.3. By using Jarvis, you consent to processing of conversation data.
+
+4.4. Do not share confidential information with Jarvis (passwords, financial data).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. DATA RETENTION PERIODS
+
+5.1. Active account data is stored throughout the usage period.
+
+5.2. After account deletion:
+   • Regular users: data deleted after 45 days
+   • Users with active subscription: after 90 days
+   
+5.3. In case of suspicious activity (fraud, violations), data may be retained up to 90 days for investigation.
+
+5.4. Security audit logs are stored for 45 days.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6. DATA SHARING WITH THIRD PARTIES
+
+6.1. Nemaks shares data with the following partners:
+   • YooKassa — for payment processing
+   • LiveKit — for voice and video calls
+
+6.2. Nemaks does NOT sell personal data to third parties.
+
+6.3. Data may be provided to law enforcement upon official request in accordance with Russian Federation legislation.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7. USER RIGHTS
+
+7.1. You have the right to:
+   • Request deletion of your data
+   • Request export of your data
+   • Withdraw consent to data processing
+   • Disable two-factor authentication
+
+7.2. To exercise your rights, contact: https://t.me/neMaxks
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+8. COOKIES AND TECHNOLOGIES
+
+8.1. Nemaks uses session cookies to maintain authorization.
+
+8.2. Third-party advertising and analytics trackers are NOT used.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+9. SECURITY
+
+9.1. Passwords are stored using bcrypt hashing.
+
+9.2. All connections are protected by HTTPS/TLS protocol.
+
+9.3. Brute-force protection is implemented (lockout after 5 failed attempts for 15 minutes).
+
+9.4. Automatic fraud detection system is active.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+10. POLICY CHANGES
+
+10.1. The Operator reserves the right to make changes to this Policy.
+
+10.2. Notice of changes is published 7 days before they take effect.
+
+10.3. Continued use of the platform means acceptance of the updated Policy.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+11. CONTACT
+
+For privacy inquiries:
+Telegram: https://t.me/neMaxks
+Response time: up to 48 hours
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+© 2026 Nemaks. All rights reserved.
+```
+
+***
+
+### 🇨🇳 中文版本 (v1.0)
+
+```
+隐私政策
+Nemaks 平台
+生效日期：2026年2月1日
+版本：1.0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. 一般规定
+
+1.1. 数据控制者：自
