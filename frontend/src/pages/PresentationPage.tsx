@@ -1,38 +1,53 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { MessageSquare, Shield, Zap, Users, Globe, Video, Mic, Star, ArrowRight } from 'lucide-react'
+import { MessageSquare, Shield, Zap, Users, Trophy, Gift, Bot, Gamepad2, ArrowRight, Key, Crown, UserCheck } from 'lucide-react'
 import { Link } from 'wouter'
 
 const features = [
   {
+    icon: <Key className="w-8 h-8 text-amber-400" />,
+    title: "Система лицензий",
+    description: "Гибкие тарифы: месяц (50₽), квартал (125₽), год (600₽). Уникальные ключи NEMKS-XXXXX-XXXXX-XXXXX."
+  },
+  {
     icon: <MessageSquare className="w-8 h-8 text-blue-400" />,
-    title: "Real-time Messaging",
-    description: "Instant messaging with rich media support, reactions, and threaded replies."
+    title: "Сообщения и каналы",
+    description: "Личные сообщения, групповые чаты, гильдии с каналами, реакции и ответы."
   },
   {
-    icon: <Video className="w-8 h-8 text-purple-400" />,
-    title: "Voice & Video Calls",
-    description: "High-quality, low-latency communication with screen sharing and noise suppression."
-  },
-  {
-    icon: <Users className="w-8 h-8 text-green-400" />,
-    title: "Nemaks Общий",
-    description: "Join our global community from day one. Everyone is invited to the conversation."
+    icon: <Bot className="w-8 h-8 text-cyan-400" />,
+    title: "AI-ассистент Jarvis",
+    description: "Умный помощник для ответов на вопросы и выполнения задач прямо в чате."
   },
   {
     icon: <Shield className="w-8 h-8 text-red-400" />,
-    title: "Advanced Security",
-    description: "QR login, end-to-end encryption principles, and robust moderation tools."
+    title: "Безопасность",
+    description: "Двухфакторная аутентификация (2FA), QR-вход, шифрование сообщений, антифрод система."
   },
   {
-    icon: <Star className="w-8 h-8 text-yellow-400" />,
-    title: "Content & Stories",
-    description: "Share your moments with 24-hour stories and rate posts with our 5-star system."
+    icon: <Trophy className="w-8 h-8 text-yellow-400" />,
+    title: "Геймификация",
+    description: "Уровни и XP, достижения, ежедневные награды, испытания, стрики и рейтинги."
   },
   {
-    icon: <Zap className="w-8 h-8 text-cyan-400" />,
-    title: "AI Assistant (Jarvis)",
-    description: "Your personal cosmic assistant to help manage tasks and answer questions."
+    icon: <Gift className="w-8 h-8 text-pink-400" />,
+    title: "Магазин и валюта",
+    description: "Внутренняя валюта (Coins/Gems), магазин предметов, подарки и обмен между игроками."
+  },
+  {
+    icon: <Gamepad2 className="w-8 h-8 text-green-400" />,
+    title: "Мини-игры и квесты",
+    description: "Развлекательные мини-игры, цепочки квестов, кланы и соревнования."
+  },
+  {
+    icon: <Crown className="w-8 h-8 text-purple-400" />,
+    title: "Super Admin панель",
+    description: "Полный контроль платформы: статистика, управление пользователями, безопасность."
+  },
+  {
+    icon: <UserCheck className="w-8 h-8 text-emerald-400" />,
+    title: "Модерация",
+    description: "Система жалоб, бан пользователей и IP, запрещённые слова, аудит-логи."
   }
 ]
 
@@ -90,8 +105,8 @@ export default function PresentationPage() {
             transition={{ delay: 0.2 }}
             className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto"
           >
-            Nemaks — это не просто мессенджер. Это целая вселенная для общения, 
-            стриминга и творчества. Присоединяйтесь к тысячам пользователей уже сегодня.
+            Nemaks — платформа с геймификацией, AI-ассистентом и системой лицензий. 
+            Общайтесь, зарабатывайте достижения и открывайте новые возможности.
           </motion.p>
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
