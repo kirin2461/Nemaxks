@@ -120,7 +120,7 @@ func initDB() {
                 &SubscriptionPlan{}, &SeatPricing{}, &OveragePricing{},
                 &Org{}, &OrgSubscription{}, &OrgEntitlement{}, &OrgMember{}, &ChannelACL{},
                 &StorageOverageDaily{}, &DonationSettings{}, &Donation{}, &PricingChangeLog{},
-                &GuildTemplate{}, &ChannelTemplate{}, &InteractiveBoard{}, &OnlineNotebook{},
+                &GuildTemplate{}, &ChannelTemplate{}, &EducationalToolTemplate{}, &InteractiveBoard{}, &OnlineNotebook{},
                 &JarvisUsage{}, &ManualPayment{}, &GuildMember{},
                 &ModerationCase{}, &ModerationVerdict{}, &ModerationActionLog{},
                 &Appeal{}, &JarvisAudioResponse{}, &JarvisVoiceCommand{}, &Voicemail{}, &JarvisCallSession{},

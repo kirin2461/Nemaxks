@@ -62,6 +62,13 @@ cd frontend && npm run dev -- --host 0.0.0.0 --port 5000
 - Магазин
 - Испытания и стрики
 
+### Образовательные инструменты (Premium)
+- **Тетради**: Математика, Физика, Химия, Биология, История, География, Литература, Конспекты, Подготовка к экзаменам
+- **Доски**: Математическая, Физическая, Химическая, Brainstorming, Канбан, Презентационная, Коллаборативная
+- **Редакторы**: Python IDE, JavaScript/Web, SQL Playground, C++/Java, Arduino, Jupyter, LaTeX, Markdown
+- Планы доступа: free, edu_basic, edu_pro
+- API: `/api/templates/educational`
+
 ### Администрирование
 - Роли: user, moderator, admin, super_admin
 - Super Admin панель: `/admin/super`

@@ -192,11 +192,33 @@ type ChannelTemplate struct {
         UpdatedAt      time.Time `json:"updated_at"`
 }
 
+// EducationalToolTemplate - шаблон образовательного инструмента
+type EducationalToolTemplate struct {
+        ID             int       `gorm:"primaryKey" json:"id"`
+        Slug           string    `gorm:"uniqueIndex" json:"slug"`
+        Name           string    `json:"name"`
+        Description    string    `gorm:"type:text" json:"description"`
+        ToolType       string    `gorm:"size:30;index" json:"tool_type"` // notebook, whiteboard, editor
+        Category       string    `gorm:"size:50;index" json:"category"` // math, physics, chemistry, programming, etc.
+        SubCategory    string    `gorm:"size:50" json:"sub_category"` // более детальная категория
+        Icon           string    `json:"icon"`
+        PreviewImage   string    `json:"preview_image"`
+        ConfigJSON     string    `gorm:"type:jsonb" json:"config_json"` // начальная конфигурация инструмента
+        FeaturesJSON   string    `gorm:"type:jsonb" json:"features_json"` // список доступных функций
+        RequiredPlan   string    `gorm:"size:30" json:"required_plan"` // free, edu_basic, edu_pro
+        IsActive       bool      `gorm:"default:true" json:"is_active"`
+        UsageCount     int       `gorm:"default:0" json:"usage_count"`
+        SortOrder      int       `gorm:"default:0" json:"sort_order"`
+        CreatedAt      time.Time `json:"created_at"`
+        UpdatedAt      time.Time `json:"updated_at"`
+}
+
 // InteractiveBoard - интерактивная доска (Edu Pro)
 type InteractiveBoard struct {
         ID          int        `gorm:"primaryKey" json:"id"`
         ChannelID   int        `gorm:"index" json:"channel_id"`
         OrgID       int        `gorm:"index" json:"org_id"`
+        TemplateID  *int       `gorm:"index" json:"template_id"` // ссылка на шаблон
         Name        string     `json:"name"`
         StateJSON   string     `gorm:"type:jsonb" json:"state_json"` // board state
         IsPersisted bool       `gorm:"default:false" json:"is_persisted"` // true for Edu Pro
@@ -212,6 +234,7 @@ type OnlineNotebook struct {
         ChannelID   int        `gorm:"index" json:"channel_id"`
         OrgID       int        `gorm:"index" json:"org_id"`
         UserID      int        `gorm:"index" json:"user_id"`
+        TemplateID  *int       `gorm:"index" json:"template_id"` // ссылка на шаблон
         Name        string     `json:"name"`
         ContentJSON string     `gorm:"type:jsonb" json:"content_json"`
         IsPersisted bool       `gorm:"default:false" json:"is_persisted"`

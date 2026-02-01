@@ -46,6 +46,9 @@ func setupOrgBillingRoutes(r *gin.Engine, auth gin.HandlerFunc) {
                 templates.GET("/channels", getChannelTemplatesHandler)
                 templates.POST("/guilds/:slug/apply", auth, applyGuildTemplateHandler)
                 templates.POST("/channels/:slug/apply", auth, applyChannelTemplateHandler)
+                templates.GET("/educational", getEducationalToolTemplatesHandler)
+                templates.GET("/educational/:slug", getEducationalToolTemplateHandler)
+                templates.POST("/educational/:slug/apply", auth, applyEducationalToolTemplateHandler)
         }
 
         donations := r.Group("/api/donations")
@@ -938,4 +941,154 @@ func parseInt(s string) int {
         var result int
         fmt.Sscanf(s, "%d", &result)
         return result
+}
+
+// Educational Tool Templates Handlers
+
+func getEducationalToolTemplatesHandler(c *gin.Context) {
+        toolType := c.Query("tool_type")
+        category := c.Query("category")
+        requiredPlan := c.Query("plan")
+
+        query := db.Model(&EducationalToolTemplate{}).Where("is_active = true")
+
+        if toolType != "" {
+                query = query.Where("tool_type = ?", toolType)
+        }
+        if category != "" {
+                query = query.Where("category = ?", category)
+        }
+        if requiredPlan != "" {
+                query = query.Where("required_plan = ? OR required_plan = 'free'", requiredPlan)
+        }
+
+        var templates []EducationalToolTemplate
+        query.Order("sort_order ASC, usage_count DESC").Find(&templates)
+
+        c.JSON(http.StatusOK, templates)
+}
+
+func getEducationalToolTemplateHandler(c *gin.Context) {
+        slug := c.Param("slug")
+
+        var template EducationalToolTemplate
+        if err := db.Where("slug = ? AND is_active = true", slug).First(&template).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Шаблон не найден"})
+                return
+        }
+
+        c.JSON(http.StatusOK, template)
+}
+
+func applyEducationalToolTemplateHandler(c *gin.Context) {
+        userID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизован"})
+                return
+        }
+
+        slug := c.Param("slug")
+
+        var template EducationalToolTemplate
+        if err := db.Where("slug = ? AND is_active = true", slug).First(&template).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Шаблон не найден"})
+                return
+        }
+
+        var req struct {
+                ChannelID int    `json:"channel_id"`
+                OrgID     *int   `json:"org_id"`
+                Name      string `json:"name"`
+        }
+        if err := c.ShouldBindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные"})
+                return
+        }
+
+        if template.RequiredPlan != "free" {
+                var hasPremium bool
+                var premium UserPremium
+                if err := db.Where("user_id = ? AND status = 'active'", userID).First(&premium).Error; err == nil {
+                        hasPremium = true
+                }
+                if !hasPremium && req.OrgID != nil {
+                        var sub OrgSubscription
+                        if err := db.Where("org_id = ? AND status = 'active'", *req.OrgID).First(&sub).Error; err == nil {
+                                hasPremium = true
+                        }
+                }
+                if !hasPremium {
+                        c.JSON(http.StatusForbidden, gin.H{"error": "Требуется премиум подписка для этого шаблона"})
+                        return
+                }
+        }
+
+        db.Model(&template).UpdateColumn("usage_count", template.UsageCount+1)
+
+        name := req.Name
+        if name == "" {
+                name = template.Name
+        }
+
+        templateID := template.ID
+
+        switch template.ToolType {
+        case "notebook":
+                notebook := OnlineNotebook{
+                        ChannelID:   req.ChannelID,
+                        UserID:      int(userID),
+                        TemplateID:  &templateID,
+                        Name:        name,
+                        ContentJSON: template.ConfigJSON,
+                        IsPersisted: template.RequiredPlan != "free",
+                        CreatedAt:   time.Now(),
+                        UpdatedAt:   time.Now(),
+                }
+                if req.OrgID != nil {
+                        notebook.OrgID = *req.OrgID
+                }
+                if err := db.Create(&notebook).Error; err != nil {
+                        c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось создать тетрадь"})
+                        return
+                }
+                c.JSON(http.StatusCreated, gin.H{
+                        "type": "notebook",
+                        "id":   notebook.ID,
+                        "data": notebook,
+                })
+
+        case "whiteboard":
+                board := InteractiveBoard{
+                        ChannelID:   req.ChannelID,
+                        TemplateID:  &templateID,
+                        Name:        name,
+                        StateJSON:   template.ConfigJSON,
+                        IsPersisted: template.RequiredPlan != "free",
+                        CreatedBy:   int(userID),
+                        CreatedAt:   time.Now(),
+                        UpdatedAt:   time.Now(),
+                }
+                if req.OrgID != nil {
+                        board.OrgID = *req.OrgID
+                }
+                if err := db.Create(&board).Error; err != nil {
+                        c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось создать доску"})
+                        return
+                }
+                c.JSON(http.StatusCreated, gin.H{
+                        "type": "whiteboard",
+                        "id":   board.ID,
+                        "data": board,
+                })
+
+        case "editor":
+                c.JSON(http.StatusOK, gin.H{
+                        "type":     "editor",
+                        "template": template,
+                        "config":   template.ConfigJSON,
+                })
+
+        default:
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Неизвестный тип инструмента"})
+        }
 }
