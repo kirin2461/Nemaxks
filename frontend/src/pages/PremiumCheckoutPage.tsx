@@ -7,14 +7,19 @@ import {
   Loader2, AlertCircle, Sparkles, Clock, Tag
 } from "lucide-react";
 
-interface PremiumPlan {
+interface SubscriptionPlan {
   id: number;
   slug: string;
   name: string;
   description: string;
-  price_rub: number;
-  billing_cycle: string;
-  features_json: string;
+  base_price_rub: number;
+  video_retention_days: number;
+  messages_retention_days: number;
+  jarvis_daily_limit: number;
+  boards_persist_flag: boolean;
+  overage_storage_enabled: boolean;
+  traffic_reports_enabled: boolean;
+  is_active: boolean;
 }
 
 interface PromoValidation {
@@ -30,7 +35,7 @@ export default function PremiumCheckoutPage() {
   const searchString = useSearch();
   const { user, isAuthenticated } = useStore();
   
-  const [plan, setPlan] = useState<PremiumPlan | null>(null);
+  const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,10 +64,10 @@ export default function PremiumCheckoutPage() {
     }
     
     try {
-      const response = await fetch("/api/premium/plans");
+      const response = await fetch("/api/subscription-plans");
       if (response.ok) {
         const plans = await response.json();
-        const foundPlan = plans.find((p: PremiumPlan) => p.slug === planSlug);
+        const foundPlan = plans.find((p: SubscriptionPlan) => p.slug === planSlug);
         if (foundPlan) {
           setPlan(foundPlan);
         } else {
@@ -133,7 +138,7 @@ export default function PremiumCheckoutPage() {
 
   const getFinalPrice = () => {
     if (!plan) return 0;
-    let price = plan.price_rub;
+    let price = plan.base_price_rub;
     if (promoValidation?.valid) {
       if (promoValidation.discount_percent) {
         price = price * (1 - promoValidation.discount_percent / 100);
@@ -144,13 +149,28 @@ export default function PremiumCheckoutPage() {
     return Math.max(0, price);
   };
 
-  const getFeatures = () => {
-    if (!plan?.features_json) return [];
-    try {
-      return JSON.parse(plan.features_json);
-    } catch {
-      return [];
+  const getFeatures = (): string[] => {
+    if (!plan) return [];
+    const features: string[] = [];
+    if (plan.jarvis_daily_limit > 0) {
+      features.push(`${plan.jarvis_daily_limit} запросов Jarvis AI в день`);
     }
+    if (plan.boards_persist_flag) {
+      features.push("Постоянное хранение досок");
+    }
+    if (plan.video_retention_days > 0) {
+      features.push(`${plan.video_retention_days} дней хранения видео`);
+    }
+    if (plan.messages_retention_days > 0) {
+      features.push(`${plan.messages_retention_days} дней хранения сообщений`);
+    }
+    if (plan.overage_storage_enabled) {
+      features.push("Расширенное хранилище");
+    }
+    if (plan.traffic_reports_enabled) {
+      features.push("Отчёты по трафику");
+    }
+    return features;
   };
 
   if (loading) {
@@ -221,11 +241,7 @@ export default function PremiumCheckoutPage() {
               <div className="border-t border-gray-700 pt-4">
                 <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
                   <Clock size={16} />
-                  <span>
-                    {plan?.billing_cycle === "monthly" && "Ежемесячная подписка"}
-                    {plan?.billing_cycle === "quarterly" && "Квартальная подписка"}
-                    {plan?.billing_cycle === "annual" && "Годовая подписка"}
-                  </span>
+                  <span>Ежемесячная подписка</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-400 text-sm">
                   <Shield size={16} />
@@ -322,12 +338,12 @@ export default function PremiumCheckoutPage() {
               <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-400">Стоимость плана</span>
-                  <span className="text-white">{plan?.price_rub} ₽</span>
+                  <span className="text-white">{plan?.base_price_rub} ₽</span>
                 </div>
                 {promoValidation?.valid && (
                   <div className="flex justify-between items-center mb-2 text-green-400">
                     <span>Скидка по промокоду</span>
-                    <span>-{plan!.price_rub - finalPrice} ₽</span>
+                    <span>-{plan!.base_price_rub - finalPrice} ₽</span>
                   </div>
                 )}
                 <div className="border-t border-gray-700 pt-3 mt-3">

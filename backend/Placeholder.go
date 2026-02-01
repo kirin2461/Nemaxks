@@ -1002,7 +1002,7 @@ func checkoutPremiumHandler(c *gin.Context) {
                 return
         }
         
-        var plan PremiumPlan
+        var plan SubscriptionPlan
         if req.PlanSlug != "" {
                 if db.Where("slug = ?", req.PlanSlug).First(&plan).RowsAffected == 0 {
                         c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
@@ -1013,15 +1013,15 @@ func checkoutPremiumHandler(c *gin.Context) {
                 return
         }
         
-        finalAmount := plan.PriceRub
+        finalAmount := plan.BasePriceRub
         var discountRub float64
         var promoCodeID *uint
         
         if req.PromoCode != "" {
-                discount, promo, _ := applyPromoCode(req.PromoCode, uint(req.PlanID), uid)
+                discount, promo, _ := applyPromoCode(req.PromoCode, uint(plan.ID), uid)
                 if promo != nil {
                         discountRub = discount
-                        finalAmount = plan.PriceRub - discount
+                        finalAmount = plan.BasePriceRub - discount
                         promoCodeID = &promo.ID
                         if finalAmount < 0 {
                                 finalAmount = 0
@@ -1031,24 +1031,19 @@ func checkoutPremiumHandler(c *gin.Context) {
         
         transaction := PremiumTransaction{
                 UserID:          uid,
-                PlanID:          uint(req.PlanID),
+                PlanID:          uint(plan.ID),
                 AmountRub:       finalAmount,
                 DiscountRub:     discountRub,
                 PromoCodeID:     promoCodeID,
                 Status:          "pending",
                 PaymentProvider: "yookassa",
-                Description:     "Premium subscription: " + plan.Name,
+                Description:     "Подписка: " + plan.Name,
         }
         db.Create(&transaction)
         
         if finalAmount == 0 && promoCodeID != nil {
                 now := time.Now()
-                periodEnd := now.AddDate(0, 1, 0)
-                if plan.BillingCycle == "quarterly" {
-                        periodEnd = now.AddDate(0, 3, 0)
-                } else if plan.BillingCycle == "annual" {
-                        periodEnd = now.AddDate(1, 0, 0)
-                }
+                periodEnd := now.AddDate(0, 1, 0) // Monthly by default
                 
                 db.Model(&transaction).Updates(map[string]interface{}{
                         "status":       "succeeded",
@@ -1057,7 +1052,7 @@ func checkoutPremiumHandler(c *gin.Context) {
                 
                 sub := PremiumSubscription{
                         UserID:             uid,
-                        PlanID:             uint(req.PlanID),
+                        PlanID:             uint(plan.ID),
                         Status:             "active",
                         CurrentPeriodStart: now,
                         CurrentPeriodEnd:   periodEnd,
@@ -1128,7 +1123,7 @@ func checkoutPremiumHandler(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
                 "payment_id":       transaction.ID,
                 "confirmation_url": payment.Confirmation.ConfirmationURL,
-                "original_price":   plan.PriceRub,
+                "original_price":   plan.BasePriceRub,
                 "discount":         discountRub,
                 "final_price":      finalAmount,
         })
