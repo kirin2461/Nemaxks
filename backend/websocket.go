@@ -473,9 +473,13 @@ func handleWSConnection(c *gin.Context) {
 
         uid, ok := (*claims)["user_id"].(float64)
         if !ok {
-                log.Println("WebSocket connection rejected: user_id not in claims")
-                c.AbortWithStatus(401)
-                return
+                // Fallback to "uid" claim (used by enhanced JWT)
+                uid, ok = (*claims)["uid"].(float64)
+                if !ok {
+                        log.Println("WebSocket connection rejected: user_id not in claims")
+                        c.AbortWithStatus(401)
+                        return
+                }
         }
 
         userID = strconv.Itoa(int(uid))
