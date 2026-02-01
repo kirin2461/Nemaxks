@@ -125,7 +125,7 @@ func getSuperAdminUsersHandler(c *gin.Context) {
                 db.Model(&Ban{}).Where("user_id = ?", u.ID).Count(&banCount)
 
                 var twoFACount int64
-                db.Model(&TwoFactorAuth{}).Where("user_id = ? AND is_enabled = ?", u.ID, true).Count(&twoFACount)
+                db.Model(&TwoFactorAuth{}).Where("user_id = ? AND enabled = ?", u.ID, true).Count(&twoFACount)
 
                 usersWithStatus = append(usersWithStatus, UserWithStatus{
                         User:     u,
@@ -163,11 +163,11 @@ func getUserDetailHandler(c *gin.Context) {
 
         var has2FA bool
         var twoFACount int64
-        db.Model(&TwoFactorAuth{}).Where("user_id = ? AND is_enabled = ?", userID, true).Count(&twoFACount)
+        db.Model(&TwoFactorAuth{}).Where("user_id = ? AND enabled = ?", userID, true).Count(&twoFACount)
         has2FA = twoFACount > 0
 
         var sessions []UserSession
-        db.Where("user_id = ? AND is_active = ?", userID, true).Order("last_activity DESC").Limit(10).Find(&sessions)
+        db.Where("user_id = ? AND is_active = ?", userID, true).Order("last_seen_at DESC").Limit(10).Find(&sessions)
 
         var recentBans []BanHistory
         db.Where("user_id = ?", userID).Order("created_at DESC").Limit(5).Find(&recentBans)
@@ -194,7 +194,7 @@ func getUserSessionsHandler(c *gin.Context) {
         }
 
         var sessions []UserSession
-        db.Where("user_id = ?", userID).Order("last_activity DESC").Find(&sessions)
+        db.Where("user_id = ?", userID).Order("last_seen_at DESC").Find(&sessions)
 
         c.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }

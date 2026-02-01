@@ -738,7 +738,7 @@ export default function SuperAdminPage() {
                 <div className="bg-card rounded-lg p-6">
                   <h3 className="text-lg font-semibold mb-4">Top JARVIS Users</h3>
                   <div className="space-y-2">
-                    {jarvisStats.top_users.map((u, i) => (
+                    {(jarvisStats.top_users || []).map((u, i) => (
                       <div key={u.user_id} className="flex items-center justify-between p-3 bg-accent rounded">
                         <div className="flex items-center gap-3">
                           <span className="w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-sm font-bold">

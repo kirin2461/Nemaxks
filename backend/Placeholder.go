@@ -818,7 +818,7 @@ func getUserStatsHandler(c *gin.Context) {
         db.Model(&Post{}).Where("author_id = ?", targetID).Count(&postsCount)
         
         // Count friends (accepted friend requests in either direction)
-        db.Model(&FriendRequest{}).Where("(from_user_id = ? OR to_user_id = ?) AND status = ?", targetID, targetID, "accepted").Count(&friendsCount)
+        db.Model(&FriendRequest{}).Where("(requester_id = ? OR addressee_id = ?) AND status = ?", targetID, targetID, "accepted").Count(&friendsCount)
         
         c.JSON(http.StatusOK, gin.H{
                 "followers_count": followersCount,
