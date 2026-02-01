@@ -310,7 +310,7 @@ func getPlatformStatsHandler(c *gin.Context) {
         db.Model(&User{}).Count(&userCount)
         db.Model(&Channel{}).Count(&channelCount)
         db.Model(&Message{}).Count(&messageCount)
-        db.Model(&User{}).Where("is_online = ?", true).Count(&onlineCount)
+        db.Model(&User{}).Where("last_seen > NOW() - INTERVAL '5 minutes'").Count(&onlineCount)
 
         var activeStreams int64 = 0
 
