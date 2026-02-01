@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'wouter'
+import { useTranslation } from 'react-i18next'
 import { Layout } from '@/components/Layout'
 import { useStore } from '@/lib/store'
-import { Users, Hash, Activity, TrendingUp, MessageSquare, Wifi, Eye, Radio } from 'lucide-react'
+import { Users, Hash, Activity, TrendingUp, MessageSquare, Wifi, Eye, Radio, Sparkles, Rss, Crown, UserPlus, Video, Phone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { friendsAPI } from '@/lib/api'
 
@@ -24,7 +26,8 @@ interface LiveStream {
 }
 
 export default function DashboardPage() {
-  const { user, isDemoMode, conversations } = useStore()
+  const { t } = useTranslation()
+  const { user, isDemoMode, conversations, liteMode } = useStore()
   const [platformStats, setPlatformStats] = useState<PlatformStats>({
     totalUsers: 0,
     onlineUsers: 0,
@@ -209,6 +212,51 @@ export default function DashboardPage() {
             )
           })}
         </div>
+
+        {/* Quick access for lite mode - shows hidden features */}
+        {liteMode && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-4 text-muted-foreground">{t('common.more')}</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <Link href="/feed">
+                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                  <Rss className="w-6 h-6 mx-auto mb-2 text-blue-500" />
+                  <span className="text-sm">{t('nav.feed')}</span>
+                </div>
+              </Link>
+              <Link href="/jarvis">
+                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                  <Sparkles className="w-6 h-6 mx-auto mb-2 text-purple-500" />
+                  <span className="text-sm">{t('nav.jarvis')}</span>
+                </div>
+              </Link>
+              <Link href="/video">
+                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                  <Video className="w-6 h-6 mx-auto mb-2 text-red-500" />
+                  <span className="text-sm">{t('nav.video')}</span>
+                </div>
+              </Link>
+              <Link href="/call">
+                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                  <Phone className="w-6 h-6 mx-auto mb-2 text-green-500" />
+                  <span className="text-sm">{t('nav.calls')}</span>
+                </div>
+              </Link>
+              <Link href="/premium">
+                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                  <Crown className="w-6 h-6 mx-auto mb-2 text-yellow-500" />
+                  <span className="text-sm">{t('nav.premium')}</span>
+                </div>
+              </Link>
+              <Link href="/invite">
+                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                  <UserPlus className="w-6 h-6 mx-auto mb-2 text-cyan-500" />
+                  <span className="text-sm">{t('nav.invite')}</span>
+                </div>
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent activity */}

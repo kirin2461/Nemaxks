@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'wouter'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '@/components/Layout'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card'
@@ -16,6 +17,7 @@ import {
   Save,
   Check,
   Zap,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -348,6 +350,21 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Lite mode: Quick access to reports */}
+          {liteMode && (
+            <Link href="/reports">
+              <Card className="cursor-pointer hover:bg-accent/10 transition-colors">
+                <CardContent className="flex items-center gap-3 py-4">
+                  <FileText className="w-6 h-6 text-primary" />
+                  <div>
+                    <p className="font-medium">{t('nav.reports')}</p>
+                    <p className="text-sm text-muted-foreground">{t('admin.reports')}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
 
           <div className="flex items-center justify-end gap-3">
             {saved && (

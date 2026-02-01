@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useLocation } from 'wouter'
+import { useParams, useLocation, Link } from 'wouter'
+import { useTranslation } from 'react-i18next'
 import { Layout } from '@/components/Layout'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card'
 import { Avatar } from '@/components/Avatar'
@@ -8,13 +9,14 @@ import { Input, Textarea } from '@/components/Input'
 import { TelegramLink } from '@/components/TelegramLink'
 import { useStore } from '@/lib/store'
 import { userAPI, UserProfile, UserStats } from '@/lib/api'
-import { Edit, Save, X, Upload, UserPlus, UserMinus, Users, Crown, Heart } from 'lucide-react'
+import { Edit, Save, X, Upload, UserPlus, UserMinus, Users, Crown, Heart, Share2 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 export default function ProfilePage() {
+  const { t } = useTranslation()
   const { userId } = useParams<{ userId?: string }>()
   const [, navigate] = useLocation()
-  const { user, updateProfile } = useStore()
+  const { user, updateProfile, liteMode } = useStore()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [subscribeLoading, setSubscribeLoading] = useState(false)
@@ -297,6 +299,36 @@ export default function ProfilePage() {
             </div>
           </div>
         </Card>
+
+        {/* Lite mode quick actions */}
+        {liteMode && isOwnProfile && (
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <Link href="/invite">
+              <Card className="cursor-pointer hover:bg-accent/10 transition-colors">
+                <CardContent className="flex items-center gap-3 py-4">
+                  <Share2 className="w-6 h-6 text-primary" />
+                  <div>
+                    <p className="font-medium">{t('nav.invite')}</p>
+                    <p className="text-sm text-muted-foreground">{t('channels.inviteFriends')}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/premium">
+              <Card className="cursor-pointer hover:bg-accent/10 transition-colors">
+                <CardContent className="flex items-center gap-3 py-4">
+                  <Crown className="w-6 h-6 text-yellow-500" />
+                  <div>
+                    <p className="font-medium">{t('nav.premium')}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {hasPremium ? premiumInfo?.plan_name : t('premium.upgrade')}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
