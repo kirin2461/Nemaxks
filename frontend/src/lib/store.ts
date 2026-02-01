@@ -80,7 +80,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   register: async (username, password) => {
     try {
-      const response = await authAPI.register(username, '', password)
+      const response = await authAPI.register(username, password)
       if (response && response.token) {
         localStorage.setItem('token', response.token)
         set({ user: response.user, isAuthenticated: true, isDemoMode: false })

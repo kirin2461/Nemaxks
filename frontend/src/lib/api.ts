@@ -94,10 +94,10 @@ export const authAPI = {
       return res;
     }),
 
-  register: (username: string, email: string, password: string) =>
+  register: (username: string, password: string) =>
     request<{ user: User; token: string; message: string }>("/auth/register", {
       method: "POST",
-      data: { username, email, password },
+      data: { username, password },
     }).then((res) => {
       if (res.token) {
         localStorage.setItem("token", res.token);
@@ -614,9 +614,9 @@ export interface SuperAdminStats {
 export interface UserWithStatus {
   id: number;
   username: string;
-  email: string;
+  email?: string;
   role: string;
-  avatar: string;
+  avatar?: string;
   created_at: string;
   last_seen: string;
   is_banned: boolean;
@@ -1161,7 +1161,6 @@ export interface Settings {
 export interface Friend {
   id: string;
   username: string;
-  email: string;
   avatar?: string;
   status: "online" | "away" | "offline";
   bio?: string;
