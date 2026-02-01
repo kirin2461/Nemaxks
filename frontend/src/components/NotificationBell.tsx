@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Bell, Check, Trash2, Settings, X, ExternalLink } from 'lucide-react'
 import { notificationsAPI, Notification, getNotificationTypeInfo, formatNotificationTime } from '../lib/notificationsApi'
-import { useNavigate } from 'react-router-dom'
+import { useLocation } from 'wouter'
 
 interface NotificationBellProps {
   className?: string
@@ -13,7 +13,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const navigate = useNavigate()
+  const [, setLocation] = useLocation()
 
   useEffect(() => {
     loadUnreadCount()
@@ -117,7 +117,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
     }
 
     if (notification.action_url) {
-      navigate(notification.action_url)
+      setLocation(notification.action_url)
       setIsOpen(false)
     }
   }
@@ -152,7 +152,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
               )}
               <button
                 onClick={() => {
-                  navigate('/notifications/settings')
+                  setLocation('/notifications/settings')
                   setIsOpen(false)
                 }}
                 className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
@@ -249,7 +249,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
             <div className="p-3 border-t border-white/10">
               <button
                 onClick={() => {
-                  navigate('/notifications')
+                  setLocation('/notifications')
                   setIsOpen(false)
                 }}
                 className="w-full py-2 text-center text-sm text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded-lg transition-colors flex items-center justify-center gap-2"

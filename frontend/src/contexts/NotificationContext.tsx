@@ -267,8 +267,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           })
           addNotification({
             type: 'call',
-            title: 'Incoming Call',
-            message: `${data.callerName || 'Someone'} is calling you`,
+            title: 'Входящий звонок',
+            message: `${data.callerName || 'Кто-то'} звонит вам`,
             username: data.callerName
           })
         }
@@ -288,8 +288,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           }
           addNotification({
             type: 'system',
-            title: 'Call Declined',
-            message: 'The call was declined'
+            title: 'Звонок отклонён',
+            message: 'Звонок был отклонён'
           })
         }
         break
@@ -325,8 +325,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
             activeCallIdRef.current = null
             addNotification({
               type: 'system',
-              title: 'Call Cancelled',
-              message: 'The caller hung up'
+              title: 'Звонок отменён',
+              message: 'Звонящий положил трубку'
             })
           }
         }
