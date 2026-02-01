@@ -152,12 +152,29 @@ export default function VideoCallPage() {
   }, [userIdFromRoute, friends])
 
   useEffect(() => {
-    if (remoteVideoRef.current && remoteVideoStream) {
-      console.log('[Video Debug] Applying remote video stream to element')
-      remoteVideoRef.current.srcObject = remoteVideoStream
-      remoteVideoRef.current.play().catch(e => console.log('Video play error:', e))
+    if (!remoteVideoStream) return
+    
+    const applyStream = () => {
+      if (remoteVideoRef.current) {
+        console.log('[Video Debug] Applying remote video stream to element')
+        remoteVideoRef.current.srcObject = remoteVideoStream
+        remoteVideoRef.current.play().catch(e => console.log('Video play error:', e))
+        return true
+      }
+      return false
     }
-  }, [remoteVideoStream])
+    
+    if (!applyStream()) {
+      console.log('[Video Debug] Video ref not ready, will retry...')
+      const retryInterval = setInterval(() => {
+        if (applyStream()) {
+          clearInterval(retryInterval)
+        }
+      }, 100)
+      
+      return () => clearInterval(retryInterval)
+    }
+  }, [remoteVideoStream, callState])
 
   useEffect(() => {
     if (shouldAccept && wsConnected && !pendingCallProcessed.current) {
