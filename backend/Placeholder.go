@@ -982,11 +982,17 @@ func checkoutPremiumHandler(c *gin.Context) {
         uid := uint(userID.(float64))
         
         var req struct {
-                PlanID    int    `json:"plan_id" binding:"required"`
+                PlanID    int    `json:"plan_id"`
+                PlanSlug  string `json:"plan_slug"`
                 PromoCode string `json:"promo_code"`
         }
         if err := c.BindJSON(&req); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+        
+        if req.PlanID == 0 && req.PlanSlug == "" {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "plan_id or plan_slug required"})
                 return
         }
         
@@ -997,7 +1003,12 @@ func checkoutPremiumHandler(c *gin.Context) {
         }
         
         var plan PremiumPlan
-        if db.First(&plan, req.PlanID).RowsAffected == 0 {
+        if req.PlanSlug != "" {
+                if db.Where("slug = ?", req.PlanSlug).First(&plan).RowsAffected == 0 {
+                        c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
+                        return
+                }
+        } else if db.First(&plan, req.PlanID).RowsAffected == 0 {
                 c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
                 return
         }

@@ -31,6 +31,7 @@ const JoinPage = React.lazy(() => import('./pages/JoinPage'))
 const ServerJoinPage = React.lazy(() => import('./pages/ServerJoinPage'))
 const SupportPage = React.lazy(() => import('./pages/SupportPage'))
 const PremiumPage = React.lazy(() => import('./pages/PremiumPage'))
+const PremiumCheckoutPage = React.lazy(() => import('./pages/PremiumCheckoutPage'))
 const ReportsPage = React.lazy(() => import('./pages/ReportsPage'))
 const TemplatesPage = React.lazy(() => import('./pages/TemplatesPage'))
 const SuperAdminPage = React.lazy(() => import('./pages/SuperAdminPage'))
@@ -318,7 +319,7 @@ function App() {
 
                 <Route path="/premium/checkout">
                   <ProtectedRoute>
-                    <PremiumPage />
+                    <PremiumCheckoutPage />
                   </ProtectedRoute>
                 </Route>
 
