@@ -112,7 +112,7 @@ export default function ChannelsPage() {
   }>({ isOpen: false, title: '', message: '', onConfirm: () => {} })
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
-  const [typingUsers, setTypingUsers] = useState<Map<string, { username: string; timestamp: number }>>(new Map())
+  const [typingUsers, setTypingUsers] = useState<Map<string, { username: string; timestamp: number; status?: string }>>(new Map())
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState('')
   const [unreadChannels, setUnreadChannels] = useState<Set<string>>(new Set())
@@ -157,16 +157,25 @@ export default function ChannelsPage() {
       }
     }
     
-    if (data.type === 'typing' && selectedChannel && String(data.channel_id) === String(selectedChannel.id)) {
+    if ((data.type === 'typing' || data.type === 'recording_voice') && selectedChannel && String(data.channel_id) === String(selectedChannel.id)) {
       const userId = String(data.user_id)
       const username = data.username || 'Someone'
       if (userId !== String(user?.id)) {
         setTypingUsers(prev => {
           const newMap = new Map(prev)
-          newMap.set(userId, { username, timestamp: Date.now() })
+          newMap.set(userId, { username, timestamp: Date.now(), status: data.type })
           return newMap
         })
       }
+    }
+    
+    if (data.type === 'stopped' && selectedChannel && String(data.channel_id) === String(selectedChannel.id)) {
+      const userId = String(data.user_id)
+      setTypingUsers(prev => {
+        const newMap = new Map(prev)
+        newMap.delete(userId)
+        return newMap
+      })
     }
 
     if (data.type === 'reaction_add' || data.type === 'reaction-add') {
@@ -1363,17 +1372,23 @@ export default function ChannelsPage() {
                 )}
               </div>
 
-              {/* Typing Indicator */}
+              {/* Typing/Recording Indicator */}
               {typingUsers.size > 0 && (
                 <div className="px-4 py-1 text-xs text-muted-foreground flex items-center gap-2">
-                  <div className="flex gap-0.5">
-                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
+                  {Array.from(typingUsers.values()).some(u => u.status === 'recording_voice') ? (
+                    <Mic className="w-3 h-3 text-red-500 animate-pulse" />
+                  ) : (
+                    <div className="flex gap-0.5">
+                      <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  )}
                   <span>
                     {Array.from(typingUsers.values()).map(u => u.username).join(', ')}
-                    {typingUsers.size === 1 ? ' печатает...' : ' печатают...'}
+                    {Array.from(typingUsers.values()).some(u => u.status === 'recording_voice')
+                      ? (typingUsers.size === 1 ? ' записывает голосовое...' : ' записывают голосовое...')
+                      : (typingUsers.size === 1 ? ' печатает...' : ' печатают...')}
                   </span>
                 </div>
               )}

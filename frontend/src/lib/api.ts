@@ -462,10 +462,10 @@ export const presenceAPI = {
       data: { status, custom_status: customStatus },
     }),
 
-  sendTyping: (channelId?: string, chatUserId?: string) =>
+  sendTyping: (channelId?: string, chatUserId?: string, status: 'typing' | 'recording_voice' | 'stopped' = 'typing') =>
     request<{ status: string }>("/typing", {
       method: "POST",
-      data: { channel_id: channelId, chat_user_id: chatUserId },
+      data: { channel_id: channelId, chat_user_id: chatUserId, status },
     }),
 };
 

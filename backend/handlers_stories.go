@@ -3,6 +3,7 @@ package main
 import (
         "crypto/rand"
         "encoding/hex"
+        "fmt"
         "net/http"
         "strconv"
         "time"
@@ -281,8 +282,9 @@ func updatePresenceHandler(c *gin.Context) {
 func sendTypingHandler(c *gin.Context) {
         userID, _ := c.Get("user_id")
         var req struct {
-                ChannelID  *uint `json:"channel_id"`
-                ChatUserID *uint `json:"chat_user_id"`
+                ChannelID  *uint  `json:"channel_id"`
+                ChatUserID *uint  `json:"chat_user_id"`
+                Status     string `json:"status"`
         }
         if err := c.BindJSON(&req); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -290,11 +292,31 @@ func sendTypingHandler(c *gin.Context) {
         }
 
         uid := uint(userID.(float64))
-        hub.broadcast <- map[string]interface{}{
-                "type":         "typing",
+        
+        var user User
+        db.First(&user, uid)
+        
+        status := req.Status
+        if status == "" {
+                status = "typing"
+        }
+
+        payload := map[string]interface{}{
+                "type":         status,
                 "user_id":      uid,
+                "username":     user.Username,
+                "avatar":       user.Avatar,
                 "channel_id":   req.ChannelID,
                 "chat_user_id": req.ChatUserID,
+        }
+
+        if req.ChatUserID != nil {
+                hub.direct <- WSDirectMessage{
+                        TargetUserID: fmt.Sprintf("%d", *req.ChatUserID),
+                        Payload:      payload,
+                }
+        } else {
+                hub.broadcast <- payload
         }
 
         c.JSON(http.StatusOK, gin.H{"status": "sent"})

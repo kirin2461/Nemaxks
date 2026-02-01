@@ -8,7 +8,7 @@ import { ContextMenu, useContextMenu, type ContextMenuItem } from '@/components/
 import { NewMessageModal } from '@/components/NewMessageModal'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
-import { messagesAPI, uploadAPI, type Message, type User } from '@/lib/api'
+import { messagesAPI, uploadAPI, presenceAPI, type Message, type User } from '@/lib/api'
 import { formatTime } from '@/lib/utils'
 import {
   Search,
@@ -49,7 +49,7 @@ export default function MessagesPage() {
   const [showNewMessageModal, setShowNewMessageModal] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
-  const [typingUsers, setTypingUsers] = useState<string[]>([])
+  const [typingUsers, setTypingUsers] = useState<{ username: string; status: string }[]>([])
   const [playingVoice, setPlayingVoice] = useState<string | null>(null)
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -135,8 +135,9 @@ export default function MessagesPage() {
         fetchConversations()
         break
       case 'typing':
+      case 'recording_voice':
         if (selectedUserRef.current && 
-            String(data.from_user_id) === String(selectedUserRef.current.id)) {
+            String(data.from_user_id || data.user_id) === String(selectedUserRef.current.id)) {
           const username = data.username
           if (!username) break
           
@@ -146,17 +147,31 @@ export default function MessagesPage() {
           }
           
           setTypingUsers(prev => {
-            if (!prev.includes(username)) {
-              return [...prev, username]
+            if (!prev.some(u => u.username === username)) {
+              return [...prev, { username, status: data.type }]
             }
-            return prev
+            return prev.map(u => u.username === username ? { ...u, status: data.type } : u)
           })
           
           const newTimer = setTimeout(() => {
-            setTypingUsers(prev => prev.filter(u => u !== username))
+            setTypingUsers(prev => prev.filter(u => u.username !== username))
             typingRemovalTimersRef.current.delete(username)
           }, 3000)
           typingRemovalTimersRef.current.set(username, newTimer)
+        }
+        break
+      case 'stopped':
+        if (selectedUserRef.current && 
+            String(data.from_user_id || data.user_id) === String(selectedUserRef.current.id)) {
+          const username = data.username
+          if (username) {
+            setTypingUsers(prev => prev.filter(u => u.username !== username))
+            const timer = typingRemovalTimersRef.current.get(username)
+            if (timer) {
+              clearTimeout(timer)
+              typingRemovalTimersRef.current.delete(username)
+            }
+          }
         }
         break
       case 'message_read':
@@ -181,15 +196,11 @@ export default function MessagesPage() {
     }
   }, [subscribeToMessages, handleWebSocketMessage])
 
-  const sendTypingIndicator = useCallback(() => {
+  const sendTypingIndicator = useCallback((status: 'typing' | 'recording_voice' | 'stopped' = 'typing') => {
     if (selectedUser && user) {
-      sendWebSocketMessage({
-        type: 'typing',
-        targetUserId: selectedUser.id,
-        username: user.username
-      })
+      presenceAPI.sendTyping(undefined, String(selectedUser.id), status).catch(() => {})
     }
-  }, [selectedUser, user, sendWebSocketMessage])
+  }, [selectedUser, user])
 
   const startRecording = async () => {
     try {
@@ -213,6 +224,7 @@ export default function MessagesPage() {
       mediaRecorder.start()
       setIsRecording(true)
       setRecordingTime(0)
+      sendTypingIndicator('recording_voice')
       
       recordingTimerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1)
@@ -226,6 +238,7 @@ export default function MessagesPage() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop()
       setIsRecording(false)
+      sendTypingIndicator('stopped')
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current)
         recordingTimerRef.current = null
@@ -993,15 +1006,24 @@ export default function MessagesPage() {
                     )
                   })
                 )}
-                {/* Typing indicator */}
+                {/* Typing/Recording indicator */}
                 {typingUsers.length > 0 && (
                   <div className="px-4 py-2 flex items-center gap-2 text-muted-foreground text-sm">
-                    <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                    <span>{typingUsers.join(', ')} печатает...</span>
+                    {typingUsers.some(u => u.status === 'recording_voice') ? (
+                      <Mic className="w-4 h-4 text-red-500 animate-pulse" />
+                    ) : (
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    )}
+                    <span>
+                      {typingUsers.map(u => u.username).join(', ')}
+                      {typingUsers.some(u => u.status === 'recording_voice')
+                        ? ' записывает голосовое...'
+                        : ' печатает...'}
+                    </span>
                   </div>
                 )}
                 <div ref={messagesEndRef} />

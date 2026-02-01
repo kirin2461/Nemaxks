@@ -1,5 +1,8 @@
 import React from 'react'
 import { cn, getInitials, generateAvatarColor } from '@/lib/utils'
+import { Mic } from 'lucide-react'
+
+type PresenceStatus = 'online' | 'offline' | 'idle' | 'dnd' | 'typing' | 'recording_voice'
 
 interface AvatarProps {
   src?: string
@@ -7,6 +10,8 @@ interface AvatarProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   userId?: string
   className?: string
+  showStatus?: boolean
+  status?: PresenceStatus
 }
 
 function sanitizeImageSrc(src?: string): string | null {
@@ -31,7 +36,7 @@ function sanitizeImageSrc(src?: string): string | null {
   return null
 }
 
-export function Avatar({ src, alt = '', size = 'md', userId = '', className }: AvatarProps) {
+export function Avatar({ src, alt = '', size = 'md', userId = '', className, showStatus = false, status }: AvatarProps) {
   const [imgError, setImgError] = React.useState(false)
   const initials = getInitials(alt || 'User')
   const gradient = generateAvatarColor(userId)
@@ -44,27 +49,72 @@ export function Avatar({ src, alt = '', size = 'md', userId = '', className }: A
     xl: 'w-24 h-24 text-4xl',
   }
 
+  const statusSizeClasses = {
+    sm: 'w-2.5 h-2.5 -bottom-0.5 -right-0.5 border',
+    md: 'w-3 h-3 -bottom-0.5 -right-0.5 border-2',
+    lg: 'w-4 h-4 bottom-0 right-0 border-2',
+    xl: 'w-5 h-5 bottom-0.5 right-0.5 border-2',
+  }
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'online':
+        return 'bg-green-500'
+      case 'idle':
+        return 'bg-yellow-500'
+      case 'dnd':
+        return 'bg-red-500'
+      case 'typing':
+        return 'bg-blue-500 animate-pulse'
+      case 'recording_voice':
+        return 'bg-red-500 animate-pulse'
+      case 'offline':
+      default:
+        return 'bg-gray-500'
+    }
+  }
+
+  const StatusIndicator = showStatus && status ? (
+    <span 
+      className={cn(
+        'absolute rounded-full border-background',
+        statusSizeClasses[size],
+        getStatusColor()
+      )}
+    >
+      {status === 'recording_voice' && size !== 'sm' && (
+        <Mic className="w-full h-full p-0.5 text-white" />
+      )}
+    </span>
+  ) : null
+
   if (!safeSrc || imgError) {
     return (
-      <div
-        className={cn(
-          'rounded-full flex items-center justify-center font-semibold text-white',
-          `bg-gradient-to-br ${gradient}`,
-          sizeClasses[size],
-          className
-        )}
-      >
-        {initials}
+      <div className="relative inline-block">
+        <div
+          className={cn(
+            'rounded-full flex items-center justify-center font-semibold text-white',
+            `bg-gradient-to-br ${gradient}`,
+            sizeClasses[size],
+            className
+          )}
+        >
+          {initials}
+        </div>
+        {StatusIndicator}
       </div>
     )
   }
 
   return (
-    <img
-      src={safeSrc}
-      alt={alt}
-      className={cn('rounded-full object-cover', sizeClasses[size], className)}
-      onError={() => setImgError(true)}
-    />
+    <div className="relative inline-block">
+      <img
+        src={safeSrc}
+        alt={alt}
+        className={cn('rounded-full object-cover', sizeClasses[size], className)}
+        onError={() => setImgError(true)}
+      />
+      {StatusIndicator}
+    </div>
   )
 }
