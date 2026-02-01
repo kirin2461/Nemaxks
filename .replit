@@ -5,7 +5,7 @@ channel = "stable-25_05"
 
 [deployment]
 run = ["bash", "-c", "cd backend && PORT=5000 ./nemaks-server"]
-build = ["bash", "-c", "ROOT=$PWD && cd frontend && npm install && npm run build && cd $ROOT/backend && go build -o nemaks-server ."]
+build = ["bash", "-c", "cd frontend && npm install && npm run build && cd .. && go build -C backend -o nemaks-server ."]
 deploymentTarget = "autoscale"
 
 [[ports]]
