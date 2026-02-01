@@ -5,6 +5,7 @@ import { Logo } from '@/components/Logo'
 import { Moon, Sun, Zap, Snowflake, Droplet, Waves, TreePine, Sunset, Cpu, Wind, QrCode, RefreshCw, Smartphone, Palette, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { QRCodeSVG } from 'qrcode.react'
+import { Link } from 'wouter'
 
 type ThemeName = 'dark' | 'light' | 'cosmic' | 'nebula-winter' | 'glass' | 'midnight-ocean' | 'forest-night' | 'sunset-glow' | 'neon-tokyo' | 'arctic-aurora'
 
@@ -12,6 +13,7 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showQR, setShowQR] = useState(false)
@@ -114,6 +116,12 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (!isLogin && !agreeToTerms) {
+      setError('Необходимо принять Правила использования и Политику конфиденциальности')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -259,6 +267,28 @@ export default function AuthPage() {
                 required
               />
             </div>
+
+            {!isLogin && (
+              <div className="flex items-start gap-3 p-3 bg-white/5 border border-white/10 rounded-lg">
+                <input
+                  id="agree-terms"
+                  type="checkbox"
+                  checked={agreeToTerms}
+                  onChange={(e) => setAgreeToTerms(e.target.checked)}
+                  className="w-5 h-5 mt-0.5 rounded border-border bg-background text-primary focus:ring-primary cursor-pointer"
+                />
+                <label htmlFor="agree-terms" className="text-sm text-gray-300 cursor-pointer">
+                  Я принимаю{' '}
+                  <Link href="/terms" className="text-primary hover:underline">
+                    Правила использования
+                  </Link>{' '}
+                  и{' '}
+                  <Link href="/privacy" className="text-primary hover:underline">
+                    Политику конфиденциальности
+                  </Link>
+                </label>
+              </div>
+            )}
 
             {error && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm animate-slide-in">
