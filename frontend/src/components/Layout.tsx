@@ -43,6 +43,7 @@ export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator'
+  const isSuperAdmin = user?.role === 'super_admin'
 
   const totalMessageBadge = Math.max(notifications.messages, unreadCount)
 
@@ -62,6 +63,7 @@ export function Layout({ children }: LayoutProps) {
     { name: t('nav.invite'), href: '/invite', icon: UserPlus, badge: 0 },
     { name: t('common.settings'), href: '/settings', icon: Settings, badge: 0 },
     ...(isAdmin ? [{ name: t('nav.admin'), href: '/admin', icon: Shield, badge: 0 }] : []),
+    ...(isSuperAdmin ? [{ name: t('nav.superAdmin'), href: '/admin/super', icon: Crown, badge: 0 }] : []),
   ]
 
   // Simplified navigation for lite mode - only essential items
