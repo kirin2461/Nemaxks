@@ -8,6 +8,7 @@ import { ContextMenu, useContextMenu, type ContextMenuItem } from '@/components/
 import { NewMessageModal } from '@/components/NewMessageModal'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { messagesAPI, uploadAPI, presenceAPI, type Message, type User } from '@/lib/api'
 import { formatTime } from '@/lib/utils'
 import {
@@ -39,6 +40,7 @@ import {
 export default function MessagesPage() {
   const { user, conversations, fetchConversations, isDemoMode } = useStore()
   const { subscribeToMessages, sendWebSocketMessage, clearMessageNotificationsFromUser } = useNotifications()
+  const { t } = useLanguage()
   const [location] = useLocation()
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -692,7 +694,7 @@ export default function MessagesPage() {
               className="w-full btn-cosmic py-2.5 flex items-center justify-center gap-2"
             >
               <Edit className="w-4 h-4" />
-              <span className="font-medium">New Message</span>
+              <span className="font-medium">{t('messages.newMessage')}</span>
             </button>
 
             {/* Search */}
@@ -700,7 +702,7 @@ export default function MessagesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search conversations..."
+                placeholder={t('messages.searchConversations')}
                 className="w-full px-4 py-2 pl-10 bg-background border border-border rounded-lg
                           text-foreground placeholder:text-muted-foreground
                           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
@@ -716,8 +718,8 @@ export default function MessagesPage() {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/30 flex items-center justify-center orb-glow">
                   <MessageSquare className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <p className="text-muted-foreground text-sm">No conversations yet</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">Start a new chat to see it here</p>
+                <p className="text-muted-foreground text-sm">{t('messages.noConversations')}</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">{t('messages.startNewChat')}</p>
               </div>
             ) : (
               conversations.map((conv, index) => (
@@ -829,14 +831,14 @@ export default function MessagesPage() {
                     <button
                       onClick={() => setShowSearch(!showSearch)}
                       className={`p-2 rounded-lg transition-colors ${showSearch ? 'bg-primary/20 text-primary' : 'hover:bg-accent/20'}`}
-                      title="Search messages"
+                      title={t('messages.searchMessages')}
                     >
                       <Search className="w-5 h-5" />
                     </button>
                     <button
                       onClick={loadPinnedMessages}
                       className={`p-2 rounded-lg transition-colors ${showPinned ? 'bg-primary/20 text-primary' : 'hover:bg-accent/20'}`}
-                      title="Pinned messages"
+                      title={t('messages.pinnedMessages')}
                     >
                       <Pin className="w-5 h-5" />
                     </button>
@@ -850,10 +852,10 @@ export default function MessagesPage() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      placeholder="Search in conversation..."
+                      placeholder={t('messages.searchInConversation')}
                       className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                    <button onClick={handleSearch} className="btn-cosmic px-4 py-2 text-sm">Search</button>
+                    <button onClick={handleSearch} className="btn-cosmic px-4 py-2 text-sm">{t('messages.search')}</button>
                   </div>
                 )}
                 {/* Search results */}
@@ -871,8 +873,8 @@ export default function MessagesPage() {
                 {showPinned && pinnedMessages.length > 0 && (
                   <div className="mt-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium flex items-center gap-1">Закрепленное сообщение</span>
-                      <button onClick={() => setShowPinned(false)} className="text-xs text-muted-foreground hover:text-foreground">Close</button>
+                      <span className="text-sm font-medium flex items-center gap-1">{t('messages.pinnedMessage')}</span>
+                      <button onClick={() => setShowPinned(false)} className="text-xs text-muted-foreground hover:text-foreground">{t('messages.close')}</button>
                     </div>
                     {pinnedMessages.map((msg) => (
                       <div 
@@ -901,7 +903,7 @@ export default function MessagesPage() {
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
                       <MessageSquare className="w-10 h-10 text-white" />
                     </div>
-                    <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+                    <p className="text-muted-foreground">{t('messages.startConversation')}</p>
                   </div>
                 ) : (
                   messages.map((message, index) => {
@@ -930,7 +932,7 @@ export default function MessagesPage() {
                                 e.stopPropagation();
                                 messageContextMenu.showContextMenu(e as any, getMessageContextMenuItems(message));
                               }}
-                              title="More"
+                              title={t('messages.more')}
                             >
                               <MoreVertical className="w-3.5 h-3.5" />
                             </button>
@@ -940,7 +942,7 @@ export default function MessagesPage() {
                           {message.forwarded_from_id && (
                             <div className={`flex items-center gap-1 mb-1 text-xs ${isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                               <Forward className="w-3 h-3" />
-                              <span>Forwarded</span>
+                              <span>{t('messages.forwarded')}</span>
                             </div>
                           )}
 
@@ -962,7 +964,7 @@ export default function MessagesPage() {
                           {/* Pinned indicator */}
                           {message.is_pinned && (
                             <div className={`flex items-center gap-1 mb-1 text-xs ${isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                              <span>Закреплено</span>
+                              <span>{t('messages.pinned')}</span>
                             </div>
                           )}
 
@@ -1075,7 +1077,7 @@ export default function MessagesPage() {
                   {isRecording ? (
                     <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500 rounded-lg">
                       <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                      <span className="text-red-500 font-medium">Запись... {formatRecordingTime(recordingTime)}</span>
+                      <span className="text-red-500 font-medium">{t('messages.recording')} {formatRecordingTime(recordingTime)}</span>
                       <div className="flex-1" />
                       <button
                         onClick={stopRecording}
@@ -1101,7 +1103,7 @@ export default function MessagesPage() {
                       <button
                         onClick={cancelVoicePreview}
                         className="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition"
-                        title="Отменить"
+                        title={t('messages.cancel')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1117,7 +1119,7 @@ export default function MessagesPage() {
                       <button
                         onClick={startRecording}
                         className="p-3 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition"
-                        title="Голосовое сообщение"
+                        title={t('messages.voiceMessage')}
                       >
                         <Mic className="w-5 h-5" />
                       </button>
@@ -1164,8 +1166,8 @@ export default function MessagesPage() {
                 <div className="w-24 h-24 mx-auto mb-6 rounded-full gradient-cosmic-rainbow-animated flex items-center justify-center orb-glow">
                   <MessageSquare className="w-12 h-12 text-white" />
                 </div>
-                <p className="text-muted-foreground text-lg font-medium mb-2">Welcome to Messages</p>
-                <p className="text-muted-foreground/70 text-sm">Select a conversation to start messaging</p>
+                <p className="text-muted-foreground text-lg font-medium mb-2">{t('messages.welcome')}</p>
+                <p className="text-muted-foreground/70 text-sm">{t('messages.selectConversation')}</p>
               </div>
             </div>
           )}
@@ -1206,7 +1208,7 @@ export default function MessagesPage() {
             </p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {realFriends.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No friends to forward to</p>
+                <p className="text-muted-foreground text-center py-4">{t('messages.noFriendsToForward')}</p>
               ) : (
                 realFriends.map((friend: any) => (
                   <button
@@ -1224,7 +1226,7 @@ export default function MessagesPage() {
               onClick={() => setForwardingMessage(null)}
               className="mt-4 w-full py-2 border border-border rounded-lg hover:bg-accent/10 transition-colors"
             >
-              Cancel
+              {t('messages.cancelDelete')}
             </button>
           </div>
         </div>
@@ -1233,10 +1235,10 @@ export default function MessagesPage() {
         isOpen={!!showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(null)}
         onConfirm={() => showDeleteConfirm && handleDeleteMessage(showDeleteConfirm)}
-        title="Удалить сообщение?"
-        message="Вы уверены, что хотите удалить это сообщение? Это действие нельзя будет отменить."
-        confirmText="Удалить"
-        cancelText="Отмена"
+        title={t('messages.deleteTitle')}
+        message={t('messages.deleteConfirm')}
+        confirmText={t('messages.confirmDelete')}
+        cancelText={t('messages.cancelDelete')}
         variant="danger"
       />
     </Layout>
