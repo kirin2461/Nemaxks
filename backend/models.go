@@ -137,3 +137,16 @@ type QRLoginSession struct {
         CreatedAt    time.Time `json:"created_at"`
         UpdatedAt    time.Time `json:"updated_at"`
 }
+
+type NotificationBanner struct {
+        ID        uint       `json:"id" gorm:"primaryKey"`
+        Title     string     `json:"title" gorm:"not null"`
+        Message   string     `json:"message" gorm:"type:text;not null"`
+        Type      string     `json:"type" gorm:"default:'info'"` // info, warning, error, success
+        IsActive  bool       `json:"is_active" gorm:"default:true"`
+        ExpiresAt *time.Time `json:"expires_at,omitempty"`
+        CreatedBy uint       `json:"created_by" gorm:"not null"`
+        CreatedAt time.Time  `json:"created_at"`
+        UpdatedAt time.Time  `json:"updated_at"`
+        Creator   User       `json:"creator,omitempty" gorm:"foreignKey:CreatedBy"`
+}

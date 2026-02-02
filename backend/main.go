@@ -480,6 +480,11 @@ func main() {
         r.GET("/api/super-admin/jarvis/users/:user_id", authMiddleware(), superAdminMiddleware(), getJarvisUserUsageHandler)
         r.DELETE("/api/super-admin/messages/:id", authMiddleware(), superAdminMiddleware(), deleteMessageAdminHandler)
         r.DELETE("/api/super-admin/posts/:id", authMiddleware(), superAdminMiddleware(), deletePostAdminHandler)
+        r.GET("/api/super-admin/banners", authMiddleware(), superAdminMiddleware(), getNotificationBannersHandler)
+        r.POST("/api/super-admin/banners", authMiddleware(), superAdminMiddleware(), createNotificationBannerHandler)
+        r.PUT("/api/super-admin/banners/:id", authMiddleware(), superAdminMiddleware(), updateNotificationBannerHandler)
+        r.DELETE("/api/super-admin/banners/:id", authMiddleware(), superAdminMiddleware(), deleteNotificationBannerHandler)
+        r.GET("/api/banners/active", getActiveBannersHandler)
 
         // Admin Panel
         r.GET("/api/admin/stats", authMiddleware(), adminMiddleware(), getAdminStatsHandler)

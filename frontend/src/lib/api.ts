@@ -779,7 +779,43 @@ export const superAdminAPI = {
     request<{ message: string }>(`/super-admin/posts/${postId}`, {
       method: "DELETE",
     }),
+
+  getBanners: () =>
+    request<{ banners: NotificationBanner[] }>("/super-admin/banners"),
+
+  createBanner: (data: { title: string; message: string; type?: string; expires_at?: string }) =>
+    request<{ banner: NotificationBanner }>("/super-admin/banners", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateBanner: (bannerId: number, data: { title?: string; message?: string; type?: string; is_active?: boolean; expires_at?: string }) =>
+    request<{ banner: NotificationBanner }>(`/super-admin/banners/${bannerId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteBanner: (bannerId: number) =>
+    request<{ message: string }>(`/super-admin/banners/${bannerId}`, {
+      method: "DELETE",
+    }),
 };
+
+export interface NotificationBanner {
+  id: number;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'error' | 'success';
+  is_active: boolean;
+  expires_at: string | null;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+  creator?: { id: number; username: string; avatar?: string };
+}
+
+export const getActiveBanners = () =>
+  request<{ banners: NotificationBanner[] }>("/banners/active");
 
 export interface BillingStats {
   active_subscriptions: number;

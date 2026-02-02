@@ -661,3 +661,125 @@ func deletePostAdminHandler(c *gin.Context) {
 
         c.JSON(http.StatusOK, gin.H{"message": "Post deleted"})
 }
+
+// Notification Banner Handlers
+func getNotificationBannersHandler(c *gin.Context) {
+        var banners []NotificationBanner
+        db.Preload("Creator").Order("created_at DESC").Find(&banners)
+        c.JSON(http.StatusOK, gin.H{"banners": banners})
+}
+
+func createNotificationBannerHandler(c *gin.Context) {
+        adminID, _ := c.Get("super_admin_id")
+        
+        var req struct {
+                Title     string     `json:"title" binding:"required"`
+                Message   string     `json:"message" binding:"required"`
+                Type      string     `json:"type"`
+                ExpiresAt *time.Time `json:"expires_at"`
+        }
+        if err := c.ShouldBindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        bannerType := req.Type
+        if bannerType == "" {
+                bannerType = "info"
+        }
+
+        banner := NotificationBanner{
+                Title:     req.Title,
+                Message:   req.Message,
+                Type:      bannerType,
+                IsActive:  true,
+                ExpiresAt: req.ExpiresAt,
+                CreatedBy: adminID.(uint),
+        }
+
+        if err := db.Create(&banner).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create banner"})
+                return
+        }
+
+        db.Preload("Creator").First(&banner, banner.ID)
+        logAudit(adminID.(uint), "create_banner", "notification_banner", strconv.Itoa(int(banner.ID)), c.ClientIP())
+        c.JSON(http.StatusCreated, gin.H{"banner": banner})
+}
+
+func updateNotificationBannerHandler(c *gin.Context) {
+        adminID, _ := c.Get("super_admin_id")
+        bannerID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid banner ID"})
+                return
+        }
+
+        var banner NotificationBanner
+        if err := db.First(&banner, bannerID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Banner not found"})
+                return
+        }
+
+        var req struct {
+                Title     *string    `json:"title"`
+                Message   *string    `json:"message"`
+                Type      *string    `json:"type"`
+                IsActive  *bool      `json:"is_active"`
+                ExpiresAt *time.Time `json:"expires_at"`
+        }
+        if err := c.ShouldBindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        if req.Title != nil {
+                banner.Title = *req.Title
+        }
+        if req.Message != nil {
+                banner.Message = *req.Message
+        }
+        if req.Type != nil {
+                banner.Type = *req.Type
+        }
+        if req.IsActive != nil {
+                banner.IsActive = *req.IsActive
+        }
+        if req.ExpiresAt != nil {
+                banner.ExpiresAt = req.ExpiresAt
+        }
+
+        db.Save(&banner)
+        db.Preload("Creator").First(&banner, banner.ID)
+
+        logAudit(adminID.(uint), "update_banner", "notification_banner", strconv.FormatUint(bannerID, 10), c.ClientIP())
+        c.JSON(http.StatusOK, gin.H{"banner": banner})
+}
+
+func deleteNotificationBannerHandler(c *gin.Context) {
+        adminID, _ := c.Get("super_admin_id")
+        bannerID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid banner ID"})
+                return
+        }
+
+        var banner NotificationBanner
+        if err := db.First(&banner, bannerID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Banner not found"})
+                return
+        }
+
+        db.Delete(&banner)
+        logAudit(adminID.(uint), "delete_banner", "notification_banner", strconv.FormatUint(bannerID, 10), c.ClientIP())
+        c.JSON(http.StatusOK, gin.H{"message": "Banner deleted"})
+}
+
+func getActiveBannersHandler(c *gin.Context) {
+        var banners []NotificationBanner
+        now := time.Now()
+        db.Where("is_active = ? AND (expires_at IS NULL OR expires_at > ?)", true, now).
+                Order("created_at DESC").
+                Find(&banners)
+        c.JSON(http.StatusOK, gin.H{"banners": banners})
+}

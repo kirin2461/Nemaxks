@@ -6,6 +6,7 @@ import { useNotifications } from '@/contexts/NotificationContext'
 import { Avatar } from './Avatar'
 import { Logo } from './Logo'
 import { NotificationCenter } from './NotificationCenter'
+import { BannerDisplay } from './BannerDisplay'
 import {
   Home,
   MessageSquare,
@@ -254,7 +255,10 @@ export function Layout({ children }: LayoutProps) {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto bg-background/50 pb-16 lg:pb-0">{children}</main>
+        <main className="flex-1 overflow-auto bg-background/50 pb-16 lg:pb-0">
+          <BannerDisplay />
+          {children}
+        </main>
       </div>
 
       {/* Mobile Bottom Navigation */}

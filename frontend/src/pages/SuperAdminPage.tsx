@@ -12,7 +12,8 @@ import {
   type ServiceStatus,
   type JarvisStats,
   type AuditLog,
-  type AbuseReport
+  type AbuseReport,
+  type NotificationBanner
 } from '@/lib/api'
 import {
   Users,
@@ -46,12 +47,17 @@ import {
   Crown,
   BarChart3,
   FileText,
-  Ban
+  Ban,
+  Bell,
+  Plus,
+  Edit,
+  AlertCircle,
+  Info
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 
-type TabType = 'dashboard' | 'users' | 'guilds' | 'moderation' | 'monitoring' | 'jarvis'
+type TabType = 'dashboard' | 'users' | 'guilds' | 'moderation' | 'monitoring' | 'jarvis' | 'banners'
 
 export default function SuperAdminPage() {
   const { user } = useStore()
@@ -72,6 +78,10 @@ export default function SuperAdminPage() {
   const [securityLogs, setSecurityLogs] = useState<AuditLog[]>([])
   const [serviceStatus, setServiceStatus] = useState<ServiceStatus | null>(null)
   const [jarvisStats, setJarvisStats] = useState<JarvisStats | null>(null)
+  const [banners, setBanners] = useState<NotificationBanner[]>([])
+  const [showBannerForm, setShowBannerForm] = useState(false)
+  const [editingBanner, setEditingBanner] = useState<NotificationBanner | null>(null)
+  const [bannerForm, setBannerForm] = useState({ title: '', message: '', type: 'info', expires_at: '' })
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [tempPassword, setTempPassword] = useState<string | null>(null)
@@ -114,11 +124,80 @@ export default function SuperAdminPage() {
           const jStats = await superAdminAPI.getJarvisStats()
           setJarvisStats(jStats)
           break
+        case 'banners':
+          const bannersData = await superAdminAPI.getBanners()
+          setBanners(bannersData.banners || [])
+          break
       }
     } catch (error) {
       console.error('Failed to load data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCreateBanner = async () => {
+    if (!bannerForm.title || !bannerForm.message) return
+    setActionLoading(true)
+    try {
+      await superAdminAPI.createBanner({
+        title: bannerForm.title,
+        message: bannerForm.message,
+        type: bannerForm.type,
+        expires_at: bannerForm.expires_at || undefined
+      })
+      setBannerForm({ title: '', message: '', type: 'info', expires_at: '' })
+      setShowBannerForm(false)
+      loadData()
+    } catch (error) {
+      console.error('Failed to create banner:', error)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleUpdateBanner = async () => {
+    if (!editingBanner) return
+    setActionLoading(true)
+    try {
+      await superAdminAPI.updateBanner(editingBanner.id, {
+        title: bannerForm.title,
+        message: bannerForm.message,
+        type: bannerForm.type,
+        expires_at: bannerForm.expires_at || undefined
+      })
+      setBannerForm({ title: '', message: '', type: 'info', expires_at: '' })
+      setEditingBanner(null)
+      loadData()
+    } catch (error) {
+      console.error('Failed to update banner:', error)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleToggleBanner = async (banner: NotificationBanner) => {
+    setActionLoading(true)
+    try {
+      await superAdminAPI.updateBanner(banner.id, { is_active: !banner.is_active })
+      loadData()
+    } catch (error) {
+      console.error('Failed to toggle banner:', error)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleDeleteBanner = async (bannerId: number) => {
+    if (!confirm('Удалить это уведомление?')) return
+    setActionLoading(true)
+    try {
+      await superAdminAPI.deleteBanner(bannerId)
+      loadData()
+    } catch (error) {
+      console.error('Failed to delete banner:', error)
+    } finally {
+      setActionLoading(false)
     }
   }
 
@@ -246,6 +325,7 @@ export default function SuperAdminPage() {
     { id: 'moderation', label: 'Moderation', icon: Shield },
     { id: 'monitoring', label: 'Monitoring', icon: Activity },
     { id: 'jarvis', label: 'JARVIS', icon: Bot },
+    { id: 'banners', label: 'Уведомления', icon: Bell },
   ] as const
 
   return (
@@ -750,6 +830,181 @@ export default function SuperAdminPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'banners' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Управление уведомлениями</h2>
+                  <button
+                    onClick={() => {
+                      setBannerForm({ title: '', message: '', type: 'info', expires_at: '' })
+                      setShowBannerForm(true)
+                      setEditingBanner(null)
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                  >
+                    <Plus className="w-4 h-4" /> Создать уведомление
+                  </button>
+                </div>
+
+                {(showBannerForm || editingBanner) && (
+                  <div className="bg-card rounded-lg p-6 border border-border">
+                    <h3 className="text-lg font-semibold mb-4">
+                      {editingBanner ? 'Редактировать уведомление' : 'Новое уведомление'}
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Заголовок</label>
+                        <input
+                          type="text"
+                          value={bannerForm.title}
+                          onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })}
+                          className="w-full px-3 py-2 bg-background border rounded-lg"
+                          placeholder="Заголовок уведомления"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Сообщение</label>
+                        <textarea
+                          value={bannerForm.message}
+                          onChange={(e) => setBannerForm({ ...bannerForm, message: e.target.value })}
+                          className="w-full px-3 py-2 bg-background border rounded-lg resize-none"
+                          rows={3}
+                          placeholder="Текст уведомления"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Тип</label>
+                          <select
+                            value={bannerForm.type}
+                            onChange={(e) => setBannerForm({ ...bannerForm, type: e.target.value })}
+                            className="w-full px-3 py-2 bg-background border rounded-lg"
+                          >
+                            <option value="info">Информация</option>
+                            <option value="success">Успех</option>
+                            <option value="warning">Предупреждение</option>
+                            <option value="error">Ошибка</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Истекает (опционально)</label>
+                          <input
+                            type="datetime-local"
+                            value={bannerForm.expires_at}
+                            onChange={(e) => setBannerForm({ ...bannerForm, expires_at: e.target.value })}
+                            className="w-full px-3 py-2 bg-background border rounded-lg"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={editingBanner ? handleUpdateBanner : handleCreateBanner}
+                          disabled={actionLoading || !bannerForm.title || !bannerForm.message}
+                          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          {editingBanner ? 'Сохранить' : 'Создать'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowBannerForm(false)
+                            setEditingBanner(null)
+                            setBannerForm({ title: '', message: '', type: 'info', expires_at: '' })
+                          }}
+                          className="px-4 py-2 border border-border rounded-lg hover:bg-accent"
+                        >
+                          Отмена
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {banners.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>Нет уведомлений</p>
+                    </div>
+                  ) : (
+                    banners.map(banner => (
+                      <div
+                        key={banner.id}
+                        className={cn(
+                          "bg-card rounded-lg p-4 border-l-4",
+                          banner.type === 'info' && "border-blue-500",
+                          banner.type === 'success' && "border-green-500",
+                          banner.type === 'warning' && "border-yellow-500",
+                          banner.type === 'error' && "border-red-500",
+                          !banner.is_active && "opacity-50"
+                        )}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {banner.type === 'info' && <Info className="w-4 h-4 text-blue-500" />}
+                              {banner.type === 'success' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                              {banner.type === 'warning' && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
+                              {banner.type === 'error' && <AlertCircle className="w-4 h-4 text-red-500" />}
+                              <h4 className="font-semibold">{banner.title}</h4>
+                              {!banner.is_active && (
+                                <span className="text-xs bg-muted px-2 py-0.5 rounded">Неактивно</span>
+                              )}
+                            </div>
+                            <p className="text-muted-foreground">{banner.message}</p>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                              <span>Создано: {format(new Date(banner.created_at), 'dd.MM.yyyy HH:mm')}</span>
+                              {banner.expires_at && (
+                                <span>Истекает: {format(new Date(banner.expires_at), 'dd.MM.yyyy HH:mm')}</span>
+                              )}
+                              {banner.creator && <span>Автор: {banner.creator.username}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleToggleBanner(banner)}
+                              disabled={actionLoading}
+                              className={cn(
+                                "p-2 rounded-lg transition-colors",
+                                banner.is_active 
+                                  ? "bg-green-500/20 text-green-500 hover:bg-green-500/30"
+                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                              )}
+                              title={banner.is_active ? 'Деактивировать' : 'Активировать'}
+                            >
+                              {banner.is_active ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingBanner(banner)
+                                setBannerForm({
+                                  title: banner.title,
+                                  message: banner.message,
+                                  type: banner.type,
+                                  expires_at: banner.expires_at ? banner.expires_at.slice(0, 16) : ''
+                                })
+                              }}
+                              className="p-2 rounded-lg bg-blue-500/20 text-blue-500 hover:bg-blue-500/30"
+                              title="Редактировать"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBanner(banner.id)}
+                              disabled={actionLoading}
+                              className="p-2 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500/30"
+                              title="Удалить"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
