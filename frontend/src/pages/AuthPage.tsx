@@ -2,12 +2,76 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useStore } from '@/lib/store'
 import { authAPI } from '@/lib/api'
 import { Logo } from '@/components/Logo'
-import { Moon, Sun, Zap, Snowflake, Droplet, Waves, TreePine, Sunset, Cpu, Wind, QrCode, RefreshCw, Smartphone, Palette, Check } from 'lucide-react'
+import { Moon, Sun, Zap, Snowflake, Droplet, Waves, TreePine, Sunset, Cpu, Wind, QrCode, RefreshCw, Smartphone, Palette, Check, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { QRCodeSVG } from 'qrcode.react'
 import { Link } from 'wouter'
 
 type ThemeName = 'dark' | 'light' | 'cosmic' | 'nebula-winter' | 'glass' | 'midnight-ocean' | 'forest-night' | 'sunset-glow' | 'neon-tokyo' | 'arctic-aurora'
+type Language = 'ru' | 'en'
+
+const translations = {
+  ru: {
+    welcome: 'Добро пожаловать в Nemaks',
+    signInSubtitle: 'Войдите в свой аккаунт',
+    signUpSubtitle: 'Создайте новый аккаунт',
+    username: 'Имя пользователя',
+    usernamePlaceholder: 'Введите имя пользователя',
+    password: 'Пароль',
+    passwordPlaceholder: 'Введите пароль',
+    agreeTerms: 'Я принимаю',
+    termsOfUse: 'Правила использования',
+    and: 'и',
+    privacyPolicy: 'Политику конфиденциальности',
+    signIn: 'Войти',
+    signUp: 'Зарегистрироваться',
+    signingIn: 'Вход...',
+    signingUp: 'Регистрация...',
+    demoMode: 'Демо-режим (без сервера)',
+    qrLogin: 'Войти по QR-коду',
+    hideQr: 'Скрыть QR-код',
+    scanWithPhone: 'Отсканируйте телефоном',
+    qrExpired: 'QR-код истёк',
+    generateNewQr: 'Сгенерировать новый QR-код',
+    openUrl: 'Откройте эту ссылку на устройстве, где вы уже авторизованы',
+    refreshQr: 'Обновить QR-код',
+    noAccount: 'Нет аккаунта?',
+    haveAccount: 'Уже есть аккаунт?',
+    chooseTheme: 'Выбрать тему',
+    chooseLanguage: 'Выбрать язык',
+    termsError: 'Необходимо принять Правила использования и Политику конфиденциальности',
+  },
+  en: {
+    welcome: 'Welcome to Nemaks',
+    signInSubtitle: 'Sign in to your account',
+    signUpSubtitle: 'Create a new account',
+    username: 'Username',
+    usernamePlaceholder: 'Enter your username',
+    password: 'Password',
+    passwordPlaceholder: 'Enter your password',
+    agreeTerms: 'I agree to',
+    termsOfUse: 'Terms of Use',
+    and: 'and',
+    privacyPolicy: 'Privacy Policy',
+    signIn: 'Sign In',
+    signUp: 'Sign Up',
+    signingIn: 'Signing in...',
+    signingUp: 'Signing up...',
+    demoMode: 'Try Demo Mode (No Backend Required)',
+    qrLogin: 'Login with QR Code',
+    hideQr: 'Hide QR Login',
+    scanWithPhone: 'Scan with your phone',
+    qrExpired: 'QR code expired',
+    generateNewQr: 'Generate New QR Code',
+    openUrl: 'Open this URL on a device where you\'re logged in',
+    refreshQr: 'Refresh QR Code',
+    noAccount: "Don't have an account?",
+    haveAccount: 'Already have an account?',
+    chooseTheme: 'Choose Theme',
+    chooseLanguage: 'Choose Language',
+    termsError: 'You must accept the Terms of Use and Privacy Policy',
+  }
+}
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
@@ -21,7 +85,19 @@ export default function AuthPage() {
   const [qrExpires, setQrExpires] = useState<Date | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
   const [showThemeMenu, setShowThemeMenu] = useState(false)
+  const [showLangMenu, setShowLangMenu] = useState(false)
+  const [language, setLanguage] = useState<Language>(() => {
+    const saved = localStorage.getItem('nemaks_language')
+    return (saved as Language) || 'ru'
+  })
   const themeMenuRef = useRef<HTMLDivElement>(null)
+  const langMenuRef = useRef<HTMLDivElement>(null)
+  
+  const t = translations[language]
+
+  useEffect(() => {
+    localStorage.setItem('nemaks_language', language)
+  }, [language])
 
   const { login, register, theme, setTheme, enableDemoMode, checkAuth } = useStore()
 
@@ -29,6 +105,9 @@ export default function AuthPage() {
     const handleClickOutside = (event: MouseEvent) => {
       if (themeMenuRef.current && !themeMenuRef.current.contains(event.target as Node)) {
         setShowThemeMenu(false)
+      }
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setShowLangMenu(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -118,7 +197,7 @@ export default function AuthPage() {
     setError('')
 
     if (!isLogin && !agreeToTerms) {
-      setError('Необходимо принять Правила использования и Политику конфиденциальности')
+      setError(t.termsError)
       return
     }
 
@@ -171,54 +250,117 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background/50 p-4 relative z-10">
-      {/* Theme selector - single button with dropdown */}
-      <div ref={themeMenuRef} className="fixed top-4 right-4 z-50">
-        <button
-          onClick={() => setShowThemeMenu(!showThemeMenu)}
-          className={cn(
-            'flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300',
-            'border backdrop-blur-sm',
-            'bg-card/80 hover:bg-accent/20 border-border hover:border-primary/50'
-          )}
-          title="Change theme"
-        >
-          <Palette className="w-4 h-4" />
-          <CurrentThemeIcon className="w-4 h-4 text-primary" />
-        </button>
+      {/* Theme and Language selectors */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        {/* Language selector */}
+        <div ref={langMenuRef} className="relative">
+          <button
+            onClick={() => setShowLangMenu(!showLangMenu)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300',
+              'border backdrop-blur-sm',
+              'bg-card/80 hover:bg-accent/20 border-border hover:border-primary/50'
+            )}
+            title={t.chooseLanguage}
+          >
+            <Globe className="w-4 h-4" />
+            <span className="text-sm font-medium">{language.toUpperCase()}</span>
+          </button>
 
-        {showThemeMenu && (
-          <div className="absolute top-full right-0 mt-2 w-48 bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-xl overflow-hidden animate-slide-in">
-            <div className="p-2 border-b border-border">
-              <span className="text-xs font-medium text-muted-foreground px-2">Choose Theme</span>
+          {showLangMenu && (
+            <div className="absolute top-full right-0 mt-2 w-40 bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-xl overflow-hidden animate-slide-in">
+              <div className="p-2 border-b border-border">
+                <span className="text-xs font-medium text-muted-foreground px-2">{t.chooseLanguage}</span>
+              </div>
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    setLanguage('ru')
+                    setShowLangMenu(false)
+                  }}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-200',
+                    'hover:bg-accent/20',
+                    language === 'ru' && 'bg-primary/10'
+                  )}
+                >
+                  <span className="text-lg">🇷🇺</span>
+                  <span className={cn('flex-1 text-left text-sm', language === 'ru' && 'font-medium text-primary')}>
+                    Русский
+                  </span>
+                  {language === 'ru' && <Check className="w-4 h-4 text-primary" />}
+                </button>
+                <button
+                  onClick={() => {
+                    setLanguage('en')
+                    setShowLangMenu(false)
+                  }}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-200',
+                    'hover:bg-accent/20',
+                    language === 'en' && 'bg-primary/10'
+                  )}
+                >
+                  <span className="text-lg">🇬🇧</span>
+                  <span className={cn('flex-1 text-left text-sm', language === 'en' && 'font-medium text-primary')}>
+                    English
+                  </span>
+                  {language === 'en' && <Check className="w-4 h-4 text-primary" />}
+                </button>
+              </div>
             </div>
-            <div className="py-1 max-h-[60vh] overflow-y-auto">
-              {themes.map((t) => {
-                const Icon = t.icon
-                const isActive = theme === t.value
-                return (
-                  <button
-                    key={t.value}
-                    onClick={() => {
-                      setTheme(t.value)
-                      setShowThemeMenu(false)
-                    }}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-200',
-                      'hover:bg-accent/20',
-                      isActive && 'bg-primary/10'
-                    )}
-                  >
-                    <Icon className={cn('w-4 h-4', isActive ? 'text-primary' : 'text-muted-foreground')} />
-                    <span className={cn('flex-1 text-left text-sm', isActive && 'font-medium text-primary')}>
-                      {t.label}
-                    </span>
-                    {isActive && <Check className="w-4 h-4 text-primary" />}
-                  </button>
-                )
-              })}
+          )}
+        </div>
+
+        {/* Theme selector */}
+        <div ref={themeMenuRef} className="relative">
+          <button
+            onClick={() => setShowThemeMenu(!showThemeMenu)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300',
+              'border backdrop-blur-sm',
+              'bg-card/80 hover:bg-accent/20 border-border hover:border-primary/50'
+            )}
+            title={t.chooseTheme}
+          >
+            <Palette className="w-4 h-4" />
+            <CurrentThemeIcon className="w-4 h-4 text-primary" />
+          </button>
+
+          {showThemeMenu && (
+            <div className="absolute top-full right-0 mt-2 w-48 bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-xl overflow-hidden animate-slide-in">
+              <div className="p-2 border-b border-border">
+                <span className="text-xs font-medium text-muted-foreground px-2">{t.chooseTheme}</span>
+              </div>
+              <div className="py-1 max-h-[60vh] overflow-y-auto">
+                {themes.map((themeItem) => {
+                  const Icon = themeItem.icon
+                  const isActive = theme === themeItem.value
+                  return (
+                    <button
+                      key={themeItem.value}
+                      onClick={() => {
+                        setTheme(themeItem.value)
+                        setShowThemeMenu(false)
+                      }}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-200',
+                        'hover:bg-accent/20',
+                        isActive && 'bg-primary/10'
+                      )}
+                    >
+                      <Icon className={cn('w-4 h-4', isActive ? 'text-primary' : 'text-muted-foreground')} />
+                      <span className={cn('flex-1 text-left text-sm', isActive && 'font-medium text-primary')}>
+                        {themeItem.label}
+                      </span>
+                      {isActive && <Check className="w-4 h-4 text-primary" />}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="w-full max-w-md relative z-10 px-2 sm:px-0">
@@ -228,10 +370,10 @@ export default function AuthPage() {
             <Logo size="xl" className="hidden sm:block" />
           </div>
           <h1 className="text-2xl sm:text-4xl font-bold gradient-text mb-2">
-            Welcome to Nemaks
+            {t.welcome}
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg">
-            {isLogin ? 'Sign in to your account' : 'Create a new account'}
+            {isLogin ? t.signInSubtitle : t.signUpSubtitle}
           </p>
         </div>
 
@@ -239,14 +381,14 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <label htmlFor="username" className="block text-sm font-medium text-foreground">
-                Username
+                {t.username}
               </label>
               <input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
+                placeholder={t.usernamePlaceholder}
                 className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary relative z-50"
                 required
               />
@@ -255,14 +397,14 @@ export default function AuthPage() {
 
             <div className="space-y-2">
               <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                Password
+                {t.password}
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder={t.passwordPlaceholder}
                 className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary relative z-50"
                 required
               />
@@ -278,13 +420,13 @@ export default function AuthPage() {
                   className="w-5 h-5 mt-0.5 rounded border-border bg-background text-primary focus:ring-primary cursor-pointer"
                 />
                 <label htmlFor="agree-terms" className="text-sm text-gray-300 cursor-pointer">
-                  Я принимаю{' '}
+                  {t.agreeTerms}{' '}
                   <Link href="/terms" className="text-primary hover:underline">
-                    Правила использования
+                    {t.termsOfUse}
                   </Link>{' '}
-                  и{' '}
+                  {t.and}{' '}
                   <Link href="/privacy" className="text-primary hover:underline">
-                    Политику конфиденциальности
+                    {t.privacyPolicy}
                   </Link>
                 </label>
               </div>
@@ -301,7 +443,7 @@ export default function AuthPage() {
               disabled={loading}
               className="btn-cosmic w-full"
             >
-              {loading ? (isLogin ? 'Signing in...' : 'Signing up...') : (isLogin ? 'Sign In' : 'Sign Up')}
+              {loading ? (isLogin ? t.signingIn : t.signingUp) : (isLogin ? t.signIn : t.signUp)}
             </button>
 
             <div className="mt-4">
@@ -310,7 +452,7 @@ export default function AuthPage() {
                 onClick={handleDemoMode}
                 className="w-full px-4 py-3 bg-accent/20 hover:bg-accent/30 border border-border rounded-lg text-foreground transition-all duration-300 hover:border-primary/50 relative z-50"
               >
-                Try Demo Mode (No Backend Required)
+                {t.demoMode}
               </button>
             </div>
 
@@ -322,7 +464,7 @@ export default function AuthPage() {
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg text-primary transition-all duration-300 hover:border-primary/50 relative z-50"
                 >
                   <QrCode className="w-5 h-5" />
-                  {showQR ? 'Hide QR Login' : 'Login with QR Code'}
+                  {showQR ? t.hideQr : t.qrLogin}
                 </button>
               </div>
             )}
@@ -332,7 +474,7 @@ export default function AuthPage() {
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <Smartphone className="w-5 h-5 text-primary" />
-                    <span className="font-medium">Scan with your phone</span>
+                    <span className="font-medium">{t.scanWithPhone}</span>
                   </div>
                   
                   {qrLoading ? (
@@ -341,14 +483,14 @@ export default function AuthPage() {
                     </div>
                   ) : isQRExpired || !qrToken ? (
                     <div className="flex flex-col items-center justify-center h-48 gap-4">
-                      <p className="text-muted-foreground">QR code expired</p>
+                      <p className="text-muted-foreground">{t.qrExpired}</p>
                       <button
                         type="button"
                         onClick={generateQRCode}
                         className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                       >
                         <RefreshCw className="w-4 h-4" />
-                        Generate New QR Code
+                        {t.generateNewQr}
                       </button>
                     </div>
                   ) : (
@@ -362,7 +504,7 @@ export default function AuthPage() {
                         />
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Open this URL on a device where you're logged in
+                        {t.openUrl}
                       </p>
                       <button
                         type="button"
@@ -373,7 +515,7 @@ export default function AuthPage() {
                         className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
                       >
                         <RefreshCw className="w-4 h-4" />
-                        Refresh QR Code
+                        {t.refreshQr}
                       </button>
                     </div>
                   )}
@@ -385,7 +527,7 @@ export default function AuthPage() {
           <div className="my-6 border-t border-border" />
 
           <p className="text-center text-sm text-muted-foreground">
-            {isLogin ? "Don't have an account?" : 'Already have an account?'}
+            {isLogin ? t.noAccount : t.haveAccount}
             {' '}
             <button
               type="button"
@@ -395,7 +537,7 @@ export default function AuthPage() {
               }}
               className="text-primary hover:text-accent font-medium transition-colors hover:underline relative z-50"
             >
-              {isLogin ? 'Sign up' : 'Sign in'}
+              {isLogin ? t.signUp : t.signIn}
             </button>
           </p>
         </div>
