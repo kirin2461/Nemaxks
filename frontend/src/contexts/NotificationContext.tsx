@@ -193,7 +193,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     let socket: WebSocket | null = null
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
     let reconnectAttempts = 0
-    const maxReconnectAttempts = 5
+    const maxReconnectAttempts = 10
     
     const connect = () => {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -240,7 +240,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         
         if (reconnectAttempts < maxReconnectAttempts && user?.id) {
           reconnectAttempts++
-          const delay = Math.min(5000 * Math.pow(1.5, reconnectAttempts - 1), 30000)
+          const delay = Math.min(1000 * Math.pow(1.5, reconnectAttempts - 1), 15000)
           console.log(`[NotificationContext] Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`)
           setConnectionStatus('reconnecting')
           reconnectTimeout = setTimeout(connect, delay)
