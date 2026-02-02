@@ -1,0 +1,182 @@
+2026-02-02 22:58:14.29
+469376de
+User
+2026/02/02 19:58:14 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:14.69
+469376de
+User
+2026-02-02 22:58:14.69
+469376de
+User
+[311.934ms] [rows:0] SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'posts' AND column_name = 'id') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'posts' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+2026-02-02 22:58:14.69
+469376de
+User
+2026/02/02 19:58:14 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:16.49
+469376de
+User
+[257.132ms] [rows:1] SELECT count(*) FROM pg_indexes WHERE tablename = 'friends' AND indexname = 'idx_friends_user_id' AND schemaname = CURRENT_SCHEMA()
+2026-02-02 22:58:16.49
+469376de
+User
+2026-02-02 22:58:16.49
+469376de
+User
+2026/02/02 19:58:16 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:16.89
+469376de
+User
+2026-02-02 22:58:16.89
+469376de
+User
+2026/02/02 19:58:16 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:16.89
+469376de
+User
+[200.107ms] [rows:1] SELECT count(*) FROM information_schema.tables WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'friend_requests' AND table_type = 'BASE TABLE'
+2026-02-02 22:58:30.19
+469376de
+User
+[599.933ms] [rows:-] SELECT c.column_name, c.is_nullable = 'YES', c.udt_name, c.character_maximum_length, c.numeric_precision, c.numeric_precision_radix, c.numeric_scale, c.datetime_precision, 8 * typlen, c.column_default, pd.description, c.identity_increment FROM information_schema.columns AS c JOIN pg_type AS pgt ON c.udt_name = pgt.typname LEFT JOIN pg_catalog.pg_description as pd ON pd.objsubid = c.ordinal_position AND pd.objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = c.table_name AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = c.table_schema)) where table_catalog = 'neondb' AND table_schema = CURRENT_SCHEMA() AND table_name = 'bot_rate_limits'
+2026-02-02 22:58:30.19
+469376de
+User
+2026/02/02 19:58:29 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:30.19
+469376de
+User
+2026-02-02 22:58:30.79
+469376de
+User
+2026/02/02 19:58:30 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:30.79
+469376de
+User
+[200.070ms] [rows:1] SELECT count(*) FROM pg_indexes WHERE tablename = 'bot_rate_limits' AND indexname = 'idx_bot_rate_limits_bot_id' AND schemaname = CURRENT_SCHEMA()
+2026-02-02 22:58:30.79
+469376de
+User
+2026-02-02 22:58:36.29
+469376de
+User
+[749.050ms] [rows:1] SELECT count(*) FROM pg_indexes WHERE tablename = 'call_recordings' AND indexname = 'idx_call_recordings_call_id' AND schemaname = CURRENT_SCHEMA()
+2026-02-02 22:58:36.29
+469376de
+User
+2026/02/02 19:58:36 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:36.29
+469376de
+User
+2026-02-02 22:58:36.59
+469376de
+User
+2026-02-02 22:58:36.59
+469376de
+User
+[200.021ms] [rows:1] SELECT CURRENT_DATABASE()
+2026-02-02 22:58:36.59
+469376de
+User
+2026/02/02 19:58:36 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:40.19
+469376de
+User
+2026/02/02 19:58:40 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:40.19
+469376de
+User
+[300.081ms] [rows:0] SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'refresh_tokens' AND column_name = 'expires_at') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'refresh_tokens' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+2026-02-02 22:58:40.19
+469376de
+User
+2026-02-02 22:58:43.59
+469376de
+User
+[1604.414ms] [rows:0] SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'user_sessions' AND column_name = 'last_seen_at') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'user_sessions' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+2026-02-02 22:58:43.59
+469376de
+User
+2026-02-02 22:58:43.59
+469376de
+User
+2026/02/02 19:58:43 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:49.60
+469376de
+User
+[200.874ms] [rows:0] SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'conversation_encryptions' AND column_name = 'shared_secret_version') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'conversation_encryptions' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+2026-02-02 22:58:49.60
+469376de
+User
+2026/02/02 19:58:49 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:49.60
+469376de
+User
+2026-02-02 22:58:52.09
+469376de
+User
+2026/02/02 19:58:52 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:52.09
+469376de
+User
+2026-02-02 22:58:52.09
+469376de
+User
+[200.038ms] [rows:1] SELECT count(*) FROM pg_indexes WHERE tablename = 'encrypted_direct_messages' AND indexname = 'idx_encrypted_direct_messages_recipient_id' AND schemaname = CURRENT_SCHEMA()
+2026-02-02 22:58:53.99
+469376de
+User
+2026-02-02 22:58:53.99
+469376de
+User
+AND b.relname = 'channel_invitations'
+2026-02-02 22:58:53.99
+469376de
+User
+2026/02/02 19:58:53 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:53.99
+469376de
+User
+FROM pg_attribute a JOIN pg_class b ON a.attrelid = b.oid AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA())
+2026-02-02 22:58:53.99
+469376de
+User
+WHERE a.attnum > 0 -- hide internal columns
+2026-02-02 22:58:53.99
+469376de
+User
+[372.781ms] [rows:-] SELECT a.attname as column_name, format_type(a.atttypid, a.atttypmod) AS data_type
+2026-02-02 22:58:53.99
+469376de
+User
+AND NOT a.attisdropped -- hide deleted columns
+2026-02-02 22:58:54.09
+469376de
+User
+[299.838ms] [rows:0] SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'channel_invitations' AND column_name = 'id') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'channel_invitations' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+2026-02-02 22:58:54.09
+469376de
+User
+2026/02/02 19:58:53 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:54.09
+469376de
+User
+2026-02-02 22:58:54.59
+469376de
+User
+2026/02/02 19:58:54 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:54.59
+469376de
+User
+[400.002ms] [rows:0] SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'channel_invitations' AND column_name = 'code') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'channel_invitations' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+2026-02-02 22:58:54.59
+469376de
+User
+2026-02-02 22:58:55.09
+469376de
+User
+2026/02/02 19:58:55 /home/runner/workspace/backend/handlers.go:104 SLOW SQL >= 200ms
+2026-02-02 22:58:55.09
+469376de
+User
+[499.717ms] [rows:0] SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'channel_invitations' AND column_name = 'expires_at') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'channel_invitations' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
