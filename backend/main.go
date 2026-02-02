@@ -26,16 +26,34 @@ func main() {
         }
 
         // Create router immediately
-        r := gin.Default()
+        gin.SetMode(gin.ReleaseMode)
+        r := gin.New()
+        r.Use(gin.Recovery())
+        r.SetTrustedProxies(nil)
         
         // Health check endpoint - must respond before full init
         r.GET("/health", func(c *gin.Context) {
                 if serverReady {
                         c.JSON(200, gin.H{"status": "ready"})
                 } else {
-                        c.JSON(503, gin.H{"status": "initializing"})
+                        c.JSON(200, gin.H{"status": "initializing"})
                 }
         })
+        
+        // Serve frontend static files IMMEDIATELY (no DB needed)
+        if _, err := os.Stat("../frontend/dist"); err == nil {
+                r.Static("/assets", "../frontend/dist/assets")
+                r.StaticFile("/", "../frontend/dist/index.html")
+                r.NoRoute(func(c *gin.Context) {
+                        c.File("../frontend/dist/index.html")
+                })
+                log.Println("Frontend static files configured")
+        } else {
+                log.Printf("Frontend dist not found: %v", err)
+                r.GET("/", func(c *gin.Context) {
+                        c.JSON(200, gin.H{"status": "API server running", "frontend": "not built"})
+                })
+        }
         
         // Start HTTP server FIRST to satisfy port timeout
         srv := &http.Server{
@@ -47,14 +65,14 @@ func main() {
         }
         
         go func() {
-                log.Printf("Server starting on port %s (initializing...)", port)
+                log.Printf("Server starting on port %s", port)
                 if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
                         log.Fatalf("Server failed to start: %v", err)
                 }
         }()
         
         // Give the server a moment to start listening
-        time.Sleep(100 * time.Millisecond)
+        time.Sleep(50 * time.Millisecond)
         log.Printf("Port %s opened, now initializing services...", port)
 
         // Now do the slow initialization
@@ -165,24 +183,6 @@ func main() {
         // Security middleware
         r.Use(SecurityHeadersMiddleware())
         r.Use(HTTPSEnforcementMiddleware())
-
-        r.NoRoute(func(c *gin.Context) {
-                log.Printf("404 Not Found: %s %s from %s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
-                c.JSON(http.StatusNotFound, gin.H{"error": "Route not found"})
-        })
-
-        r.GET("/", func(c *gin.Context) {
-                // In production with frontend, serve index.html; in dev, return API status
-                if _, err := os.Stat("../frontend/dist/index.html"); err == nil {
-                        c.File("../frontend/dist/index.html")
-                        return
-                }
-                c.JSON(http.StatusOK, gin.H{
-                        "status":  "ok",
-                        "message": "Nemaks API Server",
-                        "version": "1.0.0",
-                })
-        })
 
         // Auth routes with rate limiting and account lockout to prevent brute force attacks
         r.POST("/api/auth/register", AuthRateLimitMiddleware(), registerHandler)
@@ -579,18 +579,11 @@ func main() {
         registerLicenseRoutes(r, authMiddleware(), adminMiddleware())
         go cleanupExpiredLicenses()
 
-        // Serve frontend static files in production
+        // Additional static file routes (audio, logos, etc.)
         if _, err := os.Stat("../frontend/dist"); err == nil {
-                r.Static("/assets", "../frontend/dist/assets")
                 r.Static("/audio", "../frontend/dist/audio")
                 r.Static("/jarvis-audio", "../frontend/dist/jarvis-audio")
                 r.Static("/logos", "../frontend/dist/logos")
-                r.NoRoute(func(c *gin.Context) {
-                        // Serve index.html for SPA routing (except API and WebSocket routes)
-                        if !strings.HasPrefix(c.Request.URL.Path, "/api") && !strings.HasPrefix(c.Request.URL.Path, "/ws") && !strings.HasPrefix(c.Request.URL.Path, "/uploads") {
-                                c.File("../frontend/dist/index.html")
-                        }
-                })
         }
 
         // Wait for interrupt signal for graceful shutdown
