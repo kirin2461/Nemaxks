@@ -105,6 +105,12 @@ export default function LicenseActivationPage() {
         body: JSON.stringify({ key: licenseKey }),
       });
 
+      if (validateResponse.status === 503) {
+        setError('Сервер загружается, подождите несколько секунд и попробуйте снова...');
+        setIsValidating(false);
+        return;
+      }
+
       const validateData = await validateResponse.json();
 
       if (!validateData.valid) {
@@ -119,7 +125,7 @@ export default function LicenseActivationPage() {
         setLocation('/auth');
       }, 1500);
     } catch {
-      setError('Ошибка при проверке ключа');
+      setError('Ошибка при проверке ключа. Попробуйте обновить страницу.');
     } finally {
       setIsValidating(false);
     }

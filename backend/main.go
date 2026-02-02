@@ -40,11 +40,44 @@ func main() {
                 }
         })
         
+        // API readiness middleware - returns 503 if server is still initializing
+        apiReadinessMiddleware := func(c *gin.Context) {
+                if !serverReady {
+                        c.JSON(503, gin.H{
+                                "error":   "Server is initializing, please wait...",
+                                "status":  "initializing",
+                                "retry":   true,
+                        })
+                        c.Abort()
+                        return
+                }
+                c.Next()
+        }
+        
+        // Pre-register API group with readiness check (routes added after init)
+        api := r.Group("/api")
+        api.Use(apiReadinessMiddleware)
+        
         // Serve frontend static files IMMEDIATELY (no DB needed)
         if _, err := os.Stat("../frontend/dist"); err == nil {
                 r.Static("/assets", "../frontend/dist/assets")
                 r.StaticFile("/", "../frontend/dist/index.html")
                 r.NoRoute(func(c *gin.Context) {
+                        // If this is an API request and server is still initializing
+                        if strings.HasPrefix(c.Request.URL.Path, "/api/") {
+                                if !serverReady {
+                                        c.JSON(503, gin.H{
+                                                "error":  "Server is initializing, please wait...",
+                                                "status": "initializing",
+                                                "retry":  true,
+                                        })
+                                        return
+                                }
+                                // API route not found
+                                c.JSON(404, gin.H{"error": "Endpoint not found"})
+                                return
+                        }
+                        // SPA fallback for frontend routes
                         c.File("../frontend/dist/index.html")
                 })
                 log.Println("Frontend static files configured")
