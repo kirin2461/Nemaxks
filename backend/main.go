@@ -159,8 +159,9 @@ func main() {
                                 "http://127.0.0.1:5000",
                         }
                         corsConfig.AllowOriginFunc = func(origin string) bool {
-                                // Allow Replit preview domains
+                                // Allow Replit preview domains and production
                                 return strings.Contains(origin, ".replit.dev") ||
+                                        strings.Contains(origin, ".replit.app") ||
                                         strings.Contains(origin, ".repl.co") ||
                                         strings.HasPrefix(origin, "http://localhost") ||
                                         strings.HasPrefix(origin, "http://127.0.0.1")
