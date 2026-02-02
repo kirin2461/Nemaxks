@@ -16,9 +16,48 @@ import (
 )
 
 var db *gorm.DB
+var serverReady = false
 
 func main() {
-        // godotenv.Load() // Not needed in Replit
+        // Get port immediately - server must start fast for autoscale
+        port := os.Getenv("PORT")
+        if port == "" {
+                port = "8000"
+        }
+
+        // Create router immediately
+        r := gin.Default()
+        
+        // Health check endpoint - must respond before full init
+        r.GET("/health", func(c *gin.Context) {
+                if serverReady {
+                        c.JSON(200, gin.H{"status": "ready"})
+                } else {
+                        c.JSON(503, gin.H{"status": "initializing"})
+                }
+        })
+        
+        // Start HTTP server FIRST to satisfy port timeout
+        srv := &http.Server{
+                Addr:         ":" + port,
+                Handler:      r,
+                ReadTimeout:  15 * time.Second,
+                WriteTimeout: 15 * time.Second,
+                IdleTimeout:  60 * time.Second,
+        }
+        
+        go func() {
+                log.Printf("Server starting on port %s (initializing...)", port)
+                if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+                        log.Fatalf("Server failed to start: %v", err)
+                }
+        }()
+        
+        // Give the server a moment to start listening
+        time.Sleep(100 * time.Millisecond)
+        log.Printf("Port %s opened, now initializing services...", port)
+
+        // Now do the slow initialization
         initDB()
         initPhase1()
         initPhase2()
@@ -71,8 +110,9 @@ func main() {
                         jarvisMCP.stopProcess()
                 }
         }()
-
-        r := gin.Default()
+        
+        serverReady = true
+        log.Println("All services initialized, server ready!")
         r.SetTrustedProxies(nil) // Trust all proxies for Replit reverse proxy
 
         // Configure CORS with proper origin restrictions
@@ -142,10 +182,6 @@ func main() {
                         "message": "Nemaks API Server",
                         "version": "1.0.0",
                 })
-        })
-
-        r.GET("/health", func(c *gin.Context) {
-                c.JSON(http.StatusOK, gin.H{"status": "ok"})
         })
 
         // Auth routes with rate limiting and account lockout to prevent brute force attacks
@@ -556,28 +592,6 @@ func main() {
                         }
                 })
         }
-
-        port := os.Getenv("PORT")
-        if port == "" {
-                port = "8000"
-        }
-
-        // Create HTTP server with timeouts
-        srv := &http.Server{
-                Addr:         ":" + port,
-                Handler:      r,
-                ReadTimeout:  15 * time.Second,
-                WriteTimeout: 15 * time.Second,
-                IdleTimeout:  60 * time.Second,
-        }
-
-        // Start server in goroutine
-        go func() {
-                log.Printf("Server starting on port %s", port)
-                if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-                        log.Fatalf("Server failed to start: %v", err)
-                }
-        }()
 
         // Wait for interrupt signal for graceful shutdown
         quit := make(chan os.Signal, 1)
