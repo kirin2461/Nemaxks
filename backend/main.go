@@ -168,14 +168,16 @@ func main() {
                         }
                         log.Println("CORS: Using Replit-compatible origins with dynamic matching")
                 } else {
-                        // In non-Replit environments, CORS must be explicitly configured
-                        // Default to localhost only for development safety
+                        // In production or non-Replit environments without REPL_SLUG
+                        // Allow Replit domains for autoscale deployment
                         corsConfig.AllowOriginFunc = func(origin string) bool {
-                                return strings.HasPrefix(origin, "http://localhost") ||
+                                return strings.Contains(origin, ".replit.dev") ||
+                                        strings.Contains(origin, ".replit.app") ||
+                                        strings.Contains(origin, ".repl.co") ||
+                                        strings.HasPrefix(origin, "http://localhost") ||
                                         strings.HasPrefix(origin, "http://127.0.0.1")
                         }
-                        log.Println("CORS: No CORS_ALLOWED_ORIGINS set and not in Replit environment.")
-                        log.Println("CORS: Defaulting to localhost only. Set CORS_ALLOWED_ORIGINS for production!")
+                        log.Println("CORS: Production mode - allowing all Replit domains")
                 }
         }
 
