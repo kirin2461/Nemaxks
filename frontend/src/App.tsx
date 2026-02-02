@@ -9,6 +9,7 @@ import { AppStateProvider } from './contexts/AppStateContext'
 import { IncomingCallNotification } from './components/IncomingCallNotification'
 import { ConnectionStatusIndicator } from './components/ConnectionStatusIndicator'
 import { ToastContainer } from './components/Toast'
+import { LanguageProvider } from './contexts/LanguageContext'
 
 
 // Pages
@@ -109,11 +110,12 @@ function App() {
   }, [])
 
   return (
-    <AppStateProvider>
-      <NotificationProvider>
-        <VoiceProvider>
-          <JarvisVoiceProvider>
-            <React.Suspense fallback={<LoadingScreen />}>
+    <LanguageProvider>
+      <AppStateProvider>
+        <NotificationProvider>
+          <VoiceProvider>
+            <JarvisVoiceProvider>
+              <React.Suspense fallback={<LoadingScreen />}>
               <JarvisFloatingIndicator />
               <IncomingCallNotification />
               <ConnectionStatusIndicator />
@@ -394,11 +396,12 @@ function App() {
                 </Route>
               </Switch>
               <ToastContainer />
-            </React.Suspense>
-          </JarvisVoiceProvider>
-        </VoiceProvider>
-      </NotificationProvider>
-    </AppStateProvider>
+              </React.Suspense>
+            </JarvisVoiceProvider>
+          </VoiceProvider>
+        </NotificationProvider>
+      </AppStateProvider>
+    </LanguageProvider>
   )
 }
 

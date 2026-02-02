@@ -169,8 +169,9 @@ func ensureGlobalGuild() {
 
                 // Create global guild if it doesn't exist
                 globalGuild = Guild{
-                        Name:    "Nemaks Общий",
-                        OwnerID: systemUser.ID,
+                        Name:      "Nemaks Общий",
+                        OwnerID:   systemUser.ID,
+                        IsPrivate: false, // Explicitly public
                 }
                 if err := db.Create(&globalGuild).Error; err == nil {
                         // Create a default general channel
@@ -180,6 +181,11 @@ func ensureGlobalGuild() {
                                 Type:    "text",
                         }
                         db.Create(&channel)
+                }
+        } else {
+                // Ensure existing global guild is public
+                if globalGuild.IsPrivate {
+                        db.Model(&globalGuild).Update("is_private", false)
                 }
         }
 
@@ -518,8 +524,20 @@ func generateToken(user *User) (string, error) {
 }
 
 func getGuildsHandler(c *gin.Context) {
+        userID, _ := getUserIDFromContext(c)
         var guilds []Guild
-        db.Find(&guilds)
+        
+        // Get guilds where user is a member
+        var memberGuildIDs []uint
+        db.Model(&GuildMember{}).Where("user_id = ?", userID).Pluck("guild_id", &memberGuildIDs)
+        
+        // Get guilds: user is member, OR user is owner, OR guild is "Nemaks Общий" (the only public server)
+        if len(memberGuildIDs) > 0 {
+                db.Where("id IN ? OR owner_id = ? OR (name = ? AND is_private = ?)", memberGuildIDs, userID, "Nemaks Общий", false).Find(&guilds)
+        } else {
+                db.Where("owner_id = ? OR (name = ? AND is_private = ?)", userID, "Nemaks Общий", false).Find(&guilds)
+        }
+        
         c.JSON(http.StatusOK, guilds)
 }
 
@@ -539,13 +557,23 @@ func createGuildHandler(c *gin.Context) {
         }
 
         guild := Guild{
-                Name:    req.Name,
-                OwnerID: userID,
+                Name:      req.Name,
+                OwnerID:   userID,
+                IsPrivate: true, // All new servers are invitation-only by default
         }
         if err := db.Create(&guild).Error; err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create guild"})
                 return
         }
+        
+        // Add owner as a member of the guild
+        member := GuildMember{
+                GuildID:  guild.ID,
+                UserID:   userID,
+                Role:     "owner",
+                JoinedAt: time.Now(),
+        }
+        db.Create(&member)
 
         c.JSON(http.StatusCreated, guild)
 }

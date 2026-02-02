@@ -3,6 +3,7 @@ import { useParams } from "wouter";
 import { useStore } from "../lib/store";
 import { messagesAPI } from "../lib/api";
 import { Avatar } from "../components/Avatar";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export interface DirectMessage {
   id: string;
@@ -26,6 +27,7 @@ const DirectMessagesPage: React.FC = () => {
   const params = useParams<{ userId: string }>();
   const userId = params.userId;
   const { user: currentUser } = useStore();
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -175,7 +177,7 @@ const DirectMessagesPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-xl text-gray-400">Загрузка сообщений...</div>
+        <div className="text-xl text-gray-400">{t('messages.loading')}</div>
       </div>
     );
   }
@@ -185,7 +187,7 @@ const DirectMessagesPage: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400">
-            <p>Сообщений пока нет. Начните диалог!</p>
+            <p>{t('messages.noMessages')}</p>
           </div>
         ) : (
           messages.map((message) => (
@@ -215,20 +217,20 @@ const DirectMessagesPage: React.FC = () => {
                   <button
                     onClick={() => {
                       const newContent = prompt(
-                        "Edit message:",
+                        t('messages.editPrompt'),
                         message.content,
                       );
                       if (newContent) handleEditMessage(message.id, newContent);
                     }}
                     className="text-xs text-gray-400 hover:text-gray-200"
                   >
-                    Edit
+                    {t('messages.edit')}
                   </button>
                   <button
                     onClick={() => handleDeleteMessage(message.id)}
                     className="text-xs text-red-400 hover:text-red-300"
                   >
-                    Delete
+                    {t('messages.delete')}
                   </button>
                 </div>
               )}
@@ -242,7 +244,7 @@ const DirectMessagesPage: React.FC = () => {
               <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
               <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
             </div>
-            <span>Someone is typing...</span>
+            <span>{t('messages.typing')}</span>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -257,7 +259,7 @@ const DirectMessagesPage: React.FC = () => {
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Введите сообщение..."
+            placeholder={t('messages.placeholder')}
             className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
           />
           <button
@@ -265,7 +267,7 @@ const DirectMessagesPage: React.FC = () => {
             disabled={!newMessage.trim()}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
           >
-            Send
+            {t('messages.send')}
           </button>
         </div>
       </form>

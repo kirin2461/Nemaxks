@@ -5,6 +5,7 @@ import { ContextMenu, useContextMenu, type ContextMenuItem } from '@/components/
 import { useStore } from '@/lib/store'
 import { formatTime } from '@/lib/utils'
 import { friendsAPI } from '@/lib/api'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 import {
   Users,
@@ -48,6 +49,7 @@ export default function FriendsPage() {
   const { user, isDemoMode } = useStore()
   const [, navigate] = useLocation()
   const { initiateCall } = useNotifications()
+  const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState<TabType>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [friends, setFriends] = useState<Friend[]>([])
@@ -303,46 +305,46 @@ export default function FriendsPage() {
   const getFriendContextMenuItems = (friend: any): ContextMenuItem[] => {
     return [
       {
-        label: 'Send Message',
+        label: t('friends.sendMessage'),
         icon: <MessageSquare className="w-4 h-4" />,
         onClick: () => handleSendMessage(friend.id),
       },
       {
-        label: 'Voice Call',
+        label: t('friends.voiceCall'),
         icon: <Phone className="w-4 h-4" />,
         onClick: () => handleVoiceCall(friend.id),
       },
       {
-        label: 'Video Call',
+        label: t('friends.videoCall'),
         icon: <Video className="w-4 h-4" />,
         onClick: () => handleVideoCall(friend.id),
       },
       { divider: true } as ContextMenuItem,
       {
-        label: 'Send File',
+        label: t('friends.sendFile'),
         icon: <Paperclip className="w-4 h-4" />,
         onClick: () => handleSendFile(friend.id),
       },
       {
-        label: 'Send Gift',
+        label: t('friends.sendGift'),
         icon: <Gift className="w-4 h-4" />,
         onClick: () => handleSendGift(friend.id),
       },
       { divider: true } as ContextMenuItem,
       {
-        label: 'Remove Friend',
+        label: t('friends.remove'),
         icon: <UserMinus className="w-4 h-4" />,
         onClick: () => handleRemoveFriend(friend.id),
         variant: 'danger' as const,
       },
       {
-        label: 'Block User',
+        label: t('friends.block'),
         icon: <Ban className="w-4 h-4" />,
         onClick: () => handleBlockUser(friend.id),
         variant: 'danger' as const,
       },
       {
-        label: 'Report User',
+        label: t('friends.report'),
         icon: <Flag className="w-4 h-4" />,
         onClick: () => handleReportUser(friend.id, friend.username),
         variant: 'danger' as const,
@@ -378,15 +380,15 @@ export default function FriendsPage() {
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-bold gradient-text mb-2">Friends</h1>
-                <p className="text-muted-foreground">Manage your friends and connections</p>
+                <h1 className="text-3xl font-bold gradient-text mb-2">{t('friends.title')}</h1>
+                <p className="text-muted-foreground">{t('friends.manageConnections')}</p>
               </div>
               <button
                 onClick={() => setShowAddFriend(!showAddFriend)}
                 className="btn-cosmic px-6 py-3 flex items-center gap-2"
               >
                 <UserPlus className="w-5 h-5" />
-                Add Friend
+                {t('friends.addFriend')}
               </button>
             </div>
 
@@ -398,7 +400,7 @@ export default function FriendsPage() {
                     type="text"
                     value={addFriendInput}
                     onChange={(e) => setAddFriendInput(e.target.value)}
-                    placeholder="Enter username or email..."
+                    placeholder={t('friends.addFriendPlaceholder')}
                     className="flex-1 input-cosmic"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleAddFriend()
@@ -413,7 +415,7 @@ export default function FriendsPage() {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Send a friend request by entering their username or email address
+                  {t('friends.sendRequestHint')}
                 </p>
               </div>
             )}
@@ -425,7 +427,7 @@ export default function FriendsPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search friends..."
+                placeholder={t('friends.searchPlaceholder')}
                 className="w-full px-12 py-3 bg-background border border-border rounded-lg
                           text-foreground placeholder:text-muted-foreground
                           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
@@ -439,11 +441,11 @@ export default function FriendsPage() {
         <div className="px-6 py-3 border-b border-border bg-card/30 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto flex gap-2">
             {[
-              { key: 'all', label: 'All Friends', count: friends.length },
-              { key: 'online', label: 'Online', count: friends.filter(f => f.status === 'online').length },
-              { key: 'pending', label: 'Pending', count: pendingRequests.length },
-              { key: 'discover', label: 'Discover', count: allUsers.filter(u => u.friendship_status === 'none').length },
-              { key: 'blocked', label: 'Blocked', count: blockedUsers.length },
+              { key: 'all', label: t('friends.all'), count: friends.length },
+              { key: 'online', label: t('friends.online'), count: friends.filter(f => f.status === 'online').length },
+              { key: 'pending', label: t('friends.pending'), count: pendingRequests.length },
+              { key: 'discover', label: t('friends.discover'), count: allUsers.filter(u => u.friendship_status === 'none').length },
+              { key: 'blocked', label: t('friends.blocked'), count: blockedUsers.length },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -476,7 +478,7 @@ export default function FriendsPage() {
                       <Users className="w-10 h-10 text-white" />
                     </div>
                     <p className="text-muted-foreground">
-                      {searchQuery ? 'No friends found' : 'No friends yet. Start by adding some!'}
+                      {searchQuery ? t('friends.noFriendsFound') : t('friends.noFriends')}
                     </p>
                   </div>
                 ) : (
@@ -523,7 +525,7 @@ export default function FriendsPage() {
                           className="flex-1 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all flex items-center justify-center gap-2"
                         >
                           <MessageSquare className="w-4 h-4" />
-                          <span className="text-sm font-medium">Message</span>
+                          <span className="text-sm font-medium">{t('friends.message')}</span>
                         </button>
                         <button
                           onClick={() => handleVoiceCall(friend.id)}
@@ -545,7 +547,7 @@ export default function FriendsPage() {
                       {friend.created_at && (
                         <div className="mt-3 pt-3 border-t border-border/50 flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="w-3 h-3" />
-                          Friends since {formatTime(friend.created_at)}
+                          {t('friends.friendsSince')} {formatTime(friend.created_at)}
                         </div>
                       )}
                     </div>
@@ -559,7 +561,7 @@ export default function FriendsPage() {
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
                       <UserCheck className="w-10 h-10 text-white" />
                     </div>
-                    <p className="text-muted-foreground">No pending friend requests</p>
+                    <p className="text-muted-foreground">{t('friends.noPendingRequests')}</p>
                   </div>
                 ) : (
                   pendingRequests.map((request, index) => (
@@ -588,7 +590,7 @@ export default function FriendsPage() {
                           onClick={() => handleCancelRequest(request)}
                           className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-all cursor-pointer relative z-10"
                         >
-                          Отменить
+                          {t('friends.cancel')}
                         </button>
                       ) : (
                         <div className="flex gap-2 shrink-0 relative z-10">
@@ -598,7 +600,7 @@ export default function FriendsPage() {
                             className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all flex items-center gap-2 cursor-pointer select-none"
                           >
                             <UserCheck className="w-4 h-4" />
-                            Принять
+                            {t('friends.accept')}
                           </button>
                           <button
                             type="button"
@@ -606,7 +608,7 @@ export default function FriendsPage() {
                             className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-all flex items-center gap-2 cursor-pointer select-none"
                           >
                             <UserX className="w-4 h-4" />
-                            Отклонить
+                            {t('friends.decline')}
                           </button>
                         </div>
                       )}
@@ -621,7 +623,7 @@ export default function FriendsPage() {
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
                       <Users className="w-10 h-10 text-white" />
                     </div>
-                    <p className="text-muted-foreground">Нет новых пользователей</p>
+                    <p className="text-muted-foreground">{t('friends.noNewUsers')}</p>
                   </div>
                 ) : (
                   allUsers.filter(u => u.id !== user?.id && !friends.some(f => f.id === String(u.id)) && !pendingRequests.some(p => p.id === String(u.id))).map((discoverUser, index) => (
@@ -655,7 +657,7 @@ export default function FriendsPage() {
                         className="w-full px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <UserPlus className="w-4 h-4" />
-                        Добавить в друзья
+                        {t('friends.addFriend')}
                       </button>
                     </div>
                   ))
@@ -668,7 +670,7 @@ export default function FriendsPage() {
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
                       <Ban className="w-10 h-10 text-white" />
                     </div>
-                    <p className="text-muted-foreground">No blocked users</p>
+                    <p className="text-muted-foreground">{t('friends.noBlockedUsers')}</p>
                   </div>
                 ) : (
                   blockedUsers.map((blocked, index) => (
@@ -692,7 +694,7 @@ export default function FriendsPage() {
                         onClick={() => handleUnblockUser(blocked.id)}
                         className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all"
                       >
-                        Unblock
+                        {t('friends.unblock')}
                       </button>
                     </div>
                   ))
