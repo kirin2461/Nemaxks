@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { shopAPI, currencyAPI, inventoryAPI, ShopItem, VirtualCurrency, UserInventory } from '../lib/api';
 import { Coins, Gem, ShoppingBag, Check, Palette, Frame, Image, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +19,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 export default function ShopPage() {
+  const { t } = useTranslation();
   const [currency, setCurrency] = useState<VirtualCurrency | null>(null);
   const [items, setItems] = useState<ShopItem[]>([]);
   const [inventory, setInventory] = useState<UserInventory[]>([]);
@@ -88,7 +90,7 @@ export default function ShopPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <ShoppingBag className="w-8 h-8 text-purple-400" />
-            <h1 className="text-3xl font-bold text-white">Магазин</h1>
+            <h1 className="text-3xl font-bold text-white">{t('shop.title')}</h1>
           </div>
           
           {currency && (
@@ -117,7 +119,7 @@ export default function ShopPage() {
               }`}
             >
               {categoryIcons[cat]}
-              {cat === 'all' ? 'Все' : cat === 'themes' ? 'Темы' : cat === 'frames' ? 'Рамки' : 'Баннеры'}
+              {t(`shop.categories.${cat}`)}
             </button>
           ))}
         </div>
@@ -157,10 +159,10 @@ export default function ShopPage() {
                     {isEquipped(item.id) ? (
                       <>
                         <Check className="w-4 h-4" />
-                        Надето
+                        {t('shop.equipped')}
                       </>
                     ) : (
-                      'Надеть'
+                      t('shop.equip')
                     )}
                   </button>
                 ) : (
@@ -193,7 +195,7 @@ export default function ShopPage() {
         {items.length === 0 && (
           <div className="text-center py-16">
             <ShoppingBag className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">Нет товаров в этой категории</p>
+            <p className="text-gray-400">{t('shop.noItems', 'Нет товаров в этой категории')}</p>
           </div>
         )}
       </div>
