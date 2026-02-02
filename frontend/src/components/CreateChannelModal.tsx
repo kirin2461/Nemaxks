@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Hash, Volume2, Lock, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface CreateChannelModalProps {
   category?: string
@@ -9,9 +10,10 @@ interface CreateChannelModalProps {
 }
 
 export function CreateChannelModal({ category, onClose, onCreate }: CreateChannelModalProps) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [type, setType] = useState<'text' | 'voice'>('text')
-  const [isPrivate, setIsPrivate] = useState(false)
+  const [isPrivate, setIsPrivate] = useState(true)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,9 +27,9 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
       <div className="bg-card rounded-2xl w-full max-w-md animate-fade-in">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div>
-            <h2 className="text-lg font-semibold">Create Channel</h2>
+            <h2 className="text-lg font-semibold">{t('channels.createChannel')}</h2>
             {category && (
-              <p className="text-sm text-muted-foreground">in {category}</p>
+              <p className="text-sm text-muted-foreground">{t('channels.inCategory', { category })}</p>
             )}
           </div>
           <button
@@ -40,7 +42,7 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Channel Type</label>
+            <label className="block text-sm font-medium mb-2">{t('channels.channelType')}</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -53,9 +55,9 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
                 )}
               >
                 <Hash className="w-8 h-8" />
-                <span className="font-medium">Text</span>
+                <span className="font-medium">{t('channels.textChannel')}</span>
                 <span className="text-xs text-muted-foreground text-center">
-                  Send messages, images, and files
+                  {t('channels.textChannelDesc')}
                 </span>
               </button>
               <button
@@ -69,16 +71,16 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
                 )}
               >
                 <Volume2 className="w-8 h-8" />
-                <span className="font-medium">Voice</span>
+                <span className="font-medium">{t('channels.voiceChannel')}</span>
                 <span className="text-xs text-muted-foreground text-center">
-                  Talk with voice and video
+                  {t('channels.voiceChannelDesc')}
                 </span>
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Channel Name</label>
+            <label className="block text-sm font-medium mb-2">{t('channels.channelName')}</label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {type === 'text' ? <Hash className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
@@ -87,7 +89,7 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="new-channel"
+                placeholder={t('channels.channelNamePlaceholder')}
                 className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -97,9 +99,9 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
             <div className="flex items-center gap-3">
               {isPrivate ? <Lock className="w-5 h-5" /> : <Globe className="w-5 h-5" />}
               <div>
-                <p className="font-medium text-sm">Private Channel</p>
+                <p className="font-medium text-sm">{t('channels.privateChannel')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Only selected members can access
+                  {t('channels.privateChannelDesc')}
                 </p>
               </div>
             </div>
@@ -126,14 +128,14 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
               onClick={onClose}
               className="flex-1 px-4 py-2.5 rounded-lg hover:bg-accent/20 transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={!name.trim()}
               className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              Create Channel
+              {t('channels.createChannel')}
             </button>
           </div>
         </form>

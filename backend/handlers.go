@@ -641,6 +641,8 @@ func createChannelHandler(c *gin.Context) {
                 member := ChannelMember{
                         ChannelID: channel.ID,
                         UserID:    userID,
+                        Role:      "owner",
+                        JoinedAt:  time.Now(),
                 }
                 db.Create(&member)
         }
