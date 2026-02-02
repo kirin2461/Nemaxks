@@ -482,7 +482,7 @@ export const invitesAPI = {
   createInvite: (guildId?: string, maxUses?: number) =>
     request<InviteLink>("/invites", {
       method: "POST",
-      data: { guild_id: guildId, max_uses: maxUses },
+      data: { guild_id: guildId ? parseInt(guildId, 10) : undefined, max_uses: maxUses },
     }),
 
   getInvite: (code: string) => request<InviteLink>(`/invites/${code}`),
