@@ -1,0 +1,472 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+
+export type Language = 'ru' | 'en'
+
+interface LanguageContextType {
+  language: Language
+  setLanguage: (lang: Language) => void
+  t: (key: string) => string
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
+
+export const translations: Record<Language, Record<string, string>> = {
+  ru: {
+    // Auth page
+    'auth.welcome': 'Добро пожаловать в Nemaks',
+    'auth.signInSubtitle': 'Войдите в свой аккаунт',
+    'auth.signUpSubtitle': 'Создайте новый аккаунт',
+    'auth.username': 'Имя пользователя',
+    'auth.usernamePlaceholder': 'Введите имя пользователя',
+    'auth.password': 'Пароль',
+    'auth.passwordPlaceholder': 'Введите пароль',
+    'auth.agreeTerms': 'Я принимаю',
+    'auth.termsOfUse': 'Правила использования',
+    'auth.and': 'и',
+    'auth.privacyPolicy': 'Политику конфиденциальности',
+    'auth.signIn': 'Войти',
+    'auth.signUp': 'Зарегистрироваться',
+    'auth.signingIn': 'Вход...',
+    'auth.signingUp': 'Регистрация...',
+    'auth.demoMode': 'Демо-режим (без сервера)',
+    'auth.qrLogin': 'Войти по QR-коду',
+    'auth.hideQr': 'Скрыть QR-код',
+    'auth.scanWithPhone': 'Отсканируйте телефоном',
+    'auth.qrExpired': 'QR-код истёк',
+    'auth.generateNewQr': 'Сгенерировать новый QR-код',
+    'auth.openUrl': 'Откройте эту ссылку на устройстве, где вы уже авторизованы',
+    'auth.refreshQr': 'Обновить QR-код',
+    'auth.noAccount': 'Нет аккаунта?',
+    'auth.haveAccount': 'Уже есть аккаунт?',
+    'auth.termsError': 'Необходимо принять Правила использования и Политику конфиденциальности',
+
+    // Common
+    'common.chooseTheme': 'Выбрать тему',
+    'common.chooseLanguage': 'Выбрать язык',
+    'common.loading': 'Загрузка...',
+    'common.error': 'Ошибка',
+    'common.success': 'Успешно',
+    'common.cancel': 'Отмена',
+    'common.save': 'Сохранить',
+    'common.delete': 'Удалить',
+    'common.edit': 'Редактировать',
+    'common.close': 'Закрыть',
+    'common.back': 'Назад',
+    'common.next': 'Далее',
+    'common.submit': 'Отправить',
+    'common.search': 'Поиск',
+    'common.settings': 'Настройки',
+    'common.profile': 'Профиль',
+    'common.logout': 'Выйти',
+    'common.online': 'В сети',
+    'common.offline': 'Не в сети',
+
+    // Welcome page
+    'welcome.title': 'Добро пожаловать в Nemaks',
+    'welcome.subtitle': 'Современная платформа для общения нового поколения',
+    'welcome.feature1Title': 'Безопасное общение',
+    'welcome.feature1Desc': 'Сквозное шифрование для защиты ваших сообщений',
+    'welcome.feature2Title': 'Голосовые каналы',
+    'welcome.feature2Desc': 'Кристально чистый звук для голосового общения',
+    'welcome.feature3Title': 'AI-ассистент',
+    'welcome.feature3Desc': 'Умный помощник Jarvis для решения задач',
+    'welcome.getStarted': 'Начать',
+    'welcome.learnMore': 'Узнать больше',
+    'welcome.alreadyHaveKey': 'Уже есть ключ?',
+    'welcome.activateKey': 'Активировать ключ',
+
+    // License activation page
+    'license.title': 'Активация лицензии',
+    'license.subtitle': 'Введите ключ лицензии для доступа к платформе',
+    'license.inputPlaceholder': 'NEMKS-XXXXX-XXXXX-XXXXX',
+    'license.activate': 'Активировать',
+    'license.activating': 'Активация...',
+    'license.invalidFormat': 'Неверный формат ключа',
+    'license.keyNotFound': 'Ключ не найден',
+    'license.keyExpired': 'Срок действия ключа истёк',
+    'license.keyAlreadyUsed': 'Ключ уже активирован',
+    'license.success': 'Ключ успешно активирован!',
+    'license.serverLoading': 'Сервер загружается, подождите...',
+    'license.pricingTitle': 'Тарифные планы',
+    'license.monthly': 'Месяц',
+    'license.quarterly': 'Квартал',
+    'license.yearly': 'Год',
+    'license.days': 'дней',
+    'license.buyNow': 'Купить',
+    'license.testKey': 'Тестовый ключ',
+    'license.testKeyDesc': '10 дней бесплатного доступа',
+    'license.features': 'Возможности',
+    'license.feature1': 'Полный доступ ко всем функциям',
+    'license.feature2': 'Premium подписка',
+    'license.feature3': 'Приоритетная поддержка',
+    'license.noKey': 'Нет ключа?',
+    'license.getTestKey': 'Получить тестовый ключ',
+
+    // Sidebar
+    'sidebar.directMessages': 'Личные сообщения',
+    'sidebar.guilds': 'Гильдии',
+    'sidebar.createGuild': 'Создать гильдию',
+    'sidebar.joinGuild': 'Присоединиться к гильдии',
+    'sidebar.discoverGuilds': 'Обзор гильдий',
+    'sidebar.friends': 'Друзья',
+    'sidebar.home': 'Главная',
+
+    // Chat
+    'chat.typeMessage': 'Написать сообщение...',
+    'chat.send': 'Отправить',
+    'chat.reply': 'Ответить',
+    'chat.edit': 'Редактировать',
+    'chat.delete': 'Удалить',
+    'chat.pin': 'Закрепить',
+    'chat.unpin': 'Открепить',
+    'chat.addReaction': 'Добавить реакцию',
+    'chat.copyText': 'Копировать текст',
+    'chat.copyLink': 'Копировать ссылку',
+    'chat.report': 'Пожаловаться',
+    'chat.edited': 'изменено',
+    'chat.pinned': 'Закреплённые сообщения',
+    'chat.noMessages': 'Сообщений пока нет',
+    'chat.startConversation': 'Начните беседу!',
+
+    // Voice
+    'voice.join': 'Присоединиться',
+    'voice.leave': 'Отключиться',
+    'voice.mute': 'Выключить микрофон',
+    'voice.unmute': 'Включить микрофон',
+    'voice.deafen': 'Выключить звук',
+    'voice.undeafen': 'Включить звук',
+    'voice.startVideo': 'Включить видео',
+    'voice.stopVideo': 'Выключить видео',
+    'voice.shareScreen': 'Демонстрация экрана',
+    'voice.stopShare': 'Остановить демонстрацию',
+    'voice.settings': 'Настройки голоса',
+    'voice.connected': 'Подключено',
+    'voice.connecting': 'Подключение...',
+    'voice.disconnected': 'Отключено',
+
+    // Settings
+    'settings.title': 'Настройки',
+    'settings.account': 'Аккаунт',
+    'settings.profile': 'Профиль',
+    'settings.appearance': 'Внешний вид',
+    'settings.notifications': 'Уведомления',
+    'settings.privacy': 'Конфиденциальность',
+    'settings.security': 'Безопасность',
+    'settings.language': 'Язык',
+    'settings.theme': 'Тема',
+    'settings.voiceVideo': 'Голос и видео',
+    'settings.keybinds': 'Горячие клавиши',
+    'settings.advanced': 'Расширенные',
+    'settings.logout': 'Выйти из аккаунта',
+    'settings.deleteAccount': 'Удалить аккаунт',
+
+    // Profile
+    'profile.displayName': 'Отображаемое имя',
+    'profile.bio': 'О себе',
+    'profile.avatar': 'Аватар',
+    'profile.banner': 'Баннер',
+    'profile.changeAvatar': 'Изменить аватар',
+    'profile.changeBanner': 'Изменить баннер',
+    'profile.status': 'Статус',
+    'profile.customStatus': 'Свой статус',
+    'profile.activity': 'Активность',
+
+    // Friends
+    'friends.title': 'Друзья',
+    'friends.online': 'В сети',
+    'friends.all': 'Все',
+    'friends.pending': 'Ожидают',
+    'friends.blocked': 'Заблокированные',
+    'friends.addFriend': 'Добавить друга',
+    'friends.addFriendPlaceholder': 'Введите имя пользователя',
+    'friends.sendRequest': 'Отправить заявку',
+    'friends.accept': 'Принять',
+    'friends.decline': 'Отклонить',
+    'friends.remove': 'Удалить из друзей',
+    'friends.block': 'Заблокировать',
+    'friends.unblock': 'Разблокировать',
+    'friends.message': 'Написать',
+    'friends.noFriends': 'Друзей пока нет',
+
+    // Guilds
+    'guild.create': 'Создать гильдию',
+    'guild.name': 'Название гильдии',
+    'guild.description': 'Описание',
+    'guild.icon': 'Иконка',
+    'guild.settings': 'Настройки гильдии',
+    'guild.members': 'Участники',
+    'guild.roles': 'Роли',
+    'guild.channels': 'Каналы',
+    'guild.invites': 'Приглашения',
+    'guild.bans': 'Баны',
+    'guild.leave': 'Покинуть гильдию',
+    'guild.delete': 'Удалить гильдию',
+
+    // Channels
+    'channel.create': 'Создать канал',
+    'channel.name': 'Название канала',
+    'channel.type': 'Тип канала',
+    'channel.typeText': 'Текстовый',
+    'channel.typeVoice': 'Голосовой',
+    'channel.typeForum': 'Форум',
+    'channel.settings': 'Настройки канала',
+    'channel.permissions': 'Права доступа',
+    'channel.delete': 'Удалить канал',
+
+    // Errors
+    'error.network': 'Ошибка сети. Проверьте подключение к интернету.',
+    'error.server': 'Ошибка сервера. Попробуйте позже.',
+    'error.unauthorized': 'Необходима авторизация',
+    'error.forbidden': 'Доступ запрещён',
+    'error.notFound': 'Не найдено',
+    'error.unknown': 'Произошла неизвестная ошибка',
+  },
+
+  en: {
+    // Auth page
+    'auth.welcome': 'Welcome to Nemaks',
+    'auth.signInSubtitle': 'Sign in to your account',
+    'auth.signUpSubtitle': 'Create a new account',
+    'auth.username': 'Username',
+    'auth.usernamePlaceholder': 'Enter your username',
+    'auth.password': 'Password',
+    'auth.passwordPlaceholder': 'Enter your password',
+    'auth.agreeTerms': 'I agree to',
+    'auth.termsOfUse': 'Terms of Use',
+    'auth.and': 'and',
+    'auth.privacyPolicy': 'Privacy Policy',
+    'auth.signIn': 'Sign In',
+    'auth.signUp': 'Sign Up',
+    'auth.signingIn': 'Signing in...',
+    'auth.signingUp': 'Signing up...',
+    'auth.demoMode': 'Try Demo Mode (No Backend Required)',
+    'auth.qrLogin': 'Login with QR Code',
+    'auth.hideQr': 'Hide QR Login',
+    'auth.scanWithPhone': 'Scan with your phone',
+    'auth.qrExpired': 'QR code expired',
+    'auth.generateNewQr': 'Generate New QR Code',
+    'auth.openUrl': 'Open this URL on a device where you\'re logged in',
+    'auth.refreshQr': 'Refresh QR Code',
+    'auth.noAccount': "Don't have an account?",
+    'auth.haveAccount': 'Already have an account?',
+    'auth.termsError': 'You must accept the Terms of Use and Privacy Policy',
+
+    // Common
+    'common.chooseTheme': 'Choose Theme',
+    'common.chooseLanguage': 'Choose Language',
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.close': 'Close',
+    'common.back': 'Back',
+    'common.next': 'Next',
+    'common.submit': 'Submit',
+    'common.search': 'Search',
+    'common.settings': 'Settings',
+    'common.profile': 'Profile',
+    'common.logout': 'Logout',
+    'common.online': 'Online',
+    'common.offline': 'Offline',
+
+    // Welcome page
+    'welcome.title': 'Welcome to Nemaks',
+    'welcome.subtitle': 'A modern communication platform for the next generation',
+    'welcome.feature1Title': 'Secure Communication',
+    'welcome.feature1Desc': 'End-to-end encryption to protect your messages',
+    'welcome.feature2Title': 'Voice Channels',
+    'welcome.feature2Desc': 'Crystal clear audio for voice communication',
+    'welcome.feature3Title': 'AI Assistant',
+    'welcome.feature3Desc': 'Smart Jarvis assistant to help with tasks',
+    'welcome.getStarted': 'Get Started',
+    'welcome.learnMore': 'Learn More',
+    'welcome.alreadyHaveKey': 'Already have a key?',
+    'welcome.activateKey': 'Activate Key',
+
+    // License activation page
+    'license.title': 'License Activation',
+    'license.subtitle': 'Enter your license key to access the platform',
+    'license.inputPlaceholder': 'NEMKS-XXXXX-XXXXX-XXXXX',
+    'license.activate': 'Activate',
+    'license.activating': 'Activating...',
+    'license.invalidFormat': 'Invalid key format',
+    'license.keyNotFound': 'Key not found',
+    'license.keyExpired': 'Key has expired',
+    'license.keyAlreadyUsed': 'Key is already activated',
+    'license.success': 'Key successfully activated!',
+    'license.serverLoading': 'Server is loading, please wait...',
+    'license.pricingTitle': 'Pricing Plans',
+    'license.monthly': 'Monthly',
+    'license.quarterly': 'Quarterly',
+    'license.yearly': 'Yearly',
+    'license.days': 'days',
+    'license.buyNow': 'Buy Now',
+    'license.testKey': 'Test Key',
+    'license.testKeyDesc': '10 days free access',
+    'license.features': 'Features',
+    'license.feature1': 'Full access to all features',
+    'license.feature2': 'Premium subscription',
+    'license.feature3': 'Priority support',
+    'license.noKey': 'No key?',
+    'license.getTestKey': 'Get test key',
+
+    // Sidebar
+    'sidebar.directMessages': 'Direct Messages',
+    'sidebar.guilds': 'Guilds',
+    'sidebar.createGuild': 'Create Guild',
+    'sidebar.joinGuild': 'Join Guild',
+    'sidebar.discoverGuilds': 'Discover Guilds',
+    'sidebar.friends': 'Friends',
+    'sidebar.home': 'Home',
+
+    // Chat
+    'chat.typeMessage': 'Type a message...',
+    'chat.send': 'Send',
+    'chat.reply': 'Reply',
+    'chat.edit': 'Edit',
+    'chat.delete': 'Delete',
+    'chat.pin': 'Pin',
+    'chat.unpin': 'Unpin',
+    'chat.addReaction': 'Add Reaction',
+    'chat.copyText': 'Copy Text',
+    'chat.copyLink': 'Copy Link',
+    'chat.report': 'Report',
+    'chat.edited': 'edited',
+    'chat.pinned': 'Pinned Messages',
+    'chat.noMessages': 'No messages yet',
+    'chat.startConversation': 'Start a conversation!',
+
+    // Voice
+    'voice.join': 'Join',
+    'voice.leave': 'Disconnect',
+    'voice.mute': 'Mute',
+    'voice.unmute': 'Unmute',
+    'voice.deafen': 'Deafen',
+    'voice.undeafen': 'Undeafen',
+    'voice.startVideo': 'Start Video',
+    'voice.stopVideo': 'Stop Video',
+    'voice.shareScreen': 'Share Screen',
+    'voice.stopShare': 'Stop Sharing',
+    'voice.settings': 'Voice Settings',
+    'voice.connected': 'Connected',
+    'voice.connecting': 'Connecting...',
+    'voice.disconnected': 'Disconnected',
+
+    // Settings
+    'settings.title': 'Settings',
+    'settings.account': 'Account',
+    'settings.profile': 'Profile',
+    'settings.appearance': 'Appearance',
+    'settings.notifications': 'Notifications',
+    'settings.privacy': 'Privacy',
+    'settings.security': 'Security',
+    'settings.language': 'Language',
+    'settings.theme': 'Theme',
+    'settings.voiceVideo': 'Voice & Video',
+    'settings.keybinds': 'Keybinds',
+    'settings.advanced': 'Advanced',
+    'settings.logout': 'Log Out',
+    'settings.deleteAccount': 'Delete Account',
+
+    // Profile
+    'profile.displayName': 'Display Name',
+    'profile.bio': 'Bio',
+    'profile.avatar': 'Avatar',
+    'profile.banner': 'Banner',
+    'profile.changeAvatar': 'Change Avatar',
+    'profile.changeBanner': 'Change Banner',
+    'profile.status': 'Status',
+    'profile.customStatus': 'Custom Status',
+    'profile.activity': 'Activity',
+
+    // Friends
+    'friends.title': 'Friends',
+    'friends.online': 'Online',
+    'friends.all': 'All',
+    'friends.pending': 'Pending',
+    'friends.blocked': 'Blocked',
+    'friends.addFriend': 'Add Friend',
+    'friends.addFriendPlaceholder': 'Enter username',
+    'friends.sendRequest': 'Send Request',
+    'friends.accept': 'Accept',
+    'friends.decline': 'Decline',
+    'friends.remove': 'Remove Friend',
+    'friends.block': 'Block',
+    'friends.unblock': 'Unblock',
+    'friends.message': 'Message',
+    'friends.noFriends': 'No friends yet',
+
+    // Guilds
+    'guild.create': 'Create Guild',
+    'guild.name': 'Guild Name',
+    'guild.description': 'Description',
+    'guild.icon': 'Icon',
+    'guild.settings': 'Guild Settings',
+    'guild.members': 'Members',
+    'guild.roles': 'Roles',
+    'guild.channels': 'Channels',
+    'guild.invites': 'Invites',
+    'guild.bans': 'Bans',
+    'guild.leave': 'Leave Guild',
+    'guild.delete': 'Delete Guild',
+
+    // Channels
+    'channel.create': 'Create Channel',
+    'channel.name': 'Channel Name',
+    'channel.type': 'Channel Type',
+    'channel.typeText': 'Text',
+    'channel.typeVoice': 'Voice',
+    'channel.typeForum': 'Forum',
+    'channel.settings': 'Channel Settings',
+    'channel.permissions': 'Permissions',
+    'channel.delete': 'Delete Channel',
+
+    // Errors
+    'error.network': 'Network error. Check your internet connection.',
+    'error.server': 'Server error. Please try again later.',
+    'error.unauthorized': 'Authorization required',
+    'error.forbidden': 'Access denied',
+    'error.notFound': 'Not found',
+    'error.unknown': 'An unknown error occurred',
+  }
+}
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('nemaks_language')
+      return (saved as Language) || 'ru'
+    }
+    return 'ru'
+  })
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang)
+    localStorage.setItem('nemaks_language', lang)
+  }
+
+  const t = (key: string): string => {
+    return translations[language][key] || key
+  }
+
+  useEffect(() => {
+    localStorage.setItem('nemaks_language', language)
+  }, [language])
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  )
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext)
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider')
+  }
+  return context
+}
