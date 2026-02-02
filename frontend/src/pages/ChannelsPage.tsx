@@ -752,7 +752,20 @@ export default function ChannelsPage() {
     setReplyingTo(null)
 
     try {
-      await channelsAPI.sendMessage(selectedChannel.id, content)
+      const response = await channelsAPI.sendMessage(selectedChannel.id, content) as any
+      if (response) {
+        setMessages(prev => {
+          if (prev.some(m => String(m.id) === String(response.id))) return prev
+          return [...prev, {
+            id: String(response.id),
+            channel_id: String(response.channel_id || selectedChannel.id),
+            author_id: String(response.author_id || response.user_id || user?.id),
+            author: response.author || response.user || { id: String(user?.id), username: user?.username || 'User', avatar: user?.avatar },
+            content: response.content,
+            created_at: response.created_at
+          }]
+        })
+      }
     } catch (error) {
       console.error('Failed to send message:', error)
       setNewMessage(content)
