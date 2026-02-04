@@ -241,20 +241,20 @@ var testKeyUsed = make(map[string]bool)
 func ActivateLicense(userID uint, key string) (*UserLicense, error) {
         // Пробный ключ - однократная активация для каждого пользователя
         if key == TestLicenseKey {
-                userKeyID := fmt.Sprintf("%d-%s", userID, key)
+                now := time.Now()
                 
-                // Проверяем, использовал ли этот пользователь тестовый ключ
-                if testKeyUsed[userKeyID] {
-                        return nil, fmt.Errorf("Пробный ключ уже был использован вами")
-                }
-                
-                // Проверяем в БД, не активировал ли пользователь уже тестовый ключ
+                // Проверяем, использовал ли пользователь тестовый ключ ранее
                 var checkLicense UserLicense
                 if db.Where("user_id = ? AND key_used = ?", userID, TestLicenseKey).First(&checkLicense).Error == nil {
+                        // Лицензия от тестового ключа найдена
+                        if checkLicense.ExpiresAt.After(now) && checkLicense.IsActive {
+                                // Лицензия ещё активна - возвращаем её
+                                return &checkLicense, nil
+                        }
+                        // Лицензия истекла - ключ уже использован
                         return nil, fmt.Errorf("Пробный ключ уже был использован вами")
                 }
                 
-                now := time.Now()
                 expiresAt := now.AddDate(0, 0, 25) // 25 дней Premium
                 
                 // Проверяем существующую лицензию пользователя
@@ -269,7 +269,6 @@ func ActivateLicense(userID uint, key string) (*UserLicense, error) {
                         if err := db.Save(&existingLicense).Error; err != nil {
                                 return nil, err
                         }
-                        testKeyUsed[userKeyID] = true
                         return &existingLicense, nil
                 }
                 
@@ -286,7 +285,6 @@ func ActivateLicense(userID uint, key string) (*UserLicense, error) {
                         return nil, err
                 }
                 
-                testKeyUsed[userKeyID] = true
                 return userLicense, nil
         }
         
