@@ -489,21 +489,21 @@ export default function PrivacyPage() {
   const t = content[lang]
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-white">
-      <nav className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-md border-b border-white/10 p-4">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
+    <div className="min-h-screen bg-[#0a0a0c] text-white overflow-x-hidden">
+      <nav className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-md border-b border-white/10 px-3 py-3 sm:p-4">
+        <div className="max-w-4xl mx-auto flex justify-between items-center gap-2">
           <Link href="/welcome">
-            <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-              <span>Назад</span>
+            <button className="flex items-center gap-1 sm:gap-2 text-gray-400 hover:text-white transition-colors flex-shrink-0">
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base">Назад</span>
             </button>
           </Link>
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2">
             {(['ru', 'en', 'zh'] as Lang[]).map((l) => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
+                className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   lang === l ? 'bg-primary text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'
                 }`}
               >
@@ -514,22 +514,22 @@ export default function PrivacyPage() {
         </div>
       </nav>
 
-      <main className="pt-24 pb-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-2">{t.title}</h1>
-            <p className="text-gray-400">{t.subtitle}</p>
-            <p className="text-sm text-gray-500 mt-2">{t.version} | {t.effectiveDate}</p>
+      <main className="pt-24 pb-16 px-3 sm:px-4 overflow-x-hidden">
+        <div className="max-w-4xl mx-auto w-full">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-2xl sm:text-4xl font-bold mb-2 break-words">{t.title}</h1>
+            <p className="text-gray-400 text-sm sm:text-base">{t.subtitle}</p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-2">{t.version} | {t.effectiveDate}</p>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {t.sections.map((section, i) => (
-              <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <section.icon className="w-6 h-6 text-primary" />
-                  <h2 className="text-xl font-semibold">{section.title}</h2>
+              <div key={i} className="bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <section.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+                  <h2 className="text-lg sm:text-xl font-semibold break-words">{section.title}</h2>
                 </div>
-                <div className="text-gray-300 whitespace-pre-line leading-relaxed">
+                <div className="text-gray-300 whitespace-pre-line leading-relaxed text-sm sm:text-base break-words overflow-wrap-anywhere">
                   {section.content}
                 </div>
               </div>
