@@ -1,10 +1,25 @@
 import { useNotifications } from '@/contexts/NotificationContext'
-import { Wifi, WifiOff, Loader2 } from 'lucide-react'
+import { Wifi, WifiOff, Loader2, Radio, RefreshCw } from 'lucide-react'
+import { ConnectionType } from '@/lib/connectionManager'
+
+const connectionTypeLabels: Record<ConnectionType, string> = {
+  websocket: 'WebSocket',
+  sse: 'SSE',
+  long_polling: 'Long Polling',
+  disconnected: 'Отключено'
+}
+
+const connectionTypeIcons: Record<ConnectionType, React.ComponentType<{ className?: string }>> = {
+  websocket: Wifi,
+  sse: Radio,
+  long_polling: RefreshCw,
+  disconnected: WifiOff
+}
 
 export function ConnectionStatusIndicator() {
-  const { connectionStatus } = useNotifications()
+  const { connectionStatus, connectionType } = useNotifications()
 
-  if (connectionStatus === 'connected') {
+  if (connectionStatus === 'connected' && connectionType === 'websocket') {
     return null
   }
 
@@ -31,6 +46,12 @@ export function ConnectionStatusIndicator() {
       icon: WifiOff,
       text: 'Ошибка соединения',
       bgColor: 'bg-red-500/90',
+      animate: false
+    },
+    connected: {
+      icon: connectionTypeIcons[connectionType] || Wifi,
+      text: connectionTypeLabels[connectionType] || 'Подключено',
+      bgColor: connectionType === 'websocket' ? 'bg-green-500/90' : 'bg-blue-500/90',
       animate: false
     }
   }

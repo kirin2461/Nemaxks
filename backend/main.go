@@ -317,6 +317,12 @@ func main() {
 
         r.GET("/ws", handleWSConnection)
 
+        // Fallback connections (SSE and Long Polling)
+        r.GET("/api/sse/events", sseEventsHandler)
+        r.GET("/api/poll/events", authMiddleware(), longPollHandler)
+        r.POST("/api/poll/send", authMiddleware(), longPollSendHandler)
+        r.GET("/api/connection/status", authMiddleware(), connectionStatusHandler)
+
         // Posts
         r.GET("/api/posts", getPostsHandler)
         r.POST("/api/posts", authMiddleware(), createPostHandler)

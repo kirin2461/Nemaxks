@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
+import { useLiveKit } from '@/contexts/LiveKitContext'
 
 interface VoiceUser {
   id: string
@@ -116,11 +117,15 @@ async function fetchICEServers(): Promise<RTCIceServer[]> {
   return DEFAULT_ICE_SERVERS
 }
 
+type VoiceMode = 'p2p' | 'livekit'
+
 export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const { user } = useStore()
   const { subscribeToMessages, sendWebSocketMessage } = useNotifications()
+  const livekit = useLiveKit()
   const [state, setState] = useState<VoiceState>(initialState)
   const [voiceChannelUsers, setVoiceChannelUsers] = useState<VoiceChannelUsers>({})
+  const [voiceMode, setVoiceMode] = useState<VoiceMode>('p2p')
   
   const localStreamRef = useRef<MediaStream | null>(null)
   const localVideoStreamRef = useRef<MediaStream | null>(null)
@@ -129,6 +134,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const analyserRef = useRef<AnalyserNode | null>(null)
   const speakingAnimationRef = useRef<number | null>(null)
   const stateRef = useRef(state)
+  const p2pFailCountRef = useRef<number>(0)
+  const maxP2PFailures = 3
   
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map())
   const remoteAudioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map())
@@ -241,19 +248,42 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     pc.onconnectionstatechange = () => {
       console.log(`Peer ${peerId} connection state: ${pc.connectionState}`)
       if (pc.connectionState === 'failed') {
-        console.log(`Attempting to reconnect with peer ${peerId}`)
-        closePeerConnection(peerId)
-        setTimeout(() => {
-          if (stateRef.current.isConnected && stateRef.current.connectedUsers.some(u => u.id === peerId)) {
-            createOfferRef.current?.(peerId)
+        p2pFailCountRef.current++
+        console.log(`[VoiceContext] P2P connection failed (${p2pFailCountRef.current}/${maxP2PFailures})`)
+        
+        if (p2pFailCountRef.current >= maxP2PFailures && livekit.isAvailable) {
+          console.log('[VoiceContext] Max P2P failures reached, switching to LiveKit')
+          const channelId = stateRef.current.channelId
+          if (channelId) {
+            closeAllPeerConnections()
+            setVoiceMode('livekit')
+            livekit.joinRoom(channelId).then(success => {
+              if (success) {
+                console.log('[VoiceContext] Successfully switched to LiveKit')
+              } else {
+                console.error('[VoiceContext] Failed to switch to LiveKit, reverting to P2P')
+                setVoiceMode('p2p')
+                p2pFailCountRef.current = 0
+              }
+            })
           }
-        }, 1000)
+        } else {
+          console.log(`Attempting to reconnect with peer ${peerId}`)
+          closePeerConnection(peerId)
+          setTimeout(() => {
+            if (stateRef.current.isConnected && stateRef.current.connectedUsers.some(u => u.id === peerId)) {
+              createOfferRef.current?.(peerId)
+            }
+          }, 1000)
+        }
       } else if (pc.connectionState === 'disconnected') {
         setTimeout(() => {
           if (pc.connectionState === 'disconnected') {
             closePeerConnection(peerId)
           }
         }, 5000)
+      } else if (pc.connectionState === 'connected') {
+        p2pFailCountRef.current = 0
       }
     }
     
@@ -267,7 +297,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     addTracksToPeerConnection(pc)
     peerConnectionsRef.current.set(peerId, pc)
     return pc
-  }, [sendWebSocketMessage, addTracksToPeerConnection])
+  }, [sendWebSocketMessage, addTracksToPeerConnection, livekit])
 
   const startRemoteVoiceAnalysis = useCallback((peerId: string, stream: MediaStream) => {
     const existingAnalyser = remoteAudioAnalysersRef.current.get(peerId)

@@ -5,6 +5,7 @@ import { IncomingCallModal } from '@/components/IncomingCallModal'
 import { OutgoingCallModal } from '@/components/OutgoingCallModal'
 import { useStore } from '@/lib/store'
 import { playNotificationSound } from '@/lib/notificationSounds'
+import { connectionManager, ConnectionType, ConnectionState } from '@/lib/connectionManager'
 
 interface IncomingCall {
   callId: string
@@ -44,6 +45,8 @@ interface NotificationContextType {
   subscribeToMessages: (handler: WebSocketMessageHandler) => () => void
   sendWebSocketMessage: (message: any) => void
   connectionStatus: ConnectionStatus
+  connectionType: ConnectionType
+  forceConnectionType: (type: 'websocket' | 'sse' | 'long_polling') => void
 }
 
 const NotificationContext = createContext<NotificationContextType | null>(null)
@@ -69,6 +72,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null)
   const [outgoingCall, setOutgoingCall] = useState<OutgoingCall | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected')
+  const [connectionType, setConnectionType] = useState<ConnectionType>('disconnected')
   const pendingOfferRef = useRef<{ offer: RTCSessionDescriptionInit; fromUserId: string } | null>(null)
   const activeCallIdRef = useRef<string | null>(null)
   const messageHandlersRef = useRef<Set<WebSocketMessageHandler>>(new Set())
@@ -216,6 +220,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         reconnectAttempts = 0
         setWs(socket)
         setConnectionStatus('connected')
+        setConnectionType('websocket')
       }
       
       socket.onmessage = (event) => {
@@ -244,6 +249,17 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           console.log(`[NotificationContext] Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`)
           setConnectionStatus('reconnecting')
           reconnectTimeout = setTimeout(connect, delay)
+        } else if (reconnectAttempts >= maxReconnectAttempts) {
+          console.log('[NotificationContext] Max WebSocket reconnect attempts reached, switching to fallback')
+          connectionManager.connect(token).then(() => {
+            const unsubscribe = connectionManager.onStateChange((state) => {
+              setConnectionType(state.type)
+              setConnectionStatus(state.isConnected ? 'connected' : 'disconnected')
+            })
+            const unsubscribeMsg = connectionManager.onMessage((data) => {
+              handleWebSocketMessage(data)
+            })
+          })
         }
       }
     }
@@ -253,6 +269,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     return () => {
       console.log('[NotificationContext] Cleaning up WebSocket for user:', user?.id)
       if (reconnectTimeout) clearTimeout(reconnectTimeout)
+      connectionManager.disconnect()
       if (socket) socket.close()
     }
   }, [user?.id])
@@ -562,8 +579,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const sendWebSocketMessage = useCallback((message: any) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(message))
+    } else {
+      connectionManager.send(message)
     }
   }, [ws])
+
+  const forceConnectionType = useCallback((type: 'websocket' | 'sse' | 'long_polling') => {
+    connectionManager.forceConnectionType(type)
+  }, [])
 
   const unreadCount = notifications.filter(n => !n.read).length
 
@@ -600,7 +623,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       cancelCall,
       subscribeToMessages,
       sendWebSocketMessage,
-      connectionStatus
+      connectionStatus,
+      connectionType,
+      forceConnectionType
     }}>
       {children}
       <NotificationContainer notifications={toasts} onDismiss={dismissToast} />
