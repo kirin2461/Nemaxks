@@ -619,6 +619,10 @@ func main() {
         initLicenseModels()
         registerLicenseRoutes(r, authMiddleware(), adminMiddleware())
         go cleanupExpiredLicenses()
+        
+        // Account Management (GDPR: deletion, consent withdrawal)
+        registerAccountRoutes(r, authMiddleware())
+        go ProcessScheduledDeletions()
 
         // Additional static file routes (audio, logos, etc.)
         if _, err := os.Stat("../frontend/dist"); err == nil {

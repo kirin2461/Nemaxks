@@ -14,11 +14,16 @@ const content = {
       {
         icon: Shield,
         title: '1. Общие положения',
-        content: `1.1. Оператор персональных данных: Самозанятый Умаров Курбанбек (далее — «Оператор»).
+        content: `1.1. Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей платформы Nemaks (далее — «Платформа»).
 
-1.2. Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей платформы Nemaks.
+1.2. Оператор персональных данных: Умаров Курбанбек Одашбаевич, Московская область, г. Видное, р.п. Бутово Парк, д. 15, кв. 245.
+Контакты для вопросов по персональным данным:
+• Email: kurbanu87@gmail.com
+• Телефон: +79691021441
 
-1.3. Платформа предназначена для лиц, достигших 18 лет. Регистрируясь, вы подтверждаете достижение указанного возраста.`
+1.3. Платформа предназначена для лиц, достигших 18 лет. Регистрируясь, вы подтверждаете достижение указанного возраста.
+
+1.4. Используя Платформу, пользователь подтверждает своё согласие с условиями настоящей Политики. Согласие на обработку персональных данных, включая трансграничную передачу персональных данных на серверы в США (Replit), даётся пользователем при регистрации путём проставления отметки в чекбоксе.`
       },
       {
         icon: Database,
@@ -67,13 +72,10 @@ const content = {
         title: '5. Сроки хранения данных',
         content: `5.1. Данные активных аккаунтов хранятся в течение всего периода использования.
 
-5.2. После удаления аккаунта:
-• Обычные пользователи: данные удаляются через 45 дней
-• Пользователи с активной подпиской: через 90 дней
-
-5.3. При подозрительной активности (мошенничество, нарушения) данные могут храниться до 90 дней для расследования.
-
-5.4. Аудит-логи безопасности хранятся 45 дней.`
+5.2. Сроки хранения:
+• Аудит-логи безопасности: 45 дней (автоматическая очистка)
+• Данные при подозрении в мошенничестве: до 90 дней для расследования
+• После удаления аккаунта: данные аккаунта и связанные с ним персональные данные хранятся до 90 дней, после чего подлежат безвозвратному удалению (в том числе для пользователей с подпиской)`
       },
       {
         icon: Users,
@@ -113,7 +115,7 @@ const content = {
 8.2. Для реализации прав обратитесь: https://t.me/neMaxks
 Срок рассмотрения запросов: до 10 рабочих дней.
 
-8.3. ПРИ ОТЗЫВЕ СОГЛАСИЯ: Ваш аккаунт будет деактивирован, а данные удалены в течение 45 дней (90 дней для подписчиков). Вы можете отменить удаление в этот период.`
+8.3. При отзыве согласия на обработку персональных данных аккаунт пользователя подлежит блокировке, а персональные данные удаляются в сроки, предусмотренные пунктом 5.2 настоящей Политики, за исключением случаев, когда их дальнейшее хранение обязательно по закону (налоговая/бухгалтерская отчётность, расследование инцидентов и т.д.).`
       },
       {
         icon: Cookie,
@@ -131,16 +133,20 @@ const content = {
 
 10.3. Реализована защита от brute-force атак (блокировка после 5 неудачных попыток на 15 минут).
 
-10.4. Работает автоматическая система обнаружения мошенничества.`
+10.4. Работает автоматическая система обнаружения мошенничества.
+
+10.5. Личные сообщения защищены сквозным шифрованием (E2E) по алгоритму X25519-XSalsa20-Poly1305.
+
+10.6. Шифрование данных в покое: данные Платформы хранятся на серверах провайдера Replit (США), который обеспечивает защиту инфраструктуры, включая технические меры по защите данных в дата-центрах. Дополнительное прикладное шифрование базы данных Оператором не используется.
+
+10.7. Регулярные аудиты безопасности: специализированные внешние аудиты и penetration-testing не проводятся. Оператор по мере необходимости осуществляет внутренний пересмотр настроек безопасности и обрабатывает инциденты информационной безопасности.`
       },
       {
         icon: Bell,
         title: '11. Изменения политики',
         content: `11.1. Оператор вправе вносить изменения в настоящую Политику.
 
-11.2. Уведомление об изменениях публикуется за 7 дней до вступления в силу через:
-• Push-уведомление в приложении
-• Публикацию в Telegram-канале @neMaxks
+11.2. Уведомление об изменениях: публикация обновлённой редакции Политики в боте Nemaks за 7 дней до вступления изменений в силу, а также направление уведомления пользователям через Платформу (push-уведомление) и/или по email (если указан).
 
 11.3. Продолжение использования платформы означает согласие с обновлённой Политикой.`
       },
@@ -160,11 +166,15 @@ const content = {
         icon: MessageSquare,
         title: '13. Контакты',
         content: `По вопросам конфиденциальности обращайтесь:
-Telegram: https://t.me/neMaxks
+• Email: kurbanu87@gmail.com
+• Телефон: +79691021441
+• Telegram: https://t.me/neMaxks
 
 Сроки ответа:
 • Общие вопросы: до 48 часов
-• Запросы по правам (экспорт, удаление): до 10 рабочих дней`
+• Запросы по правам (экспорт, удаление): до 10 рабочих дней
+
+Оператор зарегистрирован в реестре операторов персональных данных Роскомнадзора. Регистрационный номер: 100135010, регистрационный ключ: 15463569.`
       }
     ],
     footer: '© 2026 Nemaks. Все права защищены.'
@@ -178,11 +188,16 @@ Telegram: https://t.me/neMaxks
       {
         icon: Shield,
         title: '1. General Provisions',
-        content: `1.1. Data Controller: Self-employed Umarov Kurbanbek (hereinafter — "Operator").
+        content: `1.1. This Privacy Policy defines the procedure for processing and protecting personal data of Nemaks platform users (hereinafter — "Platform").
 
-1.2. This Privacy Policy defines the procedure for processing and protecting personal data of Nemaks platform users.
+1.2. Data Controller: Umarov Kurbanbek Odashbaevich, Moscow Region, Vidnoye, Butovo Park, bld. 15, apt. 245.
+Contact for personal data inquiries:
+• Email: kurbanu87@gmail.com
+• Phone: +79691021441
 
-1.3. The platform is intended for persons who have reached 18 years of age. By registering, you confirm that you have reached this age.`
+1.3. The platform is intended for persons who have reached 18 years of age. By registering, you confirm that you have reached this age.
+
+1.4. By using the Platform, the user confirms their agreement to the terms of this Policy. Consent to personal data processing, including cross-border transfer to servers in the USA (Replit), is given by the user during registration by checking the checkbox.`
       },
       {
         icon: Database,
@@ -231,13 +246,10 @@ Telegram: https://t.me/neMaxks
         title: '5. Data Retention Periods',
         content: `5.1. Active account data is stored throughout the usage period.
 
-5.2. After account deletion:
-• Regular users: data deleted after 45 days
-• Users with active subscription: after 90 days
-
-5.3. In case of suspicious activity (fraud, violations), data may be retained up to 90 days for investigation.
-
-5.4. Security audit logs are stored for 45 days.`
+5.2. Retention periods:
+• Security audit logs: 45 days (automatic cleanup)
+• Data in case of suspected fraud: up to 90 days for investigation
+• After account deletion: account data and related personal data is stored for up to 90 days, after which it is permanently deleted (including for subscribers)`
       },
       {
         icon: Users,
@@ -277,7 +289,7 @@ Telegram: https://t.me/neMaxks
 8.2. To exercise your rights, contact: https://t.me/neMaxks
 Request processing time: up to 10 business days.
 
-8.3. UPON CONSENT WITHDRAWAL: Your account will be deactivated and data deleted within 45 days (90 days for subscribers). You can cancel deletion during this period.`
+8.3. Upon withdrawal of consent to personal data processing, the user's account will be blocked, and personal data will be deleted within the timeframes specified in section 5.2 of this Policy, except where further storage is required by law (tax/accounting reporting, incident investigation, etc.).`
       },
       {
         icon: Cookie,
@@ -295,16 +307,20 @@ Request processing time: up to 10 business days.
 
 10.3. Brute-force protection is implemented (blocking after 5 failed attempts for 15 minutes).
 
-10.4. Automatic fraud detection system is active.`
+10.4. Automatic fraud detection system is active.
+
+10.5. Direct messages are protected by end-to-end encryption (E2E) using X25519-XSalsa20-Poly1305 algorithm.
+
+10.6. Encryption at rest: Platform data is stored on Replit provider servers (USA), which provides infrastructure protection including technical data protection measures in data centers. Additional application-level database encryption is not used by the Operator.
+
+10.7. Regular security audits: Specialized external audits and penetration testing are not conducted. The Operator periodically reviews security settings as needed and handles information security incidents.`
       },
       {
         icon: Bell,
         title: '11. Policy Changes',
         content: `11.1. The Operator reserves the right to make changes to this Policy.
 
-11.2. Change notifications are published 7 days before taking effect via:
-• Push notification in the app
-• Publication in Telegram channel @neMaxks
+11.2. Change notifications: Publication of the updated Policy in Nemaks bot 7 days before changes take effect, as well as sending notifications to users via the Platform (push notification) and/or by email (if provided).
 
 11.3. Continued use of the platform means acceptance of the updated Policy.`
       },
@@ -324,11 +340,15 @@ Request processing time: up to 10 business days.
         icon: MessageSquare,
         title: '13. Contacts',
         content: `For privacy questions, contact:
-Telegram: https://t.me/neMaxks
+• Email: kurbanu87@gmail.com
+• Phone: +79691021441
+• Telegram: https://t.me/neMaxks
 
 Response times:
 • General questions: up to 48 hours
-• Rights requests (export, deletion): up to 10 business days`
+• Rights requests (export, deletion): up to 10 business days
+
+The Operator is registered in the Roskomnadzor personal data operators registry. Registration number: 100135010, registration key: 15463569.`
       }
     ],
     footer: '© 2026 Nemaks. All rights reserved.'
@@ -346,7 +366,7 @@ Response times:
 
 1.2. 本隐私政策规定了 Nemaks 平台用户个人数据的处理和保护程序。
 
-1.3. 该平台适用于年满16周岁的用户。注册即表示您确认已达到该年龄。`
+1.3. 该平台适用于年满18周岁的用户。注册即表示您确认已达到该年龄。`
       },
       {
         icon: Database,

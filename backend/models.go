@@ -21,18 +21,22 @@ type UserPublic struct {
 }
 
 type User struct {
-        ID          uint       `json:"id" gorm:"primaryKey"`
-        Username    string     `json:"username" gorm:"unique;not null"`
-        DisplayName *string    `json:"display_name,omitempty"`
-        Email       *string    `json:"email,omitempty" gorm:"unique"`
-        Password    string     `json:"-" gorm:"not null"` // Hidden from JSON responses
-        Avatar      *string    `json:"avatar,omitempty"`
-        Status      string     `json:"status" gorm:"default:'offline'"`
-        Bio         *string    `json:"bio,omitempty"`
-        CreatedAt   time.Time  `json:"created_at"`
-        UpdatedAt   time.Time  `json:"updated_at"`
-        Role        string     `json:"role" gorm:"default:'user'"`
-        LastSeen    *time.Time `json:"last_seen,omitempty"`
+        ID                  uint       `json:"id" gorm:"primaryKey"`
+        Username            string     `json:"username" gorm:"unique;not null"`
+        DisplayName         *string    `json:"display_name,omitempty"`
+        Email               *string    `json:"email,omitempty" gorm:"unique"`
+        Password            string     `json:"-" gorm:"not null"` // Hidden from JSON responses
+        Avatar              *string    `json:"avatar,omitempty"`
+        Status              string     `json:"status" gorm:"default:'offline'"`
+        Bio                 *string    `json:"bio,omitempty"`
+        CreatedAt           time.Time  `json:"created_at"`
+        UpdatedAt           time.Time  `json:"updated_at"`
+        Role                string     `json:"role" gorm:"default:'user'"`
+        LastSeen            *time.Time `json:"last_seen,omitempty"`
+        IsBlocked           bool       `json:"is_blocked" gorm:"default:false"`
+        BlockReason         string     `json:"block_reason,omitempty"`
+        DeletionScheduledAt *time.Time `json:"deletion_scheduled_at,omitempty"`
+        DeletionReason      string     `json:"deletion_reason,omitempty"`
 }
 
 // ToPublic converts User to a safe public representation

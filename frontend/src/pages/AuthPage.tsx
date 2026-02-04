@@ -19,10 +19,11 @@ const translations = {
     usernamePlaceholder: 'Введите имя пользователя',
     password: 'Пароль',
     passwordPlaceholder: 'Введите пароль',
-    agreeTerms: 'Я принимаю',
-    termsOfUse: 'Правила использования',
+    agreeTerms: 'Я соглашаюсь с',
+    termsOfUse: 'Правилами использования',
     and: 'и',
-    privacyPolicy: 'Политику конфиденциальности',
+    privacyPolicy: 'Политикой конфиденциальности',
+    consentText: ', даю согласие на обработку моих персональных данных, а также на трансграничную передачу данных на серверы в США (Replit)',
     signIn: 'Войти',
     signUp: 'Зарегистрироваться',
     signingIn: 'Вход...',
@@ -53,6 +54,7 @@ const translations = {
     termsOfUse: 'Terms of Use',
     and: 'and',
     privacyPolicy: 'Privacy Policy',
+    consentText: ', consent to processing of my personal data and cross-border transfer to servers in the USA (Replit)',
     signIn: 'Sign In',
     signUp: 'Sign Up',
     signingIn: 'Signing in...',
@@ -419,7 +421,7 @@ export default function AuthPage() {
                   onChange={(e) => setAgreeToTerms(e.target.checked)}
                   className="w-5 h-5 mt-0.5 rounded border-border bg-background text-primary focus:ring-primary cursor-pointer"
                 />
-                <label htmlFor="agree-terms" className="text-sm text-gray-300 cursor-pointer">
+                <label htmlFor="agree-terms" className="text-sm text-gray-300 cursor-pointer leading-relaxed">
                   {t.agreeTerms}{' '}
                   <Link href="/terms" className="text-primary hover:underline">
                     {t.termsOfUse}
@@ -428,6 +430,7 @@ export default function AuthPage() {
                   <Link href="/privacy" className="text-primary hover:underline">
                     {t.privacyPolicy}
                   </Link>
+                  {t.consentText}
                 </label>
               </div>
             )}
