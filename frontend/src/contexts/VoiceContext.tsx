@@ -78,6 +78,22 @@ const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun1.l.google.com:19302' },
   { urls: 'stun:stun2.l.google.com:19302' },
   { urls: 'stun:stun3.l.google.com:19302' },
+  { urls: 'stun:stun4.l.google.com:19302' },
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
 ]
 
 async function fetchICEServers(): Promise<RTCIceServer[]> {
@@ -89,12 +105,14 @@ async function fetchICEServers(): Promise<RTCIceServer[]> {
     if (response.ok) {
       const data = await response.json()
       if (data.iceServers && Array.isArray(data.iceServers)) {
+        console.log('[VoiceContext] Loaded ICE servers from API:', data.iceServers.length)
         return data.iceServers
       }
     }
   } catch (error) {
     console.error('Failed to fetch ICE servers:', error)
   }
+  console.log('[VoiceContext] Using default ICE servers with TURN')
   return DEFAULT_ICE_SERVERS
 }
 
