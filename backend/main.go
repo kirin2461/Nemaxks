@@ -308,6 +308,7 @@ func main() {
         r.GET("/api/voice/channels/:channel_id/participants", authMiddleware(), GetVoiceChannelParticipants)
 
         // LiveKit Voice Integration
+        r.GET("/api/livekit/status", authMiddleware(), getLiveKitStatusHandler)
         r.POST("/api/livekit/token", authMiddleware(), getLiveKitTokenHandler)
         r.POST("/api/livekit/leave/:channel_id", authMiddleware(), leaveLiveKitRoomHandler)
 

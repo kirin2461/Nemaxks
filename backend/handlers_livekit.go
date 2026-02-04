@@ -173,6 +173,22 @@ func extractUserID(raw interface{}) (uint, error) {
         }
 }
 
+// getLiveKitStatusHandler returns LiveKit availability status
+func getLiveKitStatusHandler(c *gin.Context) {
+        if livekitClient == nil {
+                c.JSON(http.StatusServiceUnavailable, gin.H{
+                        "available": false,
+                        "message":   "LiveKit not configured",
+                })
+                return
+        }
+        
+        c.JSON(http.StatusOK, gin.H{
+                "available": true,
+                "url":       os.Getenv("LIVEKIT_URL"),
+        })
+}
+
 // Helper function to get environment variable with default
 func getEnv(key, defaultValue string) string {
         value := os.Getenv(key)

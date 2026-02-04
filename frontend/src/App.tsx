@@ -5,6 +5,7 @@ import { JarvisVoiceProvider } from './contexts/JarvisVoiceContext'
 import { JarvisFloatingIndicator } from './components/JarvisFloatingIndicator'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { VoiceProvider } from './contexts/VoiceContext'
+import { LiveKitProvider } from './contexts/LiveKitContext'
 import { AppStateProvider } from './contexts/AppStateContext'
 import { IncomingCallNotification } from './components/IncomingCallNotification'
 import { ConnectionStatusIndicator } from './components/ConnectionStatusIndicator'
@@ -113,13 +114,14 @@ function App() {
     <LanguageProvider>
       <AppStateProvider>
         <NotificationProvider>
-          <VoiceProvider>
-            <JarvisVoiceProvider>
-              <React.Suspense fallback={<LoadingScreen />}>
-              <JarvisFloatingIndicator />
-              <IncomingCallNotification />
-              <ConnectionStatusIndicator />
-              <Switch>
+          <LiveKitProvider>
+            <VoiceProvider>
+              <JarvisVoiceProvider>
+                <React.Suspense fallback={<LoadingScreen />}>
+                  <JarvisFloatingIndicator />
+                  <IncomingCallNotification />
+                  <ConnectionStatusIndicator />
+                  <Switch>
                 {/* Public routes */}
                 <Route path="/welcome">
                   <PresentationPage />
@@ -394,11 +396,12 @@ function App() {
                     </div>
                   </div>
                 </Route>
-              </Switch>
-              <ToastContainer />
-              </React.Suspense>
-            </JarvisVoiceProvider>
-          </VoiceProvider>
+                  </Switch>
+                  <ToastContainer />
+                </React.Suspense>
+              </JarvisVoiceProvider>
+            </VoiceProvider>
+          </LiveKitProvider>
         </NotificationProvider>
       </AppStateProvider>
     </LanguageProvider>
