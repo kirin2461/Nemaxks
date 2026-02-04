@@ -207,8 +207,8 @@ type FriendRequest struct {
 
 type DirectMessage struct {
         ID              uint           `gorm:"primaryKey" json:"id"`
-        SenderID        uint           `gorm:"index" json:"sender_id"`
-        ReceiverID      uint           `gorm:"index" json:"receiver_id"`
+        SenderID        uint           `gorm:"index;index:idx_direct_messages_conversation,priority:1" json:"sender_id"`
+        ReceiverID      uint           `gorm:"index;index:idx_direct_messages_conversation,priority:2" json:"receiver_id"`
         Content         string         `gorm:"type:text" json:"content"`
         Read            bool           `gorm:"default:false" json:"read"`
         Edited          bool           `gorm:"default:false" json:"edited"`
@@ -218,7 +218,7 @@ type DirectMessage struct {
         VoiceURL        *string        `json:"voice_url"`
         VoiceDuration   int            `gorm:"default:0" json:"voice_duration"`
         IsPinned        bool           `gorm:"default:false" json:"is_pinned"`
-        CreatedAt       time.Time      `json:"created_at"`
+        CreatedAt       time.Time      `json:"created_at" gorm:"index:idx_direct_messages_conversation,priority:3,sort:desc"`
         UpdatedAt       time.Time      `json:"updated_at"`
         DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
 }

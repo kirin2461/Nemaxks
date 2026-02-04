@@ -89,11 +89,11 @@ type Channel struct {
 
 type Message struct {
         ID        uint      `json:"id" gorm:"primaryKey"`
-        ChannelID uint      `json:"channel_id" gorm:"not null"`
+        ChannelID uint      `json:"channel_id" gorm:"not null;index:idx_messages_channel_created,priority:1"`
         AuthorID  uint      `json:"author_id" gorm:"not null"`
         Content   string    `json:"content" gorm:"type:text"`
         Edited    bool      `json:"edited" gorm:"default:false"`
-        CreatedAt time.Time `json:"created_at"`
+        CreatedAt time.Time `json:"created_at" gorm:"index:idx_messages_channel_created,priority:2,sort:desc"`
         UpdatedAt time.Time `json:"updated_at"`
         Channel   Channel   `json:"channel,omitempty" gorm:"foreignKey:ChannelID"`
         Author    User      `json:"author,omitempty" gorm:"foreignKey:AuthorID"`
