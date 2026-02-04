@@ -79,57 +79,92 @@ const content = {
         icon: Users,
         title: '6. Передача данных третьим лицам',
         content: `6.1. Nemaks передаёт данные следующим партнёрам:
-• YooKassa — для обработки платежей
+• YooKassa — для обработки платежей (Россия)
 • LiveKit — для голосовых и видеозвонков
+• Replit Inc. — хостинг и базы данных (США)
 
-6.2. Nemaks НЕ продаёт персональные данные третьим лицам.
+6.2. ТРАНСГРАНИЧНАЯ ПЕРЕДАЧА: Данные хранятся на серверах Replit Inc. (США). Регистрируясь, вы даёте согласие на передачу данных в США в соответствии с ФЗ-152 «О персональных данных».
 
-6.3. Данные могут быть предоставлены правоохранительным органам по официальному запросу в соответствии с законодательством РФ.`
+6.3. Nemaks НЕ продаёт персональные данные третьим лицам.
+
+6.4. Данные могут быть предоставлены правоохранительным органам по официальному запросу в соответствии с законодательством РФ.`
+      },
+      {
+        icon: Database,
+        title: '7. Данные, которые НЕ собираются',
+        content: `Nemaks НЕ собирает и НЕ обрабатывает:
+• Геолокацию (GPS-координаты)
+• Контакты из телефонной книги
+• Данные других приложений
+• Содержимое зашифрованных сообщений (E2E)
+• Биометрические данные
+• Данные о здоровье`
       },
       {
         icon: Key,
-        title: '7. Права пользователя',
-        content: `7.1. Вы имеете право:
+        title: '8. Права пользователя',
+        content: `8.1. Вы имеете право:
+• Запросить доступ к своим данным
+• Запросить исправление неточных данных
 • Запросить удаление своих данных
 • Запросить экспорт своих данных
 • Отозвать согласие на обработку данных
-• Отключить двухфакторную аутентификацию
 
-7.2. Для реализации прав обратитесь: https://t.me/neMaxks`
+8.2. Для реализации прав обратитесь: https://t.me/neMaxks
+Срок рассмотрения запросов: до 10 рабочих дней.
+
+8.3. ПРИ ОТЗЫВЕ СОГЛАСИЯ: Ваш аккаунт будет деактивирован, а данные удалены в течение 45 дней (90 дней для подписчиков). Вы можете отменить удаление в этот период.`
       },
       {
         icon: Cookie,
-        title: '8. Cookies и технологии',
-        content: `8.1. Nemaks использует сессионные cookies для поддержания авторизации.
+        title: '9. Cookies и технологии',
+        content: `9.1. Nemaks использует сессионные cookies для поддержания авторизации.
 
-8.2. Сторонние рекламные и аналитические трекеры НЕ используются.`
+9.2. Сторонние рекламные и аналитические трекеры НЕ используются.`
       },
       {
         icon: Shield,
-        title: '9. Безопасность',
-        content: `9.1. Пароли хранятся с использованием bcrypt хэширования.
+        title: '10. Безопасность',
+        content: `10.1. Пароли хранятся с использованием bcrypt хэширования.
 
-9.2. Все соединения защищены протоколом HTTPS/TLS.
+10.2. Все соединения защищены протоколом HTTPS/TLS.
 
-9.3. Реализована защита от brute-force атак (блокировка после 5 неудачных попыток на 15 минут).
+10.3. Реализована защита от brute-force атак (блокировка после 5 неудачных попыток на 15 минут).
 
-9.4. Работает автоматическая система обнаружения мошенничества.`
+10.4. Работает автоматическая система обнаружения мошенничества.`
       },
       {
         icon: Bell,
-        title: '10. Изменения политики',
-        content: `10.1. Оператор вправе вносить изменения в настоящую Политику.
+        title: '11. Изменения политики',
+        content: `11.1. Оператор вправе вносить изменения в настоящую Политику.
 
-10.2. Уведомление об изменениях публикуется за 7 дней до вступления в силу.
+11.2. Уведомление об изменениях публикуется за 7 дней до вступления в силу через:
+• Push-уведомление в приложении
+• Публикацию в Telegram-канале @neMaxks
 
-10.3. Продолжение использования платформы означает согласие с обновлённой Политикой.`
+11.3. Продолжение использования платформы означает согласие с обновлённой Политикой.`
+      },
+      {
+        icon: Shield,
+        title: '12. Обработка инцидентов',
+        content: `12.1. При обнаружении утечки данных:
+• Уведомление пользователей — в течение 72 часов
+• Уведомление регулятора (Роскомнадзор) — по требованию закона
+
+12.2. Пострадавшие пользователи получат:
+• Описание инцидента
+• Перечень затронутых данных
+• Рекомендации по защите`
       },
       {
         icon: MessageSquare,
-        title: '11. Контакты',
+        title: '13. Контакты',
         content: `По вопросам конфиденциальности обращайтесь:
 Telegram: https://t.me/neMaxks
-Срок ответа: до 48 часов`
+
+Сроки ответа:
+• Общие вопросы: до 48 часов
+• Запросы по правам (экспорт, удаление): до 10 рабочих дней`
       }
     ],
     footer: '© 2026 Nemaks. Все права защищены.'
@@ -208,57 +243,92 @@ Telegram: https://t.me/neMaxks
         icon: Users,
         title: '6. Data Sharing with Third Parties',
         content: `6.1. Nemaks shares data with the following partners:
-• YooKassa — for payment processing
+• YooKassa — for payment processing (Russia)
 • LiveKit — for voice and video calls
+• Replit Inc. — hosting and databases (USA)
 
-6.2. Nemaks does NOT sell personal data to third parties.
+6.2. CROSS-BORDER TRANSFER: Data is stored on Replit Inc. servers (USA). By registering, you consent to data transfer to the USA.
 
-6.3. Data may be provided to law enforcement upon official request in accordance with Russian Federation legislation.`
+6.3. Nemaks does NOT sell personal data to third parties.
+
+6.4. Data may be provided to law enforcement upon official request in accordance with applicable legislation.`
+      },
+      {
+        icon: Database,
+        title: '7. Data We Do NOT Collect',
+        content: `Nemaks does NOT collect or process:
+• Geolocation (GPS coordinates)
+• Contacts from your phone book
+• Data from other applications
+• Content of encrypted messages (E2E)
+• Biometric data
+• Health data`
       },
       {
         icon: Key,
-        title: '7. User Rights',
-        content: `7.1. You have the right to:
+        title: '8. User Rights',
+        content: `8.1. You have the right to:
+• Request access to your data
+• Request correction of inaccurate data
 • Request deletion of your data
 • Request export of your data
 • Withdraw consent to data processing
-• Disable two-factor authentication
 
-7.2. To exercise your rights, contact: https://t.me/neMaxks`
+8.2. To exercise your rights, contact: https://t.me/neMaxks
+Request processing time: up to 10 business days.
+
+8.3. UPON CONSENT WITHDRAWAL: Your account will be deactivated and data deleted within 45 days (90 days for subscribers). You can cancel deletion during this period.`
       },
       {
         icon: Cookie,
-        title: '8. Cookies and Technologies',
-        content: `8.1. Nemaks uses session cookies to maintain authorization.
+        title: '9. Cookies and Technologies',
+        content: `9.1. Nemaks uses session cookies to maintain authorization.
 
-8.2. Third-party advertising and analytics trackers are NOT used.`
+9.2. Third-party advertising and analytics trackers are NOT used.`
       },
       {
         icon: Shield,
-        title: '9. Security',
-        content: `9.1. Passwords are stored using bcrypt hashing.
+        title: '10. Security',
+        content: `10.1. Passwords are stored using bcrypt hashing.
 
-9.2. All connections are protected by HTTPS/TLS protocol.
+10.2. All connections are protected by HTTPS/TLS protocol.
 
-9.3. Brute-force protection is implemented (blocking after 5 failed attempts for 15 minutes).
+10.3. Brute-force protection is implemented (blocking after 5 failed attempts for 15 minutes).
 
-9.4. Automatic fraud detection system is active.`
+10.4. Automatic fraud detection system is active.`
       },
       {
         icon: Bell,
-        title: '10. Policy Changes',
-        content: `10.1. The Operator reserves the right to make changes to this Policy.
+        title: '11. Policy Changes',
+        content: `11.1. The Operator reserves the right to make changes to this Policy.
 
-10.2. Change notifications are published 7 days before taking effect.
+11.2. Change notifications are published 7 days before taking effect via:
+• Push notification in the app
+• Publication in Telegram channel @neMaxks
 
-10.3. Continued use of the platform means acceptance of the updated Policy.`
+11.3. Continued use of the platform means acceptance of the updated Policy.`
+      },
+      {
+        icon: Shield,
+        title: '12. Incident Handling',
+        content: `12.1. Upon discovering a data breach:
+• User notification — within 72 hours
+• Regulator notification — as required by law
+
+12.2. Affected users will receive:
+• Incident description
+• List of affected data
+• Protection recommendations`
       },
       {
         icon: MessageSquare,
-        title: '11. Contacts',
+        title: '13. Contacts',
         content: `For privacy questions, contact:
 Telegram: https://t.me/neMaxks
-Response time: up to 48 hours`
+
+Response times:
+• General questions: up to 48 hours
+• Rights requests (export, deletion): up to 10 business days`
       }
     ],
     footer: '© 2026 Nemaks. All rights reserved.'
