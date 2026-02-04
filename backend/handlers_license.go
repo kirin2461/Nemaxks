@@ -89,12 +89,12 @@ func validateLicenseKeyHandler(c *gin.Context) {
                 return
         }
         
-        // Тестовый ключ для разработчиков/тестеров
+        // Пробный ключ - 25 дней Premium
         if req.Key == TestLicenseKey {
                 c.JSON(http.StatusOK, gin.H{
                         "valid":         true,
-                        "type":          "TEST",
-                        "duration_days": 10,
+                        "type":          "PREMIUM",
+                        "duration_days": 25,
                         "test_key":      true,
                 })
                 return

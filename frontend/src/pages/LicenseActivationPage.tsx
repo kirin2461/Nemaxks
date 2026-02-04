@@ -175,6 +175,20 @@ export default function LicenseActivationPage() {
               Если у вас уже есть ключ лицензии, введите его ниже для активации.
             </p>
 
+            {/* Тестовый ключ */}
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg sm:rounded-xl border border-purple-500/30">
+              <p className="text-xs sm:text-sm text-gray-300 mb-2">
+                Пробный ключ (25 дней Premium, однократная активация):
+              </p>
+              <button
+                onClick={() => setLicenseKey('NEMKS-TEST0-TEST0-TEST0')}
+                className="w-full py-2 sm:py-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg font-mono text-sm sm:text-lg text-purple-300 tracking-wider transition-all flex items-center justify-center gap-2"
+              >
+                <span>NEMKS-TEST0-TEST0-TEST0</span>
+                <span className="text-xs text-gray-400">(нажмите для вставки)</span>
+              </button>
+            </div>
+
             <div className="space-y-3 sm:space-y-4">
               <div>
                 <label className="block text-xs sm:text-sm text-gray-400 mb-2">Ключ лицензии</label>

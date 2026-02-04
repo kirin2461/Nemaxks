@@ -42,6 +42,7 @@ type UserLicense struct {
         ActivatedAt  time.Time    `json:"activated_at"`
         ExpiresAt    time.Time    `json:"expires_at"`
         IsActive     bool         `json:"is_active" gorm:"default:true"`
+        KeyUsed      string       `json:"key_used" gorm:"size:50"`
         User         User         `json:"user,omitempty" gorm:"foreignKey:UserID"`
         LicenseKey   LicenseKey   `json:"license_key,omitempty" gorm:"foreignKey:LicenseKeyID"`
 }
@@ -231,34 +232,61 @@ func CreateLicenseKey(licenseType LicenseType, createdBy uint) (*LicenseKey, err
         return key, nil
 }
 
-// TestLicenseKey - ключ для тестирования (многоразовый)
+// TestLicenseKey - пробный ключ (однократная активация, 25 дней Premium)
 const TestLicenseKey = "NEMKS-TEST0-TEST0-TEST0"
 
+// Хранение использованных тестовых ключей
+var testKeyUsed = make(map[string]bool)
+
 func ActivateLicense(userID uint, key string) (*UserLicense, error) {
-        // Тестовый ключ для разработчиков/тестеров - многоразовый
+        // Пробный ключ - однократная активация для каждого пользователя
         if key == TestLicenseKey {
-                now := time.Now()
-                expiresAt := now.AddDate(0, 0, 10) // 10 дней
+                userKeyID := fmt.Sprintf("%d-%s", userID, key)
                 
-                // Проверяем существующую лицензию
+                // Проверяем, использовал ли этот пользователь тестовый ключ
+                if testKeyUsed[userKeyID] {
+                        return nil, fmt.Errorf("Пробный ключ уже был использован вами")
+                }
+                
+                // Проверяем в БД, не активировал ли пользователь уже тестовый ключ
+                var checkLicense UserLicense
+                if db.Where("user_id = ? AND key_used = ?", userID, TestLicenseKey).First(&checkLicense).Error == nil {
+                        return nil, fmt.Errorf("Пробный ключ уже был использован вами")
+                }
+                
+                now := time.Now()
+                expiresAt := now.AddDate(0, 0, 25) // 25 дней Premium
+                
+                // Проверяем существующую лицензию пользователя
                 var existingLicense UserLicense
                 if db.Where("user_id = ?", userID).First(&existingLicense).Error == nil {
+                        // Обновляем существующую лицензию
+                        existingLicense.Type = LicenseYearly
+                        existingLicense.ActivatedAt = now
                         existingLicense.ExpiresAt = expiresAt
                         existingLicense.IsActive = true
-                        db.Save(&existingLicense)
+                        existingLicense.KeyUsed = TestLicenseKey
+                        if err := db.Save(&existingLicense).Error; err != nil {
+                                return nil, err
+                        }
+                        testKeyUsed[userKeyID] = true
                         return &existingLicense, nil
                 }
                 
+                // Создаём новую лицензию
                 userLicense := &UserLicense{
                         UserID:      userID,
-                        Type:        LicenseMonthly,
+                        Type:        LicenseYearly, // Premium тип
                         ActivatedAt: now,
                         ExpiresAt:   expiresAt,
                         IsActive:    true,
+                        KeyUsed:     TestLicenseKey,
                 }
                 if err := db.Create(userLicense).Error; err != nil {
                         return nil, err
                 }
+                
+                testKeyUsed[userKeyID] = true
                 return userLicense, nil
         }
         
