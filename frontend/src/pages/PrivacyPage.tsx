@@ -18,7 +18,7 @@ const content = {
 
 1.2. Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей платформы Nemaks.
 
-1.3. Платформа предназначена для лиц, достигших 16 лет. Регистрируясь, вы подтверждаете достижение указанного возраста.`
+1.3. Платформа предназначена для лиц, достигших 18 лет. Регистрируясь, вы подтверждаете достижение указанного возраста.`
       },
       {
         icon: Database,
@@ -182,7 +182,7 @@ Telegram: https://t.me/neMaxks
 
 1.2. This Privacy Policy defines the procedure for processing and protecting personal data of Nemaks platform users.
 
-1.3. The platform is intended for persons who have reached 16 years of age. By registering, you confirm that you have reached this age.`
+1.3. The platform is intended for persons who have reached 18 years of age. By registering, you confirm that you have reached this age.`
       },
       {
         icon: Database,
