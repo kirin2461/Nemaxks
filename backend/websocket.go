@@ -511,3 +511,71 @@ func handleWSConnection(c *gin.Context) {
         go client.readPump()
         go client.writePump()
 }
+
+func handleWSTunnelConnection(c *gin.Context) {
+        var userID string
+
+        tokenParam := c.Query("token")
+        if tokenParam == "" {
+                log.Println("WSTunnel connection rejected: no token provided")
+                c.AbortWithStatus(401)
+                return
+        }
+
+        token, err := jwt.ParseWithClaims(tokenParam, &jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+                if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+                        return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+                }
+                return getJWTSecret(), nil
+        })
+
+        if err != nil {
+                log.Printf("WSTunnel connection rejected: invalid token - %v", err)
+                c.AbortWithStatus(401)
+                return
+        }
+
+        if !token.Valid {
+                log.Println("WSTunnel connection rejected: token not valid")
+                c.AbortWithStatus(401)
+                return
+        }
+
+        claims, ok := token.Claims.(*jwt.MapClaims)
+        if !ok {
+                log.Println("WSTunnel connection rejected: invalid claims")
+                c.AbortWithStatus(401)
+                return
+        }
+
+        uid, ok := (*claims)["user_id"].(float64)
+        if !ok {
+                uid, ok = (*claims)["uid"].(float64)
+                if !ok {
+                        log.Println("WSTunnel connection rejected: user_id not in claims")
+                        c.AbortWithStatus(401)
+                        return
+                }
+        }
+
+        userID = strconv.Itoa(int(uid))
+
+        conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+        if err != nil {
+                log.Printf("WSTunnel upgrade error: %v", err)
+                return
+        }
+
+        log.Printf("WSTunnel connected (fallback transport): user %s", userID)
+
+        client := &WSClient{
+                ID:     len(hub.clients),
+                Conn:   conn,
+                Send:   make(chan interface{}, 256),
+                UserID: userID,
+        }
+
+        hub.register <- client
+        go client.readPump()
+        go client.writePump()
+}

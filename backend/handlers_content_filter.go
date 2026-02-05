@@ -202,10 +202,24 @@ func checkContentFilter(content string, userID uint, context string) ContentFilt
                         }
                 } else {
                         normalizedWord := NormalizeText(fw.Word)
-                        if strings.Contains(lowerContent, strings.ToLower(fw.Word)) {
+                        lowerWord := strings.ToLower(fw.Word)
+                        
+                        if strings.Contains(lowerContent, lowerWord) {
                                 matched = true
                         } else if strings.Contains(normalizedContent, normalizedWord) {
                                 matched = true
+                        } else if len(fw.Word) >= 4 && !strings.Contains(fw.Word, " ") {
+                                maxDist := 1
+                                if len(fw.Word) >= 6 {
+                                        maxDist = 2
+                                }
+                                words := strings.Fields(normalizedContent)
+                                for _, word := range words {
+                                        if LevenshteinDistance(word, normalizedWord) <= maxDist {
+                                                matched = true
+                                                break
+                                        }
+                                }
                         }
                 }
 

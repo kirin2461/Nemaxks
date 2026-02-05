@@ -1,4 +1,4 @@
-export type ConnectionType = 'websocket' | 'sse' | 'long_polling' | 'disconnected'
+export type ConnectionType = 'websocket' | 'wstunnel' | 'sse' | 'long_polling' | 'disconnected'
 
 export interface ConnectionState {
   type: ConnectionType
@@ -12,6 +12,7 @@ type StateChangeHandler = (state: ConnectionState) => void
 
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000]
 const WEBSOCKET_TIMEOUT = 5000
+const WSTUNNEL_TIMEOUT = 8000
 const SSE_TIMEOUT = 5000
 const POLL_INTERVAL = 500
 
@@ -24,10 +25,12 @@ class ConnectionManager {
   private token: string | null = null
   private baseUrl: string = ''
   private wsUrl: string = ''
+  private wstunnelUrl: string = ''
   private messageHandlers: Set<MessageHandler> = new Set()
   private stateChangeHandlers: Set<StateChangeHandler> = new Set()
   private isConnecting: boolean = false
   private shouldReconnect: boolean = true
+  private preferredTransport: ConnectionType | null = null
 
   private state: ConnectionState = {
     type: 'disconnected',
@@ -40,6 +43,7 @@ class ConnectionManager {
     if (typeof window !== 'undefined') {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       this.wsUrl = `${protocol}//${window.location.host}/ws`
+      this.wstunnelUrl = `${protocol}//${window.location.host}/wstunnel`
       this.baseUrl = window.location.origin
     }
   }
@@ -83,9 +87,14 @@ class ConnectionManager {
 
     const success = await this.tryWebSocket()
     if (!success) {
-      const sseSuccess = await this.trySSE()
-      if (!sseSuccess) {
-        this.startLongPolling()
+      console.log('[ConnectionManager] WebSocket failed, trying wstunnel...')
+      const wstunnelSuccess = await this.tryWSTunnel()
+      if (!wstunnelSuccess) {
+        console.log('[ConnectionManager] wstunnel failed, trying SSE...')
+        const sseSuccess = await this.trySSE()
+        if (!sseSuccess) {
+          this.startLongPolling()
+        }
       }
     }
     
@@ -144,6 +153,64 @@ class ConnectionManager {
         }
       } catch (e) {
         console.error('[ConnectionManager] WebSocket exception:', e)
+        resolve(false)
+      }
+    })
+  }
+
+  private async tryWSTunnel(): Promise<boolean> {
+    return new Promise((resolve) => {
+      try {
+        console.log('[ConnectionManager] Trying wstunnel (WebSocket over HTTPS/443)...')
+        const wstunnelUrlWithToken = `${this.wstunnelUrl}?token=${this.token}`
+        this.ws = new WebSocket(wstunnelUrlWithToken)
+
+        const timeout = setTimeout(() => {
+          if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
+            console.log('[ConnectionManager] wstunnel timeout')
+            this.ws.close()
+            resolve(false)
+          }
+        }, WSTUNNEL_TIMEOUT)
+
+        this.ws.onopen = () => {
+          clearTimeout(timeout)
+          console.log('[ConnectionManager] wstunnel connected successfully')
+          this.preferredTransport = 'wstunnel'
+          this.setState({
+            type: 'wstunnel',
+            isConnected: true,
+            lastError: null,
+            reconnectAttempts: 0
+          })
+          resolve(true)
+        }
+
+        this.ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data)
+            this.handleMessage(data)
+          } catch (e) {
+            console.error('[ConnectionManager] wstunnel message parse error:', e)
+          }
+        }
+
+        this.ws.onerror = (error) => {
+          console.error('[ConnectionManager] wstunnel error:', error)
+          clearTimeout(timeout)
+        }
+
+        this.ws.onclose = () => {
+          console.log('[ConnectionManager] wstunnel closed')
+          clearTimeout(timeout)
+          if (this.state.type === 'wstunnel') {
+            this.setState({ isConnected: false })
+            this.scheduleReconnect()
+          }
+          resolve(false)
+        }
+      } catch (e) {
+        console.error('[ConnectionManager] wstunnel exception:', e)
         resolve(false)
       }
     })
@@ -276,7 +343,7 @@ class ConnectionManager {
   }
 
   send(message: any): boolean {
-    if (this.state.type === 'websocket' && this.ws?.readyState === WebSocket.OPEN) {
+    if ((this.state.type === 'websocket' || this.state.type === 'wstunnel') && this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message))
       return true
     }
@@ -327,7 +394,7 @@ class ConnectionManager {
     })
   }
 
-  forceConnectionType(type: 'websocket' | 'sse' | 'long_polling'): void {
+  forceConnectionType(type: 'websocket' | 'wstunnel' | 'sse' | 'long_polling'): void {
     if (!this.token) return
 
     this.disconnect(false)
@@ -336,12 +403,22 @@ class ConnectionManager {
       case 'websocket':
         this.tryWebSocket()
         break
+      case 'wstunnel':
+        this.tryWSTunnel()
+        break
       case 'sse':
         this.trySSE()
         break
       case 'long_polling':
         this.startLongPolling()
         break
+    }
+  }
+
+  getTransportInfo(): { type: ConnectionType; fallbackUsed: boolean } {
+    return {
+      type: this.state.type,
+      fallbackUsed: this.state.type !== 'websocket' && this.state.type !== 'disconnected'
     }
   }
 }

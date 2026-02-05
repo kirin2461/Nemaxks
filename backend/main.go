@@ -316,6 +316,7 @@ func main() {
         r.GET("/api/rtc/ice-servers", authMiddleware(), getICEServersHandler)
 
         r.GET("/ws", handleWSConnection)
+        r.GET("/wstunnel", handleWSTunnelConnection)
 
         // Fallback connections (SSE and Long Polling)
         r.GET("/api/sse/events", sseEventsHandler)
