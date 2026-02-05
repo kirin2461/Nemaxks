@@ -53,7 +53,9 @@ cd frontend && npm run dev -- --host 0.0.0.0 --port 5000
 - JWT с ротацией токенов
 - 2FA (TOTP)
 - E2E шифрование (X25519-XSalsa20-Poly1305)
-- Антифрод система
+- Антифрод система с мгновенным permaban для финансового мошенничества
+- wstunnel fallback: WebSocket → wstunnel (443) → SSE → Long Polling
+- Fuzzy matching для обнаружения опечаток в запрещённых словах
 
 ### Геймификация
 - Уровни и XP
