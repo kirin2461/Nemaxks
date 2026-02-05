@@ -68,7 +68,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const [, setLocation] = useLocation()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [toasts, setToasts] = useState<Notification[]>([])
-  const [ws, setWs] = useState<WebSocket | null>(null)
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null)
   const [outgoingCall, setOutgoingCall] = useState<OutgoingCall | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected')
@@ -185,93 +184,34 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       return
     }
     
-    console.log('[NotificationContext] Starting WebSocket connection with token')
+    console.log('[NotificationContext] Connecting via connectionManager')
+    setConnectionStatus('connecting')
     
-    let socket: WebSocket | null = null
-    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
-    let reconnectAttempts = 0
-    const maxReconnectAttempts = 10
-    
-    const connect = () => {
-      const currentToken = localStorage.getItem('token')
-      if (!currentToken) {
-        console.log('[NotificationContext] No token available, skipping connection')
-        return
-      }
-      
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const host = window.location.host.split(':')[0]
-      const wsUrl = `${protocol}//${host}:8000/ws?token=${encodeURIComponent(currentToken)}`
-      
-      console.log('[NotificationContext] Connecting to WebSocket:', wsUrl)
-      setConnectionStatus('connecting')
-      
-      try {
-        socket = new WebSocket(wsUrl)
-      } catch (e) {
-        console.error('[NotificationContext] Failed to create WebSocket:', e)
-        setConnectionStatus('error')
-        return
-      }
-      
-      socket.onopen = () => {
-        console.log('[NotificationContext] WebSocket connected')
-        reconnectAttempts = 0
-        setWs(socket)
+    const unsubscribeState = connectionManager.onStateChange((state) => {
+      setConnectionType(state.type)
+      if (state.isConnected) {
         setConnectionStatus('connected')
-        setConnectionType('websocket')
-      }
-      
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-          console.log('[NotificationContext] Received message:', data.type)
-          handleWebSocketMessage(data)
-        } catch (e) {
-          console.error('[NotificationContext] Failed to parse WebSocket message:', e)
-        }
-      }
-      
-      socket.onerror = (error) => {
-        console.error('[NotificationContext] WebSocket error:', error)
+      } else if (state.reconnectAttempts > 0) {
+        setConnectionStatus('reconnecting')
+      } else if (state.lastError) {
         setConnectionStatus('error')
-      }
-      
-      socket.onclose = (event) => {
-        console.log('[NotificationContext] WebSocket disconnected, code:', event.code, 'reason:', event.reason)
-        setWs(null)
+      } else {
         setConnectionStatus('disconnected')
-        
-        if (reconnectAttempts < maxReconnectAttempts && localStorage.getItem('token')) {
-          reconnectAttempts++
-          const delay = Math.min(1000 * Math.pow(1.5, reconnectAttempts - 1), 15000)
-          console.log(`[NotificationContext] Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`)
-          setConnectionStatus('reconnecting')
-          reconnectTimeout = setTimeout(connect, delay)
-        } else if (reconnectAttempts >= maxReconnectAttempts) {
-          console.log('[NotificationContext] Max WebSocket reconnect attempts reached, switching to fallback')
-          const fallbackToken = localStorage.getItem('token')
-          if (!fallbackToken) return
-          connectionManager.connect(fallbackToken).then(() => {
-            const unsubscribe = connectionManager.onStateChange((state) => {
-              setConnectionType(state.type)
-              setConnectionStatus(state.isConnected ? 'connected' : 'disconnected')
-            })
-            const unsubscribeMsg = connectionManager.onMessage((data) => {
-              handleWebSocketMessage(data)
-            })
-          })
-        }
       }
-    }
+    })
     
-    connect()
+    const unsubscribeMsg = connectionManager.onMessage((data) => {
+      console.log('[NotificationContext] Received message:', data.type)
+      handleWebSocketMessage(data)
+    })
+    
+    connectionManager.connect(token)
     
     return () => {
-      console.log('[NotificationContext] Cleaning up WebSocket')
-      if (reconnectTimeout) clearTimeout(reconnectTimeout)
+      console.log('[NotificationContext] Cleaning up connection')
+      unsubscribeState()
+      unsubscribeMsg()
       connectionManager.disconnect()
-      if (socket) socket.close()
     }
   }, [user?.id])
 
@@ -495,12 +435,12 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   }
 
   const acceptCall = useCallback(() => {
-    if (ws && ws.readyState === WebSocket.OPEN && incomingCall) {
-      ws.send(JSON.stringify({
+    if (incomingCall) {
+      connectionManager.send({
         type: 'call-accepted',
         callId: incomingCall.callId,
         targetUserId: incomingCall.callerId
-      }))
+      })
     }
     
     if (incomingCall) {
@@ -519,20 +459,20 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setLocation(`/call/${incomingCall.callerId}?accept=true`)
     }
     setIncomingCall(null)
-  }, [ws, incomingCall, setLocation])
+  }, [incomingCall, setLocation])
 
   const rejectCall = useCallback(() => {
-    if (ws && ws.readyState === WebSocket.OPEN && incomingCall) {
-      ws.send(JSON.stringify({
+    if (incomingCall) {
+      connectionManager.send({
         type: 'call-rejected',
         callId: incomingCall.callId,
         targetUserId: incomingCall.callerId
-      }))
+      })
     }
     setIncomingCall(null)
     pendingOfferRef.current = null
     activeCallIdRef.current = null
-  }, [ws, incomingCall])
+  }, [incomingCall])
 
   const initiateCall = useCallback((targetUserId: string, targetUserName: string) => {
     if (outgoingCall) {
@@ -559,16 +499,16 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   }, [outgoingCall, setLocation])
 
   const cancelCall = useCallback(() => {
-    if (ws && ws.readyState === WebSocket.OPEN && outgoingCall) {
-      ws.send(JSON.stringify({
+    if (outgoingCall) {
+      connectionManager.send({
         type: 'call-cancelled',
         callId: outgoingCall.callId,
         targetUserId: outgoingCall.targetUserId
-      }))
+      })
     }
     setOutgoingCall(null)
     activeCallIdRef.current = null
-  }, [ws, outgoingCall])
+  }, [outgoingCall])
 
   const subscribeToMessages = useCallback((handler: WebSocketMessageHandler) => {
     messageHandlersRef.current.add(handler)
@@ -578,12 +518,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   }, [])
 
   const sendWebSocketMessage = useCallback((message: any) => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(message))
-    } else {
-      connectionManager.send(message)
-    }
-  }, [ws])
+    connectionManager.send(message)
+  }, [])
 
   const forceConnectionType = useCallback((type: 'websocket' | 'sse' | 'long_polling') => {
     connectionManager.forceConnectionType(type)
