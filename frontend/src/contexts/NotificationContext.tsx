@@ -180,7 +180,11 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   useEffect(() => {
     const token = localStorage.getItem('token')
     
+    console.log('[NotificationContext] useEffect triggered, user:', user?.id, token ? 'has token' : 'no token')
+    
     if (!token) {
+      console.log('[NotificationContext] No token, skipping connection')
+      setConnectionStatus('disconnected')
       return
     }
     

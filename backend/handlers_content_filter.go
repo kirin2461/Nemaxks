@@ -29,13 +29,57 @@ var financialFraudPatterns = []string{
         "qiwi", "киви", "юмани", "yoomoney",
 }
 
+var allFraudKeywords []string
+var allFraudPatterns []*regexp.Regexp
+var abbreviationContextPatterns []*regexp.Regexp
 var normalizedFraudPatternsCyrillic []string
 var normalizedFraudPatternsLatin []string
 
 func init() {
-        for _, pattern := range financialFraudPatterns {
+        allFraudKeywords = append(allFraudKeywords, financialFraudPatterns...)
+        allFraudKeywords = append(allFraudKeywords, GetAllFraudKeywords()...)
+        
+        for _, pattern := range allFraudKeywords {
                 normalizedFraudPatternsCyrillic = append(normalizedFraudPatternsCyrillic, NormalizeText(pattern))
                 normalizedFraudPatternsLatin = append(normalizedFraudPatternsLatin, normalizeToLatin(pattern))
+        }
+        
+        for _, patternStr := range GetAllFraudPatterns() {
+                if re, err := regexp.Compile(patternStr); err == nil {
+                        allFraudPatterns = append(allFraudPatterns, re)
+                }
+        }
+        
+        for _, abbr := range GetAgencyAbbreviationsForRegex() {
+                abbrLower := strings.ToLower(abbr)
+                abbrWithSeps := strings.Join(strings.Split(abbrLower, ""), `[\W_]*`)
+                patterns := []string{
+                        `(?i)(я из|я сотрудник|работаю в|представляю|ya iz|rabotayu v|i am from|i work at).{0,30}` + abbrLower,
+                        `(?i)` + abbrLower + `.{0,30}(возбуждено|заведено|открыто|investigation|case against)`,
+                        `(?i)(agent|агент|officer|офицер|сотрудник).{0,20}` + abbrLower,
+                        `(?i)(я из|i am from|this is|работаю в).{0,20}` + abbrWithSeps,
+                }
+                for _, pattern := range patterns {
+                        if re, err := regexp.Compile(pattern); err == nil {
+                                abbreviationContextPatterns = append(abbreviationContextPatterns, re)
+                        }
+                }
+        }
+        
+        for _, agency := range GetAllAgencyKeywords() {
+                agencyLower := strings.ToLower(agency)
+                if len(agencyLower) < 6 || strings.Contains(agencyLower, "agent") || strings.Contains(agencyLower, "officer") || strings.Contains(agencyLower, "агент") || strings.Contains(agencyLower, "офицер") {
+                        continue
+                }
+                patterns := []string{
+                        `(?i)(я из|я сотрудник|работаю в|представляю).{0,15}` + regexp.QuoteMeta(agencyLower),
+                        `(?i)(i am from|i work at|this is|agent from|officer from).{0,15}` + regexp.QuoteMeta(agencyLower),
+                }
+                for _, pattern := range patterns {
+                        if re, err := regexp.Compile(pattern); err == nil {
+                                abbreviationContextPatterns = append(abbreviationContextPatterns, re)
+                        }
+                }
         }
 }
 
@@ -75,15 +119,29 @@ func normalizeToLatin(text string) string {
 func checkFinancialFraud(content string) (bool, string) {
         normalizedCyrillic := NormalizeText(content)
         normalizedLatin := normalizeToLatin(content)
+        lowerContent := strings.ToLower(content)
         
-        for i, pattern := range financialFraudPatterns {
-                if strings.Contains(normalizedCyrillic, normalizedFraudPatternsCyrillic[i]) {
-                        return true, pattern
+        for i, keyword := range allFraudKeywords {
+                if i < len(normalizedFraudPatternsCyrillic) && strings.Contains(normalizedCyrillic, normalizedFraudPatternsCyrillic[i]) {
+                        return true, keyword
                 }
-                if strings.Contains(normalizedLatin, normalizedFraudPatternsLatin[i]) {
-                        return true, pattern
+                if i < len(normalizedFraudPatternsLatin) && strings.Contains(normalizedLatin, normalizedFraudPatternsLatin[i]) {
+                        return true, keyword
                 }
         }
+        
+        for _, re := range allFraudPatterns {
+                if re.MatchString(lowerContent) || re.MatchString(normalizedCyrillic) || re.MatchString(normalizedLatin) {
+                        return true, re.String()
+                }
+        }
+        
+        for _, re := range abbreviationContextPatterns {
+                if re.MatchString(lowerContent) || re.MatchString(normalizedCyrillic) || re.MatchString(normalizedLatin) {
+                        return true, "agency impersonation detected"
+                }
+        }
+        
         return false, ""
 }
 
