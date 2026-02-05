@@ -106,7 +106,7 @@ type CustomStatus struct {
         UserID    uint       `json:"user_id" gorm:"uniqueIndex;not null"`
         Text      string     `json:"text"`
         Emoji     string     `json:"emoji"`
-        ExpiresAt *time.Time `json:"expires_at,omitempty"`
+        ExpiresAt *time.Time `json:"expires_at,omitempty" gorm:"index:idx_custom_statuses_expires"`
         ClearAt   *time.Time `json:"clear_at,omitempty"`
         UpdatedAt time.Time  `json:"updated_at"`
         User      User       `json:"user,omitempty" gorm:"foreignKey:UserID"`
@@ -124,9 +124,9 @@ type StatusPreset struct {
 type DisappearingSettings struct {
         ID              uint      `json:"id" gorm:"primaryKey"`
         ConversationKey string    `json:"conversation_key" gorm:"uniqueIndex;not null"`
-        UserID1         uint      `json:"user_id_1" gorm:"not null"`
-        UserID2         uint      `json:"user_id_2" gorm:"not null"`
-        Enabled         bool      `json:"enabled" gorm:"default:false"`
+        UserID1         uint      `json:"user_id_1" gorm:"not null;index:idx_disappearing_users"`
+        UserID2         uint      `json:"user_id_2" gorm:"not null;index:idx_disappearing_users"`
+        Enabled         bool      `json:"enabled" gorm:"default:false;index:idx_disappearing_enabled"`
         Duration        int       `json:"duration" gorm:"default:86400"`
         UpdatedAt       time.Time `json:"updated_at"`
 }
