@@ -15,13 +15,13 @@ import (
 
 type RefreshToken struct {
         ID          uint       `json:"id" gorm:"primaryKey"`
-        UserID      uint       `json:"user_id" gorm:"index;not null"`
+        UserID      uint       `json:"user_id" gorm:"index:idx_refresh_tokens_user_revoked;not null"`
         SessionID   string     `json:"session_id" gorm:"index"`
         TokenHash   string     `json:"-" gorm:"uniqueIndex;not null"`
         DeviceInfo  string     `json:"device_info"`
         IPAddress   string     `json:"ip_address"`
-        ExpiresAt   time.Time  `json:"expires_at"`
-        Revoked     bool       `json:"revoked" gorm:"default:false"`
+        ExpiresAt   time.Time  `json:"expires_at" gorm:"index"`
+        Revoked     bool       `json:"revoked" gorm:"index:idx_refresh_tokens_user_revoked;default:false"`
         RevokedAt   *time.Time `json:"revoked_at,omitempty"`
         CreatedAt   time.Time  `json:"created_at"`
         LastUsedAt  time.Time  `json:"last_used_at"`
