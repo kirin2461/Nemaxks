@@ -15,6 +15,119 @@ var defaultForbiddenWords = []string{
         "crime", "violence", "insult", "spam", "phishing", "fraud",
 }
 
+var financialFraudPatterns = []string{
+        "номер карты", "номер карт", "cvv", "cvv2", "cvc", "cvc2",
+        "пин код", "пин-код", "пинкод", "pin code", "pincode",
+        "перевод денег", "переведи деньги", "скинь деньги",
+        "дай карту", "дайте карту", "скинь карту",
+        "реквизиты", "банковские данные", "данные карты",
+        "номер счета", "номер счёта",
+        "кредитка", "кредитная карта", "дебетовая карта",
+        "срок действия карты", "expiry date", "card number",
+        "send money", "bank details", "credit card",
+        "crypto wallet", "криптокошелек", "крипто кошелек",
+        "qiwi", "киви", "юмани", "yoomoney",
+}
+
+var normalizedFraudPatternsCyrillic []string
+var normalizedFraudPatternsLatin []string
+
+func init() {
+        for _, pattern := range financialFraudPatterns {
+                normalizedFraudPatternsCyrillic = append(normalizedFraudPatternsCyrillic, NormalizeText(pattern))
+                normalizedFraudPatternsLatin = append(normalizedFraudPatternsLatin, normalizeToLatin(pattern))
+        }
+}
+
+func normalizeToLatin(text string) string {
+        text = strings.ToLower(text)
+        var result strings.Builder
+        
+        cyrillicToLatinMap := map[rune]rune{
+                'а': 'a', 'с': 'c', 'е': 'e', 'о': 'o', 'р': 'p', 'х': 'x', 'у': 'y',
+                'в': 'b', 'н': 'h', 'к': 'k', 'м': 'm', 'т': 't',
+        }
+        leetToLatin := map[rune]rune{
+                '@': 'a', '4': 'a', '0': 'o', '1': 'i', '!': 'i',
+                '3': 'e', '$': 's', '5': 's', '7': 't', '6': 'b', '8': 'b', '9': 'g',
+        }
+        
+        for _, r := range text {
+                if replacement, ok := leetToLatin[r]; ok {
+                        result.WriteRune(replacement)
+                } else if replacement, ok := cyrillicToLatinMap[r]; ok {
+                        result.WriteRune(replacement)
+                } else {
+                        result.WriteRune(r)
+                }
+        }
+        
+        normalized := strings.Map(func(r rune) rune {
+                if r == '-' || r == '_' || r == '.' || r == ',' || r == '*' || r == '#' {
+                        return -1
+                }
+                return r
+        }, result.String())
+        
+        return strings.Join(strings.Fields(normalized), " ")
+}
+
+func checkFinancialFraud(content string) (bool, string) {
+        normalizedCyrillic := NormalizeText(content)
+        normalizedLatin := normalizeToLatin(content)
+        
+        for i, pattern := range financialFraudPatterns {
+                if strings.Contains(normalizedCyrillic, normalizedFraudPatternsCyrillic[i]) {
+                        return true, pattern
+                }
+                if strings.Contains(normalizedLatin, normalizedFraudPatternsLatin[i]) {
+                        return true, pattern
+                }
+        }
+        return false, ""
+}
+
+func permaBanUser(userID uint, reason string, matchedPattern string) error {
+        now := time.Now()
+        
+        truncatedReason := reason
+        if len(truncatedReason) > 200 {
+                truncatedReason = truncatedReason[:200] + "..."
+        }
+        truncatedPattern := matchedPattern
+        if len(truncatedPattern) > 100 {
+                truncatedPattern = truncatedPattern[:100]
+        }
+        
+        if db != nil {
+                db.Create(&ForbiddenAttempt{
+                        UserID:           userID,
+                        AttemptedContent: truncatedReason,
+                        MatchedWords:     truncatedPattern,
+                        Context:          "financial_fraud_permaban",
+                        CreatedAt:        now,
+                })
+        }
+        
+        logAudit(0, "auto_permaban_financial_fraud", "user", strconv.FormatUint(uint64(userID), 10), "system")
+        
+        if db == nil {
+                return nil
+        }
+        
+        var user User
+        if db.First(&user, userID).RowsAffected == 0 {
+                return nil
+        }
+        
+        user.IsBlocked = true
+        user.BlockReason = "Автоматический пермабан: финансовое мошенничество (паттерн: " + truncatedPattern + ")"
+        
+        db.Save(&user)
+        
+        return nil
+}
+
 func initDefaultForbiddenWords() {
         if db == nil {
                 return
@@ -63,10 +176,21 @@ func checkContentFilter(content string, userID uint, context string) ContentFilt
                 return result
         }
 
+        if isFraud, pattern := checkFinancialFraud(content); isFraud {
+                result.IsForbidden = true
+                result.MatchedWords = append(result.MatchedWords, "[FINANCIAL_FRAUD] "+pattern)
+                
+                if userID > 0 {
+                        permaBanUser(userID, content, pattern)
+                }
+                return result
+        }
+
         var forbiddenWords []ForbiddenWord
         db.Find(&forbiddenWords)
 
         lowerContent := strings.ToLower(content)
+        normalizedContent := NormalizeText(content)
 
         for _, fw := range forbiddenWords {
                 matched := false
@@ -77,7 +201,10 @@ func checkContentFilter(content string, userID uint, context string) ContentFilt
                                 matched = true
                         }
                 } else {
+                        normalizedWord := NormalizeText(fw.Word)
                         if strings.Contains(lowerContent, strings.ToLower(fw.Word)) {
+                                matched = true
+                        } else if strings.Contains(normalizedContent, normalizedWord) {
                                 matched = true
                         }
                 }
@@ -89,9 +216,13 @@ func checkContentFilter(content string, userID uint, context string) ContentFilt
         }
 
         if result.IsForbidden && userID > 0 {
+                truncatedContent := content
+                if len(truncatedContent) > 500 {
+                        truncatedContent = truncatedContent[:500] + "..."
+                }
                 attempt := ForbiddenAttempt{
                         UserID:           userID,
-                        AttemptedContent: content,
+                        AttemptedContent: truncatedContent,
                         MatchedWords:     strings.Join(result.MatchedWords, ", "),
                         Context:          context,
                         CreatedAt:        time.Now(),
