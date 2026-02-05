@@ -189,6 +189,7 @@ func getLiveKitStatusHandler(c *gin.Context) {
         })
 }
 
+
 // Helper function to get environment variable with default
 func getEnv(key, defaultValue string) string {
         value := os.Getenv(key)

@@ -63,11 +63,29 @@ const QUALITY_CONFIGS: Record<VideoQuality, { width: number; height: number; fra
   '240p': { width: 426, height: 240, frameRate: 15, bitrate: 250000 },
 }
 
-const ICE_SERVERS = [
+// Default fallback ICE servers (STUN only)
+const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
 ]
+
+// Fetch ICE servers from backend (includes TURN)
+async function fetchICEServers(): Promise<RTCIceServer[]> {
+  try {
+    const token = localStorage.getItem('token')
+    const response = await fetch('/api/rtc/ice-servers', {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    })
+    if (response.ok) {
+      const data = await response.json()
+      console.log('[ICE] Fetched ICE servers:', data.iceServers?.length)
+      return data.iceServers || DEFAULT_ICE_SERVERS
+    }
+  } catch (error) {
+    console.error('[ICE] Failed to fetch ICE servers:', error)
+  }
+  return DEFAULT_ICE_SERVERS
+}
 
 export default function VideoCallPage() {
   const { user } = useStore()
@@ -115,6 +133,7 @@ export default function VideoCallPage() {
   const [remoteVideoOff, setRemoteVideoOff] = useState(false)
   const [showAudioLogs, setShowAudioLogs] = useState(false)
   const [remoteVideoStream, setRemoteVideoStream] = useState<MediaStream | null>(null)
+  const [iceServers, setIceServers] = useState<RTCIceServer[]>(DEFAULT_ICE_SERVERS)
   const audioLogger = useAudioLogger()
   const pendingCallProcessed = useRef(false)
   const callEndSent = useRef(false)
@@ -140,6 +159,11 @@ export default function VideoCallPage() {
       outgoingCall: sessionStorage.getItem('outgoingCall')
     })
     loadFriends()
+    // Load ICE servers (with TURN support) from backend
+    fetchICEServers().then(servers => {
+      setIceServers(servers)
+      console.log('[ICE] Loaded', servers.length, 'ICE servers')
+    })
   }, [])
 
   useEffect(() => {
@@ -311,9 +335,9 @@ export default function VideoCallPage() {
     const token = localStorage.getItem('token')
     if (!token) return
     
+    // Use same host as the page (Vite proxies /ws to backend)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host.split(':')[0]
-    const wsUrl = `${protocol}//${host}:8000/ws?token=${encodeURIComponent(token)}`
+    const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`
     
     console.log('Connecting to Video WebSocket:', wsUrl)
     wsRef.current = new WebSocket(wsUrl)
@@ -427,7 +451,7 @@ export default function VideoCallPage() {
   }
 
   const createPeerConnection = () => {
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS })
+    const pc = new RTCPeerConnection({ iceServers })
     
     pc.onicecandidate = (event) => {
       if (event.candidate && wsRef.current?.readyState === WebSocket.OPEN) {
