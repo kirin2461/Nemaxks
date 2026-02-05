@@ -162,14 +162,14 @@ export default function DashboardPage() {
 
   return (
     <Layout>
-      <div className="p-8 max-w-7xl mx-auto animate-fade-in">
+      <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
         {/* Header with cosmic gradient background */}
-        <div className="mb-8 p-8 rounded-2xl gradient-aurora-animated relative overflow-hidden">
+        <div className="mb-6 md:mb-8 p-4 md:p-6 lg:p-8 rounded-2xl gradient-aurora-animated relative overflow-hidden">
           <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2 text-white drop-shadow-lg">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-white drop-shadow-lg">
               С возвращением, <span className="text-white">{user?.alias || user?.username}</span>!
             </h1>
-            <p className="text-white/90 text-lg drop-shadow">
+            <p className="text-white/90 text-sm md:text-base lg:text-lg drop-shadow">
               {isDemoMode
                 ? 'Демо режим — только просмотр интерфейса'
                 : 'Вот что происходит на платформе прямо сейчас.'}
@@ -184,7 +184,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-6 md:mb-8">
           {stats.map((stat, index) => {
             const Icon = stat.icon
             return (
@@ -193,19 +193,19 @@ export default function DashboardPage() {
                 className="card-cosmic animate-slide-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">{stat.name}</p>
-                    <p className="text-3xl font-bold mb-1">{isLoading ? '...' : stat.value}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs md:text-sm text-muted-foreground mb-1 truncate">{stat.name}</p>
+                    <p className="text-xl md:text-2xl lg:text-3xl font-bold mb-1">{isLoading ? '...' : stat.value}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
                       {stat.change}
                     </p>
                   </div>
                   <div className={cn(
-                    'w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center orb-glow',
+                    'w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br flex items-center justify-center orb-glow shrink-0',
                     stat.color
                   )}>
-                    <Icon className="w-8 h-8 text-white" />
+                    <Icon className="w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-white" />
                   </div>
                 </div>
               </div>

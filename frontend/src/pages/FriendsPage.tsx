@@ -376,19 +376,19 @@ export default function FriendsPage() {
     <Layout>
       <div className="h-screen flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-border bg-card/50 backdrop-blur-sm">
+        <div className="p-4 md:p-6 border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold gradient-text mb-2">{t('friends.title')}</h1>
-                <p className="text-muted-foreground">{t('friends.manageConnections')}</p>
+            <div className="flex items-center justify-between gap-3 mb-4 md:mb-6">
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold gradient-text mb-1 md:mb-2">{t('friends.title')}</h1>
+                <p className="text-sm md:text-base text-muted-foreground hidden sm:block">{t('friends.manageConnections')}</p>
               </div>
               <button
                 onClick={() => setShowAddFriend(!showAddFriend)}
-                className="btn-cosmic px-6 py-3 flex items-center gap-2"
+                className="btn-cosmic px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 shrink-0"
               >
                 <UserPlus className="w-5 h-5" />
-                {t('friends.addFriend')}
+                <span className="hidden sm:inline">{t('friends.addFriend')}</span>
               </button>
             </div>
 
@@ -438,8 +438,8 @@ export default function FriendsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="px-6 py-3 border-b border-border bg-card/30 backdrop-blur-sm">
-          <div className="max-w-6xl mx-auto flex gap-2">
+        <div className="px-4 md:px-6 py-2 md:py-3 border-b border-border bg-card/30 backdrop-blur-sm overflow-x-auto hide-scrollbar">
+          <div className="max-w-6xl mx-auto flex gap-1 md:gap-2 min-w-max">
             {[
               { key: 'all', label: t('friends.all'), count: friends.length },
               { key: 'online', label: t('friends.online'), count: friends.filter(f => f.status === 'online').length },
@@ -450,15 +450,15 @@ export default function FriendsPage() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as TabType)}
-                className={`px-4 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 ${
+                className={`px-3 md:px-4 py-2 rounded-lg transition-all duration-300 flex items-center gap-1.5 md:gap-2 whitespace-nowrap ${
                   activeTab === tab.key
                     ? 'bg-accent text-accent-foreground'
                     : 'hover:bg-accent/10 text-muted-foreground'
                 }`}
               >
-                <span className="font-medium">{tab.label}</span>
+                <span className="font-medium text-sm md:text-base">{tab.label}</span>
                 {tab.count > 0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-semibold">
+                  <span className="px-1.5 md:px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-semibold">
                     {tab.count}
                   </span>
                 )}
@@ -468,7 +468,7 @@ export default function FriendsPage() {
         </div>
 
         {/* Friends List */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-6xl mx-auto">
             {activeTab === 'all' || activeTab === 'online' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -85,7 +85,8 @@ export default function ChannelsPage() {
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [replyingTo, setReplyingTo] = useState<any>(null)
-  const [showMembersPanel, setShowMembersPanel] = useState(true)
+  const [showMembersPanel, setShowMembersPanel] = useState(false)
+  const [showMobileChannels, setShowMobileChannels] = useState(false)
   const [showChannelSettings, setShowChannelSettings] = useState(false)
   const [showRolesModal, setShowRolesModal] = useState(false)
   const [showCreateServerModal, setShowCreateServerModal] = useState(false)
@@ -1220,19 +1221,102 @@ export default function ChannelsPage() {
           <VoiceStatusBar />
         </div>
 
+        {/* Mobile Channels Drawer */}
+        {showMobileChannels && (
+          <>
+            <div 
+              className="lg:hidden fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowMobileChannels(false)}
+            />
+            <div className="lg:hidden fixed left-0 top-0 bottom-0 w-64 bg-card z-50 flex flex-col animate-slide-in border-r border-border">
+              <div className="p-3 border-b border-border flex items-center justify-between">
+                <h2 className="font-semibold truncate">{selectedGuild?.name}</h2>
+                <button 
+                  onClick={() => setShowMobileChannels(false)}
+                  className="p-2 rounded-lg hover:bg-accent"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2">
+                {Object.entries(channelsByCategory).map(([category, channels]) => {
+                  const isCollapsed = collapsedCategories.has(category)
+                  return (
+                    <div key={category} className="mb-2">
+                      <button
+                        onClick={() => toggleCategory(category)}
+                        className="w-full px-1 mb-1 flex items-center gap-1 group"
+                      >
+                        {isCollapsed ? (
+                          <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                        )}
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          {category}
+                        </span>
+                      </button>
+                      {!isCollapsed && channels.map((channel: any) => (
+                        <button
+                          key={channel.id}
+                          onClick={() => {
+                            setSelectedChannel(channel)
+                            setShowMobileChannels(false)
+                          }}
+                          className={cn(
+                            "w-full px-2 py-2 rounded-md flex items-center gap-2 text-left transition-colors",
+                            selectedChannel?.id === channel.id
+                              ? 'bg-accent text-foreground'
+                              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                          )}
+                        >
+                          {channel.type === 'voice' ? (
+                            <Volume2 className="w-4 h-4 flex-shrink-0" />
+                          ) : (
+                            <Hash className="w-4 h-4 flex-shrink-0" />
+                          )}
+                          <span className="truncate">{channel.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="p-2 border-t border-border">
+                <button 
+                  onClick={() => {
+                    setShowCreateChannelModal(true)
+                    setShowMobileChannels(false)
+                  }}
+                  className="w-full px-3 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 flex items-center gap-2 text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  Создать канал
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Channel Header */}
-          <div className="p-4 border-b border-border bg-card/50 backdrop-blur-sm flex items-center gap-3">
+          <div className="p-3 md:p-4 border-b border-border bg-card/50 backdrop-blur-sm flex items-center gap-2 md:gap-3">
+            <button
+              onClick={() => setShowMobileChannels(true)}
+              className="lg:hidden p-2 rounded-lg hover:bg-accent/20 text-muted-foreground"
+            >
+              <Hash className="w-5 h-5" />
+            </button>
             {selectedChannel.type === 'voice' ? (
-              <Volume2 className="w-5 h-5 text-muted-foreground" />
+              <Volume2 className="hidden lg:block w-5 h-5 text-muted-foreground" />
             ) : (
-              <Hash className="w-5 h-5 text-muted-foreground" />
+              <Hash className="hidden lg:block w-5 h-5 text-muted-foreground" />
             )}
-            <div className="flex-1">
-              <h2 className="font-semibold">{selectedChannel.name}</h2>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold truncate text-sm md:text-base">{selectedChannel.name}</h2>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <button
                 onClick={handleOpenChannelSettings}
                 className="p-2 rounded-lg hover:bg-accent/20 text-muted-foreground hover:text-foreground transition-colors"
@@ -1242,7 +1326,7 @@ export default function ChannelsPage() {
               </button>
               <button
                 onClick={() => setShowMembersPanel(!showMembersPanel)}
-                className={`p-2 rounded-lg transition-colors ${showMembersPanel ? 'bg-accent/20 text-foreground' : 'hover:bg-accent/20 text-muted-foreground hover:text-foreground'}`}
+                className={`hidden md:flex p-2 rounded-lg transition-colors ${showMembersPanel ? 'bg-accent/20 text-foreground' : 'hover:bg-accent/20 text-muted-foreground hover:text-foreground'}`}
                 title="Участники"
               >
                 <Users className="w-5 h-5" />
@@ -1445,9 +1529,9 @@ export default function ChannelsPage() {
           )}
         </div>
 
-        {/* Members Panel */}
+        {/* Members Panel - hidden on mobile */}
         {showMembersPanel && (
-          <div className="w-60 bg-[#2b2d31] flex flex-col shrink-0 border-l border-[#1e1f22]">
+          <div className="hidden md:flex w-60 bg-[#2b2d31] flex-col shrink-0 border-l border-[#1e1f22]">
             <div className="p-4 border-b border-[#1e1f22]">
               <h3 className="font-semibold text-xs text-[#949ba4] uppercase tracking-wider">Участники — {members.length}</h3>
             </div>

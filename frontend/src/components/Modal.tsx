@@ -53,21 +53,21 @@ export function Modal({
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={closeOnOverlayClick ? onClose : undefined}
       />
-      <div className={`relative w-full ${sizeClasses[size]} bg-[#1a1a2e] rounded-xl shadow-2xl border border-white/10 animate-in fade-in zoom-in-95 duration-200 ${className}`}>
+      <div className={`relative w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col bg-[#1a1a2e] rounded-xl shadow-2xl border border-white/10 animate-in fade-in zoom-in-95 duration-200 ${className}`}>
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-4 border-b border-white/10">
-            {title && <h2 className="text-lg font-semibold text-white">{title}</h2>}
+          <div className="flex items-center justify-between p-3 md:p-4 border-b border-white/10 shrink-0">
+            {title && <h2 className="text-base md:text-lg font-semibold text-white">{title}</h2>}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-1 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white touch-target"
               >
                 <X size={20} />
               </button>
             )}
           </div>
         )}
-        <div className="p-4">
+        <div className="p-3 md:p-4 overflow-y-auto flex-1">
           {children}
         </div>
       </div>
