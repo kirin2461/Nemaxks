@@ -354,6 +354,15 @@ func main() {
         r.POST("/api/messages/pin/:message_id", authMiddleware(), pinDirectMessageHandler)
         r.GET("/api/messages/pinned/:user_id", authMiddleware(), getPinnedDirectMessagesHandler)
 
+        // Group DMs
+        r.POST("/api/group-dm", authMiddleware(), createGroupDMHandler)
+        r.GET("/api/group-dm", authMiddleware(), getGroupDMsHandler)
+        r.GET("/api/group-dm/:group_id/messages", authMiddleware(), getGroupDMMessagesHandler)
+        r.POST("/api/group-dm/:group_id/messages", authMiddleware(), sendGroupDMMessageHandler)
+        r.POST("/api/group-dm/:group_id/participants", authMiddleware(), addGroupDMParticipantHandler)
+        r.DELETE("/api/group-dm/:group_id/participants/:user_id", authMiddleware(), removeGroupDMParticipantHandler)
+        r.PUT("/api/group-dm/:group_id", authMiddleware(), updateGroupDMHandler)
+
         // Jarvis AI routes
         r.POST("/api/jarvis/chat/ollama", HandleJarvisChat) // Simplified mapping for now
         r.POST("/api/jarvis/chat/deepseek", HandleJarvisChat)

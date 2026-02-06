@@ -135,6 +135,7 @@ func initDB() {
                 &ModerationCase{}, &ModerationVerdict{}, &ModerationActionLog{},
                 &Appeal{}, &JarvisAudioResponse{}, &JarvisVoiceCommand{}, &Voicemail{}, &JarvisCallSession{},
                 &ChannelTool{},
+                &GroupDM{}, &GroupDMParticipant{}, &GroupDMMessage{},
         )
         log.Println("DB connected")
 

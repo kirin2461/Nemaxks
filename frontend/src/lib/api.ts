@@ -410,6 +410,43 @@ export const messagesAPI = {
     request<{ unread_counts: Array<{ sender_id: number; count: number }> }>("/encryption/dm/unread-counts"),
 };
 
+// Group DM API
+export const groupDMAPI = {
+  getGroups: () => request<any[]>("/group-dm"),
+
+  createGroup: (name: string, participantIds: number[]) =>
+    request<any>("/group-dm", {
+      method: "POST",
+      data: { name, participant_ids: participantIds },
+    }),
+
+  getMessages: (groupId: string, limit: number = 50, offset: number = 0) =>
+    request<any[]>(`/group-dm/${groupId}/messages?limit=${limit}&offset=${offset}`),
+
+  sendMessage: (groupId: string, content: string, replyToId?: number) =>
+    request<any>(`/group-dm/${groupId}/messages`, {
+      method: "POST",
+      data: { content, reply_to_id: replyToId },
+    }),
+
+  addParticipant: (groupId: string, userId: number) =>
+    request<any>(`/group-dm/${groupId}/participants`, {
+      method: "POST",
+      data: { user_id: userId },
+    }),
+
+  removeParticipant: (groupId: string, userId: string) =>
+    request<any>(`/group-dm/${groupId}/participants/${userId}`, {
+      method: "DELETE",
+    }),
+
+  updateGroup: (groupId: string, data: { name?: string; avatar?: string }) =>
+    request<any>(`/group-dm/${groupId}`, {
+      method: "PUT",
+      data,
+    }),
+};
+
 // Stories API
 export const storiesAPI = {
   getStories: () => request<Story[]>("/stories"),

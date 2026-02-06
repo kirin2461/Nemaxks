@@ -917,3 +917,33 @@ type JarvisCallSession struct {
         EndedAt        *time.Time `json:"ended_at,omitempty"`
 }
 
+// Group DM
+type GroupDM struct {
+        ID        uint      `gorm:"primaryKey" json:"id"`
+        Name      string    `json:"name" gorm:"not null"`
+        OwnerID   uint      `gorm:"index" json:"owner_id"`
+        Avatar    *string   `json:"avatar,omitempty"`
+        CreatedAt time.Time `json:"created_at"`
+        UpdatedAt time.Time `json:"updated_at"`
+}
+
+type GroupDMParticipant struct {
+        ID       uint      `gorm:"primaryKey" json:"id"`
+        GroupID  uint      `gorm:"index:idx_gdm_participant,unique,priority:1" json:"group_id"`
+        UserID   uint      `gorm:"index:idx_gdm_participant,unique,priority:2" json:"user_id"`
+        JoinedAt time.Time `json:"joined_at"`
+}
+
+type GroupDMMessage struct {
+        ID        uint            `gorm:"primaryKey" json:"id"`
+        GroupID   uint            `gorm:"index" json:"group_id"`
+        SenderID  uint            `gorm:"index" json:"sender_id"`
+        Content   string          `gorm:"type:text" json:"content"`
+        ReplyToID *uint           `gorm:"index" json:"reply_to_id"`
+        ReplyTo   *GroupDMMessage `gorm:"foreignKey:ReplyToID" json:"reply_to,omitempty"`
+        Edited    bool            `gorm:"default:false" json:"edited"`
+        CreatedAt time.Time       `json:"created_at"`
+        UpdatedAt time.Time       `json:"updated_at"`
+        DeletedAt gorm.DeletedAt  `gorm:"index" json:"-"`
+}
+

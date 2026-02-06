@@ -9,7 +9,7 @@ import { NewMessageModal } from '@/components/NewMessageModal'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { messagesAPI, uploadAPI, presenceAPI, type Message, type User } from '@/lib/api'
+import { messagesAPI, uploadAPI, presenceAPI, groupDMAPI, type Message, type User } from '@/lib/api'
 import { formatTime } from '@/lib/utils'
 import {
   Search,
@@ -33,7 +33,8 @@ import {
   Square,
   Forward,
   Play,
-  Pause
+  Pause,
+  Users
 } from 'lucide-react'
 
 
@@ -53,6 +54,12 @@ export default function MessagesPage() {
   const [recordingTime, setRecordingTime] = useState(0)
   const [typingUsers, setTypingUsers] = useState<{ username: string; status: string }[]>([])
   const [playingVoice, setPlayingVoice] = useState<string | null>(null)
+  const [groupDMs, setGroupDMs] = useState<any[]>([])
+  const [selectedGroup, setSelectedGroup] = useState<any | null>(null)
+  const [groupMessages, setGroupMessages] = useState<any[]>([])
+  const [showCreateGroup, setShowCreateGroup] = useState(false)
+  const [newGroupName, setNewGroupName] = useState('')
+  const [selectedParticipants, setSelectedParticipants] = useState<number[]>([])
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const selectedUserRef = useRef<User | null>(null)
@@ -192,6 +199,13 @@ export default function MessagesPage() {
           }
         }
         break
+    }
+    if (data.type === 'group_dm_message') {
+      if (selectedGroup && data.data?.group_id === selectedGroup.id) {
+        setGroupMessages(prev => [...prev, data.data])
+        setTimeout(() => scrollToBottom('smooth'), 100)
+      }
+      loadGroupDMs()
     }
   }, [user?.id, fetchConversations])
 
@@ -356,11 +370,61 @@ export default function MessagesPage() {
   const messageContextMenu = useContextMenu()
   const conversationContextMenu = useContextMenu()
 
+  const loadGroupDMs = useCallback(async () => {
+    try {
+      const groups = await groupDMAPI.getGroups()
+      setGroupDMs(groups || [])
+    } catch (error) {
+      console.error('Failed to load group DMs:', error)
+    }
+  }, [])
+
+  const selectGroup = async (group: any) => {
+    setSelectedGroup(group)
+    setSelectedUser(null)
+    setLoading(true)
+    try {
+      const msgs = await groupDMAPI.getMessages(String(group.id))
+      setGroupMessages(msgs || [])
+    } catch (error) {
+      console.error('Failed to load group messages:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const sendGroupMessage = async () => {
+    if (!newMessage.trim() || !selectedGroup) return
+    try {
+      const msg = await groupDMAPI.sendMessage(String(selectedGroup.id), newMessage.trim(), replyingTo?.id ? Number(replyingTo.id) : undefined)
+      setGroupMessages(prev => [...prev, msg])
+      setNewMessage('')
+      setReplyingTo(null)
+      setTimeout(() => scrollToBottom('smooth'), 100)
+    } catch (error) {
+      console.error('Failed to send group message:', error)
+    }
+  }
+
+  const createGroupDM = async () => {
+    if (!newGroupName.trim() || selectedParticipants.length === 0) return
+    try {
+      await groupDMAPI.createGroup(newGroupName.trim(), selectedParticipants)
+      setShowCreateGroup(false)
+      setNewGroupName('')
+      setSelectedParticipants([])
+      loadGroupDMs()
+    } catch (error) {
+      console.error('Failed to create group:', error)
+    }
+  }
+
   useEffect(() => {
     if (!isDemoMode) {
       fetchConversations()
+      loadGroupDMs()
     }
-  }, [isDemoMode])
+  }, [isDemoMode, loadGroupDMs])
 
   const loadMessages = async (userId: string) => {
     try {
@@ -386,6 +450,7 @@ export default function MessagesPage() {
   const handleSelectUser = (chatUser: User) => {
     clearTypingIndicators()
     setSelectedUser(chatUser)
+    setSelectedGroup(null)
     loadMessages(chatUser.id)
     clearMessageNotificationsFromUser(String(chatUser.id))
   }
@@ -689,13 +754,22 @@ export default function MessagesPage() {
           {/* Search and New Message */}
           <div className="p-4 border-b border-border space-y-3">
             {/* New Message Button */}
-            <button
-              onClick={() => setShowNewMessageModal(true)}
-              className="w-full btn-cosmic py-2.5 flex items-center justify-center gap-2"
-            >
-              <Edit className="w-4 h-4" />
-              <span className="font-medium">{t('messages.newMessage')}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowNewMessageModal(true)}
+                className="flex-1 btn-cosmic py-2.5 flex items-center justify-center gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                <span className="font-medium">{t('messages.newMessage')}</span>
+              </button>
+              <button
+                onClick={() => setShowCreateGroup(true)}
+                className="p-2 hover:bg-[#35373c] rounded-lg transition-colors"
+                title="Создать группу"
+              >
+                <Users className="w-5 h-5" />
+              </button>
+            </div>
 
             {/* Search */}
             <div className="relative">
@@ -780,12 +854,93 @@ export default function MessagesPage() {
                 </button>
               ))
             )}
+            {groupDMs.length > 0 && (
+              <div className="mt-4">
+                <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase">Групповые чаты</div>
+                {groupDMs.map((group: any) => (
+                  <div
+                    key={`group-${group.id}`}
+                    onClick={() => selectGroup(group)}
+                    className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-accent/10 transition-colors ${
+                      selectedGroup?.id === group.id ? 'bg-accent/20 border-l-4 border-l-primary' : ''
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold text-sm">
+                      {group.name?.charAt(0)?.toUpperCase() || 'G'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{group.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {group.participants?.length || 0} участников
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Messages area */}
-        <div className={`${selectedUser ? 'flex' : 'hidden lg:flex'} flex-1 flex-col`}>
-          {selectedUser ? (
+        <div className={`${selectedUser || selectedGroup ? 'flex' : 'hidden lg:flex'} flex-1 flex-col`}>
+          {selectedGroup ? (
+            <div className="flex-1 flex flex-col">
+              <div className="p-3 sm:p-4 border-b border-border bg-card card-cosmic">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSelectedGroup(null)}
+                    className="lg:hidden p-2 -ml-1 hover:bg-accent/20 rounded-lg transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <div className="w-10 h-10 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold">
+                    {selectedGroup.name?.charAt(0)?.toUpperCase() || 'G'}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{selectedGroup.name}</h3>
+                    <p className="text-xs text-muted-foreground">{selectedGroup.participants?.length || 0} участников</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {groupMessages.map((msg: any) => (
+                  <div key={msg.id} className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {msg.sender?.username?.charAt(0)?.toUpperCase() || msg.sender_username?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{msg.sender?.username || msg.sender_username}</span>
+                        <span className="text-xs text-muted-foreground">{formatTime(msg.created_at)}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5">{msg.content}</p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+              <div className="p-4 border-t border-border">
+                <div className="flex items-center gap-2 bg-background border border-border rounded-lg px-4 py-2">
+                  <input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendGroupMessage()}
+                    placeholder={`Написать в ${selectedGroup.name}...`}
+                    className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+                  />
+                  <button
+                    onClick={sendGroupMessage}
+                    disabled={!newMessage.trim()}
+                    className="p-1.5 hover:bg-accent/20 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <Send className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : selectedUser ? (
             <>
               {/* Header */}
               <div className="p-3 sm:p-4 border-b border-border bg-card card-cosmic">
@@ -1241,6 +1396,54 @@ export default function MessagesPage() {
         cancelText={t('messages.cancelDelete')}
         variant="danger"
       />
+      {showCreateGroup && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-lg w-full max-w-md p-6 border border-border">
+            <h3 className="text-lg font-semibold mb-4">Создать групповой чат</h3>
+            <input
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              placeholder="Название группы"
+              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm placeholder:text-muted-foreground outline-none mb-4 focus:ring-2 focus:ring-primary"
+            />
+            <div className="text-sm text-muted-foreground mb-2">Выберите участников:</div>
+            <div className="max-h-48 overflow-y-auto space-y-1 mb-4">
+              {conversations.map((conv: any) => (
+                <label key={conv.user.id} className="flex items-center gap-3 p-2 hover:bg-accent/10 rounded-lg cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedParticipants.includes(conv.user.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedParticipants(prev => [...prev, conv.user.id])
+                      } else {
+                        setSelectedParticipants(prev => prev.filter(id => id !== conv.user.id))
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-sm">{conv.user.username || conv.user.display_name}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setShowCreateGroup(false); setNewGroupName(''); setSelectedParticipants([]) }}
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={createGroupDM}
+                disabled={!newGroupName.trim() || selectedParticipants.length === 0}
+                className="px-4 py-2 bg-primary hover:bg-primary/80 text-primary-foreground text-sm rounded-lg transition-colors disabled:opacity-50"
+              >
+                Создать
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   )
 }
