@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useStore } from "../lib/store";
 import { messagesAPI } from "../lib/api";
 import { Avatar } from "../components/Avatar";
 import { useLanguage } from "../contexts/LanguageContext";
+import { ArrowLeft, Phone, Video, MoreVertical } from "lucide-react";
 
 export interface DirectMessage {
   id: string;
@@ -28,6 +29,7 @@ const DirectMessagesPage: React.FC = () => {
   const userId = params.userId;
   const { user: currentUser } = useStore();
   const { t } = useLanguage();
+  const [, navigate] = useLocation();
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -186,6 +188,27 @@ const DirectMessagesPage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-900 pb-20 lg:pb-0">
+      <div className="sticky top-0 z-10 shrink-0 flex items-center gap-3 px-3 py-3 border-b border-gray-700 bg-gray-900/95 backdrop-blur-md">
+        <button
+          onClick={() => navigate('/friends')}
+          className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <Avatar size="sm" userId={userId} alt={`User ${userId}`} />
+        <div className="flex-1 min-w-0">
+          <h2 className="font-semibold text-white text-sm truncate">User {userId}</h2>
+          <span className="text-xs text-gray-400">{t('messages.directMessage') || 'Личное сообщение'}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors">
+            <Phone className="w-5 h-5" />
+          </button>
+          <button className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors">
+            <Video className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400">
@@ -269,7 +292,7 @@ const DirectMessagesPage: React.FC = () => {
 
       <form
         onSubmit={handleSendMessage}
-        className="border-t border-gray-700 p-3 md:p-4"
+        className="border-t border-gray-700 p-3 md:p-4 shrink-0 sticky bottom-0 bg-gray-900 z-10"
       >
         <div className="flex gap-2">
           <input

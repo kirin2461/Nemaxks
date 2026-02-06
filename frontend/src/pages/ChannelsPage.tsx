@@ -1320,7 +1320,7 @@ export default function ChannelsPage() {
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Channel Header */}
-          <div className="p-3 md:p-4 border-b border-border bg-card/50 backdrop-blur-sm flex items-center gap-2 md:gap-3">
+          <div className="p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md flex items-center gap-2 md:gap-3 sticky top-0 z-10 shrink-0">
             <button
               onClick={() => setShowMobileChannels(true)}
               className="lg:hidden p-2 rounded-lg hover:bg-accent/20 text-muted-foreground"
@@ -1510,7 +1510,7 @@ export default function ChannelsPage() {
               )}
 
               {/* Message Input */}
-              <div className="p-4 bg-card/30 backdrop-blur-md">
+              <div className="p-4 bg-card/80 backdrop-blur-md shrink-0 sticky bottom-0 z-10">
                 {replyingTo && (
                   <div className="mb-2 px-3 py-2 bg-accent/10 rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs">

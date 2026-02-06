@@ -88,14 +88,19 @@ export function Avatar({ src, alt = '', size = 'md', userId = '', className, sho
     </span>
   ) : null
 
+  const isFillParent = className?.includes('w-full') || className?.includes('h-full')
+
   if (!safeSrc || imgError) {
     return (
-      <div className="relative inline-block">
+      <div className={cn(
+        'relative',
+        isFillParent ? 'block w-full h-full' : 'inline-block'
+      )}>
         <div
           className={cn(
-            'rounded-full flex items-center justify-center font-semibold text-white',
+            'rounded-full overflow-hidden flex items-center justify-center font-semibold text-white',
             `bg-gradient-to-br ${gradient}`,
-            sizeClasses[size],
+            isFillParent ? 'w-full h-full' : sizeClasses[size],
             className
           )}
         >
@@ -107,11 +112,18 @@ export function Avatar({ src, alt = '', size = 'md', userId = '', className, sho
   }
 
   return (
-    <div className="relative inline-block">
+    <div className={cn(
+      'relative',
+      isFillParent ? 'block w-full h-full' : 'inline-block'
+    )}>
       <img
         src={safeSrc}
         alt={alt}
-        className={cn('rounded-full object-cover', sizeClasses[size], className)}
+        className={cn(
+          'rounded-full object-cover overflow-hidden',
+          isFillParent ? 'w-full h-full' : sizeClasses[size],
+          className
+        )}
         onError={() => setImgError(true)}
       />
       {StatusIndicator}

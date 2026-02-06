@@ -376,7 +376,7 @@ export default function FriendsPage() {
     <Layout>
       <div className="h-screen flex flex-col">
         {/* Header */}
-        <div className="p-4 md:p-6 border-b border-border bg-card/50 backdrop-blur-sm">
+        <div className="p-4 md:p-6 border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between gap-3 mb-4 md:mb-6">
               <div className="min-w-0">
