@@ -91,12 +91,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
                       notification.type === 'message' ? 'message' : 'system'
     playNotificationSound(soundType)
     
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(notification.title, {
-        body: notification.message,
-        icon: '/favicon.ico'
-      })
-    }
   }, [])
 
   const dismissToast = useCallback((id: string) => {
@@ -339,6 +333,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
               username: data.username,
               userId: String(senderId)
             })
+            if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+              new Notification(data.username || 'Новое сообщение', {
+                body: data.content || data.message?.content || 'Новое сообщение',
+                tag: `msg-${senderId}`,
+                icon: '/logos/nemaks_logo_purple_gradient.png'
+              })
+            }
           }
         }
         break
@@ -360,6 +361,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
               username: data.username,
               userId: String(senderId)
             })
+            if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+              new Notification(data.username || 'Новое сообщение', {
+                body: data.content || data.message?.content || 'Новое сообщение',
+                tag: `msg-${senderId}`,
+                icon: '/logos/nemaks_logo_purple_gradient.png'
+              })
+            }
           }
         }
         break
@@ -370,6 +378,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           message: `${data.username || 'Кто-то'} хочет добавить вас в друзья`,
           username: data.username
         })
+        if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+          new Notification('Запрос в друзья', {
+            body: `${data.username || 'Кто-то'} хочет добавить вас в друзья`,
+            tag: 'friend-request',
+            icon: '/logos/nemaks_logo_purple_gradient.png'
+          })
+        }
         break
       case 'friend_accepted':
         addNotification({
@@ -543,6 +558,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err))
     }
   }, [])
 

@@ -1,12 +1,12 @@
-import { useState } from 'react'
-import { X, Hash, Volume2, Lock, Globe } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Hash, Volume2, Lock, Globe, BookOpen, Presentation, Code } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 
 interface CreateChannelModalProps {
   category?: string
   onClose: () => void
-  onCreate: (channel: { name: string; type: 'text' | 'voice'; isPrivate: boolean }) => void
+  onCreate: (channel: { name: string; type: 'text' | 'voice'; isPrivate: boolean; template?: string }) => void
 }
 
 export function CreateChannelModal({ category, onClose, onCreate }: CreateChannelModalProps) {
@@ -14,11 +14,37 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
   const [name, setName] = useState('')
   const [type, setType] = useState<'text' | 'voice'>('text')
   const [isPrivate, setIsPrivate] = useState(true)
+  const [templates, setTemplates] = useState<any[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
+  const [isPremium, setIsPremium] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    fetch('/api/user/profile', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => res.json()).then(data => {
+      const plan = data?.subscription_plan || data?.plan || ''
+      setIsPremium(plan === 'edu_basic' || plan === 'edu_pro' || plan === 'premium' || plan === 'pro')
+    }).catch(() => {})
+
+    fetch('/api/templates/educational', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => res.json()).then(data => {
+      if (Array.isArray(data)) setTemplates(data)
+    }).catch(() => {})
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-    onCreate({ name: name.trim().toLowerCase().replace(/\s+/g, '-'), type, isPrivate })
+    onCreate({ 
+      name: name.trim().toLowerCase().replace(/\s+/g, '-'), 
+      type, 
+      isPrivate,
+      template: selectedTemplate || undefined
+    })
     onClose()
   }
 
@@ -78,6 +104,48 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
               </button>
             </div>
           </div>
+
+          {type === 'text' && isPremium && templates.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Шаблон канала</label>
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => setSelectedTemplate(null)}
+                  className={cn(
+                    'p-3 rounded-lg border transition-all flex flex-col items-center gap-1 text-center',
+                    selectedTemplate === null
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50'
+                  )}
+                >
+                  <Hash className="w-6 h-6" />
+                  <span className="text-xs font-medium">Обычный</span>
+                </button>
+                {templates.map((tmpl: any) => {
+                  const Icon = tmpl.tool_type === 'notebook' ? BookOpen 
+                    : tmpl.tool_type === 'whiteboard' ? Presentation 
+                    : tmpl.tool_type === 'editor' ? Code : BookOpen
+                  return (
+                    <button
+                      key={tmpl.id || tmpl.slug}
+                      type="button"
+                      onClick={() => setSelectedTemplate(tmpl.slug)}
+                      className={cn(
+                        'p-3 rounded-lg border transition-all flex flex-col items-center gap-1 text-center',
+                        selectedTemplate === tmpl.slug
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      )}
+                    >
+                      <Icon className="w-6 h-6" />
+                      <span className="text-xs font-medium truncate w-full">{tmpl.name_ru || tmpl.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-2">{t('channels.channelName')}</label>

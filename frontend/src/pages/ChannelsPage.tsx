@@ -394,7 +394,7 @@ export default function ChannelsPage() {
     }
   }
 
-  const handleCreateChannel = async (channelData: { name: string; type: 'text' | 'voice'; isPrivate: boolean }) => {
+  const handleCreateChannel = async (channelData: { name: string; type: 'text' | 'voice'; isPrivate: boolean; template?: string }) => {
     if (!selectedGuild) return
     try {
       const newChannel = await channelsAPI.createChannel(
@@ -420,6 +420,25 @@ export default function ChannelsPage() {
           type: newChannel.type || channelData.type,
           category: 'General'
         })
+
+        if (channelData.template && newChannel?.id) {
+          try {
+            const token = localStorage.getItem('token')
+            await fetch(`/api/templates/educational/${channelData.template}/apply`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                channel_id: newChannel.id,
+                name: channelData.name
+              })
+            })
+          } catch (err) {
+            console.error('Failed to apply template:', err)
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to create channel:', error)
