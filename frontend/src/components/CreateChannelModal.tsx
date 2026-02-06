@@ -22,17 +22,16 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
     const token = localStorage.getItem('token')
     if (!token) return
 
-    fetch('/api/user/profile', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    }).then(res => res.json()).then(data => {
-      const plan = data?.subscription_plan || data?.plan || ''
-      setIsPremium(plan === 'edu_basic' || plan === 'edu_pro' || plan === 'premium' || plan === 'pro')
-    }).catch(() => {})
-
     fetch('/api/templates/educational', {
       headers: { 'Authorization': `Bearer ${token}` }
-    }).then(res => res.json()).then(data => {
-      if (Array.isArray(data)) setTemplates(data)
+    }).then(res => {
+      if (res.ok) return res.json()
+      return []
+    }).then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        setTemplates(data)
+        setIsPremium(true)
+      }
     }).catch(() => {})
   }, [])
 
