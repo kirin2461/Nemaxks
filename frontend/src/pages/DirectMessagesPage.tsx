@@ -32,6 +32,8 @@ const DirectMessagesPage: React.FC = () => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [typing, setTyping] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -183,7 +185,7 @@ const DirectMessagesPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-900">
+    <div className="flex flex-col h-full bg-gray-900 pb-20 lg:pb-0">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400">
@@ -201,13 +203,34 @@ const DirectMessagesPage: React.FC = () => {
             >
               {message.sender_id !== currentUser?.id && <Avatar size="sm" />}
               <div
-                className={`max-w-xs px-4 py-2 rounded-lg ${
+                className={`max-w-[75%] px-4 py-2 rounded-lg ${
                   message.sender_id === currentUser?.id
                     ? "bg-blue-600 text-white"
                     : "bg-gray-700 text-gray-100"
                 }`}
               >
-                <p className="break-words">{message.content}</p>
+                {editingId === message.id ? (
+                  <div className="flex gap-1 items-center">
+                    <input
+                      type="text"
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleEditMessage(message.id, editContent)
+                          setEditingId(null)
+                        }
+                        if (e.key === 'Escape') setEditingId(null)
+                      }}
+                      className="bg-transparent border border-gray-500 rounded px-2 py-1 text-sm w-full focus:outline-none focus:border-blue-500"
+                      autoFocus
+                    />
+                    <button onClick={() => { handleEditMessage(message.id, editContent); setEditingId(null) }} className="text-xs text-green-400 hover:text-green-300 shrink-0">✓</button>
+                    <button onClick={() => setEditingId(null)} className="text-xs text-gray-400 hover:text-gray-300 shrink-0">✕</button>
+                  </div>
+                ) : (
+                  <p className="break-words">{message.content}</p>
+                )}
                 <p className="text-xs opacity-70 mt-1">
                   {new Date(message.created_at).toLocaleTimeString()}
                 </p>
@@ -215,20 +238,14 @@ const DirectMessagesPage: React.FC = () => {
               {message.sender_id === currentUser?.id && (
                 <div className="flex gap-2 items-center">
                   <button
-                    onClick={() => {
-                      const newContent = prompt(
-                        t('messages.editPrompt'),
-                        message.content,
-                      );
-                      if (newContent) handleEditMessage(message.id, newContent);
-                    }}
-                    className="text-xs text-gray-400 hover:text-gray-200"
+                    onClick={() => { setEditingId(message.id); setEditContent(message.content) }}
+                    className="text-xs sm:text-sm text-gray-400 hover:text-gray-200 p-1"
                   >
                     {t('messages.edit')}
                   </button>
                   <button
                     onClick={() => handleDeleteMessage(message.id)}
-                    className="text-xs text-red-400 hover:text-red-300"
+                    className="text-xs sm:text-sm text-red-400 hover:text-red-300 p-1"
                   >
                     {t('messages.delete')}
                   </button>
@@ -252,7 +269,7 @@ const DirectMessagesPage: React.FC = () => {
 
       <form
         onSubmit={handleSendMessage}
-        className="border-t border-gray-700 p-4"
+        className="border-t border-gray-700 p-3 md:p-4"
       >
         <div className="flex gap-2">
           <input

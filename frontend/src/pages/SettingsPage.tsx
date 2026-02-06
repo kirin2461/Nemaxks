@@ -105,7 +105,7 @@ export default function SettingsPage() {
     checked: boolean
     onChange: () => void
   }) => (
-    <div className="flex items-center justify-between py-3">
+    <div className="flex items-center justify-between py-3 sm:py-4">
       <div>
         <p className="font-medium">{label}</p>
         <p className="text-sm text-muted-foreground">{description}</p>
@@ -113,13 +113,13 @@ export default function SettingsPage() {
       <button
         onClick={onChange}
         className={cn(
-          'relative w-11 h-6 rounded-full transition-colors',
+          'relative w-12 h-7 rounded-full transition-colors',
           checked ? 'bg-primary' : 'bg-muted'
         )}
       >
         <div
           className={cn(
-            'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+            'absolute top-1 w-5 h-5 bg-white rounded-full transition-transform',
             checked ? 'translate-x-6' : 'translate-x-1'
           )}
         />
@@ -130,7 +130,7 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="p-8 max-w-4xl mx-auto flex items-center justify-center min-h-[50vh]">
+        <div className="p-4 sm:p-8 max-w-4xl mx-auto flex items-center justify-center min-h-[50vh]">
           <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
       </Layout>
@@ -139,9 +139,9 @@ export default function SettingsPage() {
 
   return (
     <Layout>
-      <div className="p-8 max-w-4xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold gradient-text mb-2">{t('common.settings')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">{t('common.settings')}</h1>
           <p className="text-muted-foreground">
             {t('settings.account')}
           </p>

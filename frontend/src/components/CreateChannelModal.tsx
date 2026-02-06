@@ -49,7 +49,7 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl w-full max-w-md animate-fade-in">
+      <div className="bg-card rounded-2xl w-full max-w-md mx-4 animate-fade-in">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div>
             <h2 className="text-lg font-semibold">{t('channels.createChannel')}</h2>
@@ -65,7 +65,7 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-4 max-h-[85vh] overflow-y-auto">
           <div>
             <label className="block text-sm font-medium mb-2">{t('channels.channelType')}</label>
             <div className="grid grid-cols-2 gap-2">

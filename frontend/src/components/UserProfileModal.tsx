@@ -107,7 +107,7 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
-      <div className="relative">
+      <div className="relative max-h-[85vh] overflow-y-auto">
         <div className="h-24 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-t-lg -mx-4 -mt-4" />
         
         <div className="relative -mt-12 px-4">

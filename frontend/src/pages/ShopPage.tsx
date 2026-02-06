@@ -85,22 +85,22 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-4 sm:p-6 pb-20 lg:pb-0">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
           <div className="flex items-center gap-3">
             <ShoppingBag className="w-8 h-8 text-purple-400" />
-            <h1 className="text-3xl font-bold text-white">{t('shop.title')}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">{t('shop.title')}</h1>
           </div>
           
           {currency && (
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 bg-yellow-500/20 px-4 py-2 rounded-lg">
-                <Coins className="w-5 h-5 text-yellow-400" />
+                <Coins className="w-5 h-5 text-yellow-400 shrink-0" />
                 <span className="text-yellow-400 font-semibold">{currency.coins}</span>
               </div>
               <div className="flex items-center gap-2 bg-purple-500/20 px-4 py-2 rounded-lg">
-                <Gem className="w-5 h-5 text-purple-400" />
+                <Gem className="w-5 h-5 text-purple-400 shrink-0" />
                 <span className="text-purple-400 font-semibold">{currency.gems}</span>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function ShopPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {items.map((item) => (
               <motion.div

@@ -183,13 +183,13 @@ export default function ProfilePage() {
 
   return (
     <Layout>
-      <div className="p-8 max-w-4xl mx-auto">
+      <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">
         <Card className="cosmic-border mb-6">
           <div className="relative">
             <div className="h-32 cosmic-gradient rounded-t-lg" />
 
-            <div className="px-6 pb-6">
-              <div className="flex items-end gap-6 -mt-12">
+            <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="flex items-end gap-3 sm:gap-6 -mt-12">
                 <div className="relative">
                   <Avatar
                     src={displayUser?.avatar}
@@ -213,10 +213,10 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="flex-1 pt-4">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-3 sm:gap-0">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-bold">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h1 className="text-xl sm:text-2xl font-bold">
                           {displayUser?.username}
                         </h1>
                         {hasPremium && (
@@ -248,13 +248,13 @@ export default function ProfilePage() {
                       </div>
                     )}
                     {!isOwnProfile && (
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button 
                           variant="secondary"
                           onClick={() => navigate(`/support/${userId}`)}
                         >
                           <Heart className="w-4 h-4" />
-                          Поддержать
+                          <span className="hidden sm:inline">Поддержать</span>
                         </Button>
                         {isSubscribed ? (
                           <Button 
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                             loading={subscribeLoading}
                           >
                             <UserMinus className="w-4 h-4" />
-                            Unsubscribe
+                            <span className="hidden sm:inline">Unsubscribe</span>
                           </Button>
                         ) : (
                           <Button 
@@ -271,7 +271,7 @@ export default function ProfilePage() {
                             loading={subscribeLoading}
                           >
                             <UserPlus className="w-4 h-4" />
-                            Subscribe
+                            <span className="hidden sm:inline">Subscribe</span>
                           </Button>
                         )}
                       </div>
@@ -282,7 +282,7 @@ export default function ProfilePage() {
                   </p>
                   
                   {!isOwnProfile && (
-                    <div className="flex gap-4 mt-3">
+                    <div className="flex flex-wrap gap-3 sm:gap-4 mt-3">
                       <div className="flex items-center gap-1 text-sm">
                         <Users className="w-4 h-4 text-muted-foreground" />
                         <span className="font-semibold">{followersCount}</span>

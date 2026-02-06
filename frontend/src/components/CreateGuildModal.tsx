@@ -76,7 +76,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={step === 1 ? 'Создать гильдию' : 'Настройка гильдии'} size="md">
       {step === 1 ? (
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[85vh] overflow-y-auto">
           <p className="text-gray-400 text-sm mb-4">Выберите шаблон для быстрого старта</p>
           
           {GUILD_TEMPLATES.map(t => (
@@ -104,7 +104,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
           ))}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[85vh] overflow-y-auto">
           <div className="flex justify-center">
             <div className="relative">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">

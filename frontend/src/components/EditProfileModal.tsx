@@ -90,7 +90,7 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Редактировать профиль" size="md">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 max-h-[85vh] overflow-y-auto">
         <div className="flex justify-center">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">

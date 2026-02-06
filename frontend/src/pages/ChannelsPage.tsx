@@ -1345,7 +1345,7 @@ export default function ChannelsPage() {
               </button>
               <button
                 onClick={() => setShowMembersPanel(!showMembersPanel)}
-                className={`hidden md:flex p-2 rounded-lg transition-colors ${showMembersPanel ? 'bg-accent/20 text-foreground' : 'hover:bg-accent/20 text-muted-foreground hover:text-foreground'}`}
+                className={`flex p-2 rounded-lg transition-colors ${showMembersPanel ? 'bg-accent/20 text-foreground' : 'hover:bg-accent/20 text-muted-foreground hover:text-foreground'}`}
                 title="Участники"
               >
                 <Users className="w-5 h-5" />
@@ -1548,11 +1548,21 @@ export default function ChannelsPage() {
           )}
         </div>
 
-        {/* Members Panel - hidden on mobile */}
+        {/* Members Panel backdrop for mobile */}
         {showMembersPanel && (
-          <div className="hidden md:flex w-60 bg-[#2b2d31] flex-col shrink-0 border-l border-[#1e1f22]">
-            <div className="p-4 border-b border-[#1e1f22]">
+          <div 
+            className="md:hidden fixed inset-0 bg-black/50 z-[55]"
+            onClick={() => setShowMembersPanel(false)}
+          />
+        )}
+        {/* Members Panel */}
+        {showMembersPanel && (
+          <div className="fixed inset-y-0 right-0 w-64 md:static md:w-60 bg-[#2b2d31] flex flex-col shrink-0 border-l border-[#1e1f22] z-[60] md:z-auto">
+            <div className="p-4 border-b border-[#1e1f22] flex items-center justify-between">
               <h3 className="font-semibold text-xs text-[#949ba4] uppercase tracking-wider">Участники — {members.length}</h3>
+              <button onClick={() => setShowMembersPanel(false)} className="md:hidden p-1 rounded hover:bg-[#35373c] text-[#949ba4]">
+                <X className="w-4 h-4" />
+              </button>
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
               {['online', 'idle', 'offline'].map(status => {
