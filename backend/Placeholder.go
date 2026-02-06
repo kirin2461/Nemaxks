@@ -16,16 +16,62 @@ import (
 
 // Messages
 func getMessagesByChannelHandler(c *gin.Context) {
-        channelID := c.Param("channel_id")
-        var messages []Message
-        db.Where("channel_id = ?", channelID).Order("created_at asc").Find(&messages)
+        channelIDStr := c.Param("channel_id")
+        channelID, err := strconv.ParseUint(channelIDStr, 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+                return
+        }
 
-        // Enrich messages with author info
+        // Access check for private channels
+        var channel Channel
+        if err := db.First(&channel, channelID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+                return
+        }
+        if channel.IsPrivate {
+                userIDRaw, exists := c.Get("user_id")
+                if !exists {
+                        c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+                        return
+                }
+                uid := uint(userIDRaw.(float64))
+                if !hasChannelAccessSingle(uid, channel) {
+                        c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
+                        return
+                }
+        }
+
+        // Pagination
+        limitStr := c.DefaultQuery("limit", "50")
+        beforeStr := c.Query("before")
+        limit, _ := strconv.Atoi(limitStr)
+        if limit <= 0 || limit > 100 {
+                limit = 50
+        }
+
+        // Fetch messages with Preload to avoid N+1 queries
+        var messages []Message
+        query := db.Preload("Author").Where("channel_id = ?", channelID)
+        if beforeStr != "" {
+                beforeID, err := strconv.ParseUint(beforeStr, 10, 32)
+                if err == nil {
+                        query = query.Where("id < ?", beforeID)
+                }
+        }
+        query.Order("created_at desc").Limit(limit).Find(&messages)
+
+        // Reverse to ASC order for display
+        for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+                messages[i], messages[j] = messages[j], messages[i]
+        }
+
         type MessageResponse struct {
                 ID        uint      `json:"id"`
                 ChannelID uint      `json:"channel_id"`
                 AuthorID  uint      `json:"author_id"`
                 Content   string    `json:"content"`
+                Edited    bool      `json:"edited"`
                 CreatedAt time.Time `json:"created_at"`
                 Author    struct {
                         ID       uint    `json:"id"`
@@ -34,21 +80,19 @@ func getMessagesByChannelHandler(c *gin.Context) {
                 } `json:"author"`
         }
 
-        var result []MessageResponse
+        result := make([]MessageResponse, 0, len(messages))
         for _, msg := range messages {
-                var author User
-                db.First(&author, msg.AuthorID)
-
                 resp := MessageResponse{
                         ID:        msg.ID,
                         ChannelID: msg.ChannelID,
                         AuthorID:  msg.AuthorID,
                         Content:   msg.Content,
+                        Edited:    msg.Edited,
                         CreatedAt: msg.CreatedAt,
                 }
-                resp.Author.ID = author.ID
-                resp.Author.Username = author.Username
-                resp.Author.Avatar = author.Avatar
+                resp.Author.ID = msg.Author.ID
+                resp.Author.Username = msg.Author.Username
+                resp.Author.Avatar = msg.Author.Avatar
                 result = append(result, resp)
         }
 
@@ -56,7 +100,11 @@ func getMessagesByChannelHandler(c *gin.Context) {
 }
 
 func createChannelMessageHandler(c *gin.Context) {
-        channelID, _ := strconv.ParseUint(c.Param("channel_id"), 10, 32)
+        channelID, err := strconv.ParseUint(c.Param("channel_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+                return
+        }
         userID, _ := c.Get("user_id")
 
         var req struct {
@@ -1503,7 +1551,11 @@ func validatePromoCodeHandler(c *gin.Context) {
         
         var plan PremiumPlan
         if planIDStr != "" {
-                planID, _ := strconv.ParseUint(planIDStr, 10, 32)
+                planID, errParse := strconv.ParseUint(planIDStr, 10, 32)
+                if errParse != nil {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid plan ID"})
+                        return
+                }
                 if db.First(&plan, planID).RowsAffected > 0 {
                         if plan.PriceRub < promo.MinPurchase {
                                 c.JSON(http.StatusBadRequest, gin.H{"error": "Minimum purchase not met"})

@@ -55,7 +55,11 @@ func approveDMAccessHandler(c *gin.Context) {
 		return
 	}
 
-	requestID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	requestID, errParse := strconv.ParseUint(c.Param("id"), 10, 32)
+	if errParse != nil {
+	        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request ID"})
+	        return
+	}
 	var sanction DMAccessSanction
 	if err := db.First(&sanction, requestID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Request not found"})
@@ -86,7 +90,11 @@ func revokeDMAccessHandler(c *gin.Context) {
 		return
 	}
 
-	requestID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	requestID, errParse := strconv.ParseUint(c.Param("id"), 10, 32)
+	if errParse != nil {
+	        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request ID"})
+	        return
+	}
 	db.Model(&DMAccessSanction{}).Where("id = ?", requestID).Updates(map[string]interface{}{
 		"status": "revoked",
 		"updated_at": time.Now(),

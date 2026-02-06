@@ -46,7 +46,11 @@ func handleExport(c *gin.Context, toStorage bool) {
 		return
 	}
 
-	cid, _ := strconv.ParseUint(channelIDStr, 10, 32)
+	cid, err := strconv.ParseUint(channelIDStr, 10, 32)
+	if err != nil {
+	        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+	        return
+	}
 	var channel Channel
 	if err := db.First(&channel, cid).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})

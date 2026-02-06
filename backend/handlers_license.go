@@ -289,7 +289,11 @@ func getSystemAdsHandler(c *gin.Context) {
 }
 
 func recordAdClickHandler(c *gin.Context) {
-        adID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        adID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ad ID"})
+                return
+        }
         
         db.Model(&SystemAd{}).Where("id = ?", adID).UpdateColumn("clicks", db.Raw("clicks + 1"))
         
@@ -364,7 +368,11 @@ func getAdRequestsHandler(c *gin.Context) {
 }
 
 func getAdRequestHandler(c *gin.Context) {
-        id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request ID"})
+                return
+        }
         
         var request AdRequest
         if err := db.Preload("User").First(&request, id).Error; err != nil {
@@ -377,7 +385,11 @@ func getAdRequestHandler(c *gin.Context) {
 
 func reviewAdRequestHandler(c *gin.Context) {
         adminID := c.GetUint("user_id")
-        id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request ID"})
+                return
+        }
         
         var req struct {
                 Status       AdRequestStatus `json:"status" binding:"required"`
@@ -440,7 +452,11 @@ func createSystemAdHandler(c *gin.Context) {
 }
 
 func updateSystemAdHandler(c *gin.Context) {
-        id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ad ID"})
+                return
+        }
         
         var ad SystemAd
         if err := db.First(&ad, id).Error; err != nil {
@@ -459,7 +475,11 @@ func updateSystemAdHandler(c *gin.Context) {
 }
 
 func deleteSystemAdHandler(c *gin.Context) {
-        id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ad ID"})
+                return
+        }
         
         if err := db.Delete(&SystemAd{}, id).Error; err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete ad"})

@@ -186,7 +186,11 @@ func getShopItemsHandler(c *gin.Context) {
 
 func purchaseItemHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        itemID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        itemID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item ID"})
+                return
+        }
 
         var item ShopItem
         if err := db.First(&item, itemID).Error; err != nil {
@@ -258,7 +262,11 @@ func getInventoryHandler(c *gin.Context) {
 
 func equipItemHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        itemID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        itemID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item ID"})
+                return
+        }
 
         var inventory UserInventory
         if err := db.Preload("Item").Where("user_id = ? AND item_id = ?", userID, itemID).First(&inventory).Error; err != nil {
@@ -391,7 +399,11 @@ func addCurrency(userID uint, coins, gems int) {
 
 func claimChallengeHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        challengeID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        challengeID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid challenge ID"})
+                return
+        }
 
         var uc UserChallenge
         if err := db.Preload("Challenge").Where("user_id = ? AND challenge_id = ?", userID, challengeID).First(&uc).Error; err != nil {
@@ -527,7 +539,11 @@ func getCompetitionsHandler(c *gin.Context) {
 }
 
 func getCompetitionHandler(c *gin.Context) {
-        competitionID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        competitionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid competition ID"})
+                return
+        }
 
         var competition GuildCompetition
         if err := db.First(&competition, competitionID).Error; err != nil {
@@ -550,7 +566,11 @@ func getCompetitionHandler(c *gin.Context) {
 
 func joinCompetitionHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        competitionID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        competitionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid competition ID"})
+                return
+        }
 
         var req struct {
                 GuildID uint `json:"guild_id" binding:"required"`
@@ -616,7 +636,11 @@ func getProfileCustomizationHandler(c *gin.Context) {
         if userIDParam == "" || userIDParam == "me" {
                 userID = c.GetUint("user_id")
         } else {
-                id, _ := strconv.ParseUint(userIDParam, 10, 32)
+                id, errParse := strconv.ParseUint(userIDParam, 10, 32)
+                if errParse != nil {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                        return
+                }
                 userID = uint(id)
         }
 
@@ -699,7 +723,11 @@ func getUserBadgesHandler(c *gin.Context) {
         if userIDParam == "" {
                 userID = c.GetUint("user_id")
         } else {
-                id, _ := strconv.ParseUint(userIDParam, 10, 32)
+                id, errParse := strconv.ParseUint(userIDParam, 10, 32)
+                if errParse != nil {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                        return
+                }
                 userID = uint(id)
         }
 
@@ -1012,7 +1040,11 @@ func spinWheelHandler(c *gin.Context) {
 }
 
 func getGuildLeaderboardHandler(c *gin.Context) {
-        guildID, _ := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+                return
+        }
         period := c.DefaultQuery("period", "all")
 
         var members []GuildMember

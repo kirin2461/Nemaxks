@@ -414,7 +414,11 @@ func getReceivedGiftsHandler(c *gin.Context) {
 
 func openGiftHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        giftID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        giftID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid gift ID"})
+                return
+        }
         
         var gift UserGiftItem
         if err := db.Where("id = ? AND receiver_id = ?", giftID, userID).First(&gift).Error; err != nil {
@@ -546,7 +550,11 @@ func getTradesHandler(c *gin.Context) {
 
 func respondTradeHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        tradeID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        tradeID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid trade ID"})
+                return
+        }
         
         var req struct {
                 Action string `json:"action" binding:"required"` // accept, reject
@@ -628,7 +636,11 @@ func getActivityFeedHandler(c *gin.Context) {
 
 func markActivityReadHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        activityID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        activityID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid activity ID"})
+                return
+        }
         
         db.Model(&ActivityFeed{}).Where("id = ? AND user_id = ?", activityID, userID).Update("is_read", true)
         c.JSON(http.StatusOK, gin.H{"success": true})
@@ -682,7 +694,11 @@ func getEventsHandler(c *gin.Context) {
 }
 
 func getEventHandler(c *gin.Context) {
-        eventID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        eventID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event ID"})
+                return
+        }
         
         var event Event
         if err := db.First(&event, eventID).Error; err != nil {
@@ -701,7 +717,11 @@ func getEventHandler(c *gin.Context) {
 
 func joinEventHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        eventID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        eventID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event ID"})
+                return
+        }
         
         var event Event
         if err := db.First(&event, eventID).Error; err != nil {
@@ -730,7 +750,11 @@ func joinEventHandler(c *gin.Context) {
 }
 
 func getEventLeaderboardHandler(c *gin.Context) {
-        eventID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        eventID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event ID"})
+                return
+        }
         limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
         
         var participants []EventParticipant
@@ -750,8 +774,16 @@ func getEventLeaderboardHandler(c *gin.Context) {
 
 func claimEventRewardHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        eventID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
-        rewardID, _ := strconv.ParseUint(c.Param("reward_id"), 10, 32)
+        eventID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event ID"})
+                return
+        }
+        rewardID, err := strconv.ParseUint(c.Param("reward_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid reward ID"})
+                return
+        }
         
         // Check participant and points
         var participant EventParticipant
@@ -823,7 +855,11 @@ func claimEventRewardHandler(c *gin.Context) {
 
 // Clans Handlers
 func getGuildClansHandler(c *gin.Context) {
-        guildID, _ := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+                return
+        }
         
         var clans []Clan
         db.Where("guild_id = ?", guildID).
@@ -892,7 +928,11 @@ func createClanHandler(c *gin.Context) {
 
 func joinClanHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        clanID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        clanID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid clan ID"})
+                return
+        }
         
         var clan Clan
         if err := db.First(&clan, clanID).Error; err != nil {
@@ -929,7 +969,11 @@ func joinClanHandler(c *gin.Context) {
 }
 
 func getClanChallengesHandler(c *gin.Context) {
-        clanID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        clanID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid clan ID"})
+                return
+        }
         
         var challenges []ClanChallenge
         db.Where("clan_id = ?", clanID).Order("created_at DESC").Find(&challenges)
@@ -946,7 +990,11 @@ func getMiniGamesHandler(c *gin.Context) {
 
 func startMiniGameHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        gameID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        gameID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid game ID"})
+                return
+        }
         
         var game MiniGame
         if err := db.First(&game, gameID).Error; err != nil {
@@ -996,7 +1044,11 @@ func startMiniGameHandler(c *gin.Context) {
 
 func completeMiniGameHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        sessionID, _ := strconv.ParseUint(c.Param("session_id"), 10, 32)
+        sessionID, err := strconv.ParseUint(c.Param("session_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
+                return
+        }
         
         var req struct {
                 Score int `json:"score" binding:"required"`
@@ -1071,7 +1123,11 @@ func getUserQuestsHandler(c *gin.Context) {
 
 func startQuestChainHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        chainID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        chainID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid quest chain ID"})
+                return
+        }
         
         var chain QuestChain
         if err := db.First(&chain, chainID).Error; err != nil {
@@ -1102,7 +1158,11 @@ func startQuestChainHandler(c *gin.Context) {
 }
 
 func getQuestStepsHandler(c *gin.Context) {
-        chainID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        chainID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid quest chain ID"})
+                return
+        }
         
         var steps []QuestStep
         db.Where("chain_id = ?", chainID).Order("step_order ASC").Find(&steps)
@@ -1124,7 +1184,11 @@ func getMentorsHandler(c *gin.Context) {
 
 func requestMentorHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        mentorID, _ := strconv.ParseUint(c.Param("mentor_id"), 10, 32)
+        mentorID, err := strconv.ParseUint(c.Param("mentor_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid mentor ID"})
+                return
+        }
         
         // Check user level (mentees should be new)
         var userLevel UserLevel
@@ -1218,7 +1282,11 @@ func getRecommendationsHandler(c *gin.Context) {
 
 func dismissRecommendationHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        recID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        recID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recommendation ID"})
+                return
+        }
         
         db.Model(&UserRecommendation{}).
                 Where("id = ? AND user_id = ?", recID, userID).
@@ -1271,7 +1339,11 @@ func createCollectionHandler(c *gin.Context) {
 
 func addToCollectionHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        collectionID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        collectionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
+                return
+        }
         
         var req struct {
                 ContentType string `json:"content_type" binding:"required"`
@@ -1312,7 +1384,11 @@ func addToCollectionHandler(c *gin.Context) {
 
 func getCollectionItemsHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        collectionID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        collectionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
+                return
+        }
         
         // Verify access
         var collection Collection
@@ -1332,8 +1408,16 @@ func getCollectionItemsHandler(c *gin.Context) {
 
 func removeFromCollectionHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        collectionID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
-        itemID, _ := strconv.ParseUint(c.Param("item_id"), 10, 32)
+        collectionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
+                return
+        }
+        itemID, err := strconv.ParseUint(c.Param("item_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item ID"})
+                return
+        }
         
         // Verify collection ownership
         var collection Collection
@@ -1354,7 +1438,11 @@ func removeFromCollectionHandler(c *gin.Context) {
 
 func deleteCollectionHandler(c *gin.Context) {
         userID := c.GetUint("user_id")
-        collectionID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        collectionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
+                return
+        }
         
         result := db.Where("id = ? AND user_id = ?", collectionID, userID).Delete(&Collection{})
         if result.RowsAffected == 0 {

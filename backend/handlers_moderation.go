@@ -15,7 +15,11 @@ func banUserInGuildHandler(c *gin.Context) {
         // Guard: Require 'PermBanMembers' in this guild
         // (Middleware should be applied in router: RequireGuildPermission(PermBanMembers))
         
-        guildID, _ := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+                return
+        }
         userIDRaw, _ := c.Get("user_id")
         adminID, _ := extractUserID(userIDRaw)
 
@@ -57,7 +61,11 @@ func banUserInGuildHandler(c *gin.Context) {
 }
 
 func muteUserHandler(c *gin.Context) {
-        guildID, _ := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+                return
+        }
         userIDRaw, _ := c.Get("user_id")
         adminID, _ := extractUserID(userIDRaw)
 
@@ -92,7 +100,11 @@ func muteUserHandler(c *gin.Context) {
 func shadowbanUserHandler(c *gin.Context) {
         // Global or Guild? Assuming Global for this example based on "shadowban" usually being platform-wide or guild-wide.
         // Let's implement Guild-scoped first.
-        guildID, _ := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+                return
+        }
         userIDRaw, _ := c.Get("user_id")
         adminID, _ := extractUserID(userIDRaw)
 

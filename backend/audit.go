@@ -20,7 +20,7 @@ type ExtendedAuditLog struct {
 
 // logExtendedAudit writes to the audit log table
 func logExtendedAudit(userID uint, action, targetType, targetID, scope, details, ip, ua string) {
-        log := ExtendedAuditLog{
+        entry := ExtendedAuditLog{
                 UserID:     userID,
                 Action:     action,
                 TargetType: targetType,
@@ -31,9 +31,10 @@ func logExtendedAudit(userID uint, action, targetType, targetID, scope, details,
                 UserAgent:  ua,
                 CreatedAt:  time.Now(),
         }
-        // Run in background to not block
         go func() {
-                db.Create(&log)
+                if err := db.Create(&entry).Error; err != nil {
+                        fmt.Printf("[Audit] Failed to write audit log: %v (action=%s target=%s:%s)\n", err, action, targetType, targetID)
+                }
         }()
 }
 

@@ -188,7 +188,12 @@ func handleRealtimeCollaboration(c *gin.Context) {
         defer ws.Close()
 
         toolIDStr := c.Param("tool_id")
-        toolID, _ := strconv.ParseUint(toolIDStr, 10, 32)
+        toolID, errParse := strconv.ParseUint(toolIDStr, 10, 32)
+        if errParse != nil {
+                log.Printf("Invalid tool ID for WebSocket: %s", toolIDStr)
+                ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseInvalidFramePayloadData, "Invalid tool ID"))
+                return
+        }
         userID := c.GetUint("user_id")
         username := c.GetString("username")
 
@@ -231,7 +236,11 @@ func handleCollaborationSync(c *gin.Context) {
 // handleGetCollaborationUsers returns list of connected users
 func handleGetCollaborationUsers(c *gin.Context) {
         toolIDStr := c.Param("tool_id")
-        toolID, _ := strconv.ParseUint(toolIDStr, 10, 32)
+        toolID, err := strconv.ParseUint(toolIDStr, 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tool ID"})
+                return
+        }
         session := GetOrCreateSession(uint(toolID))
         users := session.GetConnectedUsers()
         c.JSON(http.StatusOK, users)
@@ -246,7 +255,11 @@ func handleUpdateCursorPosition(c *gin.Context) {
         }
         toolIDStr := c.Param("tool_id")
         if toolIDStr != "" {
-                toolID, _ := strconv.ParseUint(toolIDStr, 10, 32)
+                toolID, errParse := strconv.ParseUint(toolIDStr, 10, 32)
+                if errParse != nil {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tool ID"})
+                        return
+                }
                 session := GetOrCreateSession(uint(toolID))
                 session.BroadcastCursor(&cursor)
         }

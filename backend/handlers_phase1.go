@@ -267,7 +267,11 @@ func getUserAchievementsHandler(c *gin.Context) {
         targetID := c.Param("user_id")
         var uid uint
         if targetID != "" && targetID != "me" {
-                id, _ := strconv.ParseUint(targetID, 10, 32)
+                id, errParse := strconv.ParseUint(targetID, 10, 32)
+                if errParse != nil {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                        return
+                }
                 uid = uint(id)
         } else {
                 uid = userID.(uint)
@@ -285,7 +289,11 @@ func getUserLevelHandler(c *gin.Context) {
         targetID := c.Param("user_id")
         var uid uint
         if targetID != "" && targetID != "me" {
-                id, _ := strconv.ParseUint(targetID, 10, 32)
+                id, errParse := strconv.ParseUint(targetID, 10, 32)
+                if errParse != nil {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                        return
+                }
                 uid = uint(id)
         } else {
                 uid = userID.(uint)
@@ -331,7 +339,11 @@ func getLeaderboardHandler(c *gin.Context) {
                 Limit(limit)
 
         if scope != "global" {
-                guildID, _ := strconv.ParseUint(scope, 10, 32)
+                guildID, errParse := strconv.ParseUint(scope, 10, 32)
+                if errParse != nil {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+                        return
+                }
                 query = query.Joins("JOIN guild_members ON guild_members.user_id = user_levels.user_id").
                         Where("guild_members.guild_id = ?", guildID)
         }
@@ -562,7 +574,11 @@ func getCustomStatusHandler(c *gin.Context) {
                 userID, _ := c.Get("user_id")
                 uid = userID.(uint)
         } else {
-                id, _ := strconv.ParseUint(targetID, 10, 32)
+                id, errParse := strconv.ParseUint(targetID, 10, 32)
+                if errParse != nil {
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                        return
+                }
                 uid = uint(id)
         }
 
@@ -688,7 +704,11 @@ func createStatusPresetHandler(c *gin.Context) {
 
 func deleteStatusPresetHandler(c *gin.Context) {
         userID, _ := c.Get("user_id")
-        presetID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+        presetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid preset ID"})
+                return
+        }
 
         result := db.Where("id = ? AND user_id = ?", presetID, userID).Delete(&StatusPreset{})
         if result.RowsAffected == 0 {
@@ -701,7 +721,11 @@ func deleteStatusPresetHandler(c *gin.Context) {
 
 func getDisappearingSettingsHandler(c *gin.Context) {
         userID, _ := c.Get("user_id")
-        otherUserID, _ := strconv.ParseUint(c.Param("user_id"), 10, 32)
+        otherUserID, err := strconv.ParseUint(c.Param("user_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                return
+        }
 
         key := getConversationKey(userID.(uint), uint(otherUserID))
 
@@ -719,7 +743,11 @@ func getDisappearingSettingsHandler(c *gin.Context) {
 
 func updateDisappearingSettingsHandler(c *gin.Context) {
         userID, _ := c.Get("user_id")
-        otherUserID, _ := strconv.ParseUint(c.Param("user_id"), 10, 32)
+        otherUserID, err := strconv.ParseUint(c.Param("user_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                return
+        }
 
         var req struct {
                 Enabled  bool `json:"enabled"`
