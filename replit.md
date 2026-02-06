@@ -71,6 +71,18 @@ cd frontend && npm run dev -- --host 0.0.0.0 --port 5000
 - Планы доступа: free, edu_basic, edu_pro
 - API: `/api/templates/educational`
 
+### Групповые ЛС
+- Модели: GroupDM, GroupDMParticipant, GroupDMMessage
+- CRUD: создание, добавление/удаление участников, сообщения
+- WebSocket уведомления для участников
+- API: `/api/group-dm/*`
+
+### Push-уведомления
+- Service Worker (`frontend/public/sw.js`)
+- Browser Notification API при скрытой вкладке
+- Уведомления для ЛС и запросов в друзья
+- Запрос разрешения при входе
+
 ### Администрирование
 - Роли: user, moderator, admin, super_admin
 - Super Admin панель: `/admin/super`
@@ -82,6 +94,8 @@ cd frontend && npm run dev -- --host 0.0.0.0 --port 5000
 - `/api/guilds/*` - Гильдии
 - `/api/channels/*` - Каналы
 - `/api/dm/*` - Личные сообщения
+- `/api/group-dm/*` - Групповые ЛС
+- `/api/templates/educational` - Образовательные шаблоны
 - `/api/fraud/*` - Антифрод (admin)
 - `/api/admin/*` - Администрирование
 
