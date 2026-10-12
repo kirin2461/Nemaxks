@@ -14,7 +14,6 @@ import {
   Minimize,
   Settings,
   Users,
-  MessageSquare,
   Signal,
   SignalHigh,
   SignalMedium,
@@ -63,14 +62,18 @@ const QUALITY_CONFIGS: Record<VideoQuality, { width: number; height: number; fra
   '240p': { width: 426, height: 240, frameRate: 15, bitrate: 250000 },
 }
 
-// Default fallback ICE servers (STUN only)
+// Default fallback ICE servers (STUN only).
+// TURN приходит с бэкенда (/api/rtc/ice-servers, настраивается через env:
+// TURN_URLS/TURN_USERNAME/TURN_CREDENTIAL). Для продакшна рекомендуется свой coturn.
 const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun.cloudflare.com:3478' },
 ]
 
-// Fetch ICE servers from backend (includes TURN)
+// Fetch ICE servers from backend (includes TURN), merged with STUN fallback (dedupe by urls)
 async function fetchICEServers(): Promise<RTCIceServer[]> {
+  let apiServers: RTCIceServer[] = []
   try {
     const token = localStorage.getItem('token')
     const response = await fetch('/api/rtc/ice-servers', {
@@ -78,13 +81,24 @@ async function fetchICEServers(): Promise<RTCIceServer[]> {
     })
     if (response.ok) {
       const data = await response.json()
-      console.log('[ICE] Fetched ICE servers:', data.iceServers?.length)
-      return data.iceServers || DEFAULT_ICE_SERVERS
+      if (Array.isArray(data.iceServers)) {
+        apiServers = data.iceServers
+      }
+      console.log('[ICE] Fetched ICE servers:', apiServers.length)
     }
   } catch (error) {
     console.error('[ICE] Failed to fetch ICE servers:', error)
   }
-  return DEFAULT_ICE_SERVERS
+  const seen = new Set<string>()
+  const merged: RTCIceServer[] = []
+  for (const server of [...apiServers, ...DEFAULT_ICE_SERVERS]) {
+    const key = Array.isArray(server.urls) ? server.urls.join(',') : String(server.urls)
+    if (!seen.has(key)) {
+      seen.add(key)
+      merged.push(server)
+    }
+  }
+  return merged
 }
 
 export default function VideoCallPage() {
@@ -109,6 +123,9 @@ export default function VideoCallPage() {
   const callIdFromUrl = urlState.callId
   
   const [callState, setCallState] = useState<CallState>('idle')
+  // Актуальное состояние звонка для WS-обработчиков (onmessage ставится один раз,
+  // поэтому читать callState напрямую из замыкания нельзя — он будет устаревшим)
+  const callStateRef = useRef<CallState>('idle')
   const [isMuted, setIsMuted] = useState(false)
   const [isVideoOn, setIsVideoOn] = useState(true)
   const [isScreenSharing, setIsScreenSharing] = useState(false)
@@ -126,17 +143,19 @@ export default function VideoCallPage() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null)
   const [callDuration, setCallDuration] = useState(0)
   const [showSettings, setShowSettings] = useState(false)
-  const [_showChat, setShowChat] = useState(false)
   const [callHistory] = useState<CallHistoryItem[]>([])
   const [wsConnected, setWsConnected] = useState(false)
   const [remoteMuted, setRemoteMuted] = useState(false)
   const [remoteVideoOff, setRemoteVideoOff] = useState(false)
   const [showAudioLogs, setShowAudioLogs] = useState(false)
   const [remoteVideoStream, setRemoteVideoStream] = useState<MediaStream | null>(null)
-  const [iceServers, setIceServers] = useState<RTCIceServer[]>(DEFAULT_ICE_SERVERS)
   const audioLogger = useAudioLogger()
   const pendingCallProcessed = useRef(false)
   const callEndSent = useRef(false)
+
+  useEffect(() => {
+    callStateRef.current = callState
+  }, [callState])
   
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
@@ -149,21 +168,48 @@ export default function VideoCallPage() {
   const statsIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  // Очередь ICE-кандидатов, пришедших до установки remoteDescription
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([])
+  // Perfect negotiation: флаг "мы сейчас создаём оффер" и готовность начальнойnegotiation
+  const makingOfferRef = useRef(false)
+  const negotiationReadyRef = useRef(false)
+  // id собеседника для коллбэков pc (selectedFriend может быть ещё не установлен)
+  const peerIdRef = useRef<string | null>(null)
+  // Защита от WS-реконнектов после unmount и от параллельных таймеров
+  const unmountedRef = useRef(false)
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const disconnectGraceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  // Кэш промиса загрузки ICE-серверов (устраняет race: pc создаётся только после загрузки)
+  const iceServersPromiseRef = useRef<Promise<RTCIceServer[]> | null>(null)
+
+  // Perfect negotiation (1:1): polite = (мой id > id собеседника).
+  // Re-offer при восстановлении делает только impolite-сторона (меньший id).
+  const isPolite = useCallback((peerId?: string | null) => {
+    const pid = peerId ?? peerIdRef.current
+    return String(user?.id) > String(pid)
+  }, [user?.id])
+
+  const ensureIceServers = useCallback((): Promise<RTCIceServer[]> => {
+    if (!iceServersPromiseRef.current) {
+      iceServersPromiseRef.current = fetchICEServers().then(servers => {
+        console.log('[ICE] Loaded', servers.length, 'ICE servers')
+        return servers
+      })
+    }
+    return iceServersPromiseRef.current
+  }, [])
 
   useEffect(() => {
-    console.log('VideoCallPage mounted:', { 
-      userIdFromRoute, 
-      shouldAccept, 
-      shouldInitiate, 
+    console.log('VideoCallPage mounted:', {
+      userIdFromRoute,
+      shouldAccept,
+      shouldInitiate,
       pendingCall: sessionStorage.getItem('pendingCall'),
       outgoingCall: sessionStorage.getItem('outgoingCall')
     })
     loadFriends()
     // Load ICE servers (with TURN support) from backend
-    fetchICEServers().then(servers => {
-      setIceServers(servers)
-      console.log('[ICE] Loaded', servers.length, 'ICE servers')
-    })
+    ensureIceServers()
   }, [])
 
   useEffect(() => {
@@ -269,12 +315,23 @@ export default function VideoCallPage() {
   }, [shouldAccept, shouldInitiate, wsConnected, selectedFriend])
 
   useEffect(() => {
+    unmountedRef.current = false
     if (user?.id) {
       connectWebSocket()
     }
     return () => {
+      unmountedRef.current = true
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current)
+        reconnectTimerRef.current = null
+      }
+      if (disconnectGraceTimerRef.current) {
+        clearTimeout(disconnectGraceTimerRef.current)
+        disconnectGraceTimerRef.current = null
+      }
       cleanup()
       wsRef.current?.close()
+      wsRef.current = null
     }
   }, [user?.id])
 
@@ -331,22 +388,23 @@ export default function VideoCallPage() {
 
   const connectWebSocket = () => {
     if (!user?.id) return
-    
+    if (unmountedRef.current) return
+
     const token = localStorage.getItem('token')
     if (!token) return
-    
+
     // Use same host as the page (Vite proxies /ws to backend)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`
-    
+
     console.log('Connecting to Video WebSocket:', wsUrl)
     wsRef.current = new WebSocket(wsUrl)
-    
+
     wsRef.current.onopen = () => {
       console.log('WebSocket connected for video calls')
       setWsConnected(true)
     }
-    
+
     wsRef.current.onmessage = (event) => {
       const message = JSON.parse(event.data)
       console.log('[Video WS] Received message:', message.type, 'from:', message.fromUserId)
@@ -354,27 +412,55 @@ export default function VideoCallPage() {
         handleSignalingMessage(message)
       }
     }
-    
+
     wsRef.current.onerror = (error) => {
       console.error('WebSocket error:', error)
     }
-    
+
     wsRef.current.onclose = () => {
       console.log('WebSocket disconnected')
       setWsConnected(false)
-      setTimeout(connectWebSocket, 3000)
+      // Не переподключаемся после намеренного закрытия на unmount;
+      // защита от параллельных таймеров реконнекта.
+      if (unmountedRef.current) return
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
+      reconnectTimerRef.current = setTimeout(() => {
+        reconnectTimerRef.current = null
+        if (!unmountedRef.current) connectWebSocket()
+      }, 3000)
     }
   }
 
   const handleSignalingMessage = async (message: any) => {
     switch (message.type) {
-      case 'call-offer':
-        if (shouldAccept || callState !== 'idle') {
+      case 'call-offer': {
+        const fromId = message.callerInfo?.id || message.fromUserId
+        const currentCallState = callStateRef.current
+        // Ренегосиация (ICE restart / изменение треков) в активном звонке
+        if ((currentCallState === 'connected' || message.renegotiation) && peerConnectionRef.current) {
+          await handleRenegotiationOffer(message)
+          break
+        }
+        // Glare: обе стороны в 'calling' (одновременный вызов друг друга).
+        // Tie-break по user.id: больший id принимает входящий оффер (polite),
+        // меньший — игнорирует его и ждёт answer на свой оффер.
+        if (currentCallState === 'calling' && peerConnectionRef.current &&
+            String(fromId) === String(peerIdRef.current)) {
+          if (!isPolite(fromId)) {
+            console.log('Glare: ignoring incoming call-offer (impolite side keeps waiting)')
+            break
+          }
+          console.log('Glare: accepting incoming call-offer (polite side rolls back)')
+          await handleGlareOffer(message)
+          break
+        }
+        if (shouldAccept || currentCallState !== 'idle') {
           console.log('Ignoring duplicate call-offer, already processing call')
           return
         }
         await handleIncomingCall(message)
         break
+      }
       case 'call-answer':
         console.log('Received call-answer')
         await handleCallAnswer(message)
@@ -389,8 +475,8 @@ export default function VideoCallPage() {
         await handleIceCandidate(message)
         break
       case 'call-end':
-        console.log('[Call Debug] Received call-end signal', { callState, callEndSent: callEndSent.current })
-        if (callState !== 'idle' && callState !== 'ended') {
+        console.log('[Call Debug] Received call-end signal', { callState: callStateRef.current, callEndSent: callEndSent.current })
+        if (callStateRef.current !== 'idle' && callStateRef.current !== 'ended') {
           console.log('[Call Debug] Processing call-end - ending call')
           callEndSent.current = true
           setCallState('ended')
@@ -401,7 +487,7 @@ export default function VideoCallPage() {
             callEndSent.current = false
           }, 2000)
         } else {
-          console.log('[Call Debug] Ignoring call-end - callState is', callState)
+          console.log('[Call Debug] Ignoring call-end - callState is', callStateRef.current)
         }
         break
       case 'call-rejected':
@@ -450,19 +536,49 @@ export default function VideoCallPage() {
     }
   }
 
-  const createPeerConnection = () => {
-    const pc = new RTCPeerConnection({ iceServers })
-    
+  const createPeerConnection = (servers: RTCIceServer[], peerId: string) => {
+    peerIdRef.current = peerId
+    const pc = new RTCPeerConnection({ iceServers: servers })
+
     pc.onicecandidate = (event) => {
-      if (event.candidate && wsRef.current?.readyState === WebSocket.OPEN) {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
           type: 'ice-candidate',
-          candidate: event.candidate,
-          targetUserId: selectedFriend?.id
+          // toJSON() для корректной сериализации; null = end-of-candidates
+          candidate: event.candidate ? event.candidate.toJSON() : null,
+          targetUserId: peerId
         }))
       }
     }
-    
+
+    // Ренегосиация и re-offer после ICE restart идут через onnegotiationneeded.
+    // Активен только после завершения начального offer/answer.
+    pc.onnegotiationneeded = async () => {
+      if (!negotiationReadyRef.current) return
+      if (pc.signalingState !== 'stable') return
+      try {
+        makingOfferRef.current = true
+        await pc.setLocalDescription()
+        if (pc.localDescription && wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({
+            type: 'call-offer',
+            offer: pc.localDescription,
+            targetUserId: peerId,
+            renegotiation: true,
+            callerInfo: {
+              id: user?.id,
+              username: user?.username,
+              avatar: user?.avatar
+            }
+          }))
+        }
+      } catch (error) {
+        console.error('onnegotiationneeded failed:', error)
+      } finally {
+        makingOfferRef.current = false
+      }
+    }
+
     pc.ontrack = (event) => {
       console.log('Received remote track:', event.track.kind, 'enabled:', event.track.enabled, 'muted:', event.track.muted, 'readyState:', event.track.readyState)
       const stream = event.streams[0] || new MediaStream([event.track])
@@ -536,38 +652,154 @@ export default function VideoCallPage() {
     }
     
     pc.onconnectionstatechange = () => {
+      console.log('[Call Debug] connectionState:', pc.connectionState)
       if (pc.connectionState === 'connected') {
         setCallState('connected')
-      } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-        endCall()
+        if (disconnectGraceTimerRef.current) {
+          clearTimeout(disconnectGraceTimerRef.current)
+          disconnectGraceTimerRef.current = null
+        }
+      } else if (pc.connectionState === 'disconnected') {
+        // Grace period 4с: кратковременные обрывы (смена сети) часто восстанавливаются сами.
+        // Звонок НЕ завершаем мгновенно.
+        if (disconnectGraceTimerRef.current) clearTimeout(disconnectGraceTimerRef.current)
+        disconnectGraceTimerRef.current = setTimeout(() => {
+          disconnectGraceTimerRef.current = null
+          if (pc.signalingState !== 'closed' &&
+              (pc.connectionState === 'disconnected' || pc.connectionState === 'failed')) {
+            console.log('[Call Debug] Still disconnected after grace period, restarting ICE')
+            restartIceAndReoffer(pc)
+          }
+        }, 4000)
+      } else if (pc.connectionState === 'failed') {
+        // Вместо endCall — попытка восстановления: restartIce + re-offer (impolite-сторона)
+        restartIceAndReoffer(pc)
       }
     }
-    
+
+    pc.oniceconnectionstatechange = () => {
+      console.log('[Call Debug] iceConnectionState:', pc.iceConnectionState)
+      if (pc.iceConnectionState === 'failed') {
+        restartIceAndReoffer(pc)
+      }
+    }
+
     return pc
+  }
+
+  // restartIce триггерит onnegotiationneeded → re-offer. Re-offer делает ТОЛЬКО
+  // impolite-сторона (меньший id), чтобы обе стороны не слали офферы одновременно.
+  const restartIceAndReoffer = (pc: RTCPeerConnection) => {
+    if (pc.signalingState === 'closed') return
+    if (isPolite()) {
+      console.log('[Call Debug] Polite side: waiting for re-offer from peer')
+      return
+    }
+    console.log('[Call Debug] Impolite side: restarting ICE (re-offer via onnegotiationneeded)')
+    pc.restartIce()
+  }
+
+  // Отправка накопленных ICE-кандидатов после установки remoteDescription
+  const flushPendingCandidates = async () => {
+    const pc = peerConnectionRef.current
+    if (!pc) return
+    const pending = pendingCandidatesRef.current
+    pendingCandidatesRef.current = []
+    for (const candidate of pending) {
+      try {
+        await pc.addIceCandidate(candidate)
+      } catch (error) {
+        console.error('Failed to add queued ICE candidate:', error)
+      }
+    }
+  }
+
+  // Ренегосиация: входящий оффер в активном звонке (perfect negotiation)
+  const handleRenegotiationOffer = async (message: any) => {
+    const pc = peerConnectionRef.current
+    if (!pc) return
+    const fromId = message.callerInfo?.id || message.fromUserId
+    const polite = isPolite(fromId)
+    const offerCollision = makingOfferRef.current || pc.signalingState !== 'stable'
+
+    if (offerCollision && !polite) {
+      console.log('Ignoring colliding renegotiation offer (impolite side)')
+      return
+    }
+
+    try {
+      if (offerCollision) {
+        await pc.setLocalDescription({ type: 'rollback' })
+        makingOfferRef.current = false
+      }
+      await pc.setRemoteDescription(new RTCSessionDescription(message.offer))
+      await flushPendingCandidates()
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer)
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: 'call-answer',
+          answer,
+          targetUserId: fromId,
+          renegotiation: true
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to handle renegotiation offer:', error)
+    }
+  }
+
+  // Glare в 1:1: мы в 'calling' (свой оффер отправлен), пришёл встречный оффер и
+  // мы — polite-сторона (больший id): откатываем свой оффер и отвечаем на чужой.
+  const handleGlareOffer = async (message: any) => {
+    const pc = peerConnectionRef.current
+    if (!pc) return
+    const callerId = message.callerInfo?.id || message.fromUserId
+    if (message.callerInfo) {
+      setSelectedFriend(message.callerInfo)
+    }
+    peerIdRef.current = String(callerId)
+
+    try {
+      await pc.setLocalDescription({ type: 'rollback' })
+      makingOfferRef.current = false
+      await pc.setRemoteDescription(new RTCSessionDescription(message.offer))
+      await flushPendingCandidates()
+      setCallState('ringing')
+      // Пользователь уже выразил намерение звонить — принимаем автоматически
+      await acceptCallInternal(String(callerId))
+    } catch (error) {
+      console.error('Failed to handle glare offer:', error)
+    }
   }
 
   const startCall = async (friend: Friend) => {
     setSelectedFriend(friend)
     setCallState('calling')
-    
+
     try {
+      // Ждём загрузки ICE-серверов (с TURN) ДО создания RTCPeerConnection
+      const servers = await ensureIceServers()
       const stream = await getMediaStream(targetQuality)
       localStreamRef.current = stream
       setCurrentQuality(targetQuality)
-      
+
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream
         localVideoRef.current.play().catch(e => console.log('Local video play error:', e))
       }
-      
-      peerConnectionRef.current = createPeerConnection()
-      
+
+      peerConnectionRef.current = createPeerConnection(servers, String(friend.id))
+      pendingCandidatesRef.current = []
+      negotiationReadyRef.current = false
+
       stream.getTracks().forEach(track => {
         peerConnectionRef.current?.addTrack(track, stream)
       })
-      
+
       const offer = await peerConnectionRef.current.createOffer()
       await peerConnectionRef.current.setLocalDescription(offer)
+      negotiationReadyRef.current = true
       
       const callId = callIdFromUrl || crypto.randomUUID()
       console.log('Sending call-offer with SDP to', friend.id, 'callId:', callId)
@@ -597,10 +829,15 @@ export default function VideoCallPage() {
     if (message.callerInfo) {
       setSelectedFriend(message.callerInfo)
     }
-    
-    peerConnectionRef.current = createPeerConnection()
+
+    // Ждём загрузки ICE-серверов (с TURN) ДО создания RTCPeerConnection
+    const servers = await ensureIceServers()
+    peerConnectionRef.current = createPeerConnection(servers, String(callerId))
+    pendingCandidatesRef.current = []
+    negotiationReadyRef.current = false
     await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(message.offer))
-    
+    await flushPendingCandidates()
+
     if (message.autoAccept && callerId) {
       await acceptCallInternal(callerId)
     }
@@ -608,29 +845,39 @@ export default function VideoCallPage() {
 
   const acceptCallInternal = async (targetUserId?: string) => {
     if (!peerConnectionRef.current) return
-    
+
     const targetId = targetUserId || selectedFriend?.id
     if (!targetId) {
       console.error('No target user ID for call answer')
       return
     }
-    
+
     try {
-      const stream = await getMediaStream(targetQuality)
-      localStreamRef.current = stream
+      // При glare-accept локальный поток уже получен в startCall — переиспользуем
+      let stream = localStreamRef.current
+      if (!stream) {
+        stream = await getMediaStream(targetQuality)
+        localStreamRef.current = stream
+      }
       setCurrentQuality(targetQuality)
-      
+
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream
         localVideoRef.current.play().catch(e => console.log('Local video play error:', e))
       }
-      
+
+      const existingTracks = new Set(
+        peerConnectionRef.current.getSenders().map(s => s.track).filter(Boolean)
+      )
       stream.getTracks().forEach(track => {
-        peerConnectionRef.current?.addTrack(track, stream)
+        if (!existingTracks.has(track)) {
+          peerConnectionRef.current?.addTrack(track, stream!)
+        }
       })
-      
+
       const answer = await peerConnectionRef.current.createAnswer()
       await peerConnectionRef.current.setLocalDescription(answer)
+      negotiationReadyRef.current = true
       
       console.log('Sending call-answer to', targetId)
       wsRef.current?.send(JSON.stringify({
@@ -654,18 +901,34 @@ export default function VideoCallPage() {
   }
 
   const handleCallAnswer = async (message: any) => {
-    if (!peerConnectionRef.current) return
-    await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(message.answer))
+    const pc = peerConnectionRef.current
+    if (!pc) return
+    // Дубликат/устаревший answer (например, после glare) — игнорируем
+    if (pc.signalingState === 'stable') {
+      console.log('Ignoring call-answer: signalingState is stable')
+      return
+    }
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(message.answer))
+      await flushPendingCandidates()
+    } catch (error) {
+      console.error('Failed to handle call-answer:', error)
+    }
   }
 
   const handleIceCandidate = async (message: any) => {
-    if (!peerConnectionRef.current) return
-    try {
-      if (message.candidate) {
-        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(message.candidate))
+    const pc = peerConnectionRef.current
+    if (pc && pc.remoteDescription) {
+      try {
+        // null — легитимный end-of-candidates
+        await pc.addIceCandidate(message.candidate ?? null)
+      } catch (error) {
+        console.error('Failed to add ICE candidate:', error)
       }
-    } catch (error) {
-      console.error('Failed to add ICE candidate:', error)
+    } else if (message.candidate) {
+      // Кандидат пришёл до remoteDescription — ставим в очередь,
+      // флашится в handleIncomingCall/handleCallAnswer
+      pendingCandidatesRef.current.push(message.candidate)
     }
   }
 
@@ -707,23 +970,41 @@ export default function VideoCallPage() {
     localStreamRef.current = null
     screenStreamRef.current = null
     peerConnectionRef.current = null
+    pendingCandidatesRef.current = []
+    makingOfferRef.current = false
+    negotiationReadyRef.current = false
+    peerIdRef.current = null
+    if (disconnectGraceTimerRef.current) {
+      clearTimeout(disconnectGraceTimerRef.current)
+      disconnectGraceTimerRef.current = null
+    }
     setIsScreenSharing(false)
     setRemoteMuted(false)
     setRemoteVideoOff(false)
     audioLogger.logInfo('Call cleanup completed')
   }
 
+  // Читаем актуальные значения из ref'ов: sendStateSync может вызываться из
+  // WS-обработчика, установленного один раз (stale closure)
+  const isMutedRef = useRef(isMuted)
+  const isVideoOnRef = useRef(isVideoOn)
+  useEffect(() => {
+    isMutedRef.current = isMuted
+    isVideoOnRef.current = isVideoOn
+  }, [isMuted, isVideoOn])
+
   const sendStateSync = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN && selectedFriend?.id) {
+    const targetId = peerIdRef.current || selectedFriend?.id
+    if (wsRef.current?.readyState === WebSocket.OPEN && targetId) {
       wsRef.current.send(JSON.stringify({
         type: 'call-state-sync',
-        isMuted,
-        isVideoOn,
-        targetUserId: selectedFriend.id
+        isMuted: isMutedRef.current,
+        isVideoOn: isVideoOnRef.current,
+        targetUserId: targetId
       }))
       audioLogger.logInfo('Sent state sync to remote participant')
     }
-  }, [isMuted, isVideoOn, selectedFriend?.id, audioLogger])
+  }, [selectedFriend?.id, audioLogger])
 
   const toggleMute = () => {
     if (localStreamRef.current) {
@@ -786,7 +1067,8 @@ export default function VideoCallPage() {
             height: { ideal: 1080 },
             frameRate: { ideal: 30 }
           },
-          audio: true
+          // Не захватываем системный звук: голос уже идёт отдельным треком
+          audio: false
         })
         
         screenStreamRef.current = screenStream
@@ -1048,7 +1330,7 @@ export default function VideoCallPage() {
         )}
 
         {callState === 'calling' && (
-          <div className="h-screen flex flex-col items-center justify-center">
+          <div className="h-dvh flex flex-col items-center justify-center">
             <div className="text-center">
               <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-4xl font-bold mx-auto mb-6 animate-pulse">
                 {selectedFriend?.username?.charAt(0).toUpperCase()}
@@ -1066,7 +1348,7 @@ export default function VideoCallPage() {
         )}
 
         {callState === 'ringing' && (
-          <div className="h-screen flex flex-col items-center justify-center">
+          <div className="h-dvh flex flex-col items-center justify-center">
             <div className="text-center">
               <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-4xl font-bold mx-auto mb-6 pulse-call">
                 {selectedFriend?.username?.charAt(0).toUpperCase()}
@@ -1092,7 +1374,9 @@ export default function VideoCallPage() {
         )}
 
         {(callState === 'connected' || callState === 'ended') && (
-          <div className="h-screen flex flex-col bg-black">
+          // relative — обязательно: absolute-оверлеи позиционируются от этого контейнера,
+          // h-dvh (100dvh) — корректная высота на мобильных с динамической адресной строкой
+          <div className="relative h-dvh flex flex-col bg-black">
             <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
               <div className="flex items-center gap-4">
                 <div className="bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2 flex items-center gap-2">
@@ -1138,12 +1422,6 @@ export default function VideoCallPage() {
                   title="Логи аудио"
                 >
                   <Activity className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setShowChat(prev => !prev)}
-                  className="p-2 rounded-lg bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white transition-colors"
-                >
-                  <MessageSquare className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setShowSettings(!showSettings)}
@@ -1208,7 +1486,7 @@ export default function VideoCallPage() {
               )}
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
               <div className="flex items-center justify-center gap-4">
                 <button
                   onClick={toggleMute}
