@@ -26,9 +26,9 @@ const categoryConfig: Record<string, { label: string; icon: React.ReactNode }> =
 };
 
 const toolTypeColors: Record<string, { bg: string; text: string; activeBg: string }> = {
-  notebook: { bg: "bg-blue-600/10", text: "text-blue-400", activeBg: "bg-blue-600" },
-  whiteboard: { bg: "bg-green-600/10", text: "text-green-400", activeBg: "bg-green-600" },
-  editor: { bg: "bg-orange-600/10", text: "text-orange-400", activeBg: "bg-orange-600" },
+  notebook: { bg: "bg-primary/10", text: "text-primary", activeBg: "bg-gradient-brand shadow-glow" },
+  whiteboard: { bg: "bg-accent/10", text: "text-accent", activeBg: "bg-accent" },
+  editor: { bg: "bg-amber-600/10", text: "text-amber-400", activeBg: "bg-amber-600" },
 };
 
 export function CategoryFilter({ categories, selectedCategory, onSelect, toolType }: CategoryFilterProps) {
