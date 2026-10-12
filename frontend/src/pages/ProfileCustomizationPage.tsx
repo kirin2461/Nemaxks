@@ -7,7 +7,7 @@ const rarityColors: Record<string, string> = {
   common: 'text-muted-foreground',
   uncommon: 'text-green-400',
   rare: 'text-blue-400',
-  epic: 'text-purple-400',
+  epic: 'text-primary',
   legendary: 'text-yellow-400',
 };
 
@@ -98,7 +98,7 @@ export default function ProfileCustomizationPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full" />
       </div>
     );
   }
@@ -107,8 +107,8 @@ export default function ProfileCustomizationPage() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <User className="w-8 h-8 text-purple-400" />
-          <h1 className="text-3xl font-bold text-foreground">Кастомизация профиля</h1>
+          <User className="w-8 h-8 text-primary" />
+          <h1 className="text-3xl font-bold text-foreground"><span className="gradient-brand-text">Кастомизация</span> профиля</h1>
         </div>
 
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -118,8 +118,8 @@ export default function ProfileCustomizationPage() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'bg-purple-500 text-white'
-                  : 'bg-card text-muted-foreground hover:bg-secondary'
+                  ? 'gradient-brand text-primary-foreground shadow-glow'
+                  : 'bg-card/60 border border-border/50 text-muted-foreground hover:bg-secondary backdrop-blur-sm'
               }`}
             >
               {tab.icon}
@@ -136,7 +136,7 @@ export default function ProfileCustomizationPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className={`bg-card/50 rounded-xl p-4 border cursor-pointer transition-all ${
-                  isEquipped(inv.item_id) ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-border hover:border-border'
+                  isEquipped(inv.item_id) ? 'border-primary ring-2 ring-primary/50 shadow-glow' : 'border-border hover:border-primary/40'
                 }`}
                 onClick={() => !isEquipped(inv.item_id) && handleEquip(inv.item_id)}
               >
@@ -151,7 +151,7 @@ export default function ProfileCustomizationPage() {
                     <p className={`text-xs capitalize ${rarityColors[inv.item.rarity]}`}>{inv.item.rarity}</p>
                   </div>
                   {isEquipped(inv.item_id) && (
-                    <Check className="w-5 h-5 text-purple-400" />
+                    <Check className="w-5 h-5 text-primary" />
                   )}
                 </div>
               </motion.div>
@@ -171,12 +171,12 @@ export default function ProfileCustomizationPage() {
                 key={badge.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className={`bg-card/50 rounded-xl p-4 border text-center ${
-                  hasBadge(badge.id) ? 'border-purple-500' : 'border-border opacity-50'
+                className={`bg-card/55 backdrop-blur-xl rounded-xl p-4 border text-center shadow-soft ${
+                  hasBadge(badge.id) ? 'border-primary shadow-glow' : 'border-border opacity-50'
                 }`}
               >
                 <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center text-2xl ${
-                  hasBadge(badge.id) ? 'bg-purple-500/20' : 'bg-secondary'
+                  hasBadge(badge.id) ? 'bg-primary/20' : 'bg-secondary'
                 }`}>
                   <Award className={`w-6 h-6 ${hasBadge(badge.id) ? rarityColors[badge.rarity] : 'text-muted-foreground'}`} />
                 </div>
@@ -189,13 +189,13 @@ export default function ProfileCustomizationPage() {
         )}
 
         {activeTab === 'settings' && (
-          <div className="bg-card/50 rounded-xl p-6 border border-border space-y-6">
+          <div className="glass rounded-xl p-6 shadow-soft space-y-6">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">О себе</label>
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="w-full bg-secondary border border-border rounded-lg p-3 text-foreground resize-none"
+                className="input-field resize-none p-3"
                 rows={3}
                 placeholder="Расскажите о себе..."
               />
@@ -217,7 +217,7 @@ export default function ProfileCustomizationPage() {
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-foreground">Видимость</h4>
               
-              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-secondary/50 border border-border/40 rounded-lg">
                 <div className="flex items-center gap-2">
                   {profile?.show_level ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
                   <span className="text-foreground">Показывать уровень</span>
@@ -225,7 +225,7 @@ export default function ProfileCustomizationPage() {
                 <button
                   onClick={() => handleToggle('show_level')}
                   className={`w-12 h-6 rounded-full transition-all ${
-                    profile?.show_level ? 'bg-purple-500' : 'bg-muted'
+                    profile?.show_level ? 'gradient-brand shadow-glow' : 'bg-muted'
                   }`}
                 >
                   <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -234,7 +234,7 @@ export default function ProfileCustomizationPage() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-secondary/50 border border-border/40 rounded-lg">
                 <div className="flex items-center gap-2">
                   {profile?.show_achievements ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
                   <span className="text-foreground">Показывать достижения</span>
@@ -242,7 +242,7 @@ export default function ProfileCustomizationPage() {
                 <button
                   onClick={() => handleToggle('show_achievements')}
                   className={`w-12 h-6 rounded-full transition-all ${
-                    profile?.show_achievements ? 'bg-purple-500' : 'bg-muted'
+                    profile?.show_achievements ? 'gradient-brand shadow-glow' : 'bg-muted'
                   }`}
                 >
                   <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -251,7 +251,7 @@ export default function ProfileCustomizationPage() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-secondary/50 border border-border/40 rounded-lg">
                 <div className="flex items-center gap-2">
                   {profile?.show_activity ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
                   <span className="text-foreground">Показывать активность</span>
@@ -259,7 +259,7 @@ export default function ProfileCustomizationPage() {
                 <button
                   onClick={() => handleToggle('show_activity')}
                   className={`w-12 h-6 rounded-full transition-all ${
-                    profile?.show_activity ? 'bg-purple-500' : 'bg-muted'
+                    profile?.show_activity ? 'gradient-brand shadow-glow' : 'bg-muted'
                   }`}
                 >
                   <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -271,7 +271,7 @@ export default function ProfileCustomizationPage() {
 
             <button
               onClick={handleUpdateSettings}
-              className="w-full py-3 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-all"
+              className="w-full py-3 gradient-brand hover:brightness-110 shadow-glow text-primary-foreground font-medium rounded-xl transition-all"
             >
               Сохранить изменения
             </button>
