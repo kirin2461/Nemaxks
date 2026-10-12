@@ -101,6 +101,8 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(RequestIDMiddleware())
+	r.Use(MetricsMiddleware())
 	configureTrustedProxies(r)
 
 	// Fail-fast: в release без JWT_SECRET не стартуем (см. getJWTSecret)
@@ -114,6 +116,12 @@ func main() {
 			c.JSON(200, gin.H{"status": "initializing"})
 		}
 	})
+
+	// Readiness probe: 200 только когда БД доступна (Redis — degraded, не блокирует)
+	r.GET("/ready", ReadyHandler)
+
+	// Prometheus metrics endpoint
+	r.GET("/metrics", MetricsHandler())
 
 	// API readiness middleware - returns 503 if server is still initializing
 	apiReadinessMiddleware := func(c *gin.Context) {
