@@ -33,10 +33,10 @@ type TelegramMessage struct {
 			Username  string `json:"username"`
 		} `json:"from"`
 		Chat struct {
-			ID        int64  `json:"id"`
-			Title     string `json:"title"`
-			Type      string `json:"type"`
-			Username  string `json:"username"`
+			ID       int64  `json:"id"`
+			Title    string `json:"title"`
+			Type     string `json:"type"`
+			Username string `json:"username"`
 		} `json:"chat"`
 		Date int64  `json:"date"`
 		Text string `json:"text"`
@@ -46,7 +46,7 @@ type TelegramMessage struct {
 // ChatMessage represents unified message format
 type ChatMessage struct {
 	ID              uint
-	Source          string    // "telegram" or "vk"
+	Source          string // "telegram" or "vk"
 	SourceMessageID string
 	ChatID          string
 	UserID          string

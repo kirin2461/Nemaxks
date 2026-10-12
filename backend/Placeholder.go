@@ -1,1291 +1,1294 @@
 package main
 
 import (
-        "encoding/base64"
-        "encoding/json"
-        "fmt"
-        "io"
-        "log"
-        "net"
-        "net/http"
-        "os"
-        "sort"
-        "strconv"
-        "strings"
-        "time"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
 
-        "github.com/gin-gonic/gin"
-        "github.com/golang-jwt/jwt/v5"
-        "gorm.io/gorm"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm"
 )
 
 // Messages
 func getMessagesByChannelHandler(c *gin.Context) {
-        channelIDStr := c.Param("channel_id")
-        channelID, err := strconv.ParseUint(channelIDStr, 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
-                return
-        }
+	channelIDStr := c.Param("channel_id")
+	channelID, err := strconv.ParseUint(channelIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+		return
+	}
 
-        // Access check for private channels
-        var channel Channel
-        if err := db.First(&channel, channelID).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
-                return
-        }
-        if channel.IsPrivate {
-                userIDRaw, exists := c.Get("user_id")
-                if !exists {
-                        c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
-                        return
-                }
-                uid := uint(userIDRaw.(float64))
-                if !hasChannelAccessSingle(uid, channel) {
-                        c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
-                        return
-                }
-        }
+	// Access check for private channels
+	var channel Channel
+	if err := db.First(&channel, channelID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+		return
+	}
+	if channel.IsPrivate {
+		userIDRaw, exists := c.Get("user_id")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+			return
+		}
+		uid := uint(userIDRaw.(float64))
+		if !hasChannelAccessSingle(uid, channel) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
+			return
+		}
+	}
 
-        // Pagination
-        limitStr := c.DefaultQuery("limit", "50")
-        beforeStr := c.Query("before")
-        limit, _ := strconv.Atoi(limitStr)
-        if limit <= 0 || limit > 100 {
-                limit = 50
-        }
+	// Pagination
+	limitStr := c.DefaultQuery("limit", "50")
+	beforeStr := c.Query("before")
+	limit, _ := strconv.Atoi(limitStr)
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
 
-        // Fetch messages with Preload to avoid N+1 queries
-        var messages []Message
-        query := db.Preload("Author").Where("channel_id = ?", channelID)
-        if beforeStr != "" {
-                beforeID, err := strconv.ParseUint(beforeStr, 10, 32)
-                if err == nil {
-                        query = query.Where("id < ?", beforeID)
-                }
-        }
-        query.Order("created_at desc").Limit(limit).Find(&messages)
+	// Fetch messages with Preload to avoid N+1 queries
+	var messages []Message
+	query := db.Preload("Author").Where("channel_id = ?", channelID)
+	if beforeStr != "" {
+		beforeID, err := strconv.ParseUint(beforeStr, 10, 32)
+		if err == nil {
+			query = query.Where("id < ?", beforeID)
+		}
+	}
+	query.Order("created_at desc").Limit(limit).Find(&messages)
 
-        // Reverse to ASC order for display
-        for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
-                messages[i], messages[j] = messages[j], messages[i]
-        }
+	// Reverse to ASC order for display
+	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+		messages[i], messages[j] = messages[j], messages[i]
+	}
 
-        type MessageResponse struct {
-                ID        uint      `json:"id"`
-                ChannelID uint      `json:"channel_id"`
-                AuthorID  uint      `json:"author_id"`
-                Content   string    `json:"content"`
-                Edited    bool      `json:"edited"`
-                CreatedAt time.Time `json:"created_at"`
-                Author    struct {
-                        ID       uint    `json:"id"`
-                        Username string  `json:"username"`
-                        Avatar   *string `json:"avatar"`
-                } `json:"author"`
-        }
+	type MessageResponse struct {
+		ID        uint      `json:"id"`
+		ChannelID uint      `json:"channel_id"`
+		AuthorID  uint      `json:"author_id"`
+		Content   string    `json:"content"`
+		Edited    bool      `json:"edited"`
+		CreatedAt time.Time `json:"created_at"`
+		Author    struct {
+			ID       uint    `json:"id"`
+			Username string  `json:"username"`
+			Avatar   *string `json:"avatar"`
+		} `json:"author"`
+	}
 
-        result := make([]MessageResponse, 0, len(messages))
-        for _, msg := range messages {
-                resp := MessageResponse{
-                        ID:        msg.ID,
-                        ChannelID: msg.ChannelID,
-                        AuthorID:  msg.AuthorID,
-                        Content:   msg.Content,
-                        Edited:    msg.Edited,
-                        CreatedAt: msg.CreatedAt,
-                }
-                resp.Author.ID = msg.Author.ID
-                resp.Author.Username = msg.Author.Username
-                resp.Author.Avatar = msg.Author.Avatar
-                result = append(result, resp)
-        }
+	result := make([]MessageResponse, 0, len(messages))
+	for _, msg := range messages {
+		resp := MessageResponse{
+			ID:        msg.ID,
+			ChannelID: msg.ChannelID,
+			AuthorID:  msg.AuthorID,
+			Content:   msg.Content,
+			Edited:    msg.Edited,
+			CreatedAt: msg.CreatedAt,
+		}
+		resp.Author.ID = msg.Author.ID
+		resp.Author.Username = msg.Author.Username
+		resp.Author.Avatar = msg.Author.Avatar
+		result = append(result, resp)
+	}
 
-        c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, result)
 }
 
 func createChannelMessageHandler(c *gin.Context) {
-        channelID, err := strconv.ParseUint(c.Param("channel_id"), 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
-                return
-        }
-        userID, _ := c.Get("user_id")
+	channelID, err := strconv.ParseUint(c.Param("channel_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+		return
+	}
+	userID, _ := c.Get("user_id")
 
-        var req struct {
-                Content string `json:"content" binding:"required"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
+	var req struct {
+		Content string `json:"content" binding:"required"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        // Sanitize content before storing
-        sanitizedContent := SanitizeMessageContent(req.Content)
+	// Sanitize content before storing
+	sanitizedContent := SanitizeMessageContent(req.Content)
 
-        msg := Message{
-                ChannelID: uint(channelID),
-                AuthorID:  uint(userID.(float64)),
-                Content:   sanitizedContent,
-        }
-        if err := db.Create(&msg).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create message"})
-                return
-        }
+	msg := Message{
+		ChannelID: uint(channelID),
+		AuthorID:  uint(userID.(float64)),
+		Content:   sanitizedContent,
+	}
+	if err := db.Create(&msg).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create message"})
+		return
+	}
 
-        // Load author info for the response
-        var author User
-        db.First(&author, msg.AuthorID)
+	// Load author info for the response
+	var author User
+	db.First(&author, msg.AuthorID)
 
-        messageResponse := gin.H{
-                "id":         msg.ID,
-                "channel_id": msg.ChannelID,
-                "author_id":  msg.AuthorID,
-                "content":    msg.Content,
-                "created_at": msg.CreatedAt,
-                "author": gin.H{
-                        "id":       author.ID,
-                        "username": author.Username,
-                        "avatar":   author.Avatar,
-                },
-        }
+	messageResponse := gin.H{
+		"id":         msg.ID,
+		"channel_id": msg.ChannelID,
+		"author_id":  msg.AuthorID,
+		"content":    msg.Content,
+		"created_at": msg.CreatedAt,
+		"author": gin.H{
+			"id":       author.ID,
+			"username": author.Username,
+			"avatar":   author.Avatar,
+		},
+	}
 
-        // Broadcast to WebSocket clients
-        hub.broadcast <- map[string]interface{}{
-                "type":       "channel-message",
-                "channel_id": channelID,
-                "message":    messageResponse,
-        }
+	// Broadcast to WebSocket clients
+	hub.broadcast <- map[string]interface{}{
+		"type":       "channel-message",
+		"channel_id": channelID,
+		"message":    messageResponse,
+	}
 
-        c.JSON(http.StatusCreated, messageResponse)
+	c.JSON(http.StatusCreated, messageResponse)
 }
 
 // RTC - ICE servers with TURN support for NAT traversal.
 //
 // Конфигурация через env-переменные (рекомендуется для продакшна — свой coturn):
-//   STUN_URLS       — список STUN через запятую (по умолчанию публичные google/cloudflare)
-//   TURN_URLS       — список TURN/TURNS через запятую (по умолчанию бесплатный openrelay.metered.ca)
-//   TURN_USERNAME   — логин TURN (по умолчанию "openrelayproject")
-//   TURN_CREDENTIAL — пароль TURN (по умолчанию "openrelayproject")
+//
+//	STUN_URLS       — список STUN через запятую (по умолчанию публичные google/cloudflare)
+//	TURN_URLS       — список TURN/TURNS через запятую (по умолчанию бесплатный openrelay.metered.ca)
+//	TURN_USERNAME   — логин TURN (по умолчанию "openrelayproject")
+//	TURN_CREDENTIAL — пароль TURN (по умолчанию "openrelayproject")
+//
 // Пример для своего coturn:
-//   TURN_URLS=turn:turn.example.com:3478,turns:turn.example.com:5349?transport=tcp
-//   TURN_USERNAME=user TURN_CREDENTIAL=secret
+//
+//	TURN_URLS=turn:turn.example.com:3478,turns:turn.example.com:5349?transport=tcp
+//	TURN_USERNAME=user TURN_CREDENTIAL=secret
 func getICEServersHandler(c *gin.Context) {
-        // STUN servers for NAT discovery
-        stunURLs := splitEnvList("STUN_URLS", []string{
-                "stun:stun.l.google.com:19302",
-                "stun:stun1.l.google.com:19302",
-                "stun:stun.cloudflare.com:3478",
-        })
-        iceServers := make([]gin.H, 0, len(stunURLs)+4)
-        for _, u := range stunURLs {
-                iceServers = append(iceServers, gin.H{"urls": u})
-        }
+	// STUN servers for NAT discovery
+	stunURLs := splitEnvList("STUN_URLS", []string{
+		"stun:stun.l.google.com:19302",
+		"stun:stun1.l.google.com:19302",
+		"stun:stun.cloudflare.com:3478",
+	})
+	iceServers := make([]gin.H, 0, len(stunURLs)+4)
+	for _, u := range stunURLs {
+		iceServers = append(iceServers, gin.H{"urls": u})
+	}
 
-        // TURN servers for relay when direct connection fails
-        turnURLs := splitEnvList("TURN_URLS", []string{
-                "turn:openrelay.metered.ca:80",
-                "turn:openrelay.metered.ca:443",
-                "turn:openrelay.metered.ca:443?transport=tcp",
-                "turns:openrelay.metered.ca:443?transport=tcp",
-        })
-        turnUsername := os.Getenv("TURN_USERNAME")
-        if turnUsername == "" {
-                turnUsername = "openrelayproject"
-        }
-        turnCredential := os.Getenv("TURN_CREDENTIAL")
-        if turnCredential == "" {
-                turnCredential = "openrelayproject"
-        }
-        for _, u := range turnURLs {
-                iceServers = append(iceServers, gin.H{
-                        "urls":       u,
-                        "username":   turnUsername,
-                        "credential": turnCredential,
-                })
-        }
+	// TURN servers for relay when direct connection fails
+	turnURLs := splitEnvList("TURN_URLS", []string{
+		"turn:openrelay.metered.ca:80",
+		"turn:openrelay.metered.ca:443",
+		"turn:openrelay.metered.ca:443?transport=tcp",
+		"turns:openrelay.metered.ca:443?transport=tcp",
+	})
+	turnUsername := os.Getenv("TURN_USERNAME")
+	if turnUsername == "" {
+		turnUsername = "openrelayproject"
+	}
+	turnCredential := os.Getenv("TURN_CREDENTIAL")
+	if turnCredential == "" {
+		turnCredential = "openrelayproject"
+	}
+	for _, u := range turnURLs {
+		iceServers = append(iceServers, gin.H{
+			"urls":       u,
+			"username":   turnUsername,
+			"credential": turnCredential,
+		})
+	}
 
-        c.JSON(http.StatusOK, gin.H{
-                "iceServers": iceServers,
-        })
+	c.JSON(http.StatusOK, gin.H{
+		"iceServers": iceServers,
+	})
 }
 
 // splitEnvList читает env-переменную как список через запятую; если пусто — возвращает fallback
 func splitEnvList(envKey string, fallback []string) []string {
-        raw := strings.TrimSpace(os.Getenv(envKey))
-        if raw == "" {
-                return fallback
-        }
-        parts := strings.Split(raw, ",")
-        result := make([]string, 0, len(parts))
-        for _, p := range parts {
-                if trimmed := strings.TrimSpace(p); trimmed != "" {
-                        result = append(result, trimmed)
-                }
-        }
-        if len(result) == 0 {
-                return fallback
-        }
-        return result
+	raw := strings.TrimSpace(os.Getenv(envKey))
+	if raw == "" {
+		return fallback
+	}
+	parts := strings.Split(raw, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	if len(result) == 0 {
+		return fallback
+	}
+	return result
 }
 
 // Posts
 func getPostsHandler(c *gin.Context) {
-        filter := c.Query("filter")
-        tag := c.Query("tag")
-        limitStr := c.DefaultQuery("limit", "20")
-        offsetStr := c.DefaultQuery("offset", "0")
-        
-        limit, _ := strconv.Atoi(limitStr)
-        offset, _ := strconv.Atoi(offsetStr)
-        if limit <= 0 || limit > 50 {
-                limit = 20
-        }
-        if offset < 0 {
-                offset = 0
-        }
-        
-        var posts []Post
-        
-        // Get current user ID if authenticated
-        var currentUserID uint
-        if userID, exists := c.Get("user_id"); exists {
-                currentUserID = uint(userID.(float64))
-        }
-        
-        // Build base conditions that apply to both count and fetch queries
-        var followingIDs []uint
-        
-        switch filter {
-        case "following":
-                // Get posts from users the current user follows
-                if currentUserID > 0 {
-                        db.Model(&Subscription{}).Where("follower_id = ?", currentUserID).Pluck("following_id", &followingIDs)
-                        if len(followingIDs) == 0 {
-                                c.JSON(http.StatusOK, gin.H{"posts": []map[string]interface{}{}, "has_more": false})
-                                return
-                        }
-                } else {
-                        c.JSON(http.StatusOK, gin.H{"posts": []map[string]interface{}{}, "has_more": false})
-                        return
-                }
-        }
-        
-        // Build query with conditions
-        query := db.Model(&Post{}).Preload("Author")
-        
-        // Apply tag filter
-        if tag != "" {
-                query = query.Where("tags LIKE ?", "%"+tag+"%")
-        }
-        
-        // Apply following filter
-        if filter == "following" && len(followingIDs) > 0 {
-                query = query.Where("author_id IN ?", followingIDs)
-        }
-        
-        // Apply ordering
-        switch filter {
-        case "trending":
-                query = query.Order("likes DESC, created_at DESC")
-        default:
-                query = query.Order("created_at DESC")
-        }
-        
-        // Fetch one extra to determine has_more
-        query.Limit(limit + 1).Offset(offset).Find(&posts)
-        
-        hasMore := len(posts) > limit
-        if hasMore {
-                posts = posts[:limit]
-        }
-        
-        // Enrich posts with rating info and user-specific data
-        type PostResponse struct {
-                Post
-                AverageRating float64 `json:"average_rating"`
-                RatingCount   int     `json:"rating_count"`
-                UserRating    int     `json:"user_rating"`
-                IsLiked       bool    `json:"is_liked"`
-                IsBookmarked  bool    `json:"is_bookmarked"`
-        }
-        
-        var response []PostResponse
-        for _, post := range posts {
-                pr := PostResponse{Post: post}
-                
-                // Get average rating
-                var avgResult struct {
-                        Average float64
-                        Count   int64
-                }
-                db.Model(&PostRating{}).Where("post_id = ?", post.ID).
-                        Select("COALESCE(AVG(rating), 0) as average, COUNT(*) as count").
-                        Scan(&avgResult)
-                pr.AverageRating = avgResult.Average
-                pr.RatingCount = int(avgResult.Count)
-                
-                // Get user's rating and like/bookmark status if authenticated
-                if currentUserID > 0 {
-                        var userRating PostRating
-                        if db.Where("post_id = ? AND user_id = ?", post.ID, currentUserID).First(&userRating).RowsAffected > 0 {
-                                pr.UserRating = userRating.Rating
-                        }
-                        
-                        var like PostLike
-                        pr.IsLiked = db.Where("post_id = ? AND user_id = ?", post.ID, currentUserID).First(&like).RowsAffected > 0
-                        
-                        var bookmark PostBookmark
-                        pr.IsBookmarked = db.Where("post_id = ? AND user_id = ?", post.ID, currentUserID).First(&bookmark).RowsAffected > 0
-                }
-                
-                response = append(response, pr)
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "posts":    response,
-                "has_more": hasMore,
-        })
+	filter := c.Query("filter")
+	tag := c.Query("tag")
+	limitStr := c.DefaultQuery("limit", "20")
+	offsetStr := c.DefaultQuery("offset", "0")
+
+	limit, _ := strconv.Atoi(limitStr)
+	offset, _ := strconv.Atoi(offsetStr)
+	if limit <= 0 || limit > 50 {
+		limit = 20
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	var posts []Post
+
+	// Get current user ID if authenticated
+	var currentUserID uint
+	if userID, exists := c.Get("user_id"); exists {
+		currentUserID = uint(userID.(float64))
+	}
+
+	// Build base conditions that apply to both count and fetch queries
+	var followingIDs []uint
+
+	switch filter {
+	case "following":
+		// Get posts from users the current user follows
+		if currentUserID > 0 {
+			db.Model(&Subscription{}).Where("follower_id = ?", currentUserID).Pluck("following_id", &followingIDs)
+			if len(followingIDs) == 0 {
+				c.JSON(http.StatusOK, gin.H{"posts": []map[string]interface{}{}, "has_more": false})
+				return
+			}
+		} else {
+			c.JSON(http.StatusOK, gin.H{"posts": []map[string]interface{}{}, "has_more": false})
+			return
+		}
+	}
+
+	// Build query with conditions
+	query := db.Model(&Post{}).Preload("Author")
+
+	// Apply tag filter
+	if tag != "" {
+		query = query.Where("tags LIKE ?", "%"+tag+"%")
+	}
+
+	// Apply following filter
+	if filter == "following" && len(followingIDs) > 0 {
+		query = query.Where("author_id IN ?", followingIDs)
+	}
+
+	// Apply ordering
+	switch filter {
+	case "trending":
+		query = query.Order("likes DESC, created_at DESC")
+	default:
+		query = query.Order("created_at DESC")
+	}
+
+	// Fetch one extra to determine has_more
+	query.Limit(limit + 1).Offset(offset).Find(&posts)
+
+	hasMore := len(posts) > limit
+	if hasMore {
+		posts = posts[:limit]
+	}
+
+	// Enrich posts with rating info and user-specific data
+	type PostResponse struct {
+		Post
+		AverageRating float64 `json:"average_rating"`
+		RatingCount   int     `json:"rating_count"`
+		UserRating    int     `json:"user_rating"`
+		IsLiked       bool    `json:"is_liked"`
+		IsBookmarked  bool    `json:"is_bookmarked"`
+	}
+
+	var response []PostResponse
+	for _, post := range posts {
+		pr := PostResponse{Post: post}
+
+		// Get average rating
+		var avgResult struct {
+			Average float64
+			Count   int64
+		}
+		db.Model(&PostRating{}).Where("post_id = ?", post.ID).
+			Select("COALESCE(AVG(rating), 0) as average, COUNT(*) as count").
+			Scan(&avgResult)
+		pr.AverageRating = avgResult.Average
+		pr.RatingCount = int(avgResult.Count)
+
+		// Get user's rating and like/bookmark status if authenticated
+		if currentUserID > 0 {
+			var userRating PostRating
+			if db.Where("post_id = ? AND user_id = ?", post.ID, currentUserID).First(&userRating).RowsAffected > 0 {
+				pr.UserRating = userRating.Rating
+			}
+
+			var like PostLike
+			pr.IsLiked = db.Where("post_id = ? AND user_id = ?", post.ID, currentUserID).First(&like).RowsAffected > 0
+
+			var bookmark PostBookmark
+			pr.IsBookmarked = db.Where("post_id = ? AND user_id = ?", post.ID, currentUserID).First(&bookmark).RowsAffected > 0
+		}
+
+		response = append(response, pr)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"posts":    response,
+		"has_more": hasMore,
+	})
 }
 
 func createPostHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        var req struct {
-                Title   string   `json:"title"`
-                Content string   `json:"content" binding:"required"`
-                Tags    []string `json:"tags"`
-                Media   []struct {
-                        Type string `json:"type"`
-                        URL  string `json:"url"`
-                } `json:"media"`
-        }
-        if err := c.ShouldBindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
+	userID, _ := c.Get("user_id")
+	var req struct {
+		Title   string   `json:"title"`
+		Content string   `json:"content" binding:"required"`
+		Tags    []string `json:"tags"`
+		Media   []struct {
+			Type string `json:"type"`
+			URL  string `json:"url"`
+		} `json:"media"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        // Sanitize content before storing
-        sanitizedContent := SanitizeForDisplay(req.Content)
-        sanitizedTitle := SanitizeForDisplay(req.Title)
+	// Sanitize content before storing
+	sanitizedContent := SanitizeForDisplay(req.Content)
+	sanitizedTitle := SanitizeForDisplay(req.Title)
 
-        // Use content as title if title is empty
-        title := sanitizedTitle
-        if title == "" {
-                title = sanitizedContent
-                if len(title) > 100 {
-                        title = title[:100] + "..."
-                }
-        }
+	// Use content as title if title is empty
+	title := sanitizedTitle
+	if title == "" {
+		title = sanitizedContent
+		if len(title) > 100 {
+			title = title[:100] + "..."
+		}
+	}
 
-        post := Post{
-                AuthorID: uint(userID.(float64)),
-                Title:    title,
-                Content:  sanitizedContent,
-                Tags:     req.Tags,
-        }
-        if err := db.Create(&post).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
-                return
-        }
+	post := Post{
+		AuthorID: uint(userID.(float64)),
+		Title:    title,
+		Content:  sanitizedContent,
+		Tags:     req.Tags,
+	}
+	if err := db.Create(&post).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
+		return
+	}
 
-        // Load author info
-        var author User
-        db.First(&author, post.AuthorID)
+	// Load author info
+	var author User
+	db.First(&author, post.AuthorID)
 
-        postData := gin.H{
-                "id":         post.ID,
-                "title":      post.Title,
-                "content":    post.Content,
-                "tags":       req.Tags,
-                "likes":      0,
-                "comments":   0,
-                "shares":     0,
-                "created_at": post.CreatedAt,
-                "author": gin.H{
-                        "id":       author.ID,
-                        "username": author.Username,
-                        "avatar":   author.Avatar,
-                },
-        }
+	postData := gin.H{
+		"id":         post.ID,
+		"title":      post.Title,
+		"content":    post.Content,
+		"tags":       req.Tags,
+		"likes":      0,
+		"comments":   0,
+		"shares":     0,
+		"created_at": post.CreatedAt,
+		"author": gin.H{
+			"id":       author.ID,
+			"username": author.Username,
+			"avatar":   author.Avatar,
+		},
+	}
 
-        // Broadcast new post to all connected users (followers)
-        var followers []Subscription
-        db.Where("following_id = ?", post.AuthorID).Find(&followers)
-        for _, follower := range followers {
-                BroadcastToUser(follower.FollowerID, "new_post", postData)
-        }
+	// Broadcast new post to all connected users (followers)
+	var followers []Subscription
+	db.Where("following_id = ?", post.AuthorID).Find(&followers)
+	for _, follower := range followers {
+		BroadcastToUser(follower.FollowerID, "new_post", postData)
+	}
 
-        c.JSON(http.StatusCreated, postData)
+	c.JSON(http.StatusCreated, postData)
 }
 
 func getPlatformStatsHandler(c *gin.Context) {
-        var userCount, channelCount, messageCount, onlineCount int64
-        db.Model(&User{}).Count(&userCount)
-        db.Model(&Channel{}).Count(&channelCount)
-        db.Model(&Message{}).Count(&messageCount)
-        db.Model(&User{}).Where("last_seen > NOW() - INTERVAL '5 minutes'").Count(&onlineCount)
+	var userCount, channelCount, messageCount, onlineCount int64
+	db.Model(&User{}).Count(&userCount)
+	db.Model(&Channel{}).Count(&channelCount)
+	db.Model(&Message{}).Count(&messageCount)
+	db.Model(&User{}).Where("last_seen > NOW() - INTERVAL '5 minutes'").Count(&onlineCount)
 
-        var activeStreams int64 = 0
+	var activeStreams int64 = 0
 
-        c.JSON(http.StatusOK, gin.H{
-                "totalUsers":    userCount,
-                "onlineUsers":   onlineCount,
-                "totalMessages": messageCount,
-                "totalChannels": channelCount,
-                "activeStreams": activeStreams,
-                "peakViewers":   0,
-        })
+	c.JSON(http.StatusOK, gin.H{
+		"totalUsers":    userCount,
+		"onlineUsers":   onlineCount,
+		"totalMessages": messageCount,
+		"totalChannels": channelCount,
+		"activeStreams": activeStreams,
+		"peakViewers":   0,
+	})
 }
 
 var startTime = time.Now()
 
 func getLiveStreamsHandler(c *gin.Context) {
-        // Live streams require LiveKit integration (LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
-        // Returns empty array when LiveKit is not configured
-        c.JSON(http.StatusOK, []gin.H{})
+	// Live streams require LiveKit integration (LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
+	// Returns empty array when LiveKit is not configured
+	c.JSON(http.StatusOK, []gin.H{})
 }
 
 // Videos
 func getVideosHandler(c *gin.Context) {
-        var videos []Video
-        db.Find(&videos)
-        c.JSON(http.StatusOK, videos)
+	var videos []Video
+	db.Find(&videos)
+	c.JSON(http.StatusOK, videos)
 }
 
 func getVideoHandler(c *gin.Context) {
-        id := c.Param("id")
-        var video Video
-        if err := db.First(&video, id).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Video not found"})
-                return
-        }
-        
-        // Determine max quality based on user's premium status
-        maxQuality := "720p"
-        authHeader := c.GetHeader("Authorization")
-        if authHeader != "" {
-                tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-                token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-                        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                                return nil, jwt.ErrSignatureInvalid
-                        }
-                        return getJWTSecret(), nil
-                })
-                if err == nil && token.Valid {
-                        if claims, ok := token.Claims.(jwt.MapClaims); ok {
-                                userIDFloat, _ := claims["user_id"].(float64)
-                                var user User
-                                if err := db.First(&user, uint(userIDFloat)).Error; err == nil {
-                                        // Check if user has premium subscription
-                                        var sub PremiumSubscription
-                                        if err := db.Preload("Plan").Where("user_id = ? AND status IN ?", 
-                                                user.ID, []string{"active", "trialing"}).First(&sub).Error; err == nil {
-                                                // Pro and Premium plans get 1080p
-                                                if sub.Plan.Slug == "pro" || sub.Plan.Slug == "premium" || sub.Plan.Slug == "vip" {
-                                                        maxQuality = "1080p"
-                                                }
-                                        }
-                                }
-                        }
-                }
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "video":       video,
-                "max_quality": maxQuality,
-        })
+	id := c.Param("id")
+	var video Video
+	if err := db.First(&video, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Video not found"})
+		return
+	}
+
+	// Determine max quality based on user's premium status
+	maxQuality := "720p"
+	authHeader := c.GetHeader("Authorization")
+	if authHeader != "" {
+		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return getJWTSecret(), nil
+		})
+		if err == nil && token.Valid {
+			if claims, ok := token.Claims.(jwt.MapClaims); ok {
+				userIDFloat, _ := claims["user_id"].(float64)
+				var user User
+				if err := db.First(&user, uint(userIDFloat)).Error; err == nil {
+					// Check if user has premium subscription
+					var sub PremiumSubscription
+					if err := db.Preload("Plan").Where("user_id = ? AND status IN ?",
+						user.ID, []string{"active", "trialing"}).First(&sub).Error; err == nil {
+						// Pro and Premium plans get 1080p
+						if sub.Plan.Slug == "pro" || sub.Plan.Slug == "premium" || sub.Plan.Slug == "vip" {
+							maxQuality = "1080p"
+						}
+					}
+				}
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"video":       video,
+		"max_quality": maxQuality,
+	})
 }
 
 func createVideoHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var req struct {
-                Title       string   `json:"title" binding:"required"`
-                Description string   `json:"description"`
-                VideoURL    string   `json:"video_url" binding:"required"`
-                Thumbnail   string   `json:"thumbnail"`
-                Duration    int      `json:"duration"`
-                Category    string   `json:"category"`
-                Tags        []string `json:"tags"`
-                IsPublic    bool     `json:"is_public"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
-        
-        const maxVideosPerWeek = 3
-        const maxDurationSeconds = 120 * 60
-        
-        if req.Duration > maxDurationSeconds {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Длительность видео не должна превышать 120 минут"})
-                return
-        }
-        
-        oneWeekAgo := time.Now().AddDate(0, 0, -7)
-        var videoCount int64
-        db.Model(&Video{}).Where("author_id = ? AND created_at > ?", uid, oneWeekAgo).Count(&videoCount)
-        
-        if videoCount >= maxVideosPerWeek {
-                c.JSON(http.StatusTooManyRequests, gin.H{
-                        "error": "Вы можете загружать не более 3 видео в неделю",
-                        "videos_this_week": videoCount,
-                        "limit": maxVideosPerWeek,
-                })
-                return
-        }
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
 
-        // Sanitize video title and description
-        sanitizedTitle := SanitizeForDisplay(req.Title)
-        sanitizedDescription := SanitizeForDisplay(req.Description)
+	var req struct {
+		Title       string   `json:"title" binding:"required"`
+		Description string   `json:"description"`
+		VideoURL    string   `json:"video_url" binding:"required"`
+		Thumbnail   string   `json:"thumbnail"`
+		Duration    int      `json:"duration"`
+		Category    string   `json:"category"`
+		Tags        []string `json:"tags"`
+		IsPublic    bool     `json:"is_public"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        video := Video{
-                AuthorID:    uid,
-                Title:       sanitizedTitle,
-                Description: sanitizedDescription,
-                VideoURL:    req.VideoURL,
-                Thumbnail:   req.Thumbnail,
-                Duration:    req.Duration,
-                Category:    req.Category,
-                IsPublic:    req.IsPublic,
-        }
-        
-        if err := db.Create(&video).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось создать видео"})
-                return
-        }
-        
-        c.JSON(http.StatusCreated, video)
+	const maxVideosPerWeek = 3
+	const maxDurationSeconds = 120 * 60
+
+	if req.Duration > maxDurationSeconds {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Длительность видео не должна превышать 120 минут"})
+		return
+	}
+
+	oneWeekAgo := time.Now().AddDate(0, 0, -7)
+	var videoCount int64
+	db.Model(&Video{}).Where("author_id = ? AND created_at > ?", uid, oneWeekAgo).Count(&videoCount)
+
+	if videoCount >= maxVideosPerWeek {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"error":            "Вы можете загружать не более 3 видео в неделю",
+			"videos_this_week": videoCount,
+			"limit":            maxVideosPerWeek,
+		})
+		return
+	}
+
+	// Sanitize video title and description
+	sanitizedTitle := SanitizeForDisplay(req.Title)
+	sanitizedDescription := SanitizeForDisplay(req.Description)
+
+	video := Video{
+		AuthorID:    uid,
+		Title:       sanitizedTitle,
+		Description: sanitizedDescription,
+		VideoURL:    req.VideoURL,
+		Thumbnail:   req.Thumbnail,
+		Duration:    req.Duration,
+		Category:    req.Category,
+		IsPublic:    req.IsPublic,
+	}
+
+	if err := db.Create(&video).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось создать видео"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, video)
 }
 
 func updateVideoHandler(c *gin.Context) {
-        id := c.Param("id")
-        var video Video
-        if err := db.First(&video, id).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Video not found"})
-                return
-        }
+	id := c.Param("id")
+	var video Video
+	if err := db.First(&video, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Video not found"})
+		return
+	}
 
-        var req struct {
-                Title       string `json:"title"`
-                Description string `json:"description"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
+	var req struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        // Sanitize video title and description
-        if req.Title != "" {
-                video.Title = SanitizeForDisplay(req.Title)
-        }
-        if req.Description != "" {
-                video.Description = SanitizeForDisplay(req.Description)
-        }
+	// Sanitize video title and description
+	if req.Title != "" {
+		video.Title = SanitizeForDisplay(req.Title)
+	}
+	if req.Description != "" {
+		video.Description = SanitizeForDisplay(req.Description)
+	}
 
-        db.Save(&video)
-        c.JSON(http.StatusOK, video)
+	db.Save(&video)
+	c.JSON(http.StatusOK, video)
 }
 
 func deleteVideoHandler(c *gin.Context) {
-        id := c.Param("id")
-        db.Delete(&Video{}, id)
-        c.JSON(http.StatusOK, gin.H{"message": "Video deleted"})
+	id := c.Param("id")
+	db.Delete(&Video{}, id)
+	c.JSON(http.StatusOK, gin.H{"message": "Video deleted"})
 }
 
 // Post Likes
 func likePostHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "liked"})
+	c.JSON(http.StatusOK, gin.H{"status": "liked"})
 }
 func unlikePostHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "unliked"})
+	c.JSON(http.StatusOK, gin.H{"status": "unliked"})
 }
 
 // Post Bookmarks
 func bookmarkPostHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "bookmarked"})
+	c.JSON(http.StatusOK, gin.H{"status": "bookmarked"})
 }
 func unbookmarkPostHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "unbookmarked"})
+	c.JSON(http.StatusOK, gin.H{"status": "unbookmarked"})
 }
 
 // Popular Tags
 func getPopularTagsHandler(c *gin.Context) {
-        limit := 20
-        if l := c.Query("limit"); l != "" {
-                if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 50 {
-                        limit = parsed
-                }
-        }
+	limit := 20
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 50 {
+			limit = parsed
+		}
+	}
 
-        var posts []Post
-        db.Select("tags").Where("tags IS NOT NULL AND array_length(tags, 1) > 0").Find(&posts)
+	var posts []Post
+	db.Select("tags").Where("tags IS NOT NULL AND array_length(tags, 1) > 0").Find(&posts)
 
-        tagCounts := make(map[string]int)
-        for _, post := range posts {
-                for _, tag := range post.Tags {
-                        if tag != "" {
-                                tagCounts[tag]++
-                        }
-                }
-        }
+	tagCounts := make(map[string]int)
+	for _, post := range posts {
+		for _, tag := range post.Tags {
+			if tag != "" {
+				tagCounts[tag]++
+			}
+		}
+	}
 
-        type TagInfo struct {
-                Name  string `json:"name"`
-                Count int    `json:"count"`
-        }
-        var tags []TagInfo
-        for name, count := range tagCounts {
-                tags = append(tags, TagInfo{Name: name, Count: count})
-        }
+	type TagInfo struct {
+		Name  string `json:"name"`
+		Count int    `json:"count"`
+	}
+	var tags []TagInfo
+	for name, count := range tagCounts {
+		tags = append(tags, TagInfo{Name: name, Count: count})
+	}
 
-        sort.Slice(tags, func(i, j int) bool {
-                return tags[i].Count > tags[j].Count
-        })
+	sort.Slice(tags, func(i, j int) bool {
+		return tags[i].Count > tags[j].Count
+	})
 
-        if len(tags) > limit {
-                tags = tags[:limit]
-        }
+	if len(tags) > limit {
+		tags = tags[:limit]
+	}
 
-        c.JSON(http.StatusOK, gin.H{"tags": tags})
+	c.JSON(http.StatusOK, gin.H{"tags": tags})
 }
 
 // Edit Post
 func updatePostHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        postID := c.Param("id")
+	userID, _ := c.Get("user_id")
+	postID := c.Param("id")
 
-        var post Post
-        if err := db.First(&post, postID).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Пост не найден"})
-                return
-        }
+	var post Post
+	if err := db.First(&post, postID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Пост не найден"})
+		return
+	}
 
-        if post.AuthorID != uint(userID.(float64)) {
-                c.JSON(http.StatusForbidden, gin.H{"error": "Вы можете редактировать только свои посты"})
-                return
-        }
+	if post.AuthorID != uint(userID.(float64)) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Вы можете редактировать только свои посты"})
+		return
+	}
 
-        var req struct {
-                Content string   `json:"content"`
-                Tags    []string `json:"tags"`
-        }
-        if err := c.ShouldBindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
+	var req struct {
+		Content string   `json:"content"`
+		Tags    []string `json:"tags"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        if req.Content != "" {
-                post.Content = SanitizeForDisplay(req.Content)
-                if len(post.Content) > 100 {
-                        post.Title = post.Content[:100] + "..."
-                } else {
-                        post.Title = post.Content
-                }
-        }
-        if req.Tags != nil {
-                post.Tags = req.Tags
-        }
+	if req.Content != "" {
+		post.Content = SanitizeForDisplay(req.Content)
+		if len(post.Content) > 100 {
+			post.Title = post.Content[:100] + "..."
+		} else {
+			post.Title = post.Content
+		}
+	}
+	if req.Tags != nil {
+		post.Tags = req.Tags
+	}
 
-        if err := db.Save(&post).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить пост"})
-                return
-        }
+	if err := db.Save(&post).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить пост"})
+		return
+	}
 
-        var author User
-        db.First(&author, post.AuthorID)
+	var author User
+	db.First(&author, post.AuthorID)
 
-        c.JSON(http.StatusOK, gin.H{
-                "id":         post.ID,
-                "content":    post.Content,
-                "tags":       post.Tags,
-                "updated_at": post.UpdatedAt,
-                "author": gin.H{
-                        "id":       author.ID,
-                        "username": author.Username,
-                        "avatar":   author.Avatar,
-                },
-        })
+	c.JSON(http.StatusOK, gin.H{
+		"id":         post.ID,
+		"content":    post.Content,
+		"tags":       post.Tags,
+		"updated_at": post.UpdatedAt,
+		"author": gin.H{
+			"id":       author.ID,
+			"username": author.Username,
+			"avatar":   author.Avatar,
+		},
+	})
 }
 
 // Delete Post
 func deletePostHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        postID := c.Param("id")
+	userID, _ := c.Get("user_id")
+	postID := c.Param("id")
 
-        var post Post
-        if err := db.First(&post, postID).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Пост не найден"})
-                return
-        }
+	var post Post
+	if err := db.First(&post, postID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Пост не найден"})
+		return
+	}
 
-        if post.AuthorID != uint(userID.(float64)) {
-                c.JSON(http.StatusForbidden, gin.H{"error": "Вы можете удалять только свои посты"})
-                return
-        }
+	if post.AuthorID != uint(userID.(float64)) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Вы можете удалять только свои посты"})
+		return
+	}
 
-        if err := db.Delete(&post).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить пост"})
-                return
-        }
+	if err := db.Delete(&post).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить пост"})
+		return
+	}
 
-        c.JSON(http.StatusOK, gin.H{"message": "Пост удалён"})
+	c.JSON(http.StatusOK, gin.H{"message": "Пост удалён"})
 }
 
 // Subscriptions
 func getSubscriptionsHandler(c *gin.Context) {
-        userID, exists := c.Get("user_id")
-        if !exists {
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
-                return
-        }
-        uid := uint(userID.(float64))
-        
-        var subscriptions []Subscription
-        db.Where("follower_id = ?", uid).Find(&subscriptions)
-        
-        type SubResponse struct {
-                ID          uint   `json:"id"`
-                FollowingID uint   `json:"following_id"`
-                UserID      uint   `json:"user_id"`
-                Username    string `json:"username"`
-                Avatar      string `json:"avatar,omitempty"`
-        }
-        
-        var response []SubResponse
-        for _, sub := range subscriptions {
-                var user User
-                if db.First(&user, sub.FollowingID).RowsAffected > 0 {
-                        avatar := ""
-                        if user.Avatar != nil {
-                                avatar = *user.Avatar
-                        }
-                        response = append(response, SubResponse{
-                                ID:          sub.ID,
-                                FollowingID: sub.FollowingID,
-                                UserID:      sub.FollowingID,
-                                Username:    user.Username,
-                                Avatar:      avatar,
-                        })
-                }
-        }
-        
-        c.JSON(http.StatusOK, response)
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+		return
+	}
+	uid := uint(userID.(float64))
+
+	var subscriptions []Subscription
+	db.Where("follower_id = ?", uid).Find(&subscriptions)
+
+	type SubResponse struct {
+		ID          uint   `json:"id"`
+		FollowingID uint   `json:"following_id"`
+		UserID      uint   `json:"user_id"`
+		Username    string `json:"username"`
+		Avatar      string `json:"avatar,omitempty"`
+	}
+
+	var response []SubResponse
+	for _, sub := range subscriptions {
+		var user User
+		if db.First(&user, sub.FollowingID).RowsAffected > 0 {
+			avatar := ""
+			if user.Avatar != nil {
+				avatar = *user.Avatar
+			}
+			response = append(response, SubResponse{
+				ID:          sub.ID,
+				FollowingID: sub.FollowingID,
+				UserID:      sub.FollowingID,
+				Username:    user.Username,
+				Avatar:      avatar,
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func subscribeHandler(c *gin.Context) {
-        userID, exists := c.Get("user_id")
-        if !exists {
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
-                return
-        }
-        uid := uint(userID.(float64))
-        targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-                return
-        }
-        
-        if uid == uint(targetID) {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot subscribe to yourself"})
-                return
-        }
-        
-        var existing Subscription
-        if db.Where("follower_id = ? AND following_id = ?", uid, targetID).First(&existing).RowsAffected > 0 {
-                c.JSON(http.StatusOK, gin.H{"status": "already_subscribed"})
-                return
-        }
-        
-        sub := Subscription{
-                FollowerID:  uid,
-                FollowingID: uint(targetID),
-        }
-        db.Create(&sub)
-        c.JSON(http.StatusOK, gin.H{"status": "subscribed", "id": sub.ID})
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+		return
+	}
+	uid := uint(userID.(float64))
+	targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	if uid == uint(targetID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot subscribe to yourself"})
+		return
+	}
+
+	var existing Subscription
+	if db.Where("follower_id = ? AND following_id = ?", uid, targetID).First(&existing).RowsAffected > 0 {
+		c.JSON(http.StatusOK, gin.H{"status": "already_subscribed"})
+		return
+	}
+
+	sub := Subscription{
+		FollowerID:  uid,
+		FollowingID: uint(targetID),
+	}
+	db.Create(&sub)
+	c.JSON(http.StatusOK, gin.H{"status": "subscribed", "id": sub.ID})
 }
 
 func unsubscribeHandler(c *gin.Context) {
-        userID, exists := c.Get("user_id")
-        if !exists {
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
-                return
-        }
-        uid := uint(userID.(float64))
-        targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-                return
-        }
-        
-        db.Where("follower_id = ? AND following_id = ?", uid, targetID).Delete(&Subscription{})
-        c.JSON(http.StatusOK, gin.H{"status": "unsubscribed"})
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+		return
+	}
+	uid := uint(userID.(float64))
+	targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	db.Where("follower_id = ? AND following_id = ?", uid, targetID).Delete(&Subscription{})
+	c.JSON(http.StatusOK, gin.H{"status": "unsubscribed"})
 }
 
 func getSubscribersHandler(c *gin.Context) {
-        targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-                return
-        }
-        
-        var subscriptions []Subscription
-        db.Where("following_id = ?", targetID).Find(&subscriptions)
-        
-        type SubResponse struct {
-                ID         uint   `json:"id"`
-                FollowerID uint   `json:"follower_id"`
-                Username   string `json:"username"`
-                Avatar     string `json:"avatar,omitempty"`
-        }
-        
-        var response []SubResponse
-        for _, sub := range subscriptions {
-                var user User
-                if db.First(&user, sub.FollowerID).RowsAffected > 0 {
-                        avatar := ""
-                        if user.Avatar != nil {
-                                avatar = *user.Avatar
-                        }
-                        response = append(response, SubResponse{
-                                ID:         sub.ID,
-                                FollowerID: sub.FollowerID,
-                                Username:   user.Username,
-                                Avatar:     avatar,
-                        })
-                }
-        }
-        
-        c.JSON(http.StatusOK, response)
+	targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var subscriptions []Subscription
+	db.Where("following_id = ?", targetID).Find(&subscriptions)
+
+	type SubResponse struct {
+		ID         uint   `json:"id"`
+		FollowerID uint   `json:"follower_id"`
+		Username   string `json:"username"`
+		Avatar     string `json:"avatar,omitempty"`
+	}
+
+	var response []SubResponse
+	for _, sub := range subscriptions {
+		var user User
+		if db.First(&user, sub.FollowerID).RowsAffected > 0 {
+			avatar := ""
+			if user.Avatar != nil {
+				avatar = *user.Avatar
+			}
+			response = append(response, SubResponse{
+				ID:         sub.ID,
+				FollowerID: sub.FollowerID,
+				Username:   user.Username,
+				Avatar:     avatar,
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // User Profile and Stats
 func getUserProfileHandler(c *gin.Context) {
-        targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-                return
-        }
-        
-        var user User
-        if db.First(&user, targetID).RowsAffected == 0 {
-                c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-                return
-        }
-        
-        // Get subscription stats
-        var followersCount int64
-        var followingCount int64
-        db.Model(&Subscription{}).Where("following_id = ?", targetID).Count(&followersCount)
-        db.Model(&Subscription{}).Where("follower_id = ?", targetID).Count(&followingCount)
-        
-        // Check if current user is subscribed to this profile
-        isSubscribed := false
-        if userID, exists := c.Get("user_id"); exists {
-                uid := uint(userID.(float64))
-                if uid != uint(targetID) {
-                        var sub Subscription
-                        if db.Where("follower_id = ? AND following_id = ?", uid, targetID).First(&sub).RowsAffected > 0 {
-                                isSubscribed = true
-                        }
-                }
-        }
-        
-        avatar := ""
-        if user.Avatar != nil {
-                avatar = *user.Avatar
-        }
-        bio := ""
-        if user.Bio != nil {
-                bio = *user.Bio
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "id":              user.ID,
-                "username":        user.Username,
-                "avatar":          avatar,
-                "bio":             bio,
-                "role":            user.Role,
-                "created_at":      user.CreatedAt,
-                "followers_count": followersCount,
-                "following_count": followingCount,
-                "is_subscribed":   isSubscribed,
-        })
+	targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var user User
+	if db.First(&user, targetID).RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Get subscription stats
+	var followersCount int64
+	var followingCount int64
+	db.Model(&Subscription{}).Where("following_id = ?", targetID).Count(&followersCount)
+	db.Model(&Subscription{}).Where("follower_id = ?", targetID).Count(&followingCount)
+
+	// Check if current user is subscribed to this profile
+	isSubscribed := false
+	if userID, exists := c.Get("user_id"); exists {
+		uid := uint(userID.(float64))
+		if uid != uint(targetID) {
+			var sub Subscription
+			if db.Where("follower_id = ? AND following_id = ?", uid, targetID).First(&sub).RowsAffected > 0 {
+				isSubscribed = true
+			}
+		}
+	}
+
+	avatar := ""
+	if user.Avatar != nil {
+		avatar = *user.Avatar
+	}
+	bio := ""
+	if user.Bio != nil {
+		bio = *user.Bio
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":              user.ID,
+		"username":        user.Username,
+		"avatar":          avatar,
+		"bio":             bio,
+		"role":            user.Role,
+		"created_at":      user.CreatedAt,
+		"followers_count": followersCount,
+		"following_count": followingCount,
+		"is_subscribed":   isSubscribed,
+	})
 }
 
 func getUserStatsHandler(c *gin.Context) {
-        targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-                return
-        }
-        
-        var followersCount int64
-        var followingCount int64
-        var postsCount int64
-        var friendsCount int64
-        
-        db.Model(&Subscription{}).Where("following_id = ?", targetID).Count(&followersCount)
-        db.Model(&Subscription{}).Where("follower_id = ?", targetID).Count(&followingCount)
-        db.Model(&Post{}).Where("author_id = ?", targetID).Count(&postsCount)
-        
-        // Count friends (accepted friend requests in either direction)
-        db.Model(&FriendRequest{}).Where("(requester_id = ? OR addressee_id = ?) AND status = ?", targetID, targetID, "accepted").Count(&friendsCount)
-        
-        c.JSON(http.StatusOK, gin.H{
-                "followers_count": followersCount,
-                "following_count": followingCount,
-                "posts_count":     postsCount,
-                "friends_count":   friendsCount,
-        })
+	targetID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	var followersCount int64
+	var followingCount int64
+	var postsCount int64
+	var friendsCount int64
+
+	db.Model(&Subscription{}).Where("following_id = ?", targetID).Count(&followersCount)
+	db.Model(&Subscription{}).Where("follower_id = ?", targetID).Count(&followingCount)
+	db.Model(&Post{}).Where("author_id = ?", targetID).Count(&postsCount)
+
+	// Count friends (accepted friend requests in either direction)
+	db.Model(&FriendRequest{}).Where("(requester_id = ? OR addressee_id = ?) AND status = ?", targetID, targetID, "accepted").Count(&friendsCount)
+
+	c.JSON(http.StatusOK, gin.H{
+		"followers_count": followersCount,
+		"following_count": followingCount,
+		"posts_count":     postsCount,
+		"friends_count":   friendsCount,
+	})
 }
 
 // Video Extras
 func likeVideoHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "liked"})
+	c.JSON(http.StatusOK, gin.H{"status": "liked"})
 }
 func unlikeVideoHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "unliked"})
+	c.JSON(http.StatusOK, gin.H{"status": "unliked"})
 }
 func bookmarkVideoHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "bookmarked"})
+	c.JSON(http.StatusOK, gin.H{"status": "bookmarked"})
 }
 func unbookmarkVideoHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "unbookmarked"})
+	c.JSON(http.StatusOK, gin.H{"status": "unbookmarked"})
 }
 func getVideoChaptersHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, []string{})
+	c.JSON(http.StatusOK, []string{})
 }
 func incrementVideoViewHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "viewed"})
+	c.JSON(http.StatusOK, gin.H{"status": "viewed"})
 }
 
 // Premium Subscription Handlers
 func getPremiumPlansHandler(c *gin.Context) {
-        var plans []PremiumPlan
-        db.Where("is_active = ?", true).Find(&plans)
-        c.JSON(http.StatusOK, plans)
+	var plans []PremiumPlan
+	db.Where("is_active = ?", true).Find(&plans)
+	c.JSON(http.StatusOK, plans)
 }
 
 func getUserPremiumHandler(c *gin.Context) {
-        userIDParam := c.Param("id")
-        userID, err := strconv.ParseUint(userIDParam, 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
-                return
-        }
-        
-        var premium UserPremium
-        result := db.Preload("Plan").Where("user_id = ? AND status = ?", userID, "active").First(&premium)
-        
-        if result.Error != nil {
-                c.JSON(http.StatusOK, gin.H{
-                        "has_premium": false,
-                        "plan": nil,
-                })
-                return
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "has_premium":           true,
-                "plan_name":             premium.Plan.Name,
-                "plan_slug":             premium.Plan.Slug,
-                "current_period_end":    premium.CurrentPeriodEnd,
-                "auto_renew":            premium.AutoRenew,
-        })
+	userIDParam := c.Param("id")
+	userID, err := strconv.ParseUint(userIDParam, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	var premium UserPremium
+	result := db.Preload("Plan").Where("user_id = ? AND status = ?", userID, "active").First(&premium)
+
+	if result.Error != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"has_premium": false,
+			"plan":        nil,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"has_premium":        true,
+		"plan_name":          premium.Plan.Name,
+		"plan_slug":          premium.Plan.Slug,
+		"current_period_end": premium.CurrentPeriodEnd,
+		"auto_renew":         premium.AutoRenew,
+	})
 }
 
 func createDonationHandler(c *gin.Context) {
-        toUserIDParam := c.Param("id")
-        toUserID, err := strconv.ParseUint(toUserIDParam, 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
-                return
-        }
-        
-        var fromUserID *uint
-        if uid, exists := c.Get("user_id"); exists {
-                id := uint(uid.(float64))
-                fromUserID = &id
-        }
-        
-        var req struct {
-                Amount  float64 `json:"amount" binding:"required,min=10"`
-                Message string  `json:"message"`
-        }
-        if err := c.ShouldBindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
-        
-        donation := CreatorDonation{
-                FromUserID: fromUserID,
-                ToUserID:   uint(toUserID),
-                AmountRub:  req.Amount,
-                Message:    req.Message,
-                Status:     "pending",
-                CreatedAt:  time.Now(),
-        }
-        
-        if err := db.Create(&donation).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create donation"})
-                return
-        }
-        
-        c.JSON(http.StatusCreated, gin.H{
-                "id":      donation.ID,
-                "status":  "pending",
-                "message": "Donation created. Redirecting to payment...",
-        })
+	toUserIDParam := c.Param("id")
+	toUserID, err := strconv.ParseUint(toUserIDParam, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	var fromUserID *uint
+	if uid, exists := c.Get("user_id"); exists {
+		id := uint(uid.(float64))
+		fromUserID = &id
+	}
+
+	var req struct {
+		Amount  float64 `json:"amount" binding:"required,min=10"`
+		Message string  `json:"message"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	donation := CreatorDonation{
+		FromUserID: fromUserID,
+		ToUserID:   uint(toUserID),
+		AmountRub:  req.Amount,
+		Message:    req.Message,
+		Status:     "pending",
+		CreatedAt:  time.Now(),
+	}
+
+	if err := db.Create(&donation).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create donation"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"id":      donation.ID,
+		"status":  "pending",
+		"message": "Donation created. Redirecting to payment...",
+	})
 }
 
 func getUserDonationsHandler(c *gin.Context) {
-        userIDParam := c.Param("id")
-        userID, err := strconv.ParseUint(userIDParam, 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
-                return
-        }
-        
-        var donations []CreatorDonation
-        db.Where("to_user_id = ?", userID).
-                Order("created_at desc").
-                Limit(50).
-                Find(&donations)
-        
-        var total float64
-        db.Model(&CreatorDonation{}).
-                Where("to_user_id = ?", userID).
-                Select("COALESCE(SUM(amount_rub), 0)").
-                Scan(&total)
-        
-        c.JSON(http.StatusOK, gin.H{
-                "donations": donations,
-                "total":     total,
-        })
+	userIDParam := c.Param("id")
+	userID, err := strconv.ParseUint(userIDParam, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	var donations []CreatorDonation
+	db.Where("to_user_id = ?", userID).
+		Order("created_at desc").
+		Limit(50).
+		Find(&donations)
+
+	var total float64
+	db.Model(&CreatorDonation{}).
+		Where("to_user_id = ?", userID).
+		Select("COALESCE(SUM(amount_rub), 0)").
+		Scan(&total)
+
+	c.JSON(http.StatusOK, gin.H{
+		"donations": donations,
+		"total":     total,
+	})
 }
 
 // Premium Billing Endpoints
 
 func getPremiumSubscriptionHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var sub PremiumSubscription
-        if err := db.Preload("Plan").Where("user_id = ? AND status IN ?", uid, []string{"active", "cancelled"}).Order("current_period_end DESC").First(&sub).Error; err != nil {
-                c.JSON(http.StatusOK, gin.H{})
-                return
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "id":                   sub.ID,
-                "plan_id":              sub.PlanID,
-                "plan_name":            sub.Plan.Name,
-                "status":               sub.Status,
-                "current_period_start": sub.CurrentPeriodStart,
-                "current_period_end":   sub.CurrentPeriodEnd,
-                "auto_renew":           sub.AutoRenew,
-                "cancel_at_period_end": sub.CancelAtPeriodEnd,
-        })
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var sub PremiumSubscription
+	if err := db.Preload("Plan").Where("user_id = ? AND status IN ?", uid, []string{"active", "cancelled"}).Order("current_period_end DESC").First(&sub).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":                   sub.ID,
+		"plan_id":              sub.PlanID,
+		"plan_name":            sub.Plan.Name,
+		"status":               sub.Status,
+		"current_period_start": sub.CurrentPeriodStart,
+		"current_period_end":   sub.CurrentPeriodEnd,
+		"auto_renew":           sub.AutoRenew,
+		"cancel_at_period_end": sub.CancelAtPeriodEnd,
+	})
 }
 
 func checkoutPremiumHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var req struct {
-                PlanID    int    `json:"plan_id"`
-                PlanSlug  string `json:"plan_slug"`
-                PromoCode string `json:"promo_code"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
-        
-        if req.PlanID == 0 && req.PlanSlug == "" {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "plan_id or plan_slug required"})
-                return
-        }
-        
-        var existingSub PremiumSubscription
-        if db.Where("user_id = ? AND status = ?", uid, "active").First(&existingSub).RowsAffected > 0 {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Already have active subscription"})
-                return
-        }
-        
-        var plan SubscriptionPlan
-        if req.PlanSlug != "" {
-                if db.Where("slug = ?", req.PlanSlug).First(&plan).RowsAffected == 0 {
-                        c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
-                        return
-                }
-        } else if db.First(&plan, req.PlanID).RowsAffected == 0 {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
-                return
-        }
-        
-        finalAmount := plan.BasePriceRub
-        var discountRub float64
-        var promoCodeID *uint
-        
-        if req.PromoCode != "" {
-                discount, promo, _ := applyPromoCode(req.PromoCode, uint(plan.ID), uid)
-                if promo != nil {
-                        discountRub = discount
-                        finalAmount = plan.BasePriceRub - discount
-                        promoCodeID = &promo.ID
-                        if finalAmount < 0 {
-                                finalAmount = 0
-                        }
-                }
-        }
-        
-        transaction := PremiumTransaction{
-                UserID:          uid,
-                PlanID:          uint(plan.ID),
-                AmountRub:       finalAmount,
-                DiscountRub:     discountRub,
-                PromoCodeID:     promoCodeID,
-                Status:          "pending",
-                PaymentProvider: "yookassa",
-                Description:     "Подписка: " + plan.Name,
-        }
-        db.Create(&transaction)
-        
-        if finalAmount == 0 && promoCodeID != nil {
-                now := time.Now()
-                periodEnd := now.AddDate(0, 1, 0) // Monthly by default
-                
-                db.Model(&transaction).Updates(map[string]interface{}{
-                        "status":       "succeeded",
-                        "completed_at": now,
-                })
-                
-                sub := PremiumSubscription{
-                        UserID:             uid,
-                        PlanID:             uint(plan.ID),
-                        Status:             "active",
-                        CurrentPeriodStart: now,
-                        CurrentPeriodEnd:   periodEnd,
-                        AutoRenew:          true,
-                }
-                db.Create(&sub)
-                db.Model(&transaction).Update("subscription_id", sub.ID)
-                
-                db.Model(&PromoCode{}).Where("id = ?", *promoCodeID).Update("used_count", gorm.Expr("used_count + 1"))
-                db.Create(&PromoCodeUsage{
-                        PromoCodeID:   *promoCodeID,
-                        UserID:        uid,
-                        TransactionID: transaction.ID,
-                        DiscountRub:   discountRub,
-                })
-                
-                c.JSON(http.StatusOK, gin.H{
-                        "payment_id": transaction.ID,
-                        "status":     "free_with_promo",
-                        "message":    "Subscription activated with 100% discount",
-                })
-                return
-        }
-        
-        if yookassaService == nil {
-                c.JSON(http.StatusOK, gin.H{
-                        "payment_id":       transaction.ID,
-                        "confirmation_url": "",
-                        "message":          "YooKassa not configured. Please contact admin.",
-                })
-                return
-        }
-        
-        returnURL := os.Getenv("APP_URL")
-        if returnURL == "" {
-                returnURL = "https://nemaks.com"
-        }
-        
-        payment, err := yookassaService.CreatePayment(
-                transaction.ID,
-                finalAmount,
-                "Подписка "+plan.Name,
-                returnURL+"/premium?status=success",
-                true,
-        )
-        if err != nil {
-                log.Printf("[Billing] YooKassa payment error: %v", err)
-                db.Model(&transaction).Update("status", "failed")
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Payment creation failed"})
-                return
-        }
-        
-        db.Model(&transaction).Updates(map[string]interface{}{
-                "provider_payment_id": payment.ID,
-                "confirmation_url":    payment.Confirmation.ConfirmationURL,
-        })
-        
-        if promoCodeID != nil {
-                db.Model(&PromoCode{}).Where("id = ?", *promoCodeID).Update("used_count", gorm.Expr("used_count + 1"))
-                db.Create(&PromoCodeUsage{
-                        PromoCodeID:   *promoCodeID,
-                        UserID:        uid,
-                        TransactionID: transaction.ID,
-                        DiscountRub:   discountRub,
-                })
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "payment_id":       transaction.ID,
-                "confirmation_url": payment.Confirmation.ConfirmationURL,
-                "original_price":   plan.BasePriceRub,
-                "discount":         discountRub,
-                "final_price":      finalAmount,
-        })
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var req struct {
+		PlanID    int    `json:"plan_id"`
+		PlanSlug  string `json:"plan_slug"`
+		PromoCode string `json:"promo_code"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.PlanID == 0 && req.PlanSlug == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "plan_id or plan_slug required"})
+		return
+	}
+
+	var existingSub PremiumSubscription
+	if db.Where("user_id = ? AND status = ?", uid, "active").First(&existingSub).RowsAffected > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Already have active subscription"})
+		return
+	}
+
+	var plan SubscriptionPlan
+	if req.PlanSlug != "" {
+		if db.Where("slug = ?", req.PlanSlug).First(&plan).RowsAffected == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
+			return
+		}
+	} else if db.First(&plan, req.PlanID).RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
+		return
+	}
+
+	finalAmount := plan.BasePriceRub
+	var discountRub float64
+	var promoCodeID *uint
+
+	if req.PromoCode != "" {
+		discount, promo, _ := applyPromoCode(req.PromoCode, uint(plan.ID), uid)
+		if promo != nil {
+			discountRub = discount
+			finalAmount = plan.BasePriceRub - discount
+			promoCodeID = &promo.ID
+			if finalAmount < 0 {
+				finalAmount = 0
+			}
+		}
+	}
+
+	transaction := PremiumTransaction{
+		UserID:          uid,
+		PlanID:          uint(plan.ID),
+		AmountRub:       finalAmount,
+		DiscountRub:     discountRub,
+		PromoCodeID:     promoCodeID,
+		Status:          "pending",
+		PaymentProvider: "yookassa",
+		Description:     "Подписка: " + plan.Name,
+	}
+	db.Create(&transaction)
+
+	if finalAmount == 0 && promoCodeID != nil {
+		now := time.Now()
+		periodEnd := now.AddDate(0, 1, 0) // Monthly by default
+
+		db.Model(&transaction).Updates(map[string]interface{}{
+			"status":       "succeeded",
+			"completed_at": now,
+		})
+
+		sub := PremiumSubscription{
+			UserID:             uid,
+			PlanID:             uint(plan.ID),
+			Status:             "active",
+			CurrentPeriodStart: now,
+			CurrentPeriodEnd:   periodEnd,
+			AutoRenew:          true,
+		}
+		db.Create(&sub)
+		db.Model(&transaction).Update("subscription_id", sub.ID)
+
+		db.Model(&PromoCode{}).Where("id = ?", *promoCodeID).Update("used_count", gorm.Expr("used_count + 1"))
+		db.Create(&PromoCodeUsage{
+			PromoCodeID:   *promoCodeID,
+			UserID:        uid,
+			TransactionID: transaction.ID,
+			DiscountRub:   discountRub,
+		})
+
+		c.JSON(http.StatusOK, gin.H{
+			"payment_id": transaction.ID,
+			"status":     "free_with_promo",
+			"message":    "Subscription activated with 100% discount",
+		})
+		return
+	}
+
+	if yookassaService == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"payment_id":       transaction.ID,
+			"confirmation_url": "",
+			"message":          "YooKassa not configured. Please contact admin.",
+		})
+		return
+	}
+
+	returnURL := os.Getenv("APP_URL")
+	if returnURL == "" {
+		returnURL = "https://nemaks.com"
+	}
+
+	payment, err := yookassaService.CreatePayment(
+		transaction.ID,
+		finalAmount,
+		"Подписка "+plan.Name,
+		returnURL+"/premium?status=success",
+		true,
+	)
+	if err != nil {
+		log.Printf("[Billing] YooKassa payment error: %v", err)
+		db.Model(&transaction).Update("status", "failed")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Payment creation failed"})
+		return
+	}
+
+	db.Model(&transaction).Updates(map[string]interface{}{
+		"provider_payment_id": payment.ID,
+		"confirmation_url":    payment.Confirmation.ConfirmationURL,
+	})
+
+	if promoCodeID != nil {
+		db.Model(&PromoCode{}).Where("id = ?", *promoCodeID).Update("used_count", gorm.Expr("used_count + 1"))
+		db.Create(&PromoCodeUsage{
+			PromoCodeID:   *promoCodeID,
+			UserID:        uid,
+			TransactionID: transaction.ID,
+			DiscountRub:   discountRub,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"payment_id":       transaction.ID,
+		"confirmation_url": payment.Confirmation.ConfirmationURL,
+		"original_price":   plan.BasePriceRub,
+		"discount":         discountRub,
+		"final_price":      finalAmount,
+	})
 }
 
 func cancelPremiumHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var sub PremiumSubscription
-        if err := db.Where("user_id = ? AND status = ?", uid, "active").First(&sub).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "No active subscription"})
-                return
-        }
-        
-        now := time.Now()
-        db.Model(&sub).Updates(map[string]interface{}{
-                "cancel_at_period_end": true,
-                "cancelled_at":         now,
-                "status":               "cancelled",
-                "auto_renew":           false,
-        })
-        
-        go SendSubscriptionCancelled(uid, sub.CurrentPeriodEnd)
-        
-        c.JSON(http.StatusOK, gin.H{"status": "cancelled", "ends_at": sub.CurrentPeriodEnd})
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var sub PremiumSubscription
+	if err := db.Where("user_id = ? AND status = ?", uid, "active").First(&sub).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No active subscription"})
+		return
+	}
+
+	now := time.Now()
+	db.Model(&sub).Updates(map[string]interface{}{
+		"cancel_at_period_end": true,
+		"cancelled_at":         now,
+		"status":               "cancelled",
+		"auto_renew":           false,
+	})
+
+	go SendSubscriptionCancelled(uid, sub.CurrentPeriodEnd)
+
+	c.JSON(http.StatusOK, gin.H{"status": "cancelled", "ends_at": sub.CurrentPeriodEnd})
 }
 
 func getPremiumTransactionsHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var transactions []PremiumTransaction
-        db.Where("user_id = ?", uid).Order("created_at DESC").Limit(50).Find(&transactions)
-        
-        result := make([]gin.H, len(transactions))
-        for i, t := range transactions {
-                result[i] = gin.H{
-                        "id":               t.ID,
-                        "plan_id":          t.PlanID,
-                        "amount_rub":       t.AmountRub,
-                        "status":           t.Status,
-                        "payment_provider": t.PaymentProvider,
-                        "created_at":       t.CreatedAt,
-                        "completed_at":     t.CompletedAt,
-                }
-        }
-        
-        c.JSON(http.StatusOK, result)
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var transactions []PremiumTransaction
+	db.Where("user_id = ?", uid).Order("created_at DESC").Limit(50).Find(&transactions)
+
+	result := make([]gin.H, len(transactions))
+	for i, t := range transactions {
+		result[i] = gin.H{
+			"id":               t.ID,
+			"plan_id":          t.PlanID,
+			"amount_rub":       t.AmountRub,
+			"status":           t.Status,
+			"payment_provider": t.PaymentProvider,
+			"created_at":       t.CreatedAt,
+			"completed_at":     t.CompletedAt,
+		}
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 // yookassaWebhookCIDRs — официальные подсети, с которых ЮKassa отправляет
@@ -1294,23 +1297,23 @@ func getPremiumTransactionsHandler(c *gin.Context) {
 // (185.71.76.0/27, 185.71.77.0/27, 77.75.153.0/25, 77.75.154.128/25,
 // 77.75.156.11, 77.75.156.35, 2a02:5180::/32).
 var yookassaWebhookCIDRs = []string{
-        "185.71.76.0/27",
-        "185.71.77.0/27",
-        "77.75.153.0/25",
-        "77.75.154.128/25",
-        "77.75.156.11/32",
-        "77.75.156.35/32",
-        "2a02:5180::/32",
+	"185.71.76.0/27",
+	"185.71.77.0/27",
+	"77.75.153.0/25",
+	"77.75.154.128/25",
+	"77.75.156.11/32",
+	"77.75.156.35/32",
+	"2a02:5180::/32",
 }
 
 var yookassaWebhookNets []*net.IPNet
 
 func init() {
-        for _, cidr := range yookassaWebhookCIDRs {
-                if _, n, err := net.ParseCIDR(cidr); err == nil {
-                        yookassaWebhookNets = append(yookassaWebhookNets, n)
-                }
-        }
+	for _, cidr := range yookassaWebhookCIDRs {
+		if _, n, err := net.ParseCIDR(cidr); err == nil {
+			yookassaWebhookNets = append(yookassaWebhookNets, n)
+		}
+	}
 }
 
 // yookassaWebhookIPAllowed проверяет, что webhook пришёл с IP ЮKassa.
@@ -1318,1007 +1321,1006 @@ func init() {
 // (например, для тестовых стендов). Основная защита — перепроверка платежа
 // через API, IP-allowlist является дополнительным слоем.
 func yookassaWebhookIPAllowed(ip string) bool {
-        switch strings.ToLower(strings.TrimSpace(os.Getenv("YOOKASSA_WEBHOOK_IP_CHECK"))) {
-        case "false", "0", "off", "no":
-                return true
-        }
-        parsed := net.ParseIP(strings.TrimSpace(ip))
-        if parsed == nil {
-                return false
-        }
-        for _, n := range yookassaWebhookNets {
-                if n.Contains(parsed) {
-                        return true
-                }
-        }
-        return false
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("YOOKASSA_WEBHOOK_IP_CHECK"))) {
+	case "false", "0", "off", "no":
+		return true
+	}
+	parsed := net.ParseIP(strings.TrimSpace(ip))
+	if parsed == nil {
+		return false
+	}
+	for _, n := range yookassaWebhookNets {
+		if n.Contains(parsed) {
+			return true
+		}
+	}
+	return false
 }
 
 // yookassaPaymentVerification — ответ GET /v3/payments/{id} ЮKassa,
 // используется для независимой перепроверки webhook-уведомлений.
 type yookassaPaymentVerification struct {
-        ID     string `json:"id"`
-        Status string `json:"status"`
-        Paid   bool   `json:"paid"`
-        Amount struct {
-                Value    string `json:"value"`
-                Currency string `json:"currency"`
-        } `json:"amount"`
-        Metadata struct {
-                TransactionID string `json:"transaction_id"`
-        } `json:"metadata"`
-        PaymentMethod struct {
-                Type  string `json:"type"`
-                ID    string `json:"id"`
-                Saved bool   `json:"saved"`
-        } `json:"payment_method"`
+	ID     string `json:"id"`
+	Status string `json:"status"`
+	Paid   bool   `json:"paid"`
+	Amount struct {
+		Value    string `json:"value"`
+		Currency string `json:"currency"`
+	} `json:"amount"`
+	Metadata struct {
+		TransactionID string `json:"transaction_id"`
+	} `json:"metadata"`
+	PaymentMethod struct {
+		Type  string `json:"type"`
+		ID    string `json:"id"`
+		Saved bool   `json:"saved"`
+	} `json:"payment_method"`
 }
 
 // fetchYooKassaPayment запрашивает актуальное состояние платежа напрямую у ЮKassa
 // (basic-auth YOOKASSA_SHOP_ID:YOOKASSA_SECRET_KEY). Это защищает от поддельных
 // webhook'ов: доверяем только данным, полученным от api.yookassa.ru.
 func fetchYooKassaPayment(paymentID string) (*yookassaPaymentVerification, error) {
-        shopID := os.Getenv("YOOKASSA_SHOP_ID")
-        secretKey := os.Getenv("YOOKASSA_SECRET_KEY")
-        if shopID == "" || secretKey == "" {
-                return nil, fmt.Errorf("yookassa credentials not configured")
-        }
-        // Защита от SSRF/инъекции в path: payment ID ЮKassa — UUID-like, отбрасываем всё лишнее
-        for _, ch := range paymentID {
-                if !(ch >= 'a' && ch <= 'z' || ch >= '0' && ch <= '9' || ch == '-') {
-                        return nil, fmt.Errorf("invalid payment id format")
-                }
-        }
+	shopID := os.Getenv("YOOKASSA_SHOP_ID")
+	secretKey := os.Getenv("YOOKASSA_SECRET_KEY")
+	if shopID == "" || secretKey == "" {
+		return nil, fmt.Errorf("yookassa credentials not configured")
+	}
+	// Защита от SSRF/инъекции в path: payment ID ЮKassa — UUID-like, отбрасываем всё лишнее
+	for _, ch := range paymentID {
+		if !(ch >= 'a' && ch <= 'z' || ch >= '0' && ch <= '9' || ch == '-') {
+			return nil, fmt.Errorf("invalid payment id format")
+		}
+	}
 
-        req, err := http.NewRequest("GET", "https://api.yookassa.ru/v3/payments/"+paymentID, nil)
-        if err != nil {
-                return nil, err
-        }
-        auth := base64.StdEncoding.EncodeToString([]byte(shopID + ":" + secretKey))
-        req.Header.Set("Authorization", "Basic "+auth)
+	req, err := http.NewRequest("GET", "https://api.yookassa.ru/v3/payments/"+paymentID, nil)
+	if err != nil {
+		return nil, err
+	}
+	auth := base64.StdEncoding.EncodeToString([]byte(shopID + ":" + secretKey))
+	req.Header.Set("Authorization", "Basic "+auth)
 
-        client := &http.Client{Timeout: 15 * time.Second}
-        resp, err := client.Do(req)
-        if err != nil {
-                return nil, fmt.Errorf("yookassa api request failed: %w", err)
-        }
-        defer resp.Body.Close()
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("yookassa api request failed: %w", err)
+	}
+	defer resp.Body.Close()
 
-        body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-        if resp.StatusCode != http.StatusOK {
-                return nil, fmt.Errorf("yookassa api returned status %d", resp.StatusCode)
-        }
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("yookassa api returned status %d", resp.StatusCode)
+	}
 
-        var payment yookassaPaymentVerification
-        if err := json.Unmarshal(body, &payment); err != nil {
-                return nil, fmt.Errorf("failed to parse yookassa payment: %w", err)
-        }
-        return &payment, nil
+	var payment yookassaPaymentVerification
+	if err := json.Unmarshal(body, &payment); err != nil {
+		return nil, fmt.Errorf("failed to parse yookassa payment: %w", err)
+	}
+	return &payment, nil
 }
 
 func yookassaWebhookHandler(c *gin.Context) {
-        // Дополнительный слой защиты: IP-allowlist ЮKassa (feature-flag
-        // YOOKASSA_WEBHOOK_IP_CHECK, по умолчанию включён).
-        if !yookassaWebhookIPAllowed(c.ClientIP()) {
-                log.Printf("[Billing] Webhook rejected: IP %s is not in YooKassa allowlist", c.ClientIP())
-                c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
-                return
-        }
+	// Дополнительный слой защиты: IP-allowlist ЮKassa (feature-flag
+	// YOOKASSA_WEBHOOK_IP_CHECK, по умолчанию включён).
+	if !yookassaWebhookIPAllowed(c.ClientIP()) {
+		log.Printf("[Billing] Webhook rejected: IP %s is not in YooKassa allowlist", c.ClientIP())
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+		return
+	}
 
-        var payload struct {
-                Type   string `json:"type"`
-                Event  string `json:"event"`
-                Object struct {
-                        ID       string `json:"id"`
-                        Status   string `json:"status"`
-                        Metadata struct {
-                                TransactionID string `json:"transaction_id"`
-                        } `json:"metadata"`
-                        PaymentMethod struct {
-                                Type  string `json:"type"`
-                                ID    string `json:"id"`
-                                Saved bool   `json:"saved"`
-                        } `json:"payment_method"`
-                } `json:"object"`
-        }
+	var payload struct {
+		Type   string `json:"type"`
+		Event  string `json:"event"`
+		Object struct {
+			ID       string `json:"id"`
+			Status   string `json:"status"`
+			Metadata struct {
+				TransactionID string `json:"transaction_id"`
+			} `json:"metadata"`
+			PaymentMethod struct {
+				Type  string `json:"type"`
+				ID    string `json:"id"`
+				Saved bool   `json:"saved"`
+			} `json:"payment_method"`
+		} `json:"object"`
+	}
 
-        if err := c.BindJSON(&payload); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
-                return
-        }
+	if err := c.BindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
+		return
+	}
 
-        if payload.Object.Status == "succeeded" {
-                transactionID, err := strconv.ParseUint(payload.Object.Metadata.TransactionID, 10, 32)
-                if err != nil {
-                        log.Printf("Invalid transaction ID in webhook: %s", payload.Object.Metadata.TransactionID)
-                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID"})
-                        return
-                }
+	if payload.Object.Status == "succeeded" {
+		transactionID, err := strconv.ParseUint(payload.Object.Metadata.TransactionID, 10, 32)
+		if err != nil {
+			log.Printf("Invalid transaction ID in webhook: %s", payload.Object.Metadata.TransactionID)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID"})
+			return
+		}
 
-                var transaction PremiumTransaction
-                if db.First(&transaction, transactionID).RowsAffected == 0 {
-                        log.Printf("Transaction not found: %d", transactionID)
-                        c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
-                        return
-                }
+		var transaction PremiumTransaction
+		if db.First(&transaction, transactionID).RowsAffected == 0 {
+			log.Printf("Transaction not found: %d", transactionID)
+			c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
+			return
+		}
 
-                if transaction.Status == "succeeded" {
-                        c.JSON(http.StatusOK, gin.H{"status": "already_processed"})
-                        return
-                }
+		if transaction.Status == "succeeded" {
+			c.JSON(http.StatusOK, gin.H{"status": "already_processed"})
+			return
+		}
 
-                // КРИТИЧНО: не доверяем телу webhook. Перепроверяем платёж
-                // напрямую через API ЮKassa и активируем подписку только после
-                // успешной сверки всех полей с данными в БД.
-                verified, err := fetchYooKassaPayment(payload.Object.ID)
-                if err != nil {
-                        // Временная ошибка/не настроено — отвечаем 503, чтобы
-                        // ЮKassa повторила уведомление позже. Ничего не активируем.
-                        log.Printf("[Billing] Webhook verification unavailable for payment %s: %v", payload.Object.ID, err)
-                        c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Payment verification unavailable"})
-                        return
-                }
+		// КРИТИЧНО: не доверяем телу webhook. Перепроверяем платёж
+		// напрямую через API ЮKassa и активируем подписку только после
+		// успешной сверки всех полей с данными в БД.
+		verified, err := fetchYooKassaPayment(payload.Object.ID)
+		if err != nil {
+			// Временная ошибка/не настроено — отвечаем 503, чтобы
+			// ЮKassa повторила уведомление позже. Ничего не активируем.
+			log.Printf("[Billing] Webhook verification unavailable for payment %s: %v", payload.Object.ID, err)
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Payment verification unavailable"})
+			return
+		}
 
-                if verified.Status != "succeeded" || !verified.Paid {
-                        log.Printf("[Billing] Webhook rejected: payment %s real status is %q (paid=%v)", payload.Object.ID, verified.Status, verified.Paid)
-                        c.JSON(http.StatusBadRequest, gin.H{"error": "Payment is not succeeded"})
-                        return
-                }
+		if verified.Status != "succeeded" || !verified.Paid {
+			log.Printf("[Billing] Webhook rejected: payment %s real status is %q (paid=%v)", payload.Object.ID, verified.Status, verified.Paid)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Payment is not succeeded"})
+			return
+		}
 
-                // Сверка transaction_id из metadata с транзакцией в БД
-                if verified.Metadata.TransactionID != strconv.FormatUint(transactionID, 10) {
-                        log.Printf("[Billing] Webhook rejected: payment %s metadata transaction_id=%q does not match %d", payload.Object.ID, verified.Metadata.TransactionID, transactionID)
-                        c.JSON(http.StatusBadRequest, gin.H{"error": "Payment metadata mismatch"})
-                        return
-                }
+		// Сверка transaction_id из metadata с транзакцией в БД
+		if verified.Metadata.TransactionID != strconv.FormatUint(transactionID, 10) {
+			log.Printf("[Billing] Webhook rejected: payment %s metadata transaction_id=%q does not match %d", payload.Object.ID, verified.Metadata.TransactionID, transactionID)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Payment metadata mismatch"})
+			return
+		}
 
-                // Если платёж уже привязан к транзакции — ID обязан совпадать
-                if transaction.ProviderPaymentID != "" && transaction.ProviderPaymentID != payload.Object.ID {
-                        log.Printf("[Billing] Webhook rejected: transaction %d is bound to payment %s, got %s", transaction.ID, transaction.ProviderPaymentID, payload.Object.ID)
-                        c.JSON(http.StatusBadRequest, gin.H{"error": "Payment ID mismatch"})
-                        return
-                }
+		// Если платёж уже привязан к транзакции — ID обязан совпадать
+		if transaction.ProviderPaymentID != "" && transaction.ProviderPaymentID != payload.Object.ID {
+			log.Printf("[Billing] Webhook rejected: transaction %d is bound to payment %s, got %s", transaction.ID, transaction.ProviderPaymentID, payload.Object.ID)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Payment ID mismatch"})
+			return
+		}
 
-                // Сверка суммы платежа с суммой транзакции
-                verifiedAmount, err := strconv.ParseFloat(verified.Amount.Value, 64)
-                if err != nil || verifiedAmount < transaction.AmountRub-0.01 || verifiedAmount > transaction.AmountRub+0.01 {
-                        log.Printf("[Billing] Webhook rejected: payment %s amount %q does not match transaction %d amount %.2f", payload.Object.ID, verified.Amount.Value, transaction.ID, transaction.AmountRub)
-                        c.JSON(http.StatusBadRequest, gin.H{"error": "Payment amount mismatch"})
-                        return
-                }
+		// Сверка суммы платежа с суммой транзакции
+		verifiedAmount, err := strconv.ParseFloat(verified.Amount.Value, 64)
+		if err != nil || verifiedAmount < transaction.AmountRub-0.01 || verifiedAmount > transaction.AmountRub+0.01 {
+			log.Printf("[Billing] Webhook rejected: payment %s amount %q does not match transaction %d amount %.2f", payload.Object.ID, verified.Amount.Value, transaction.ID, transaction.AmountRub)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Payment amount mismatch"})
+			return
+		}
 
-                now := time.Now()
-                transaction.Status = "succeeded"
-                transaction.CompletedAt = &now
-                transaction.ProviderPaymentID = payload.Object.ID
-                db.Save(&transaction)
-                
-                var plan PremiumPlan
-                db.First(&plan, transaction.PlanID)
-                
-                periodEnd := now.AddDate(0, 1, 0)
-                if plan.BillingCycle == "quarterly" {
-                        periodEnd = now.AddDate(0, 3, 0)
-                } else if plan.BillingCycle == "annual" {
-                        periodEnd = now.AddDate(1, 0, 0)
-                }
-                
-                // Данные о способе оплаты берём из верифицированного ответа API,
-                // а не из тела webhook
-                paymentMethodID := ""
-                if verified.PaymentMethod.Saved && verified.PaymentMethod.ID != "" {
-                        paymentMethodID = verified.PaymentMethod.ID
-                        log.Printf("[Billing] Saved payment method %s for user %d", paymentMethodID, transaction.UserID)
-                }
-                
-                var existingSub PremiumSubscription
-                if db.Where("user_id = ?", transaction.UserID).First(&existingSub).RowsAffected > 0 {
-                        updates := map[string]interface{}{
-                                "plan_id":              transaction.PlanID,
-                                "status":               "active",
-                                "current_period_start": now,
-                                "current_period_end":   periodEnd,
-                                "auto_renew":           true,
-                                "cancel_at_period_end": false,
-                                "cancelled_at":         nil,
-                        }
-                        if paymentMethodID != "" {
-                                updates["payment_method_id"] = paymentMethodID
-                        }
-                        db.Model(&existingSub).Updates(updates)
-                        db.Model(&transaction).Update("subscription_id", existingSub.ID)
-                } else {
-                        sub := PremiumSubscription{
-                                UserID:             transaction.UserID,
-                                PlanID:             transaction.PlanID,
-                                Status:             "active",
-                                CurrentPeriodStart: now,
-                                CurrentPeriodEnd:   periodEnd,
-                                AutoRenew:          true,
-                                PaymentMethodID:    paymentMethodID,
-                        }
-                        db.Create(&sub)
-                        db.Model(&transaction).Update("subscription_id", sub.ID)
-                }
-                
-                go SendPaymentConfirmation(transaction.UserID, plan.Name, plan.PriceRub)
-                go grantReferralBonus(transaction.UserID, 7, "premium_subscription")
-                go activateBoostFromWebhook(transaction.ID)
-                
-                log.Printf("Premium subscription activated for user %d, plan %d", transaction.UserID, transaction.PlanID)
-        }
-        
-        c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		now := time.Now()
+		transaction.Status = "succeeded"
+		transaction.CompletedAt = &now
+		transaction.ProviderPaymentID = payload.Object.ID
+		db.Save(&transaction)
+
+		var plan PremiumPlan
+		db.First(&plan, transaction.PlanID)
+
+		periodEnd := now.AddDate(0, 1, 0)
+		if plan.BillingCycle == "quarterly" {
+			periodEnd = now.AddDate(0, 3, 0)
+		} else if plan.BillingCycle == "annual" {
+			periodEnd = now.AddDate(1, 0, 0)
+		}
+
+		// Данные о способе оплаты берём из верифицированного ответа API,
+		// а не из тела webhook
+		paymentMethodID := ""
+		if verified.PaymentMethod.Saved && verified.PaymentMethod.ID != "" {
+			paymentMethodID = verified.PaymentMethod.ID
+			log.Printf("[Billing] Saved payment method %s for user %d", paymentMethodID, transaction.UserID)
+		}
+
+		var existingSub PremiumSubscription
+		if db.Where("user_id = ?", transaction.UserID).First(&existingSub).RowsAffected > 0 {
+			updates := map[string]interface{}{
+				"plan_id":              transaction.PlanID,
+				"status":               "active",
+				"current_period_start": now,
+				"current_period_end":   periodEnd,
+				"auto_renew":           true,
+				"cancel_at_period_end": false,
+				"cancelled_at":         nil,
+			}
+			if paymentMethodID != "" {
+				updates["payment_method_id"] = paymentMethodID
+			}
+			db.Model(&existingSub).Updates(updates)
+			db.Model(&transaction).Update("subscription_id", existingSub.ID)
+		} else {
+			sub := PremiumSubscription{
+				UserID:             transaction.UserID,
+				PlanID:             transaction.PlanID,
+				Status:             "active",
+				CurrentPeriodStart: now,
+				CurrentPeriodEnd:   periodEnd,
+				AutoRenew:          true,
+				PaymentMethodID:    paymentMethodID,
+			}
+			db.Create(&sub)
+			db.Model(&transaction).Update("subscription_id", sub.ID)
+		}
+
+		go SendPaymentConfirmation(transaction.UserID, plan.Name, plan.PriceRub)
+		go grantReferralBonus(transaction.UserID, 7, "premium_subscription")
+		go activateBoostFromWebhook(transaction.ID)
+
+		log.Printf("Premium subscription activated for user %d, plan %d", transaction.UserID, transaction.PlanID)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 // Seed premium plans
 func seedPremiumPlans() {
-        plans := []PremiumPlan{
-                {
-                        Slug:         "basic-monthly",
-                        Name:         "Basic",
-                        Description:  "Базовый план для начинающих",
-                        PriceRub:     199,
-                        BillingCycle: "monthly",
-                        Features:     `["Без рекламы","Базовые темы оформления","Поддержка 24/7"]`,
-                        IsActive:     true,
-                        SortOrder:    1,
-                },
-                {
-                        Slug:         "basic-quarterly",
-                        Name:         "Basic (3 месяца)",
-                        Description:  "Базовый план - скидка 15%",
-                        PriceRub:     507,
-                        BillingCycle: "quarterly",
-                        Features:     `["Без рекламы","Базовые темы оформления","Поддержка 24/7","Скидка 15%"]`,
-                        IsActive:     true,
-                        SortOrder:    2,
-                },
-                {
-                        Slug:         "basic-annual",
-                        Name:         "Basic (1 год)",
-                        Description:  "Базовый план - скидка 25%",
-                        PriceRub:     1789,
-                        BillingCycle: "annual",
-                        Features:     `["Без рекламы","Базовые темы оформления","Поддержка 24/7","Скидка 25%"]`,
-                        IsActive:     true,
-                        SortOrder:    3,
-                },
-                {
-                        Slug:         "pro-monthly",
-                        Name:         "Pro",
-                        Description:  "Расширенные возможности для активных пользователей",
-                        PriceRub:     499,
-                        BillingCycle: "monthly",
-                        Features:     `["Все из Basic","HD видео","Эксклюзивные темы","Приоритетная поддержка","Расширенное хранилище"]`,
-                        IsActive:     true,
-                        SortOrder:    4,
-                },
-                {
-                        Slug:         "pro-quarterly",
-                        Name:         "Pro (3 месяца)",
-                        Description:  "Расширенные возможности - скидка 15%",
-                        PriceRub:     1272,
-                        BillingCycle: "quarterly",
-                        Features:     `["Все из Basic","HD видео","Эксклюзивные темы","Приоритетная поддержка","Расширенное хранилище","Скидка 15%"]`,
-                        IsActive:     true,
-                        SortOrder:    5,
-                },
-                {
-                        Slug:         "pro-annual",
-                        Name:         "Pro (1 год)",
-                        Description:  "Расширенные возможности - скидка 25%",
-                        PriceRub:     4491,
-                        BillingCycle: "annual",
-                        Features:     `["Все из Basic","HD видео","Эксклюзивные темы","Приоритетная поддержка","Расширенное хранилище","Скидка 25%"]`,
-                        IsActive:     true,
-                        SortOrder:    6,
-                },
-                {
-                        Slug:         "vip-monthly",
-                        Name:         "VIP",
-                        Description:  "Максимальные возможности и эксклюзивный доступ",
-                        PriceRub:     999,
-                        BillingCycle: "monthly",
-                        Features:     `["Все из Pro","VIP значок","Ранний доступ к новым функциям","Персональный менеджер","Неограниченное хранилище"]`,
-                        IsActive:     true,
-                        SortOrder:    7,
-                },
-                {
-                        Slug:         "vip-quarterly",
-                        Name:         "VIP (3 месяца)",
-                        Description:  "Максимальные возможности - скидка 15%",
-                        PriceRub:     2547,
-                        BillingCycle: "quarterly",
-                        Features:     `["Все из Pro","VIP значок","Ранний доступ к новым функциям","Персональный менеджер","Неограниченное хранилище","Скидка 15%"]`,
-                        IsActive:     true,
-                        SortOrder:    8,
-                },
-                {
-                        Slug:         "vip-annual",
-                        Name:         "VIP (1 год)",
-                        Description:  "Максимальные возможности - скидка 25%",
-                        PriceRub:     8991,
-                        BillingCycle: "annual",
-                        Features:     `["Все из Pro","VIP значок","Ранний доступ к новым функциям","Персональный менеджер","Неограниченное хранилище","Скидка 25%"]`,
-                        IsActive:     true,
-                        SortOrder:    9,
-                },
-        }
-        
-        for _, plan := range plans {
-                var existing PremiumPlan
-                if db.Where("slug = ?", plan.Slug).First(&existing).RowsAffected == 0 {
-                        db.Create(&plan)
-                        log.Printf("Created premium plan: %s", plan.Name)
-                }
-        }
+	plans := []PremiumPlan{
+		{
+			Slug:         "basic-monthly",
+			Name:         "Basic",
+			Description:  "Базовый план для начинающих",
+			PriceRub:     199,
+			BillingCycle: "monthly",
+			Features:     `["Без рекламы","Базовые темы оформления","Поддержка 24/7"]`,
+			IsActive:     true,
+			SortOrder:    1,
+		},
+		{
+			Slug:         "basic-quarterly",
+			Name:         "Basic (3 месяца)",
+			Description:  "Базовый план - скидка 15%",
+			PriceRub:     507,
+			BillingCycle: "quarterly",
+			Features:     `["Без рекламы","Базовые темы оформления","Поддержка 24/7","Скидка 15%"]`,
+			IsActive:     true,
+			SortOrder:    2,
+		},
+		{
+			Slug:         "basic-annual",
+			Name:         "Basic (1 год)",
+			Description:  "Базовый план - скидка 25%",
+			PriceRub:     1789,
+			BillingCycle: "annual",
+			Features:     `["Без рекламы","Базовые темы оформления","Поддержка 24/7","Скидка 25%"]`,
+			IsActive:     true,
+			SortOrder:    3,
+		},
+		{
+			Slug:         "pro-monthly",
+			Name:         "Pro",
+			Description:  "Расширенные возможности для активных пользователей",
+			PriceRub:     499,
+			BillingCycle: "monthly",
+			Features:     `["Все из Basic","HD видео","Эксклюзивные темы","Приоритетная поддержка","Расширенное хранилище"]`,
+			IsActive:     true,
+			SortOrder:    4,
+		},
+		{
+			Slug:         "pro-quarterly",
+			Name:         "Pro (3 месяца)",
+			Description:  "Расширенные возможности - скидка 15%",
+			PriceRub:     1272,
+			BillingCycle: "quarterly",
+			Features:     `["Все из Basic","HD видео","Эксклюзивные темы","Приоритетная поддержка","Расширенное хранилище","Скидка 15%"]`,
+			IsActive:     true,
+			SortOrder:    5,
+		},
+		{
+			Slug:         "pro-annual",
+			Name:         "Pro (1 год)",
+			Description:  "Расширенные возможности - скидка 25%",
+			PriceRub:     4491,
+			BillingCycle: "annual",
+			Features:     `["Все из Basic","HD видео","Эксклюзивные темы","Приоритетная поддержка","Расширенное хранилище","Скидка 25%"]`,
+			IsActive:     true,
+			SortOrder:    6,
+		},
+		{
+			Slug:         "vip-monthly",
+			Name:         "VIP",
+			Description:  "Максимальные возможности и эксклюзивный доступ",
+			PriceRub:     999,
+			BillingCycle: "monthly",
+			Features:     `["Все из Pro","VIP значок","Ранний доступ к новым функциям","Персональный менеджер","Неограниченное хранилище"]`,
+			IsActive:     true,
+			SortOrder:    7,
+		},
+		{
+			Slug:         "vip-quarterly",
+			Name:         "VIP (3 месяца)",
+			Description:  "Максимальные возможности - скидка 15%",
+			PriceRub:     2547,
+			BillingCycle: "quarterly",
+			Features:     `["Все из Pro","VIP значок","Ранний доступ к новым функциям","Персональный менеджер","Неограниченное хранилище","Скидка 15%"]`,
+			IsActive:     true,
+			SortOrder:    8,
+		},
+		{
+			Slug:         "vip-annual",
+			Name:         "VIP (1 год)",
+			Description:  "Максимальные возможности - скидка 25%",
+			PriceRub:     8991,
+			BillingCycle: "annual",
+			Features:     `["Все из Pro","VIP значок","Ранний доступ к новым функциям","Персональный менеджер","Неограниченное хранилище","Скидка 25%"]`,
+			IsActive:     true,
+			SortOrder:    9,
+		},
+	}
+
+	for _, plan := range plans {
+		var existing PremiumPlan
+		if db.Where("slug = ?", plan.Slug).First(&existing).RowsAffected == 0 {
+			db.Create(&plan)
+			log.Printf("Created premium plan: %s", plan.Name)
+		}
+	}
 }
 
 func getAdminBillingStatsHandler(c *gin.Context) {
-        now := time.Now()
-        startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-        
-        var activeSubscriptions int64
-        db.Model(&PremiumSubscription{}).Where("status = ?", "active").Count(&activeSubscriptions)
-        
-        var monthlyRevenue float64
-        db.Model(&PremiumTransaction{}).
-                Select("COALESCE(SUM(amount_rub), 0)").
-                Where("status = ? AND created_at >= ?", "succeeded", startOfMonth).
-                Scan(&monthlyRevenue)
-        
-        var totalRevenue float64
-        db.Model(&PremiumTransaction{}).
-                Select("COALESCE(SUM(amount_rub), 0)").
-                Where("status = ?", "succeeded").
-                Scan(&totalRevenue)
-        
-        var newSubscriptions int64
-        db.Model(&PremiumSubscription{}).Where("created_at >= ?", startOfMonth).Count(&newSubscriptions)
-        
-        var cancelledSubscriptions int64
-        db.Model(&PremiumSubscription{}).Where("cancelled_at >= ?", startOfMonth).Count(&cancelledSubscriptions)
-        
-        var churnRate float64
-        if activeSubscriptions > 0 {
-                churnRate = float64(cancelledSubscriptions) / float64(activeSubscriptions+cancelledSubscriptions) * 100
-        }
-        
-        var recentTransactions []PremiumTransaction
-        db.Preload("User").Order("created_at DESC").Limit(20).Find(&recentTransactions)
-        
-        txList := make([]gin.H, len(recentTransactions))
-        for i, tx := range recentTransactions {
-                username := ""
-                if tx.User.Username != "" {
-                        username = tx.User.Username
-                }
-                txList[i] = gin.H{
-                        "id":           tx.ID,
-                        "user_id":      tx.UserID,
-                        "username":     username,
-                        "amount_rub":   tx.AmountRub,
-                        "status":       tx.Status,
-                        "created_at":   tx.CreatedAt,
-                        "completed_at": tx.CompletedAt,
-                }
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "active_subscriptions":    activeSubscriptions,
-                "monthly_revenue":         monthlyRevenue,
-                "total_revenue":           totalRevenue,
-                "new_subscriptions":       newSubscriptions,
-                "cancelled_subscriptions": cancelledSubscriptions,
-                "churn_rate":              churnRate,
-                "recent_transactions":     txList,
-        })
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	var activeSubscriptions int64
+	db.Model(&PremiumSubscription{}).Where("status = ?", "active").Count(&activeSubscriptions)
+
+	var monthlyRevenue float64
+	db.Model(&PremiumTransaction{}).
+		Select("COALESCE(SUM(amount_rub), 0)").
+		Where("status = ? AND created_at >= ?", "succeeded", startOfMonth).
+		Scan(&monthlyRevenue)
+
+	var totalRevenue float64
+	db.Model(&PremiumTransaction{}).
+		Select("COALESCE(SUM(amount_rub), 0)").
+		Where("status = ?", "succeeded").
+		Scan(&totalRevenue)
+
+	var newSubscriptions int64
+	db.Model(&PremiumSubscription{}).Where("created_at >= ?", startOfMonth).Count(&newSubscriptions)
+
+	var cancelledSubscriptions int64
+	db.Model(&PremiumSubscription{}).Where("cancelled_at >= ?", startOfMonth).Count(&cancelledSubscriptions)
+
+	var churnRate float64
+	if activeSubscriptions > 0 {
+		churnRate = float64(cancelledSubscriptions) / float64(activeSubscriptions+cancelledSubscriptions) * 100
+	}
+
+	var recentTransactions []PremiumTransaction
+	db.Preload("User").Order("created_at DESC").Limit(20).Find(&recentTransactions)
+
+	txList := make([]gin.H, len(recentTransactions))
+	for i, tx := range recentTransactions {
+		username := ""
+		if tx.User.Username != "" {
+			username = tx.User.Username
+		}
+		txList[i] = gin.H{
+			"id":           tx.ID,
+			"user_id":      tx.UserID,
+			"username":     username,
+			"amount_rub":   tx.AmountRub,
+			"status":       tx.Status,
+			"created_at":   tx.CreatedAt,
+			"completed_at": tx.CompletedAt,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"active_subscriptions":    activeSubscriptions,
+		"monthly_revenue":         monthlyRevenue,
+		"total_revenue":           totalRevenue,
+		"new_subscriptions":       newSubscriptions,
+		"cancelled_subscriptions": cancelledSubscriptions,
+		"churn_rate":              churnRate,
+		"recent_transactions":     txList,
+	})
 }
 
 // Promo Code Handlers
 func validatePromoCodeHandler(c *gin.Context) {
-        code := c.Query("code")
-        planIDStr := c.Query("plan_id")
-        
-        if code == "" {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Promo code required"})
-                return
-        }
-        
-        var promo PromoCode
-        if db.Where("code = ? AND is_active = ?", code, true).First(&promo).RowsAffected == 0 {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Invalid promo code"})
-                return
-        }
-        
-        now := time.Now()
-        if now.Before(promo.ValidFrom) || now.After(promo.ValidUntil) {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Promo code expired"})
-                return
-        }
-        
-        if promo.MaxUses > 0 && promo.UsedCount >= promo.MaxUses {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Promo code usage limit reached"})
-                return
-        }
-        
-        var plan PremiumPlan
-        if planIDStr != "" {
-                planID, errParse := strconv.ParseUint(planIDStr, 10, 32)
-                if errParse != nil {
-                        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid plan ID"})
-                        return
-                }
-                if db.First(&plan, planID).RowsAffected > 0 {
-                        if plan.PriceRub < promo.MinPurchase {
-                                c.JSON(http.StatusBadRequest, gin.H{"error": "Minimum purchase not met"})
-                                return
-                        }
-                }
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "valid":          true,
-                "discount_type":  promo.DiscountType,
-                "discount_value": promo.DiscountValue,
-                "description":    promo.Description,
-        })
+	code := c.Query("code")
+	planIDStr := c.Query("plan_id")
+
+	if code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Promo code required"})
+		return
+	}
+
+	var promo PromoCode
+	if db.Where("code = ? AND is_active = ?", code, true).First(&promo).RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Invalid promo code"})
+		return
+	}
+
+	now := time.Now()
+	if now.Before(promo.ValidFrom) || now.After(promo.ValidUntil) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Promo code expired"})
+		return
+	}
+
+	if promo.MaxUses > 0 && promo.UsedCount >= promo.MaxUses {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Promo code usage limit reached"})
+		return
+	}
+
+	var plan PremiumPlan
+	if planIDStr != "" {
+		planID, errParse := strconv.ParseUint(planIDStr, 10, 32)
+		if errParse != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid plan ID"})
+			return
+		}
+		if db.First(&plan, planID).RowsAffected > 0 {
+			if plan.PriceRub < promo.MinPurchase {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Minimum purchase not met"})
+				return
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"valid":          true,
+		"discount_type":  promo.DiscountType,
+		"discount_value": promo.DiscountValue,
+		"description":    promo.Description,
+	})
 }
 
 func applyPromoCode(code string, planID uint, userID uint) (float64, *PromoCode, error) {
-        var promo PromoCode
-        if db.Where("code = ? AND is_active = ?", code, true).First(&promo).RowsAffected == 0 {
-                return 0, nil, nil
-        }
-        
-        now := time.Now()
-        if now.Before(promo.ValidFrom) || now.After(promo.ValidUntil) {
-                return 0, nil, nil
-        }
-        
-        if promo.MaxUses > 0 && promo.UsedCount >= promo.MaxUses {
-                return 0, nil, nil
-        }
-        
-        var existing PromoCodeUsage
-        if db.Where("promo_code_id = ? AND user_id = ?", promo.ID, userID).First(&existing).RowsAffected > 0 {
-                return 0, nil, nil
-        }
-        
-        var plan PremiumPlan
-        if db.First(&plan, planID).RowsAffected == 0 {
-                return 0, nil, nil
-        }
-        
-        if plan.PriceRub < promo.MinPurchase {
-                return 0, nil, nil
-        }
-        
-        var discount float64
-        if promo.DiscountType == "percent" {
-                discount = plan.PriceRub * (promo.DiscountValue / 100)
-        } else {
-                discount = promo.DiscountValue
-        }
-        
-        if discount > plan.PriceRub {
-                discount = plan.PriceRub
-        }
-        
-        return discount, &promo, nil
+	var promo PromoCode
+	if db.Where("code = ? AND is_active = ?", code, true).First(&promo).RowsAffected == 0 {
+		return 0, nil, nil
+	}
+
+	now := time.Now()
+	if now.Before(promo.ValidFrom) || now.After(promo.ValidUntil) {
+		return 0, nil, nil
+	}
+
+	if promo.MaxUses > 0 && promo.UsedCount >= promo.MaxUses {
+		return 0, nil, nil
+	}
+
+	var existing PromoCodeUsage
+	if db.Where("promo_code_id = ? AND user_id = ?", promo.ID, userID).First(&existing).RowsAffected > 0 {
+		return 0, nil, nil
+	}
+
+	var plan PremiumPlan
+	if db.First(&plan, planID).RowsAffected == 0 {
+		return 0, nil, nil
+	}
+
+	if plan.PriceRub < promo.MinPurchase {
+		return 0, nil, nil
+	}
+
+	var discount float64
+	if promo.DiscountType == "percent" {
+		discount = plan.PriceRub * (promo.DiscountValue / 100)
+	} else {
+		discount = promo.DiscountValue
+	}
+
+	if discount > plan.PriceRub {
+		discount = plan.PriceRub
+	}
+
+	return discount, &promo, nil
 }
 
 func createPromoCodeHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var user User
-        if db.First(&user, uid).RowsAffected == 0 || user.Role != "admin" {
-                c.JSON(http.StatusForbidden, gin.H{"error": "Admin only"})
-                return
-        }
-        
-        var req struct {
-                Code            string  `json:"code" binding:"required"`
-                Description     string  `json:"description"`
-                DiscountType    string  `json:"discount_type" binding:"required"`
-                DiscountValue   float64 `json:"discount_value" binding:"required"`
-                MaxUses         int     `json:"max_uses"`
-                MinPurchase     float64 `json:"min_purchase"`
-                ValidFrom       string  `json:"valid_from"`
-                ValidUntil      string  `json:"valid_until"`
-                ApplicablePlans string  `json:"applicable_plans"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
-        
-        validFrom := time.Now()
-        validUntil := time.Now().AddDate(1, 0, 0)
-        
-        if req.ValidFrom != "" {
-                if t, err := time.Parse("2006-01-02", req.ValidFrom); err == nil {
-                        validFrom = t
-                }
-        }
-        if req.ValidUntil != "" {
-                if t, err := time.Parse("2006-01-02", req.ValidUntil); err == nil {
-                        validUntil = t
-                }
-        }
-        
-        promo := PromoCode{
-                Code:            req.Code,
-                Description:     req.Description,
-                DiscountType:    req.DiscountType,
-                DiscountValue:   req.DiscountValue,
-                MaxUses:         req.MaxUses,
-                MinPurchase:     req.MinPurchase,
-                ValidFrom:       validFrom,
-                ValidUntil:      validUntil,
-                ApplicablePlans: req.ApplicablePlans,
-                IsActive:        true,
-                CreatedBy:       uid,
-        }
-        
-        if err := db.Create(&promo).Error; err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Code already exists"})
-                return
-        }
-        
-        c.JSON(http.StatusCreated, promo)
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var user User
+	if db.First(&user, uid).RowsAffected == 0 || user.Role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Admin only"})
+		return
+	}
+
+	var req struct {
+		Code            string  `json:"code" binding:"required"`
+		Description     string  `json:"description"`
+		DiscountType    string  `json:"discount_type" binding:"required"`
+		DiscountValue   float64 `json:"discount_value" binding:"required"`
+		MaxUses         int     `json:"max_uses"`
+		MinPurchase     float64 `json:"min_purchase"`
+		ValidFrom       string  `json:"valid_from"`
+		ValidUntil      string  `json:"valid_until"`
+		ApplicablePlans string  `json:"applicable_plans"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	validFrom := time.Now()
+	validUntil := time.Now().AddDate(1, 0, 0)
+
+	if req.ValidFrom != "" {
+		if t, err := time.Parse("2006-01-02", req.ValidFrom); err == nil {
+			validFrom = t
+		}
+	}
+	if req.ValidUntil != "" {
+		if t, err := time.Parse("2006-01-02", req.ValidUntil); err == nil {
+			validUntil = t
+		}
+	}
+
+	promo := PromoCode{
+		Code:            req.Code,
+		Description:     req.Description,
+		DiscountType:    req.DiscountType,
+		DiscountValue:   req.DiscountValue,
+		MaxUses:         req.MaxUses,
+		MinPurchase:     req.MinPurchase,
+		ValidFrom:       validFrom,
+		ValidUntil:      validUntil,
+		ApplicablePlans: req.ApplicablePlans,
+		IsActive:        true,
+		CreatedBy:       uid,
+	}
+
+	if err := db.Create(&promo).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Code already exists"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, promo)
 }
 
 func getPromoCodesHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var user User
-        if db.First(&user, uid).RowsAffected == 0 || user.Role != "admin" {
-                c.JSON(http.StatusForbidden, gin.H{"error": "Admin only"})
-                return
-        }
-        
-        var promos []PromoCode
-        db.Order("created_at DESC").Find(&promos)
-        c.JSON(http.StatusOK, promos)
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var user User
+	if db.First(&user, uid).RowsAffected == 0 || user.Role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Admin only"})
+		return
+	}
+
+	var promos []PromoCode
+	db.Order("created_at DESC").Find(&promos)
+	c.JSON(http.StatusOK, promos)
 }
 
 func deletePromoCodeHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var user User
-        if db.First(&user, uid).RowsAffected == 0 || user.Role != "admin" {
-                c.JSON(http.StatusForbidden, gin.H{"error": "Admin only"})
-                return
-        }
-        
-        promoID := c.Param("id")
-        db.Model(&PromoCode{}).Where("id = ?", promoID).Update("is_active", false)
-        c.JSON(http.StatusOK, gin.H{"status": "deleted"})
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var user User
+	if db.First(&user, uid).RowsAffected == 0 || user.Role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Admin only"})
+		return
+	}
+
+	promoID := c.Param("id")
+	db.Model(&PromoCode{}).Where("id = ?", promoID).Update("is_active", false)
+	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
 // Trial Period Handler
 func startTrialHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var req struct {
-                PlanID uint `json:"plan_id" binding:"required"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
-        
-        var existingSub PremiumSubscription
-        if db.Where("user_id = ?", uid).First(&existingSub).RowsAffected > 0 {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Already have subscription"})
-                return
-        }
-        
-        var plan PremiumPlan
-        if db.First(&plan, req.PlanID).RowsAffected == 0 {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
-                return
-        }
-        
-        now := time.Now()
-        trialEnd := now.AddDate(0, 0, 7)
-        
-        sub := PremiumSubscription{
-                UserID:             uid,
-                PlanID:             req.PlanID,
-                Status:             "trialing",
-                CurrentPeriodStart: now,
-                CurrentPeriodEnd:   trialEnd,
-                TrialEnd:           &trialEnd,
-                IsTrialing:         true,
-                AutoRenew:          false,
-        }
-        db.Create(&sub)
-        
-        c.JSON(http.StatusCreated, gin.H{
-                "message":   "Trial started",
-                "trial_end": trialEnd,
-                "plan":      plan.Name,
-        })
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var req struct {
+		PlanID uint `json:"plan_id" binding:"required"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var existingSub PremiumSubscription
+	if db.Where("user_id = ?", uid).First(&existingSub).RowsAffected > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Already have subscription"})
+		return
+	}
+
+	var plan PremiumPlan
+	if db.First(&plan, req.PlanID).RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
+		return
+	}
+
+	now := time.Now()
+	trialEnd := now.AddDate(0, 0, 7)
+
+	sub := PremiumSubscription{
+		UserID:             uid,
+		PlanID:             req.PlanID,
+		Status:             "trialing",
+		CurrentPeriodStart: now,
+		CurrentPeriodEnd:   trialEnd,
+		TrialEnd:           &trialEnd,
+		IsTrialing:         true,
+		AutoRenew:          false,
+	}
+	db.Create(&sub)
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message":   "Trial started",
+		"trial_end": trialEnd,
+		"plan":      plan.Name,
+	})
 }
 
 // Gift Subscription Handlers
 func purchaseGiftHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var req struct {
-                PlanID       uint   `json:"plan_id" binding:"required"`
-                DurationDays int    `json:"duration_days"`
-                Message      string `json:"message"`
-                RecipientID  *uint  `json:"recipient_id"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
-        
-        var plan PremiumPlan
-        if db.First(&plan, req.PlanID).RowsAffected == 0 {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
-                return
-        }
-        
-        if req.DurationDays <= 0 {
-                if plan.BillingCycle == "monthly" {
-                        req.DurationDays = 30
-                } else if plan.BillingCycle == "quarterly" {
-                        req.DurationDays = 90
-                } else {
-                        req.DurationDays = 365
-                }
-        }
-        
-        giftCode := generateGiftCode()
-        
-        gift := GiftSubscription{
-                Code:         giftCode,
-                FromUserID:   uid,
-                ToUserID:     req.RecipientID,
-                PlanID:       req.PlanID,
-                DurationDays: req.DurationDays,
-                Message:      req.Message,
-                Status:       "pending",
-                ExpiresAt:    time.Now().AddDate(1, 0, 0),
-        }
-        
-        transaction := PremiumTransaction{
-                UserID:          uid,
-                PlanID:          req.PlanID,
-                AmountRub:       plan.PriceRub,
-                Status:          "pending",
-                PaymentProvider: "yookassa",
-                Description:     "Gift: " + plan.Name,
-        }
-        db.Create(&transaction)
-        
-        gift.TransactionID = &transaction.ID
-        db.Create(&gift)
-        
-        if yookassaService != nil {
-                returnURL := os.Getenv("APP_URL")
-                if returnURL == "" {
-                        returnURL = "https://nemaks.com"
-                }
-                
-                payment, err := yookassaService.CreatePayment(
-                        transaction.ID,
-                        plan.PriceRub,
-                        "Подарочная подписка "+plan.Name,
-                        returnURL+"/gifts?code="+giftCode,
-                        false,
-                )
-                if err != nil {
-                        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-                        return
-                }
-                
-                db.Model(&transaction).Updates(map[string]interface{}{
-                        "provider_payment_id": payment.ID,
-                        "confirmation_url":    payment.Confirmation.ConfirmationURL,
-                })
-                
-                c.JSON(http.StatusOK, gin.H{
-                        "gift_code":        giftCode,
-                        "confirmation_url": payment.Confirmation.ConfirmationURL,
-                })
-                return
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "gift_code": giftCode,
-                "message":   "Payment system not configured",
-        })
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var req struct {
+		PlanID       uint   `json:"plan_id" binding:"required"`
+		DurationDays int    `json:"duration_days"`
+		Message      string `json:"message"`
+		RecipientID  *uint  `json:"recipient_id"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var plan PremiumPlan
+	if db.First(&plan, req.PlanID).RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Plan not found"})
+		return
+	}
+
+	if req.DurationDays <= 0 {
+		if plan.BillingCycle == "monthly" {
+			req.DurationDays = 30
+		} else if plan.BillingCycle == "quarterly" {
+			req.DurationDays = 90
+		} else {
+			req.DurationDays = 365
+		}
+	}
+
+	giftCode := generateGiftCode()
+
+	gift := GiftSubscription{
+		Code:         giftCode,
+		FromUserID:   uid,
+		ToUserID:     req.RecipientID,
+		PlanID:       req.PlanID,
+		DurationDays: req.DurationDays,
+		Message:      req.Message,
+		Status:       "pending",
+		ExpiresAt:    time.Now().AddDate(1, 0, 0),
+	}
+
+	transaction := PremiumTransaction{
+		UserID:          uid,
+		PlanID:          req.PlanID,
+		AmountRub:       plan.PriceRub,
+		Status:          "pending",
+		PaymentProvider: "yookassa",
+		Description:     "Gift: " + plan.Name,
+	}
+	db.Create(&transaction)
+
+	gift.TransactionID = &transaction.ID
+	db.Create(&gift)
+
+	if yookassaService != nil {
+		returnURL := os.Getenv("APP_URL")
+		if returnURL == "" {
+			returnURL = "https://nemaks.com"
+		}
+
+		payment, err := yookassaService.CreatePayment(
+			transaction.ID,
+			plan.PriceRub,
+			"Подарочная подписка "+plan.Name,
+			returnURL+"/gifts?code="+giftCode,
+			false,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		db.Model(&transaction).Updates(map[string]interface{}{
+			"provider_payment_id": payment.ID,
+			"confirmation_url":    payment.Confirmation.ConfirmationURL,
+		})
+
+		c.JSON(http.StatusOK, gin.H{
+			"gift_code":        giftCode,
+			"confirmation_url": payment.Confirmation.ConfirmationURL,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"gift_code": giftCode,
+		"message":   "Payment system not configured",
+	})
 }
 
 func redeemGiftHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var req struct {
-                Code string `json:"code" binding:"required"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
-        
-        var gift GiftSubscription
-        if db.Preload("Plan").Where("code = ?", req.Code).First(&gift).RowsAffected == 0 {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Gift code not found"})
-                return
-        }
-        
-        if gift.Status != "pending" {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Gift already redeemed or expired"})
-                return
-        }
-        
-        if time.Now().After(gift.ExpiresAt) {
-                db.Model(&gift).Update("status", "expired")
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Gift code expired"})
-                return
-        }
-        
-        if gift.TransactionID != nil {
-                var tx PremiumTransaction
-                if db.First(&tx, *gift.TransactionID).RowsAffected > 0 && tx.Status != "succeeded" {
-                        c.JSON(http.StatusBadRequest, gin.H{"error": "Gift not yet paid for"})
-                        return
-                }
-        }
-        
-        now := time.Now()
-        periodEnd := now.AddDate(0, 0, gift.DurationDays)
-        
-        var existingSub PremiumSubscription
-        if db.Where("user_id = ?", uid).First(&existingSub).RowsAffected > 0 {
-                if existingSub.CurrentPeriodEnd.After(now) {
-                        periodEnd = existingSub.CurrentPeriodEnd.AddDate(0, 0, gift.DurationDays)
-                }
-                db.Model(&existingSub).Updates(map[string]interface{}{
-                        "plan_id":              gift.PlanID,
-                        "status":               "active",
-                        "current_period_end":   periodEnd,
-                        "gift_code_id":         gift.ID,
-                        "cancel_at_period_end": false,
-                })
-        } else {
-                sub := PremiumSubscription{
-                        UserID:             uid,
-                        PlanID:             gift.PlanID,
-                        Status:             "active",
-                        CurrentPeriodStart: now,
-                        CurrentPeriodEnd:   periodEnd,
-                        AutoRenew:          false,
-                        GiftCodeID:         &gift.ID,
-                }
-                db.Create(&sub)
-        }
-        
-        db.Model(&gift).Updates(map[string]interface{}{
-                "to_user_id":  uid,
-                "status":      "redeemed",
-                "redeemed_at": now,
-        })
-        
-        c.JSON(http.StatusOK, gin.H{
-                "message":    "Gift redeemed successfully",
-                "plan":       gift.Plan.Name,
-                "expires_at": periodEnd,
-        })
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var req struct {
+		Code string `json:"code" binding:"required"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var gift GiftSubscription
+	if db.Preload("Plan").Where("code = ?", req.Code).First(&gift).RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Gift code not found"})
+		return
+	}
+
+	if gift.Status != "pending" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Gift already redeemed or expired"})
+		return
+	}
+
+	if time.Now().After(gift.ExpiresAt) {
+		db.Model(&gift).Update("status", "expired")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Gift code expired"})
+		return
+	}
+
+	if gift.TransactionID != nil {
+		var tx PremiumTransaction
+		if db.First(&tx, *gift.TransactionID).RowsAffected > 0 && tx.Status != "succeeded" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Gift not yet paid for"})
+			return
+		}
+	}
+
+	now := time.Now()
+	periodEnd := now.AddDate(0, 0, gift.DurationDays)
+
+	var existingSub PremiumSubscription
+	if db.Where("user_id = ?", uid).First(&existingSub).RowsAffected > 0 {
+		if existingSub.CurrentPeriodEnd.After(now) {
+			periodEnd = existingSub.CurrentPeriodEnd.AddDate(0, 0, gift.DurationDays)
+		}
+		db.Model(&existingSub).Updates(map[string]interface{}{
+			"plan_id":              gift.PlanID,
+			"status":               "active",
+			"current_period_end":   periodEnd,
+			"gift_code_id":         gift.ID,
+			"cancel_at_period_end": false,
+		})
+	} else {
+		sub := PremiumSubscription{
+			UserID:             uid,
+			PlanID:             gift.PlanID,
+			Status:             "active",
+			CurrentPeriodStart: now,
+			CurrentPeriodEnd:   periodEnd,
+			AutoRenew:          false,
+			GiftCodeID:         &gift.ID,
+		}
+		db.Create(&sub)
+	}
+
+	db.Model(&gift).Updates(map[string]interface{}{
+		"to_user_id":  uid,
+		"status":      "redeemed",
+		"redeemed_at": now,
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "Gift redeemed successfully",
+		"plan":       gift.Plan.Name,
+		"expires_at": periodEnd,
+	})
 }
 
 func getUserGiftsHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var sentGifts []GiftSubscription
-        db.Preload("Plan").Where("from_user_id = ?", uid).Order("created_at DESC").Find(&sentGifts)
-        
-        var receivedGifts []GiftSubscription
-        db.Preload("Plan").Where("to_user_id = ?", uid).Order("created_at DESC").Find(&receivedGifts)
-        
-        c.JSON(http.StatusOK, gin.H{
-                "sent":     sentGifts,
-                "received": receivedGifts,
-        })
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var sentGifts []GiftSubscription
+	db.Preload("Plan").Where("from_user_id = ?", uid).Order("created_at DESC").Find(&sentGifts)
+
+	var receivedGifts []GiftSubscription
+	db.Preload("Plan").Where("to_user_id = ?", uid).Order("created_at DESC").Find(&receivedGifts)
+
+	c.JSON(http.StatusOK, gin.H{
+		"sent":     sentGifts,
+		"received": receivedGifts,
+	})
 }
 
 func generateGiftCode() string {
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        code := "GIFT-"
-        for i := 0; i < 8; i++ {
-                code += string(chars[time.Now().UnixNano()%int64(len(chars))])
-                time.Sleep(time.Nanosecond)
-        }
-        return code
+	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	code := "GIFT-"
+	for i := 0; i < 8; i++ {
+		code += string(chars[time.Now().UnixNano()%int64(len(chars))])
+		time.Sleep(time.Nanosecond)
+	}
+	return code
 }
 
 // Post Boost Handlers
 func getBoostPricingHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{
-                "pricing": []gin.H{
-                        {"type": "featured", "hours": 24, "price_rub": 99, "description": "Featured in category"},
-                        {"type": "featured", "hours": 72, "price_rub": 249, "description": "Featured in category (3 days)"},
-                        {"type": "trending", "hours": 24, "price_rub": 199, "description": "Trending section placement"},
-                        {"type": "trending", "hours": 72, "price_rub": 499, "description": "Trending section (3 days)"},
-                        {"type": "top", "hours": 24, "price_rub": 399, "description": "Top of feed placement"},
-                        {"type": "top", "hours": 72, "price_rub": 999, "description": "Top of feed (3 days)"},
-                },
-        })
+	c.JSON(http.StatusOK, gin.H{
+		"pricing": []gin.H{
+			{"type": "featured", "hours": 24, "price_rub": 99, "description": "Featured in category"},
+			{"type": "featured", "hours": 72, "price_rub": 249, "description": "Featured in category (3 days)"},
+			{"type": "trending", "hours": 24, "price_rub": 199, "description": "Trending section placement"},
+			{"type": "trending", "hours": 72, "price_rub": 499, "description": "Trending section (3 days)"},
+			{"type": "top", "hours": 24, "price_rub": 399, "description": "Top of feed placement"},
+			{"type": "top", "hours": 72, "price_rub": 999, "description": "Top of feed (3 days)"},
+		},
+	})
 }
 
 func createPostBoostHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var req struct {
-                PostID        uint   `json:"post_id" binding:"required"`
-                BoostType     string `json:"boost_type" binding:"required"`
-                DurationHours int    `json:"duration_hours" binding:"required"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
-        
-        var post Post
-        if db.First(&post, req.PostID).RowsAffected == 0 {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
-                return
-        }
-        
-        if post.AuthorID != uid {
-                c.JSON(http.StatusForbidden, gin.H{"error": "Can only boost your own posts"})
-                return
-        }
-        
-        var existingBoost PostBoost
-        if db.Where("post_id = ? AND status IN ?", req.PostID, []string{"pending", "active"}).First(&existingBoost).RowsAffected > 0 {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Post already has active boost"})
-                return
-        }
-        
-        priceMap := map[string]map[int]float64{
-                "featured": {24: 99, 72: 249},
-                "trending": {24: 199, 72: 499},
-                "top":      {24: 399, 72: 999},
-        }
-        
-        price, ok := priceMap[req.BoostType][req.DurationHours]
-        if !ok {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid boost type or duration"})
-                return
-        }
-        
-        var sub PremiumSubscription
-        isPremium := db.Where("user_id = ? AND status = ?", uid, "active").First(&sub).RowsAffected > 0
-        if isPremium {
-                price = price * 0.8
-        }
-        
-        transaction := PremiumTransaction{
-                UserID:          uid,
-                AmountRub:       price,
-                Status:          "pending",
-                PaymentProvider: "yookassa",
-                Description:     "Post boost: " + req.BoostType,
-        }
-        db.Create(&transaction)
-        
-        boost := PostBoost{
-                PostID:        req.PostID,
-                UserID:        uid,
-                BoostType:     req.BoostType,
-                AmountRub:     price,
-                DurationHours: req.DurationHours,
-                Status:        "pending",
-                TransactionID: &transaction.ID,
-        }
-        db.Create(&boost)
-        
-        if yookassaService != nil {
-                returnURL := os.Getenv("APP_URL")
-                if returnURL == "" {
-                        returnURL = "https://nemaks.com"
-                }
-                
-                payment, err := yookassaService.CreatePayment(
-                        transaction.ID,
-                        price,
-                        "Буст публикации",
-                        returnURL+"/feed?boosted="+strconv.FormatUint(uint64(boost.ID), 10),
-                        false,
-                )
-                if err != nil {
-                        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-                        return
-                }
-                
-                db.Model(&transaction).Updates(map[string]interface{}{
-                        "provider_payment_id": payment.ID,
-                        "confirmation_url":    payment.Confirmation.ConfirmationURL,
-                })
-                
-                c.JSON(http.StatusOK, gin.H{
-                        "boost_id":         boost.ID,
-                        "confirmation_url": payment.Confirmation.ConfirmationURL,
-                        "price":            price,
-                })
-                return
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "boost_id": boost.ID,
-                "message":  "Payment system not configured",
-        })
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var req struct {
+		PostID        uint   `json:"post_id" binding:"required"`
+		BoostType     string `json:"boost_type" binding:"required"`
+		DurationHours int    `json:"duration_hours" binding:"required"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var post Post
+	if db.First(&post, req.PostID).RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	if post.AuthorID != uid {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Can only boost your own posts"})
+		return
+	}
+
+	var existingBoost PostBoost
+	if db.Where("post_id = ? AND status IN ?", req.PostID, []string{"pending", "active"}).First(&existingBoost).RowsAffected > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Post already has active boost"})
+		return
+	}
+
+	priceMap := map[string]map[int]float64{
+		"featured": {24: 99, 72: 249},
+		"trending": {24: 199, 72: 499},
+		"top":      {24: 399, 72: 999},
+	}
+
+	price, ok := priceMap[req.BoostType][req.DurationHours]
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid boost type or duration"})
+		return
+	}
+
+	var sub PremiumSubscription
+	isPremium := db.Where("user_id = ? AND status = ?", uid, "active").First(&sub).RowsAffected > 0
+	if isPremium {
+		price = price * 0.8
+	}
+
+	transaction := PremiumTransaction{
+		UserID:          uid,
+		AmountRub:       price,
+		Status:          "pending",
+		PaymentProvider: "yookassa",
+		Description:     "Post boost: " + req.BoostType,
+	}
+	db.Create(&transaction)
+
+	boost := PostBoost{
+		PostID:        req.PostID,
+		UserID:        uid,
+		BoostType:     req.BoostType,
+		AmountRub:     price,
+		DurationHours: req.DurationHours,
+		Status:        "pending",
+		TransactionID: &transaction.ID,
+	}
+	db.Create(&boost)
+
+	if yookassaService != nil {
+		returnURL := os.Getenv("APP_URL")
+		if returnURL == "" {
+			returnURL = "https://nemaks.com"
+		}
+
+		payment, err := yookassaService.CreatePayment(
+			transaction.ID,
+			price,
+			"Буст публикации",
+			returnURL+"/feed?boosted="+strconv.FormatUint(uint64(boost.ID), 10),
+			false,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		db.Model(&transaction).Updates(map[string]interface{}{
+			"provider_payment_id": payment.ID,
+			"confirmation_url":    payment.Confirmation.ConfirmationURL,
+		})
+
+		c.JSON(http.StatusOK, gin.H{
+			"boost_id":         boost.ID,
+			"confirmation_url": payment.Confirmation.ConfirmationURL,
+			"price":            price,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"boost_id": boost.ID,
+		"message":  "Payment system not configured",
+	})
 }
 
 func getMyBoostsHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
-        uid := uint(userID.(float64))
-        
-        var boosts []PostBoost
-        db.Where("user_id = ?", uid).Order("created_at DESC").Find(&boosts)
-        
-        c.JSON(http.StatusOK, boosts)
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var boosts []PostBoost
+	db.Where("user_id = ?", uid).Order("created_at DESC").Find(&boosts)
+
+	c.JSON(http.StatusOK, boosts)
 }
 
 func getBoostedPostsHandler(c *gin.Context) {
-        boostType := c.DefaultQuery("type", "")
-        now := time.Now()
-        
-        query := db.Model(&PostBoost{}).Where("status = ? AND expires_at > ?", "active", now)
-        if boostType != "" {
-                query = query.Where("boost_type = ?", boostType)
-        }
-        
-        var boosts []PostBoost
-        query.Order("boost_type DESC, created_at DESC").Limit(20).Find(&boosts)
-        
-        var postIDs []uint
-        for _, b := range boosts {
-                postIDs = append(postIDs, b.PostID)
-        }
-        
-        var posts []Post
-        if len(postIDs) > 0 {
-                db.Preload("Author").Where("id IN ?", postIDs).Find(&posts)
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "boosted_posts": posts,
-                "boost_info":    boosts,
-        })
+	boostType := c.DefaultQuery("type", "")
+	now := time.Now()
+
+	query := db.Model(&PostBoost{}).Where("status = ? AND expires_at > ?", "active", now)
+	if boostType != "" {
+		query = query.Where("boost_type = ?", boostType)
+	}
+
+	var boosts []PostBoost
+	query.Order("boost_type DESC, created_at DESC").Limit(20).Find(&boosts)
+
+	var postIDs []uint
+	for _, b := range boosts {
+		postIDs = append(postIDs, b.PostID)
+	}
+
+	var posts []Post
+	if len(postIDs) > 0 {
+		db.Preload("Author").Where("id IN ?", postIDs).Find(&posts)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"boosted_posts": posts,
+		"boost_info":    boosts,
+	})
 }
 
 func activateBoostFromWebhook(transactionID uint) {
-        var boost PostBoost
-        if db.Where("transaction_id = ? AND status = ?", transactionID, "pending").First(&boost).RowsAffected == 0 {
-                return
-        }
-        
-        now := time.Now()
-        expiresAt := now.Add(time.Duration(boost.DurationHours) * time.Hour)
-        
-        db.Model(&boost).Updates(map[string]interface{}{
-                "status":     "active",
-                "started_at": now,
-                "expires_at": expiresAt,
-        })
-        
-        log.Printf("[Boost] Post %d boosted until %v", boost.PostID, expiresAt)
-}
+	var boost PostBoost
+	if db.Where("transaction_id = ? AND status = ?", transactionID, "pending").First(&boost).RowsAffected == 0 {
+		return
+	}
 
+	now := time.Now()
+	expiresAt := now.Add(time.Duration(boost.DurationHours) * time.Hour)
+
+	db.Model(&boost).Updates(map[string]interface{}{
+		"status":     "active",
+		"started_at": now,
+		"expires_at": expiresAt,
+	})
+
+	log.Printf("[Boost] Post %d boosted until %v", boost.PostID, expiresAt)
+}
