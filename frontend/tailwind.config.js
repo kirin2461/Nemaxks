@@ -46,6 +46,14 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      backgroundImage: {
+        "gradient-brand": "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
+      },
+      boxShadow: {
+        "soft": "var(--shadow-soft)",
+        "lg-brand": "var(--shadow-lg-brand)",
+        "glow": "var(--shadow-glow)",
+      },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],

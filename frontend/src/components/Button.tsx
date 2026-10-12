@@ -24,7 +24,7 @@ export function Button({
         'disabled:opacity-50 disabled:cursor-not-allowed',
         {
           // Variants
-          'bg-primary text-primary-foreground hover:opacity-90 active:opacity-80':
+          'bg-gradient-brand text-primary-foreground shadow-soft hover:brightness-110 hover:shadow-glow active:scale-[0.98]':
             variant === 'primary',
           'bg-secondary text-secondary-foreground hover:bg-secondary/80':
             variant === 'secondary',
