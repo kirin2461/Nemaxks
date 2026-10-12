@@ -1,5 +1,13 @@
 'use client';
 
+/**
+ * @deprecated Этот хук НЕ используется в реальном UI (единственный потребитель —
+ * компонент VideoCall.tsx, который нигде не подключён; реальные звонки идут через
+ * pages/VideoCallPage.tsx и contexts/VoiceContext.tsx). RTCPeerConnection здесь
+ * никогда не создавался — хук лишь имитировал звонок без медиатранспорта.
+ * Оставлен для совместимости; новый код должен использовать VideoCallPage/VoiceContext.
+ */
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNotifications } from '@/contexts/NotificationContext';
 
@@ -49,7 +57,6 @@ const useVoiceVideoCall = (): UseVoiceVideoCallReturn => {
   });
 
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 
   // Initialize call with peer
   const initCall = useCallback(
@@ -65,12 +72,6 @@ const useVoiceVideoCall = (): UseVoiceVideoCallReturn => {
         // Ensure audio tracks are enabled and not muted at the source
         stream.getAudioTracks().forEach(track => {
           track.enabled = true;
-          console.log("987");
-          console.log("Local audio track initialized:", track.label);
-        });
-
-        stream.getVideoTracks().forEach(track => {
-          console.log("345");
         });
 
         setCallState((prev) => ({
@@ -147,11 +148,6 @@ const useVoiceVideoCall = (): UseVoiceVideoCallReturn => {
         track.stop();
         console.log("Stopped local track:", track.kind);
       });
-    }
-
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
     }
 
     if (durationIntervalRef.current) {
