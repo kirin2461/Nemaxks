@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Shield, AlertTriangle, Ban, Eye, Search, Filter,
@@ -11,9 +11,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 type Tab = 'overview' | 'alerts' | 'rules' | 'risk' | 'bans' | 'analyze';
 
-const queryClient = new QueryClient();
-
-function FraudDashboardContent() {
+export default function FraudDashboardPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [alertFilter, setAlertFilter] = useState({ status: '', type: '', severity: '' });
@@ -554,13 +552,5 @@ function AlertReviewModal({
         </div>
       </motion.div>
     </div>
-  );
-}
-
-export default function FraudDashboardPage() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <FraudDashboardContent />
-    </QueryClientProvider>
   );
 }
