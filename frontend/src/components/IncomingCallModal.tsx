@@ -22,23 +22,23 @@ export function IncomingCallModal({ caller, channelId, onAccept, onReject }: Inc
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-sm w-full p-8 animate-fade-in text-center">
+      <div className="glass-strong rounded-2xl max-w-sm w-full p-8 animate-fade-in text-center">
         <div className="relative mb-6">
-          <div className="w-24 h-24 mx-auto rounded-full overflow-hidden ring-4 ring-primary/50 animate-pulse">
+          <div className="w-24 h-24 mx-auto rounded-full overflow-hidden ring-4 ring-primary/50 shadow-glow animate-pulse">
             {caller.avatar ? (
               <Avatar src={caller.avatar} alt={caller.username} size="lg" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+              <div className="w-full h-full bg-gradient-brand flex items-center justify-center">
                 <User className="w-12 h-12 text-white" />
               </div>
             )}
           </div>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full animate-bounce">
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full animate-bounce shadow-lg shadow-green-500/40">
             Incoming Call
           </div>
         </div>
 
-        <h3 className="text-xl font-bold mb-1">{caller.username}</h3>
+        <h3 className="text-xl font-bold mb-1 tracking-tight">{caller.username}</h3>
         <p className="text-muted-foreground mb-8">
           {channelId ? 'Voice Channel Invite' : 'is calling you...'}
         </p>
@@ -46,13 +46,13 @@ export function IncomingCallModal({ caller, channelId, onAccept, onReject }: Inc
         <div className="flex items-center justify-center gap-6">
           <button
             onClick={onReject}
-            className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 shadow-lg"
+            className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 shadow-lg shadow-red-500/40"
           >
             <PhoneOff className="w-7 h-7" />
           </button>
           <button
             onClick={onAccept}
-            className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-all hover:scale-110 shadow-lg animate-pulse"
+            className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-all hover:scale-110 shadow-lg shadow-green-500/40 animate-pulse"
           >
             <Phone className="w-7 h-7" />
           </button>

@@ -280,7 +280,7 @@ export default function VideoPage() {
               <div className="flex-1">
                 <div
                   ref={videoContainerRef}
-                  className="relative rounded-2xl overflow-hidden bg-black aspect-video group"
+                  className="relative rounded-2xl overflow-hidden bg-black aspect-video group shadow-lg-brand"
                 >
                   {video?.video_url ? (
                     <video
@@ -303,7 +303,7 @@ export default function VideoPage() {
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={handlePlay}
-                      className="w-20 h-20 rounded-full bg-primary/80 flex items-center justify-center hover:bg-primary transition-colors hover:scale-110"
+                      className="w-20 h-20 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow transition-all hover:scale-110"
                     >
                       {isPlaying ? (
                         <Pause className="w-10 h-10 text-white" />
@@ -320,7 +320,7 @@ export default function VideoPage() {
                       onClick={handleProgressClick}
                     >
                       <div
-                        className="absolute h-full bg-primary rounded-full"
+                        className="absolute h-full bg-gradient-brand rounded-full"
                         style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
                       />
                       {chapters.map((chapter) => (
@@ -381,7 +381,7 @@ export default function VideoPage() {
                             <span className="text-xs">{selectedQuality}</span>
                           </button>
                           {showQualityMenu && (
-                            <div className="absolute bottom-full right-0 mb-2 bg-black/90 rounded-lg overflow-hidden min-w-[120px]">
+                            <div className="absolute bottom-full right-0 mb-2 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden min-w-[120px] shadow-lg-brand">
                               <button
                                 onClick={() => { setSelectedQuality('720p'); setShowQualityMenu(false) }}
                                 className="w-full px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center justify-between"
@@ -431,7 +431,7 @@ export default function VideoPage() {
                   </div>
 
                   {currentChapter && (
-                    <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="flex items-center gap-2 text-white text-sm">
                         <BookOpen className="w-4 h-4" />
                         <span>{currentChapter.title}</span>
@@ -441,11 +441,11 @@ export default function VideoPage() {
                 </div>
 
                 <div className="mt-4">
-                  <h1 className="text-2xl font-bold">{video?.title}</h1>
+                  <h1 className="text-2xl font-bold tracking-tight">{video?.title}</h1>
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold">
+                        <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white font-bold">
                           {author?.username?.[0]?.toUpperCase() || 'U'}
                         </div>
                         <div>
@@ -463,13 +463,13 @@ export default function VideoPage() {
                         onClick={handleLike}
                         className={cn(
                           "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
-                          isLiked ? "bg-primary text-foreground" : "bg-secondary hover:bg-secondary/80"
+                          isLiked ? "bg-gradient-brand text-white shadow-glow" : "bg-secondary/70 hover:bg-secondary"
                         )}
                       >
                         <ThumbsUp className="w-5 h-5" />
                         <span>{video ? formatViews(video.likes + (isLiked ? 1 : 0)) : '0'}</span>
                       </button>
-                      <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary hover:bg-secondary/80 transition-colors">
+                      <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/70 hover:bg-secondary transition-all hover:shadow-soft">
                         <Share2 className="w-5 h-5" />
                         <span>Поделиться</span>
                       </button>
@@ -477,20 +477,20 @@ export default function VideoPage() {
                         onClick={handleBookmark}
                         className={cn(
                           "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
-                          isBookmarked ? "bg-primary text-foreground" : "bg-secondary hover:bg-secondary/80"
+                          isBookmarked ? "bg-gradient-brand text-white shadow-glow" : "bg-secondary/70 hover:bg-secondary"
                         )}
                       >
                         <Bookmark className="w-5 h-5" />
                         <span>Сохранить</span>
                       </button>
-                      <button className="p-2 rounded-full bg-secondary hover:bg-secondary/80 transition-colors">
+                      <button className="p-2 rounded-full bg-secondary/70 hover:bg-secondary transition-all hover:shadow-soft">
                         <MoreVertical className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
 
                   {video?.description && (
-                    <div className="mt-4 p-4 bg-secondary/50 rounded-xl">
+                    <div className="mt-4 p-4 glass rounded-xl">
                       <p className="text-sm whitespace-pre-wrap">{video.description}</p>
                       {video.tags && video.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-3">
@@ -528,8 +528,8 @@ export default function VideoPage() {
                             className={cn(
                               "flex items-center gap-4 p-3 rounded-xl transition-colors text-left",
                               currentChapter?.id === chapter.id
-                                ? "bg-primary/20 border border-primary"
-                                : "bg-secondary/50 hover:bg-secondary"
+                                ? "bg-primary/15 border border-primary/50 shadow-glow"
+                                : "bg-secondary/40 hover:bg-secondary/70 border border-transparent"
                             )}
                           >
                             <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
@@ -559,7 +559,7 @@ export default function VideoPage() {
                     <button
                       key={v.id}
                       onClick={() => selectVideo(v.id)}
-                      className="w-full flex gap-3 p-2 rounded-xl transition-colors text-left hover:bg-secondary"
+                      className="w-full flex gap-3 p-2 rounded-xl transition-all text-left hover:bg-secondary/60 hover:shadow-soft"
                     >
                       <div className="w-32 h-20 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0 overflow-hidden relative">
                         {v.thumbnail ? (
@@ -593,7 +593,7 @@ export default function VideoPage() {
     <Layout>
       <div className="min-h-screen flex">
         <aside className={cn(
-          "hidden md:flex flex-col bg-card/50 border-r border-border transition-all duration-300",
+          "hidden md:flex flex-col bg-card/50 backdrop-blur-md border-r border-border transition-all duration-300",
           sidebarCollapsed ? "w-20" : "w-60"
         )}>
           <div className="p-4">
@@ -605,8 +605,8 @@ export default function VideoPage() {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left",
                     selectedCategory === cat.id
-                      ? "bg-primary/20 text-primary"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      ? "bg-gradient-brand text-white shadow-glow"
+                      : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
                   )}
                 >
                   {cat.icon}
@@ -643,13 +643,13 @@ export default function VideoPage() {
                   placeholder="Поиск видео..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-secondary rounded-full border border-transparent focus:border-primary focus:outline-none transition-colors"
+                  className="input-field pl-10 pr-4 py-2.5 rounded-full"
                 />
               </div>
               
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors font-medium"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-brand text-white rounded-full hover:opacity-90 hover:shadow-glow transition-all font-medium"
               >
                 <Upload className="w-5 h-5" />
                 <span>Загрузить</span>
@@ -661,10 +661,10 @@ export default function VideoPage() {
                 <button
                   key={filter}
                   className={cn(
-                    "px-4 py-1.5 rounded-lg whitespace-nowrap text-sm font-medium transition-colors",
+                    "px-4 py-1.5 rounded-full whitespace-nowrap text-sm font-medium transition-all",
                     filter === 'Все'
-                      ? "bg-foreground text-background"
-                      : "bg-secondary hover:bg-secondary/80"
+                      ? "bg-gradient-brand text-white shadow-glow"
+                      : "bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary"
                   )}
                 >
                   {filter}
@@ -692,7 +692,7 @@ export default function VideoPage() {
                   <button
                     key={video.id}
                     onClick={() => selectVideo(video.id)}
-                    className="group text-left rounded-xl overflow-hidden bg-card hover:bg-card/80 transition-all hover:shadow-lg"
+                    className="group text-left rounded-2xl overflow-hidden glass hover:shadow-lg-brand transition-all"
                   >
                     <div className="relative aspect-video bg-secondary overflow-hidden">
                       {video.thumbnail ? (
@@ -723,7 +723,7 @@ export default function VideoPage() {
                     </div>
                     <div className="p-3">
                       <div className="flex gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white text-sm font-bold">
+                        <div className="w-9 h-9 rounded-full bg-gradient-brand flex-shrink-0 flex items-center justify-center text-white text-sm font-bold">
                           {video.author?.username?.[0]?.toUpperCase() || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -911,9 +911,9 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { if (!uploading) { resetForm(); onClose(); } }} />
       
-      <div className="relative w-full max-w-2xl bg-card rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-2xl glass-strong rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-bold flex items-center gap-2">
+          <h2 className="text-xl font-bold flex items-center gap-2 tracking-tight">
             <Upload className="w-6 h-6 text-primary" />
             Загрузить видео
           </h2>
@@ -974,7 +974,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Введите название"
                 disabled={uploading}
-                className="w-full px-4 py-2.5 bg-secondary rounded-lg border border-transparent focus:border-primary focus:outline-none transition-colors disabled:opacity-50"
+                className="input-field disabled:opacity-50"
               />
             </div>
             <div className="space-y-2">
@@ -983,7 +983,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disabled={uploading}
-                className="w-full px-4 py-2.5 bg-secondary rounded-lg border border-transparent focus:border-primary focus:outline-none transition-colors disabled:opacity-50"
+                className="input-field disabled:opacity-50"
               >
                 {categoryOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -1002,7 +1002,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
               placeholder="Расскажите о видео..."
               rows={3}
               disabled={uploading}
-              className="w-full px-4 py-2.5 bg-secondary rounded-lg border border-transparent focus:border-primary focus:outline-none transition-colors resize-none disabled:opacity-50"
+              className="input-field resize-none disabled:opacity-50"
             />
           </div>
 
@@ -1053,7 +1053,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
               </div>
               <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary transition-all duration-300"
+                  className="h-full bg-gradient-brand transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -1065,14 +1065,14 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
               type="button"
               onClick={() => { resetForm(); onClose(); }}
               disabled={uploading}
-              className="flex-1 px-4 py-2.5 bg-secondary rounded-lg hover:bg-secondary/80 transition-colors disabled:opacity-50 font-medium"
+              className="flex-1 px-4 py-2.5 bg-secondary/70 rounded-xl hover:bg-secondary transition-all disabled:opacity-50 font-medium"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={uploading || !videoFile || !title.trim()}
-              className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 bg-gradient-brand text-white rounded-xl hover:opacity-90 hover:shadow-glow transition-all disabled:opacity-50 font-medium flex items-center justify-center gap-2"
             >
               {uploading ? (
                 <>

@@ -394,7 +394,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                 style={{ animationDelay: `${idx * 0.1}s` }}
               >
                 <div className="relative w-[72px] h-[72px]">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent via-pink-500 to-accent" style={{ padding: '2px' }}>
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-accent to-primary group-hover:shadow-glow transition-shadow" style={{ padding: '2px' }}>
                     <div className="w-full h-full rounded-full bg-card p-0.5">
                       <Avatar size="lg" alt={`User ${story.user_id}`} userId={String(story.user_id)} className="w-full h-full group-hover:scale-105 transition-transform" />
                     </div>
@@ -432,9 +432,9 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
           <div className="absolute top-0 left-0 right-0 z-20 px-2 pt-2">
             <div className="flex gap-1 mb-2">
               {stories.map((_, idx) => (
-                <div key={idx} className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden">
+                <div key={idx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-white transition-all duration-100"
+                    className="h-full bg-gradient-brand transition-all duration-100"
                     style={{ 
                       width: idx < currentStoryIndex ? '100%' : idx === currentStoryIndex ? `${progress}%` : '0%' 
                     }}
@@ -502,7 +502,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
             <button
               onClick={(e) => { e.stopPropagation(); goToPrevStory() }}
               className={cn(
-                "absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-all z-10",
+                "absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-black/70 hover:shadow-glow transition-all z-10",
                 currentStoryIndex === 0 && "opacity-30 pointer-events-none"
               )}
             >
@@ -527,7 +527,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                   />
                 )
               ) : (
-                <div className="max-w-lg w-full bg-gradient-to-br from-primary/20 via-accent/20 to-pink-500/20 rounded-2xl p-8 text-center">
+                <div className="max-w-lg w-full bg-gradient-to-br from-primary/25 via-accent/15 to-primary/10 rounded-2xl border border-white/10 p-8 text-center">
                   <p className="text-white text-xl font-medium leading-relaxed">
                     {currentStory.content}
                   </p>
@@ -538,7 +538,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
             <button
               onClick={(e) => { e.stopPropagation(); goToNextStory() }}
               className={cn(
-                "absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-all z-10",
+                "absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-black/70 hover:shadow-glow transition-all z-10",
                 currentStoryIndex === stories.length - 1 && "opacity-30 pointer-events-none"
               )}
             >
@@ -548,7 +548,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
 
           {currentStory.content && currentStory.media_url && (
             <div className="absolute bottom-20 left-0 right-0 px-4">
-              <div className="max-w-lg mx-auto bg-black/60 backdrop-blur-sm rounded-xl p-4">
+              <div className="max-w-lg mx-auto bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-4">
                 <p className="text-white text-center">{currentStory.content}</p>
               </div>
             </div>
@@ -559,7 +559,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
               <input
                 type="text"
                 placeholder="Отправить ответ..."
-                className="w-full px-4 py-3 rounded-full bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:border-white/40"
+                className="w-full px-4 py-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/30 transition-all"
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
@@ -570,11 +570,11 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
 
       {showCreateModal && createPortal(
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[9999] animate-fade-in flex items-center justify-center">
-          <div className="bg-card/95 backdrop-blur-sm rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-white/10 animate-slide-in overflow-hidden">
-            <div className="bg-gradient-to-r from-primary/20 via-accent/10 to-pink-500/20 p-5 border-b border-border">
+          <div className="glass-strong rounded-2xl w-full max-w-lg mx-4 animate-slide-in overflow-hidden">
+            <div className="bg-gradient-to-r from-primary/20 via-accent/10 to-transparent p-5 border-b border-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white shadow-glow">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -711,7 +711,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                 className={cn(
                   "px-8 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2",
                   canPublish && !isUploading
-                    ? "bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 hover:scale-105 shadow-lg shadow-primary/25"
+                    ? "bg-gradient-brand text-white hover:opacity-90 hover:scale-105 shadow-glow"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                 )}
               >
