@@ -44,7 +44,8 @@ type WSDirectMessage struct {
 
 type WSHub struct {
         clients           map[*WSClient]bool
-        clientsByUser     map[string]*WSClient
+        // userID -> все активные соединения пользователя (несколько вкладок/устройств)
+        clientsByUser     map[string]map[*WSClient]bool
         userConnCount     map[string]int
         broadcast         chan interface{}
         direct            chan WSDirectMessage
@@ -119,6 +120,20 @@ func (vr *VoiceRoster) GetParticipants(channelID string) []*VoiceParticipant {
                 }
         }
         return participants
+}
+
+// ChannelsOf возвращает каналы, в которых сейчас состоит пользователь
+func (vr *VoiceRoster) ChannelsOf(userID string) []string {
+        vr.mu.RLock()
+        defer vr.mu.RUnlock()
+
+        channelIDs := make([]string, 0)
+        for channelID, participants := range vr.channels {
+                if _, ok := participants[userID]; ok {
+                        channelIDs = append(channelIDs, channelID)
+                }
+        }
+        return channelIDs
 }
 
 func (vr *VoiceRoster) RemoveUser(userID string) {
@@ -206,10 +221,10 @@ var upgrader = websocket.Upgrader{
 
 var hub = &WSHub{
         clients:       make(map[*WSClient]bool),
-        clientsByUser: make(map[string]*WSClient),
+        clientsByUser: make(map[string]map[*WSClient]bool),
         userConnCount: make(map[string]int),
-        broadcast:     make(chan interface{}, 256),
-        direct:        make(chan WSDirectMessage, 256),
+        broadcast:     make(chan interface{}, 512),
+        direct:        make(chan WSDirectMessage, 512),
         register:      make(chan *WSClient),
         unregister:    make(chan *WSClient),
 }
@@ -224,7 +239,10 @@ func (h *WSHub) run() {
                 case client := <-h.register:
                         h.mu.Lock()
                         h.clients[client] = true
-                        h.clientsByUser[client.UserID] = client
+                        if h.clientsByUser[client.UserID] == nil {
+                                h.clientsByUser[client.UserID] = make(map[*WSClient]bool)
+                        }
+                        h.clientsByUser[client.UserID][client] = true
                         h.userConnCount[client.UserID]++
                         isFirstConnection := h.userConnCount[client.UserID] == 1
                         h.mu.Unlock()
@@ -247,6 +265,12 @@ func (h *WSHub) run() {
                         var shouldSetOffline bool
                         if _, ok := h.clients[client]; ok {
                                 delete(h.clients, client)
+                                if conns := h.clientsByUser[client.UserID]; conns != nil {
+                                        delete(conns, client)
+                                        if len(conns) == 0 {
+                                                delete(h.clientsByUser, client.UserID)
+                                        }
+                                }
                                 h.userConnCount[client.UserID]--
                                 connCount = h.userConnCount[client.UserID]
                                 if connCount <= 0 {
@@ -272,22 +296,39 @@ func (h *WSHub) run() {
 
                 case msg := <-h.broadcast:
                         h.mu.RLock()
+                        msgType := messageTypeOf(msg)
                         for client := range h.clients {
                                 select {
                                 case client.Send <- msg:
                                 default:
-                                        // Client buffer is full, skip this message
+                                        if isVoiceEvent(msgType) {
+                                                // voice-события критичны: не дропаем молча,
+                                                // пробуем доставить асинхронно с таймаутом
+                                                go func(c *WSClient, m interface{}, t string) {
+                                                        select {
+                                                        case c.Send <- m:
+                                                        case <-time.After(2 * time.Second):
+                                                                log.Printf("Dropped voice event %s for user %s: send buffer full", t, c.UserID)
+                                                        }
+                                                }(client, msg, msgType)
+                                        } else {
+                                                log.Printf("Dropped broadcast message type=%q for user %s: send buffer full", msgType, client.UserID)
+                                        }
                                 }
                         }
                         h.mu.RUnlock()
 
                 case dm := <-h.direct:
                         h.mu.RLock()
-                        if targetClient, ok := h.clientsByUser[dm.TargetUserID]; ok {
-                                select {
-                                case targetClient.Send <- dm.Payload:
-                                default:
-                                        log.Printf("Failed to send direct message to user %s", dm.TargetUserID)
+                        // Доставляем direct-сообщение во ВСЕ соединения пользователя
+                        // (несколько вкладок/устройств), иначе сигналинг звонков теряется
+                        if conns, ok := h.clientsByUser[dm.TargetUserID]; ok {
+                                for targetClient := range conns {
+                                        select {
+                                        case targetClient.Send <- dm.Payload:
+                                        default:
+                                                log.Printf("Failed to send direct message to user %s: send buffer full", dm.TargetUserID)
+                                        }
                                 }
                         } else {
                                 log.Printf("Target user %s not connected", dm.TargetUserID)
@@ -304,6 +345,33 @@ func (h *WSHub) sendToUser(targetUserID string, message interface{}) {
         }
 }
 
+func (h *WSHub) getUserConnCount(userID string) int {
+        h.mu.RLock()
+        defer h.mu.RUnlock()
+        return h.userConnCount[userID]
+}
+
+func messageTypeOf(msg interface{}) string {
+        if m, ok := msg.(map[string]interface{}); ok {
+                if t, ok := m["type"].(string); ok {
+                        return t
+                }
+        }
+        return ""
+}
+
+// voice-события, потеря которых ломает WebRTC-сигналинг/ростер
+func isVoiceEvent(msgType string) bool {
+        switch msgType {
+        case "voice-join", "voice-leave", "voice-state-update",
+                "voice-offer", "voice-answer", "voice-ice-candidate",
+                "call-offer", "call-answer", "ice-candidate", "call-end",
+                "call-rejected", "call-accepted", "call-cancelled":
+                return true
+        }
+        return false
+}
+
 func BroadcastToUser(userID uint, eventType string, data interface{}) {
         message := map[string]interface{}{
                 "type": eventType,
@@ -314,7 +382,21 @@ func BroadcastToUser(userID uint, eventType string, data interface{}) {
 
 func (c *WSClient) readPump() {
         defer func() {
-                voiceRoster.RemoveUser(c.UserID)
+                // Убираем пользователя из голосовых каналов только когда закрывается
+                // его ПОСЛЕДНЕЕ соединение (учёт нескольких вкладок). До удаления
+                // рассылаем voice-leave всем каналам, иначе остаются «призрачные» участники.
+                if hub.getUserConnCount(c.UserID) <= 1 {
+                        for _, channelID := range voiceRoster.ChannelsOf(c.UserID) {
+                                log.Printf("Voice leave (disconnect): user %s left channel %s", c.UserID, channelID)
+                                hub.broadcast <- map[string]interface{}{
+                                        "type":       "voice-leave",
+                                        "channel_id": channelID,
+                                        "user_id":    c.UserID,
+                                        "fromUserId": c.UserID,
+                                }
+                        }
+                        voiceRoster.RemoveUser(c.UserID)
+                }
                 hub.unregister <- c
                 c.Conn.Close()
         }()
