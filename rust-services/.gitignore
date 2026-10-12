@@ -1,6 +1,7 @@
 # Rust
 target/
-Cargo.lock
+# Cargo.lock коммитится: workspace содержит бинарные сервисы (audit-service,
+# search-service), lock-файл нужен для воспроизводимых сборок (--locked).
 **/*.rs.bk
 
 # IDE
