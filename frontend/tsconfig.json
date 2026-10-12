@@ -20,8 +20,7 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
 
-    /* Path mapping */
-    "baseUrl": ".",
+    /* Path mapping (baseUrl удалён — в TS 6.0 опция убрана; paths работает относительно tsconfig) */
     "paths": {
       "@/*": ["./src/*"]
     }
