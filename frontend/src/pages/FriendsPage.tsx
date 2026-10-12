@@ -472,7 +472,7 @@ export default function FriendsPage() {
                 {filteredFriends.length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
-                      <Users className="w-10 h-10 text-white" />
+                      <Users className="w-10 h-10 text-primary-foreground" />
                     </div>
                     <p className="text-muted-foreground">
                       {searchQuery ? t('friends.noFriendsFound') : t('friends.noFriends')}
@@ -556,7 +556,7 @@ export default function FriendsPage() {
                 {pendingRequests.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
-                      <UserCheck className="w-10 h-10 text-white" />
+                      <UserCheck className="w-10 h-10 text-primary-foreground" />
                     </div>
                     <p className="text-muted-foreground">{t('friends.noPendingRequests')}</p>
                   </div>
@@ -618,7 +618,7 @@ export default function FriendsPage() {
                 {allUsers.filter(u => u.id !== user?.id && !friends.some(f => f.id === String(u.id)) && !pendingRequests.some(p => p.id === String(u.id))).length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
-                      <Users className="w-10 h-10 text-white" />
+                      <Users className="w-10 h-10 text-primary-foreground" />
                     </div>
                     <p className="text-muted-foreground">{t('friends.noNewUsers')}</p>
                   </div>
@@ -665,7 +665,7 @@ export default function FriendsPage() {
                 {blockedUsers.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
-                      <Ban className="w-10 h-10 text-white" />
+                      <Ban className="w-10 h-10 text-primary-foreground" />
                     </div>
                     <p className="text-muted-foreground">{t('friends.noBlockedUsers')}</p>
                   </div>

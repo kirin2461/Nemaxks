@@ -97,11 +97,11 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
               {avatarPreview ? (
                 <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
               ) : (
-                <User className="w-12 h-12 text-white" />
+                <User className="w-12 h-12 text-primary-foreground" />
               )}
             </div>
             <label className="absolute bottom-0 right-0 w-8 h-8 gradient-brand shadow-glow rounded-full flex items-center justify-center cursor-pointer hover:brightness-110 transition-all">
-              <Camera className="w-4 h-4 text-white" />
+              <Camera className="w-4 h-4 text-primary-foreground" />
               <input
                 type="file"
                 accept="image/*"

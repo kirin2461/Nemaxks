@@ -167,7 +167,7 @@ export default function ContactPage() {
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 gradient-brand glow rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Send className="w-7 h-7 text-white" />
+                  <Send className="w-7 h-7 text-primary-foreground" />
                 </div>
                 <div>
                   <p className="text-sm text-primary mb-1">{t.telegram.title}</p>

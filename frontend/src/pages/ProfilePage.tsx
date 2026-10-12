@@ -216,7 +216,7 @@ export default function ProfilePage() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-3 sm:gap-0">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-xl sm:text-2xl font-bold">
+                        <h1 className="text-xl sm:text-2xl font-bold drop-shadow-md">
                           {displayUser?.username}
                         </h1>
                         {hasPremium && (
