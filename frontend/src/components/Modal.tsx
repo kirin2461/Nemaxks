@@ -49,25 +49,25 @@ export function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
         onClick={closeOnOverlayClick ? onClose : undefined}
       />
-      <div className={`relative w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col bg-card text-card-foreground rounded-xl shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200 ${className}`}>
+      <div className={`relative w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col glass-strong text-card-foreground rounded-2xl animate-in fade-in zoom-in-95 duration-200 ${className}`}>
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-3 md:p-4 border-b border-border shrink-0">
-            {title && <h2 className="text-base md:text-lg font-semibold text-foreground">{title}</h2>}
+          <div className="flex items-center justify-between p-3 md:p-4 border-b border-border/60 shrink-0">
+            {title && <h2 className="text-base md:text-lg font-semibold tracking-tight text-foreground">{title}</h2>}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground touch-target"
+                className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground touch-target"
               >
                 <X size={20} />
               </button>
             )}
           </div>
         )}
-        <div className="p-3 md:p-4 overflow-y-auto flex-1">
+        <div className="p-3 md:p-4 overflow-y-auto flex-1 custom-scrollbar">
           {children}
         </div>
       </div>
