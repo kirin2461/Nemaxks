@@ -1,0 +1,14 @@
+node_modules/
+dist/
+
+# Секреты и локальные env-файлы
+.env
+.env.*
+*.env
+
+# Логи
+*.log
+
+# VCS
+.git
+.gitignore

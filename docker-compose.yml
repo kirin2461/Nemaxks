@@ -1,5 +1,14 @@
 version: '3.8'
 
+# Nemaxks — production-like стек.
+#
+# Запуск:
+#   cp .env.example .env  # заполнить POSTGRES_PASSWORD, REDIS_PASSWORD, JWT_SECRET
+#   docker compose up -d                 # postgres + redis + livekit + backend + frontend(prod)
+#   docker compose --profile dev up -d   # + frontend-dev (vite dev server с hot reload)
+#
+# Пароли не имеют дефолтов (:?required) — задайте их в .env.
+
 services:
   # PostgreSQL Database
   postgres:
@@ -8,7 +17,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-nemaxks}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nemaxks_secret}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
       POSTGRES_DB: ${POSTGRES_DB:-nemaxks}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -20,21 +29,35 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis Cache
+  # Redis Cache (пароль обязателен)
   redis:
     image: redis:7-alpine
     container_name: nemaxks-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?required}"]
     volumes:
       - redis_data:/data
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?required}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # LiveKit Voice/Video server (конфиг — ./livekit.yaml в корне репо)
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: nemaxks-livekit
+    restart: unless-stopped
+    command: ["--config", "/etc/livekit.yaml"]
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "7880:7880"     # HTTP/WebSocket API
+      - "7881:7881"     # RTC TCP
+      - "7882:7882/udp" # RTC UDP
+      - "50000-50100:50000-50100/udp" # RTC port range (см. livekit.yaml)
 
   # Backend API
   backend:
@@ -49,10 +72,17 @@ services:
       redis:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-nemaxks}:${POSTGRES_PASSWORD:-nemaxks_secret}@postgres:5432/${POSTGRES_DB:-nemaxks}?sslmode=disable
-      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgres://${POSTGRES_USER:-nemaxks}:${POSTGRES_PASSWORD:?required}@postgres:5432/${POSTGRES_DB:-nemaxks}?sslmode=disable
+      REDIS_URL: redis://:${REDIS_PASSWORD:?required}@redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173}
+      # LiveKit (проброс ключей; по умолчанию — devkey/devsecret из livekit.yaml)
+      LIVEKIT_URL: ${LIVEKIT_URL:-ws://livekit:7880}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-devsecret}
       PORT: 8000
       GIN_MODE: ${GIN_MODE:-release}
     volumes:
@@ -65,7 +95,8 @@ services:
       timeout: 10s
       retries: 3
 
-  # Frontend (development)
+  # Frontend (PRODUCTION): собранный статический бандл за nginx.
+  # Запускается по умолчанию вместе со стеком.
   frontend:
     build:
       context: ./frontend
@@ -74,10 +105,23 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-    environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     ports:
       - "5173:5173"
+
+  # Frontend (DEVELOPMENT): vite dev server с hot reload.
+  # Не собирает образ — монтирует исходники. Запуск: --profile dev
+  frontend-dev:
+    image: node:20-alpine
+    container_name: nemaxks-frontend-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5174:5173"
     profiles:
       - dev
 
@@ -87,6 +131,8 @@ volumes:
   redis_data:
     driver: local
   uploads_data:
+    driver: local
+  frontend_node_modules:
     driver: local
 
 networks:

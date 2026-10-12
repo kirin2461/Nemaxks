@@ -1,3 +1,10 @@
+# ==========================================================================
+# EXPERIMENTAL / НЕ ПОДКЛЮЧЕНО
+# gRPC-транспорт (envoy + rust-services + backend/grpc_server.go) в
+# production-пути НЕ активен: gRPC-сервер нигде не запускается,
+# backend/proto/*.pb.go — рукописные заглушки. Файл оставлен как заготовка
+# для будущего gRPC-gateway. См. README.md (раздел "gRPC (experimental)").
+# ==========================================================================
 static_resources:
   listeners:
   # Main listener for HTTP/gRPC-Web

@@ -1,13 +1,21 @@
 version: '3.8'
 
+# Rust-микросервисы Nemaxks: audit-service и search-service (gRPC).
+# ВНИМАНИЕ: build context = корень репозитория (нужен каталог proto/):
+#   docker compose -f rust-services/docker-compose.yml build
+# (compose автоматически резолвит context: ".." относительно этого файла)
+#
+# Статус gRPC-транспорта: EXPERIMENTAL — Go-бэкенд пока не вызывает эти
+# сервисы в production-пути (см. README.md, раздел про gRPC).
+
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:18.1-alpine
+    image: postgres:16-alpine
     container_name: comm_postgres
     environment:
       POSTGRES_USER: comm_user
-      POSTGRES_PASSWORD: comm_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
       POSTGRES_DB: communication_db
     ports:
       - "5432:5432"
@@ -23,96 +31,52 @@ services:
 
   # Redis Cache
   redis:
-    image: redis:8.4-alpine
+    image: redis:7-alpine
     container_name: comm_redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?required}"]
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?required}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - comm_network
 
-  # Message Service
-  message-service:
+  # Audit Service (gRPC, порт 50051)
+  audit-service:
     build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: message_service
+      context: ..
+      dockerfile: rust-services/audit-service/Dockerfile
+    container_name: audit_service
     environment:
-      DATABASE_URL: postgresql://comm_user:comm_password@postgres:5432/communication_db
-      REDIS_URL: redis://redis:6379
-      SERVICE_PORT: 8001
+      DATABASE_URL: postgresql://comm_user:${POSTGRES_PASSWORD:?required}@postgres:5432/communication_db
     ports:
-      - "8001:8001"
+      - "50051:50051"
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     networks:
       - comm_network
 
-  # Channel Service
-  channel-service:
+  # Search Service (gRPC, порт 50052)
+  search-service:
     build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: channel_service
+      context: ..
+      dockerfile: rust-services/search-service/Dockerfile
+    container_name: search_service
     environment:
-      DATABASE_URL: postgresql://comm_user:comm_password@postgres:5432/communication_db
-      REDIS_URL: redis://redis:6379
-      SERVICE_PORT: 8002
+      DATABASE_URL: postgresql://comm_user:${POSTGRES_PASSWORD:?required}@postgres:5432/communication_db
+      TANTIVY_INDEX_PATH: /data/search_index
     ports:
-      - "8002:8002"
+      - "50052:50052"
+    volumes:
+      - search_index:/data
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - comm_network
-
-  # Voice Service
-  voice-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: voice_service
-    environment:
-      DATABASE_URL: postgresql://comm_user:comm_password@postgres:5432/communication_db
-      REDIS_URL: redis://redis:6379
-      SERVICE_PORT: 8003
-    ports:
-      - "8003:8003"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - comm_network
-
-  # Board Service
-  board-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: board_service
-    environment:
-      DATABASE_URL: postgresql://comm_user:comm_password@postgres:5432/communication_db
-      REDIS_URL: redis://redis:6379
-      SERVICE_PORT: 8004
-    ports:
-      - "8004:8004"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     networks:
       - comm_network
@@ -120,6 +84,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  search_index:
 
 networks:
   comm_network:

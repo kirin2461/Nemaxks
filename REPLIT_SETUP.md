@@ -29,7 +29,7 @@ Create `.env` files:
 
 **backend/.env**
 ```env
-PORT=8080
+PORT=8000
 DATABASE_URL=your_postgres_url
 JWT_SECRET=your_secret_key
 REDIS_URL=your_redis_url
@@ -43,10 +43,11 @@ VITE_WS_URL=wss://your-repl.replit.app/ws
 
 ### 4. Run the Application
 
-Replit will automatically:
-1. Build backend: `go build -o server cmd/server/main.go`
-2. Build frontend: `npm run build`
-3. Start both services
+Replit will automatically (см. `.replit`):
+1. Build backend: `cd backend && CGO_ENABLED=0 go build -o ./server .`
+   (main package находится в корне `backend/`, а не в `cmd/server`)
+2. Build frontend: `cd frontend && npm install && npm run build`
+3. Start backend: `cd backend && ./server` (PORT=3000 по `.replit`)
 
 ### 5. Access Your App
 
@@ -60,7 +61,7 @@ Replit will automatically:
 ```bash
 cd backend
 go mod tidy
-go run cmd/server/main.go
+go run .
 ```
 
 ### Frontend errors

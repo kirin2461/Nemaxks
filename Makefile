@@ -1,6 +1,40 @@
-# Makefile for protobuf generation
+# Makefile for Nemaxks
+#
+# NOTE: proto-* target'ы — EXPERIMENTAL. gRPC-транспорт не активен
+# (см. README.md, раздел "gRPC (experimental)"). backend/proto/*.pb.go —
+# рукописные заглушки; регенерация требует third_party/googleapis.
 
-.PHONY: proto proto-clean proto-install
+.PHONY: proto proto-clean proto-install build test docker-up docker-down help
+
+# ===========================================
+# Основные target'ы
+# ===========================================
+
+# Сборка backend (Go) и frontend (Vite)
+build:
+	@echo "Building backend..."
+	cd backend && go build ./...
+	@echo "Building frontend..."
+	cd frontend && npm ci && npm run build
+	@echo "✓ Build complete"
+
+# Тесты backend + проверки
+test:
+	@echo "Running Go tests..."
+	cd backend && go vet ./... && go test ./...
+	@echo "✓ Tests complete"
+
+# Поднять стек (postgres, redis, livekit, backend, frontend-prod)
+docker-up:
+	docker compose up -d --build
+
+# Остановить стек
+docker-down:
+	docker compose down
+
+# ===========================================
+# Proto (EXPERIMENTAL, gRPC не подключён)
+# ===========================================
 
 # Proto generation
 proto:
@@ -38,6 +72,10 @@ proto-clean:
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  proto-install - Install protoc plugins and googleapis"
-	@echo "  proto         - Generate Go code from proto files"
-	@echo "  proto-clean   - Clean generated proto files"
+	@echo "  build         - Build backend (Go) and frontend (Vite)"
+	@echo "  test          - Run go vet + go test (backend)"
+	@echo "  docker-up     - docker compose up -d --build (full stack)"
+	@echo "  docker-down   - docker compose down"
+	@echo "  proto-install - [EXPERIMENTAL] Install protoc plugins and googleapis"
+	@echo "  proto         - [EXPERIMENTAL] Generate Go code from proto files"
+	@echo "  proto-clean   - [EXPERIMENTAL] Clean generated proto files"
