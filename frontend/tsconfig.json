@@ -23,7 +23,11 @@
     /* Path mapping (baseUrl удалён — в TS 6.0 опция убрана; paths работает относительно tsconfig) */
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+
+    /* Явный список @types: не подключаем автоматически всё из node_modules/@types
+       (в CI @types/aria-query приходит битым с зеркала → TS2688) */
+    "types": ["node", "react", "react-dom", "qrcode.react"]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
