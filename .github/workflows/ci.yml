@@ -113,16 +113,10 @@ jobs:
       - name: Diagnose toolchain
         working-directory: ./frontend
         run: |
-          echo "### Frontend toolchain" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          node --version >> "$GITHUB_STEP_SUMMARY" 2>&1
-          npm --version >> "$GITHUB_STEP_SUMMARY" 2>&1
-          npm config get omit >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
-          echo "NODE_ENV=$NODE_ENV" >> "$GITHUB_STEP_SUMMARY"
-          npm ls typescript vitest @types/node >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
-          ls node_modules/.bin/tsc node_modules/.bin/vite >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
-          ./node_modules/.bin/tsc --version >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice::node=$(node --version) npm=$(npm --version) omit=$(npm config get omit 2>/dev/null) NODE_ENV=${NODE_ENV:-unset}"
+          echo "::notice::bin tsc=$(test -f node_modules/.bin/tsc && echo OK || echo MISSING) vite=$(test -f node_modules/.bin/vite && echo OK || echo MISSING) vitest=$(test -d node_modules/vitest && echo OK || echo MISSING) typesnode=$(test -d node_modules/@types/node && echo OK || echo MISSING)"
+          echo "::notice::tsc-version=$(./node_modules/.bin/tsc --version 2>/dev/null || echo NA)"
+          npm ls typescript vitest @types/node 2>&1 | head -6 | while read -r l; do echo "::notice::npm-ls: $l"; done
 
       # Advisory: eslint запускается, но пока в кодовой базе есть
       # legacy-ошибки линта — не блокируем CI (см. отчёт lint).
