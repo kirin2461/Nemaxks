@@ -50,18 +50,18 @@ export function DailyRewardModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Ежедневные награды" size="lg">
       <div className="space-y-6">
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-500/20 to-yellow-500/20 rounded-lg border border-orange-500/30">
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 rounded-lg border border-accent/30">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-brand rounded-full flex items-center justify-center shadow-soft">
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-white font-bold">Серия: {currentStreak} дней</p>
-              <p className="text-orange-300 text-sm">Заходите каждый день для бонусов!</p>
+              <p className="text-foreground font-bold">Серия: {currentStreak} дней</p>
+              <p className="text-accent/80 text-sm">Заходите каждый день для бонусов!</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-black text-orange-400">x{Math.min(currentStreak, 7)}</p>
+            <p className="text-2xl font-black text-accent">x{Math.min(currentStreak, 7)}</p>
             <p className="text-xs text-muted-foreground">множитель</p>
           </div>
         </div>
@@ -72,7 +72,7 @@ export function DailyRewardModal({
               key={reward.day}
               className={`relative p-3 rounded-lg border text-center transition-all ${
                 reward.isToday
-                  ? 'border-purple-500 bg-purple-500/20 ring-2 ring-purple-500/50'
+                  ? 'border-primary/40 bg-primary/15 ring-2 ring-primary/50'
                   : reward.claimed
                   ? 'border-green-500/50 bg-green-500/10'
                   : 'border-border bg-muted/60'
@@ -83,7 +83,7 @@ export function DailyRewardModal({
               )}
               
               <p className={`text-xs font-medium mb-2 ${
-                reward.isToday ? 'text-purple-300' : 'text-muted-foreground'
+                reward.isToday ? 'text-primary/80' : 'text-muted-foreground'
               }`}>
                 День {reward.day}
               </p>
@@ -92,14 +92,14 @@ export function DailyRewardModal({
                 {reward.special ? (
                   <span className="text-xl">{reward.special}</span>
                 ) : reward.gems ? (
-                  <Gem className="w-5 h-5 text-purple-400" />
+                  <Gem className="w-5 h-5 text-primary" />
                 ) : (
-                  <Coins className="w-5 h-5 text-yellow-400" />
+                  <Coins className="w-5 h-5 text-accent" />
                 )}
               </div>
               
               <p className={`text-sm font-bold ${
-                reward.claimed ? 'text-muted-foreground' : 'text-white'
+                reward.claimed ? 'text-muted-foreground' : 'text-foreground'
               }`}>
                 {reward.special || (reward.gems ? `${reward.gems}💎` : `${reward.coins}🪙`)}
               </p>
@@ -113,13 +113,13 @@ export function DailyRewardModal({
             <p className="text-green-400 font-bold mb-2">Награда получена!</p>
             <div className="flex justify-center gap-4">
               {claimedReward.coins && (
-                <span className="text-yellow-400">+{claimedReward.coins} 🪙</span>
+                <span className="text-accent">+{claimedReward.coins} 🪙</span>
               )}
               {claimedReward.gems && (
-                <span className="text-purple-400">+{claimedReward.gems} 💎</span>
+                <span className="text-primary">+{claimedReward.gems} 💎</span>
               )}
               {claimedReward.xp && (
-                <span className="text-blue-400">+{claimedReward.xp} XP</span>
+                <span className="text-accent">+{claimedReward.xp} XP</span>
               )}
             </div>
           </div>
@@ -135,7 +135,7 @@ export function DailyRewardModal({
           <button
             onClick={handleClaim}
             disabled={!canClaim || loading}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-gradient-brand hover:brightness-110 rounded-lg text-white font-bold transition-all shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

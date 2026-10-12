@@ -10,15 +10,16 @@ interface SpinWheelModalProps {
   nextSpinTime?: string
 }
 
+// Палитра сегментов — из дизайн-токенов Nebula (primary/accent и их оттенки)
 const WHEEL_SEGMENTS = [
-  { label: '100 🪙', color: '#f59e0b', value: 100 },
-  { label: '5 💎', color: '#8b5cf6', value: 5 },
-  { label: '50 🪙', color: '#eab308', value: 50 },
-  { label: '🎁', color: '#ec4899', value: 0 },
-  { label: '200 🪙', color: '#f97316', value: 200 },
-  { label: '10 💎', color: '#a855f7', value: 10 },
-  { label: '25 🪙', color: '#fbbf24', value: 25 },
-  { label: '500 XP', color: '#3b82f6', value: 500 },
+  { label: '100 🪙', color: 'hsl(var(--accent))', value: 100 },
+  { label: '5 💎', color: 'hsl(var(--primary))', value: 5 },
+  { label: '50 🪙', color: 'hsl(var(--accent) / 0.75)', value: 50 },
+  { label: '🎁', color: 'hsl(var(--primary) / 0.75)', value: 0 },
+  { label: '200 🪙', color: 'hsl(var(--accent) / 0.85)', value: 200 },
+  { label: '10 💎', color: 'hsl(var(--primary) / 0.85)', value: 10 },
+  { label: '25 🪙', color: 'hsl(var(--accent) / 0.65)', value: 25 },
+  { label: '500 XP', color: 'hsl(var(--primary) / 0.65)', value: 500 },
 ]
 
 export function SpinWheelModal({
@@ -65,12 +66,12 @@ export function SpinWheelModal({
       <div className="text-center">
         <div className="relative w-64 h-64 mx-auto mb-6">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
-            <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-white drop-shadow-lg" />
+            <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-foreground drop-shadow-lg" />
           </div>
           
           <div
             ref={wheelRef}
-            className="w-full h-full rounded-full border-4 border-white/20 shadow-2xl overflow-hidden"
+            className="w-full h-full rounded-full border-4 border-border shadow-2xl overflow-hidden"
             style={{
               transform: `rotate(${rotation}deg)`,
               transition: spinning ? 'transform 4s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none'
@@ -100,7 +101,7 @@ export function SpinWheelModal({
                     <path
                       d={`M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArc} 1 ${x2} ${y2} Z`}
                       fill={segment.color}
-                      stroke="#fff"
+                      stroke="hsl(var(--background))"
                       strokeWidth="0.5"
                     />
                     <text
@@ -118,16 +119,16 @@ export function SpinWheelModal({
                   </g>
                 )
               })}
-              <circle cx="50" cy="50" r="8" fill="#1a1a2e" stroke="white" strokeWidth="2" />
+              <circle cx="50" cy="50" r="8" fill="hsl(var(--card))" stroke="hsl(var(--foreground))" strokeWidth="1" />
             </svg>
           </div>
         </div>
 
         {result && !spinning && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg border border-purple-500/30 animate-in fade-in zoom-in">
-            <Gift className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+          <div className="mb-6 p-4 bg-gradient-to-r from-primary/20 to-accent/20 rounded-lg border border-primary/30 animate-in fade-in zoom-in">
+            <Gift className="w-8 h-8 text-primary mx-auto mb-2" />
             <p className="text-foreground font-bold text-lg mb-1">Поздравляем!</p>
-            <p className="text-purple-300">Вы выиграли: {result.prize}</p>
+            <p className="text-primary/80">Вы выиграли: {result.prize}</p>
           </div>
         )}
 
@@ -140,7 +141,7 @@ export function SpinWheelModal({
         <button
           onClick={handleSpin}
           disabled={!canSpin || spinning}
-          className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full px-6 py-3 bg-gradient-brand hover:brightness-110 rounded-lg text-white font-bold transition-all shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {spinning ? (
             <>
