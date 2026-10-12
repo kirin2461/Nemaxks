@@ -368,7 +368,7 @@ export default function FriendsPage() {
       case 'online': return 'bg-green-500'
       case 'away': return 'bg-yellow-500'
       case 'busy': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      default: return 'bg-muted-foreground'
     }
   }
 
@@ -376,16 +376,16 @@ export default function FriendsPage() {
     <Layout>
       <div className="h-screen flex flex-col">
         {/* Header */}
-        <div className="p-4 md:p-6 border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
+        <div className="p-4 md:p-6 border-b border-border/60 bg-card/55 backdrop-blur-xl sticky top-0 z-10 shrink-0 shadow-soft">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between gap-3 mb-4 md:mb-6">
               <div className="min-w-0">
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold gradient-text mb-1 md:mb-2">{t('friends.title')}</h1>
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold gradient-brand-text mb-1 md:mb-2">{t('friends.title')}</h1>
                 <p className="text-sm md:text-base text-muted-foreground hidden sm:block">{t('friends.manageConnections')}</p>
               </div>
               <button
                 onClick={() => setShowAddFriend(!showAddFriend)}
-                className="btn-cosmic px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 shrink-0"
+                className="gradient-brand text-primary-foreground rounded-lg font-medium shadow-soft hover:brightness-110 hover:shadow-glow active:scale-[0.98] transition-all px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 shrink-0"
               >
                 <UserPlus className="w-5 h-5" />
                 <span className="hidden sm:inline">{t('friends.addFriend')}</span>
@@ -394,14 +394,14 @@ export default function FriendsPage() {
 
             {/* Add Friend Form */}
             {showAddFriend && (
-              <div className="mb-6 p-4 bg-accent/10 border border-border rounded-lg animate-slide-in">
+              <div className="mb-6 p-4 glass rounded-xl animate-slide-in">
                 <div className="flex gap-3">
                   <input
                     type="text"
                     value={addFriendInput}
                     onChange={(e) => setAddFriendInput(e.target.value)}
                     placeholder={t('friends.addFriendPlaceholder')}
-                    className="flex-1 input-cosmic"
+                    className="flex-1 input-field"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleAddFriend()
                     }}
@@ -409,7 +409,7 @@ export default function FriendsPage() {
                   <button
                     onClick={handleAddFriend}
                     disabled={!addFriendInput.trim()}
-                    className="btn-cosmic px-6"
+                    className="gradient-brand text-primary-foreground rounded-lg font-medium shadow-soft hover:brightness-110 active:scale-[0.98] transition-all px-6 disabled:opacity-50"
                   >
                     <Send className="w-5 h-5" />
                   </button>
@@ -428,10 +428,7 @@ export default function FriendsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('friends.searchPlaceholder')}
-                className="w-full px-12 py-3 bg-background border border-border rounded-lg
-                          text-foreground placeholder:text-muted-foreground
-                          focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-                          transition-all duration-300"
+                className="input-field px-12 py-3"
               />
             </div>
           </div>
@@ -452,7 +449,7 @@ export default function FriendsPage() {
                 onClick={() => setActiveTab(tab.key as TabType)}
                 className={`px-3 md:px-4 py-2 rounded-lg transition-all duration-300 flex items-center gap-1.5 md:gap-2 whitespace-nowrap ${
                   activeTab === tab.key
-                    ? 'bg-accent text-accent-foreground'
+                    ? 'gradient-brand text-primary-foreground shadow-glow'
                     : 'hover:bg-accent/10 text-muted-foreground'
                 }`}
               >
@@ -474,7 +471,7 @@ export default function FriendsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredFriends.length === 0 ? (
                   <div className="col-span-full text-center py-12">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
                       <Users className="w-10 h-10 text-white" />
                     </div>
                     <p className="text-muted-foreground">
@@ -485,7 +482,7 @@ export default function FriendsPage() {
                   filteredFriends.map((friend, index) => (
                     <div
                       key={friend.id}
-                      className="card-cosmic p-4 hover:scale-[1.02] transition-all duration-300 animate-slide-in"
+                      className="glass rounded-xl shadow-soft p-4 hover:scale-[1.02] hover:shadow-glow transition-all duration-300 animate-slide-in"
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       {/* Friend Header */}
@@ -558,7 +555,7 @@ export default function FriendsPage() {
               <div className="space-y-4">
                 {pendingRequests.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
                       <UserCheck className="w-10 h-10 text-white" />
                     </div>
                     <p className="text-muted-foreground">{t('friends.noPendingRequests')}</p>
@@ -567,7 +564,7 @@ export default function FriendsPage() {
                   pendingRequests.map((request, index) => (
                     <div
                       key={request.id}
-                      className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 animate-slide-in"
+                      className="glass rounded-xl shadow-soft p-4 flex items-center gap-4 animate-slide-in"
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <Avatar
@@ -620,7 +617,7 @@ export default function FriendsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {allUsers.filter(u => u.id !== user?.id && !friends.some(f => f.id === String(u.id)) && !pendingRequests.some(p => p.id === String(u.id))).length === 0 ? (
                   <div className="col-span-full text-center py-12">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
                       <Users className="w-10 h-10 text-white" />
                     </div>
                     <p className="text-muted-foreground">{t('friends.noNewUsers')}</p>
@@ -629,7 +626,7 @@ export default function FriendsPage() {
                   allUsers.filter(u => u.id !== user?.id && !friends.some(f => f.id === String(u.id)) && !pendingRequests.some(p => p.id === String(u.id))).map((discoverUser, index) => (
                     <div
                       key={discoverUser.id}
-                      className="card-cosmic p-4 animate-slide-in"
+                      className="glass rounded-xl shadow-soft p-4 animate-slide-in"
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <div className="flex items-start gap-3 mb-3">
@@ -667,7 +664,7 @@ export default function FriendsPage() {
               <div className="space-y-4">
                 {blockedUsers.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
                       <Ban className="w-10 h-10 text-white" />
                     </div>
                     <p className="text-muted-foreground">{t('friends.noBlockedUsers')}</p>
@@ -676,7 +673,7 @@ export default function FriendsPage() {
                   blockedUsers.map((blocked, index) => (
                     <div
                       key={blocked.id}
-                      className="card-cosmic p-4 flex items-center gap-4 animate-slide-in"
+                      className="glass rounded-xl shadow-soft p-4 flex items-center gap-4 animate-slide-in"
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <Avatar
