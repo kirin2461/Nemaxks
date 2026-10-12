@@ -74,30 +74,20 @@ const initialState: VoiceState = {
 
 const VoiceContext = createContext<VoiceContextValue | null>(null)
 
+// Минимальный fallback: только публичные бесплатные STUN-серверы.
+// Основной источник ICE-конфигурации — GET /api/rtc/ice-servers: бэкенд отдаёт
+// TURN из env-переменных (TURN_URLS, TURN_USERNAME, TURN_CREDENTIAL).
+// Для продакшна рекомендуется поднять свой coturn и прописать его через env на бэкенде —
+// хардкодить TURN на фронтенде не нужно.
 const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
-  { urls: 'stun:stun3.l.google.com:19302' },
-  { urls: 'stun:stun4.l.google.com:19302' },
-  {
-    urls: 'turn:openrelay.metered.ca:80',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:openrelay.metered.ca:443',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
+  { urls: 'stun:stun.cloudflare.com:3478' },
 ]
 
+// Загружает ICE-серверы с API и мерджит с fallback-списком (dedupe по urls).
 async function fetchICEServers(): Promise<RTCIceServer[]> {
+  let apiServers: RTCIceServer[] = []
   try {
     const token = localStorage.getItem('token')
     const response = await fetch('/api/rtc/ice-servers', {
@@ -106,15 +96,24 @@ async function fetchICEServers(): Promise<RTCIceServer[]> {
     if (response.ok) {
       const data = await response.json()
       if (data.iceServers && Array.isArray(data.iceServers)) {
-        console.log('[VoiceContext] Loaded ICE servers from API:', data.iceServers.length)
-        return data.iceServers
+        apiServers = data.iceServers
       }
     }
   } catch (error) {
     console.error('Failed to fetch ICE servers:', error)
   }
-  console.log('[VoiceContext] Using default ICE servers with TURN')
-  return DEFAULT_ICE_SERVERS
+  // Мердж: серверы из API (включая TURN) + fallback STUN, dedupe по urls
+  const seen = new Set<string>()
+  const merged: RTCIceServer[] = []
+  for (const server of [...apiServers, ...DEFAULT_ICE_SERVERS]) {
+    const key = Array.isArray(server.urls) ? server.urls.join(',') : String(server.urls)
+    if (!seen.has(key)) {
+      seen.add(key)
+      merged.push(server)
+    }
+  }
+  console.log(`[VoiceContext] ICE servers: ${merged.length} total (${apiServers.length} from API)`)
+  return merged
 }
 
 type VoiceMode = 'p2p' | 'livekit'
@@ -142,67 +141,178 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const remoteAudioAnalysersRef = useRef<Map<string, { audioContext: AudioContext; analyser: AnalyserNode; animationId: number }>>(new Map())
   const remoteVideoStreamsRef = useRef<Map<string, MediaStream>>(new Map())
   const remoteScreenStreamsRef = useRef<Map<string, MediaStream>>(new Map())
-  const pendingCandidatesRef = useRef<Map<string, RTCIceCandidate[]>>(new Map())
-  const createOfferRef = useRef<((peerId: string) => Promise<void>) | null>(null)
-  const iceServersRef = useRef<RTCIceServer[]>(DEFAULT_ICE_SERVERS)
-  
+  // Очередь ICE-кандидатов до установки remoteDescription (с меткой времени для TTL-очистки)
+  const pendingCandidatesRef = useRef<Map<string, { candidate: RTCIceCandidateInit | null; ts: number }[]>>(new Map())
+  // null = ещё не загружались с API (getICEServers делает fetch один раз и кэширует)
+  const iceServersRef = useRef<RTCIceServer[] | null>(null)
+  const iceServersPromiseRef = useRef<Promise<RTCIceServer[]> | null>(null)
+  // Perfect negotiation: флаг "мы сейчас создаём оффер" на каждого пира
+  const makingOfferRef = useRef<Map<string, boolean>>(new Map())
+  // Пиры, с которыми завершена начальнаяnegotiation (onnegotiationneeded активен только после неё)
+  const negotiationReadyRef = useRef<Set<string>>(new Set())
+  // Состояние медиа пиров по сигналингу (voice-state-update) — основной источник screen vs camera
+  const remoteMediaStateRef = useRef<Map<string, { video: boolean; screen: boolean }>>(new Map())
+  // id голосового аудио-потока пира (защита от затирания вторым аудиотреком, например со скриншэра)
+  const remoteVoiceStreamIdRef = useRef<Map<string, string>>(new Map())
+
+  // Perfect negotiation: детерминированная роль в паре.
+  // polite = (мой id > id пира). Оффер при glare откатывает polite-сторона,
+  // impolite-сторона (меньший id) свой оффер НЕ откатывает.
+  const isPolite = useCallback((peerId: string) => {
+    return String(user?.id) > String(peerId)
+  }, [user?.id])
+
   useEffect(() => {
     stateRef.current = state
   }, [state])
+
+  // TTL-очистка очередей ICE-кандидатов (30с) для неизвестных/отвалившихся peerId
+  useEffect(() => {
+    const PENDING_CANDIDATE_TTL_MS = 30000
+    const interval = setInterval(() => {
+      const now = Date.now()
+      pendingCandidatesRef.current.forEach((queue, peerId) => {
+        const fresh = queue.filter(entry => now - entry.ts < PENDING_CANDIDATE_TTL_MS)
+        if (fresh.length === 0) {
+          pendingCandidatesRef.current.delete(peerId)
+        } else if (fresh.length !== queue.length) {
+          pendingCandidatesRef.current.set(peerId, fresh)
+        }
+      })
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [])
 
   const broadcastVoiceEvent = useCallback((type: string, data: object) => {
     sendWebSocketMessage({ type, ...data })
   }, [sendWebSocketMessage])
 
+  // Загрузка ICE-серверов: один fetch с кэшем (iceServersRef) и дедупликацией
+  // параллельных вызовов (iceServersPromiseRef).
+  const getICEServers = useCallback(async (): Promise<RTCIceServer[]> => {
+    if (iceServersRef.current) {
+      return iceServersRef.current
+    }
+    if (!iceServersPromiseRef.current) {
+      iceServersPromiseRef.current = fetchICEServers()
+        .then(servers => {
+          iceServersRef.current = servers
+          return servers
+        })
+        .finally(() => {
+          iceServersPromiseRef.current = null
+        })
+    }
+    return iceServersPromiseRef.current
+  }, [])
+
+  // Синхронизация треков с senders без полной пересборки:
+  // replaceTrack для существующих senders, addTrack только для новых треков,
+  // removeTrack только для реально удалённых. Изменения триггерят onnegotiationneeded.
   const addTracksToPeerConnection = useCallback((pc: RTCPeerConnection) => {
-    // Remove existing senders
-    pc.getSenders().forEach(sender => pc.removeTrack(sender))
-    
-    // Add audio track
+    const desiredTracks: { track: MediaStreamTrack; stream: MediaStream }[] = []
+
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => {
-        pc.addTrack(track, localStreamRef.current!)
+        desiredTracks.push({ track, stream: localStreamRef.current! })
       })
     }
-    
-    // Add video track if enabled
+
     if (localVideoStreamRef.current && stateRef.current.hasVideo) {
       localVideoStreamRef.current.getTracks().forEach(track => {
-        pc.addTrack(track, localVideoStreamRef.current!)
+        desiredTracks.push({ track, stream: localVideoStreamRef.current! })
       })
     }
-    
-    // Add screen share track if enabled
+
     if (localScreenStreamRef.current && stateRef.current.isScreenSharing) {
       localScreenStreamRef.current.getTracks().forEach(track => {
-        pc.addTrack(track, localScreenStreamRef.current!)
+        desiredTracks.push({ track, stream: localScreenStreamRef.current! })
       })
+    }
+
+    const senders = pc.getSenders()
+
+    // Удаляем senders, чьи треки больше не нужны
+    for (const sender of senders) {
+      if (sender.track && !desiredTracks.some(d => d.track === sender.track)) {
+        pc.removeTrack(sender)
+      }
+    }
+
+    // Добавляем/заменяем треки
+    for (const { track, stream } of desiredTracks) {
+      const existing = pc.getSenders().find(s => s.track === track)
+      if (existing) continue // трек уже отправляется
+
+      // Переиспользуем пустой sender того же kind через replaceTrack
+      const reusable = pc.getSenders().find(s => !s.track && s instanceof RTCRtpSender)
+      if (reusable) {
+        reusable.replaceTrack(track).catch(err => console.error('replaceTrack failed:', err))
+      } else {
+        pc.addTrack(track, stream)
+      }
     }
   }, [])
 
   const createPeerConnection = useCallback((peerId: string): RTCPeerConnection => {
-    const pc = new RTCPeerConnection({ 
-      iceServers: iceServersRef.current,
+    const pc = new RTCPeerConnection({
+      iceServers: iceServersRef.current ?? DEFAULT_ICE_SERVERS,
       iceCandidatePoolSize: 10,
       bundlePolicy: 'max-bundle',
       rtcpMuxPolicy: 'require'
     })
-    
+
     pc.onicecandidate = (event) => {
-      if (event.candidate && stateRef.current.channelId) {
+      if (stateRef.current.channelId) {
         sendWebSocketMessage({
           type: 'voice-ice-candidate',
           targetUserId: peerId,
           channel_id: stateRef.current.channelId,
-          candidate: event.candidate.toJSON()
+          // toJSON() для корректной сериализации; null = end-of-candidates
+          candidate: event.candidate ? event.candidate.toJSON() : null
         })
       }
     }
-    
+
+    // Perfect negotiation: единая точка создания офферов для ренегосиации и ICE restart.
+    // Срабатывает только после завершения начальнойnegotiation (negotiationReadyRef),
+    // чтобы не слать лишние офферы во время первичного offer/answer.
+    pc.onnegotiationneeded = async () => {
+      if (pc.signalingState !== 'stable') return
+      if (!negotiationReadyRef.current.has(peerId)) return
+      if (!stateRef.current.isConnected || !stateRef.current.channelId) return
+      try {
+        makingOfferRef.current.set(peerId, true)
+        await pc.setLocalDescription()
+        if (pc.localDescription) {
+          sendWebSocketMessage({
+            type: 'voice-offer',
+            targetUserId: peerId,
+            channel_id: stateRef.current.channelId,
+            sdp: pc.localDescription.sdp
+          })
+        }
+      } catch (error) {
+        console.error(`onnegotiationneeded failed for peer ${peerId}:`, error)
+      } finally {
+        makingOfferRef.current.set(peerId, false)
+      }
+    }
+
     pc.ontrack = (event) => {
       console.log(`Received remote track from ${peerId}: ${event.track.kind}`, event.track.label)
-      
+      const stream = event.streams[0]
+
       if (event.track.kind === 'audio') {
+        const streamId = stream?.id || ''
+        const knownVoiceStreamId = remoteVoiceStreamIdRef.current.get(peerId)
+        if (knownVoiceStreamId && knownVoiceStreamId !== streamId) {
+          // Второй аудиотрек (например, звук скриншэра) — не затираем голосовой элемент
+          console.log(`[VoiceContext] Ignoring extra audio track from ${peerId} (stream ${streamId})`)
+          return
+        }
+        remoteVoiceStreamIdRef.current.set(peerId, streamId)
+
         let audioEl = remoteAudioElementsRef.current.get(peerId)
         if (!audioEl) {
           audioEl = new Audio()
@@ -213,7 +323,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
           remoteAudioElementsRef.current.set(peerId, audioEl)
         }
         console.log(`Setting remote audio stream for ${peerId}`);
-        audioEl.srcObject = event.streams[0]
+        audioEl.srcObject = stream
         audioEl.play().catch(err => {
           console.error("Error playing remote audio element:", err);
           const playOnGesture = () => {
@@ -222,35 +332,56 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
           };
           document.addEventListener('click', playOnGesture);
         })
-        startRemoteVoiceAnalysis(peerId, event.streams[0])
+        // Анализ голоса запускаем один раз на голосовой поток (не на поток скриншэра)
+        if (!remoteAudioAnalysersRef.current.has(peerId)) {
+          startRemoteVoiceAnalysis(peerId, stream)
+        }
       } else if (event.track.kind === 'video') {
+        // Screen vs camera: основной источник — сигналинг (voice-state-update),
+        // label трека используется только как fallback.
         const label = event.track.label.toLowerCase()
-        if (label.includes('screen') || label.includes('window')) {
-          remoteScreenStreamsRef.current.set(peerId, event.streams[0])
+        const looksLikeScreen = label.includes('screen') || label.includes('window')
+        const sig = remoteMediaStateRef.current.get(peerId)
+        let isScreen: boolean
+        if (sig && sig.screen !== sig.video) {
+          isScreen = sig.screen
+        } else if (sig && sig.screen && sig.video) {
+          // Включены и камера, и экран: различаем по уже назначенным потокам
+          const hasCamera = remoteVideoStreamsRef.current.has(peerId)
+          const hasScreen = remoteScreenStreamsRef.current.has(peerId)
+          if (hasCamera && !hasScreen) isScreen = true
+          else if (!hasCamera && hasScreen) isScreen = false
+          else isScreen = looksLikeScreen
+        } else {
+          isScreen = looksLikeScreen
+        }
+
+        if (isScreen) {
+          remoteScreenStreamsRef.current.set(peerId, stream)
           setState(prev => ({
             ...prev,
-            connectedUsers: prev.connectedUsers.map(u => 
-              u.id === peerId ? { ...u, isScreenSharing: true, screenStream: event.streams[0] } : u
+            connectedUsers: prev.connectedUsers.map(u =>
+              u.id === peerId ? { ...u, isScreenSharing: true, screenStream: stream } : u
             )
           }))
         } else {
-          remoteVideoStreamsRef.current.set(peerId, event.streams[0])
+          remoteVideoStreamsRef.current.set(peerId, stream)
           setState(prev => ({
             ...prev,
-            connectedUsers: prev.connectedUsers.map(u => 
-              u.id === peerId ? { ...u, hasVideo: true, videoStream: event.streams[0] } : u
+            connectedUsers: prev.connectedUsers.map(u =>
+              u.id === peerId ? { ...u, hasVideo: true, videoStream: stream } : u
             )
           }))
         }
       }
     }
-    
+
     pc.onconnectionstatechange = () => {
       console.log(`Peer ${peerId} connection state: ${pc.connectionState}`)
       if (pc.connectionState === 'failed') {
         p2pFailCountRef.current++
         console.log(`[VoiceContext] P2P connection failed (${p2pFailCountRef.current}/${maxP2PFailures})`)
-        
+
         if (p2pFailCountRef.current >= maxP2PFailures && livekit.isAvailable) {
           console.log('[VoiceContext] Max P2P failures reached, switching to LiveKit')
           const channelId = stateRef.current.channelId
@@ -267,37 +398,43 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
               }
             })
           }
-        } else {
-          console.log(`Attempting to reconnect with peer ${peerId}`)
-          closePeerConnection(peerId)
-          setTimeout(() => {
-            if (stateRef.current.isConnected && stateRef.current.connectedUsers.some(u => u.id === peerId)) {
-              createOfferRef.current?.(peerId)
-            }
-          }, 1000)
+        } else if (!isPolite(peerId)) {
+          // Единая точка восстановления: restartIce без закрытия pc.
+          // Re-offer делает ТОЛЬКО impolite-сторона (через onnegotiationneeded),
+          // чтобы обе стороны не слали офферы одновременно (glare).
+          console.log(`[VoiceContext] connectionState failed, restarting ICE with ${peerId}`)
+          pc.restartIce()
         }
       } else if (pc.connectionState === 'disconnected') {
+        // Grace period 5с: соединение может восстановиться само; иначе — restartIce,
+        // pc НЕ закрываем (закрытие только по явному voice-leave/leaveChannel).
         setTimeout(() => {
-          if (pc.connectionState === 'disconnected') {
-            closePeerConnection(peerId)
+          if (pc.signalingState !== 'closed' && pc.connectionState === 'disconnected') {
+            if (!isPolite(peerId)) {
+              console.log(`[VoiceContext] Still disconnected from ${peerId} after grace period, restarting ICE`)
+              pc.restartIce()
+            }
           }
         }, 5000)
       } else if (pc.connectionState === 'connected') {
         p2pFailCountRef.current = 0
       }
     }
-    
+
     pc.oniceconnectionstatechange = () => {
       console.log(`Peer ${peerId} ICE state: ${pc.iceConnectionState}`)
       if (pc.iceConnectionState === 'failed') {
-        pc.restartIce()
+        // Re-offer после restartIce делает impolite-сторона через onnegotiationneeded
+        if (!isPolite(peerId)) {
+          pc.restartIce()
+        }
       }
     }
-    
+
     addTracksToPeerConnection(pc)
     peerConnectionsRef.current.set(peerId, pc)
     return pc
-  }, [sendWebSocketMessage, addTracksToPeerConnection, livekit])
+  }, [sendWebSocketMessage, addTracksToPeerConnection, livekit, isPolite])
 
   const startRemoteVoiceAnalysis = useCallback((peerId: string, stream: MediaStream) => {
     const existingAnalyser = remoteAudioAnalysersRef.current.get(peerId)
@@ -389,6 +526,10 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     remoteScreenStreamsRef.current.delete(peerId)
     stopRemoteVoiceAnalysis(peerId)
     pendingCandidatesRef.current.delete(peerId)
+    makingOfferRef.current.delete(peerId)
+    negotiationReadyRef.current.delete(peerId)
+    remoteMediaStateRef.current.delete(peerId)
+    remoteVoiceStreamIdRef.current.delete(peerId)
   }, [stopRemoteVoiceAnalysis])
 
   const closeAllPeerConnections = useCallback(() => {
@@ -406,55 +547,60 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     remoteVideoStreamsRef.current.clear()
     remoteScreenStreamsRef.current.clear()
     pendingCandidatesRef.current.clear()
+    makingOfferRef.current.clear()
+    negotiationReadyRef.current.clear()
+    remoteMediaStateRef.current.clear()
+    remoteVoiceStreamIdRef.current.clear()
   }, [stopRemoteVoiceAnalysis])
 
+  // Ренегосиация: только синхронизируем треки (replaceTrack/addTrack/removeTrack).
+  // Сам оффер отправит pc.onnegotiationneeded (с защитой makingOffer и проверкой
+  // signalingState === 'stable'), поэтому здесь createOffer вручную НЕ вызываем —
+  // иначе возможны двойные офферы и InvalidStateError.
   const renegotiateAll = useCallback(async () => {
     for (const [peerId, pc] of peerConnectionsRef.current.entries()) {
       try {
-        // Update tracks
+        if (pc.signalingState === 'closed') continue
         addTracksToPeerConnection(pc)
-        
-        // Create new offer
-        const offer = await pc.createOffer()
-        await pc.setLocalDescription(offer)
-        
-        sendWebSocketMessage({
-          type: 'voice-offer',
-          targetUserId: peerId,
-          channel_id: stateRef.current.channelId,
-          sdp: offer.sdp
-        })
       } catch (error) {
         console.error(`Error renegotiating with peer ${peerId}:`, error)
       }
     }
-  }, [addTracksToPeerConnection, sendWebSocketMessage])
+  }, [addTracksToPeerConnection])
 
   const createOffer = useCallback(async (peerId: string) => {
     console.log(`Creating offer for peer ${peerId}`)
+    if (makingOfferRef.current.get(peerId)) {
+      console.log(`Already making offer for ${peerId}, skipping`)
+      return
+    }
     let pc = peerConnectionsRef.current.get(peerId)
     if (!pc) {
       pc = createPeerConnection(peerId)
     }
-    
+    if (pc.signalingState !== 'stable') {
+      console.log(`Skipping offer for ${peerId}: signalingState=${pc.signalingState}`)
+      return
+    }
+
     try {
+      makingOfferRef.current.set(peerId, true)
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
-      
+
       sendWebSocketMessage({
         type: 'voice-offer',
         targetUserId: peerId,
         channel_id: stateRef.current.channelId,
         sdp: offer.sdp
       })
+      negotiationReadyRef.current.add(peerId)
     } catch (error) {
       console.error('Error creating offer:', error)
+    } finally {
+      makingOfferRef.current.set(peerId, false)
     }
   }, [createPeerConnection, sendWebSocketMessage])
-
-  useEffect(() => {
-    createOfferRef.current = createOffer
-  }, [createOffer])
 
   const handleVoiceOffer = useCallback(async (fromUserId: string, sdp: string, channelId: string) => {
     if (!stateRef.current.isConnected) return;
@@ -466,44 +612,70 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     if (!pc) {
       pc = createPeerConnection(fromUserId)
     }
-    
+
+    // Perfect negotiation: разрешение коллизии офферов (glare).
+    const polite = isPolite(fromUserId)
+    const makingOffer = makingOfferRef.current.get(fromUserId) === true
+    const offerCollision = makingOffer || pc.signalingState !== 'stable'
+
+    if (offerCollision) {
+      if (!polite) {
+        // Impolite-сторона игнорирует встречный оффер
+        console.log(`[VoiceContext] Ignoring colliding offer from ${fromUserId} (impolite side)`)
+        return
+      }
+      console.log(`[VoiceContext] Offer collision with ${fromUserId}, rolling back (polite side)`)
+    }
+
     try {
+      if (offerCollision) {
+        // Polite-сторона откатывает свой оффер и принимает чужой
+        await pc.setLocalDescription({ type: 'rollback' })
+        makingOfferRef.current.set(fromUserId, false)
+      }
       await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp }))
-      
+
       const pendingCandidates = pendingCandidatesRef.current.get(fromUserId) || []
-      for (const candidate of pendingCandidates) {
-        await pc.addIceCandidate(candidate)
+      for (const entry of pendingCandidates) {
+        await pc.addIceCandidate(entry.candidate)
       }
       pendingCandidatesRef.current.delete(fromUserId)
-      
+
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
-      
+
       sendWebSocketMessage({
         type: 'voice-answer',
         targetUserId: fromUserId,
         channel_id: channelId,
         sdp: answer.sdp
       })
+      negotiationReadyRef.current.add(fromUserId)
     } catch (error) {
       console.error('Error handling voice offer:', error)
     }
-  }, [createPeerConnection, sendWebSocketMessage, user?.id])
+  }, [createPeerConnection, sendWebSocketMessage, user?.id, isPolite])
 
   const handleVoiceAnswer = useCallback(async (fromUserId: string, sdp: string) => {
     if (!stateRef.current.isConnected) return
     if (fromUserId === String(user?.id)) return
-    
+
     console.log(`Received voice answer from ${fromUserId}`)
     const pc = peerConnectionsRef.current.get(fromUserId)
     if (!pc) return
-    
+    // Answer вне состояния have-local-offer — дубликат/устаревший, игнорируем
+    if (pc.signalingState === 'stable') {
+      console.log(`[VoiceContext] Ignoring answer from ${fromUserId}: signalingState is stable`)
+      return
+    }
+
     try {
       await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp }))
-      
+      negotiationReadyRef.current.add(fromUserId)
+
       const pendingCandidates = pendingCandidatesRef.current.get(fromUserId) || []
-      for (const candidate of pendingCandidates) {
-        await pc.addIceCandidate(candidate)
+      for (const entry of pendingCandidates) {
+        await pc.addIceCandidate(entry.candidate)
       }
       pendingCandidatesRef.current.delete(fromUserId)
     } catch (error) {
@@ -511,23 +683,24 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user?.id])
 
-  const handleIceCandidate = useCallback(async (fromUserId: string, candidateData: RTCIceCandidateInit) => {
+  const handleIceCandidate = useCallback(async (fromUserId: string, candidateData: RTCIceCandidateInit | null) => {
     if (!stateRef.current.isConnected) return
     if (fromUserId === String(user?.id)) return
-    if (!candidateData) return
-    
+    // undefined — битое сообщение; null — легитимный end-of-candidates
+    if (candidateData === undefined) return
+
     const pc = peerConnectionsRef.current.get(fromUserId)
-    const candidate = new RTCIceCandidate(candidateData)
-    
+
     if (pc && pc.remoteDescription) {
       try {
-        await pc.addIceCandidate(candidate)
+        await pc.addIceCandidate(candidateData)
       } catch (error) {
         console.error('Error adding ICE candidate:', error)
       }
-    } else {
+    } else if (candidateData) {
+      // Кандидат пришёл до remoteDescription — ставим в очередь (TTL-очистка в effect)
       const pending = pendingCandidatesRef.current.get(fromUserId) || []
-      pending.push(candidate)
+      pending.push({ candidate: candidateData, ts: Date.now() })
       pendingCandidatesRef.current.set(fromUserId, pending)
     }
   }, [user?.id])
@@ -668,16 +841,28 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         return { ...prev, [channelId]: [...channelUsers, voiceUser] }
       })
       
+      // Запоминаем медиа-состояние пира из сигналинга (для различения screen/camera)
+      remoteMediaStateRef.current.set(userId, {
+        video: data.has_video || false,
+        screen: data.is_screen_sharing || false
+      })
+
       if (stateRef.current.channelId === channelId && userId !== String(user?.id)) {
-        console.log(`Adding ${userId} to connected users and creating offer`);
+        console.log(`Adding ${userId} to connected users`);
         setState(prev => ({
           ...prev,
           connectedUsers: prev.connectedUsers.some(u => u.id === userId)
             ? prev.connectedUsers
             : [...prev.connectedUsers, voiceUser]
         }))
-        
-        setTimeout(() => createOffer(userId), 500);
+
+        // Perfect negotiation: оффер новичку создаёт ТОЛЬКО сторона с меньшим id
+        // (impolite). Вторая ветка (оффер от новичка) — в joinChannel, тоже с
+        // проверкой сравнения id. Обе ветки вместе покрывают пару ровно один раз.
+        if (String(user?.id) < userId) {
+          console.log(`Creating offer for ${userId} (we are the impolite/initiator side)`);
+          setTimeout(() => createOffer(userId), 500);
+        }
       }
     }
     
@@ -698,7 +883,13 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     }
     
     if (data.type === 'voice-state-update') {
-      const updateUser = (users: VoiceUser[]) => 
+      // Основной источник для различения screen/camera треков в ontrack
+      remoteMediaStateRef.current.set(userId, {
+        video: data.has_video || false,
+        screen: data.is_screen_sharing || false
+      })
+
+      const updateUser = (users: VoiceUser[]) =>
         users.map(u => u.id === userId 
           ? { 
               ...u, 
@@ -762,8 +953,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      iceServersRef.current = await fetchICEServers()
-      console.log('Using ICE servers:', iceServersRef.current.length)
+      const iceServers = await getICEServers()
+      console.log('Using ICE servers:', iceServers.length)
       
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -825,9 +1016,19 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         is_screen_sharing: false
       })
 
+      // Perfect negotiation: новичок создаёт оффер только участникам с БОЛЬШИМ id
+      // (т.е. когда новичок — impolite-сторона пары). Участники с меньшим id сами
+      // отправят оффер новичку из обработчика voice-join. Вместе — ровно один оффер на пару.
       for (const participant of existingParticipants) {
         if (participant.id && participant.id !== 'undefined' && participant.id !== String(user?.id)) {
-          createOffer(participant.id)
+          // Запоминаем медиа-состояние из снапшота участников (screen vs camera)
+          remoteMediaStateRef.current.set(participant.id, {
+            video: participant.hasVideo || false,
+            screen: participant.isScreenSharing || false
+          })
+          if (String(user?.id) < participant.id) {
+            createOffer(participant.id)
+          }
         }
       }
 
@@ -836,7 +1037,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Failed to join voice channel:', error)
     }
-  }, [state.isConnected, state.channelId, state.isMuted, state.isDeafened, user, broadcastVoiceEvent, startVoiceActivityDetection, stopVoiceActivityDetection, closeAllPeerConnections, fetchExistingParticipants, createOffer])
+  }, [state.isConnected, state.channelId, state.isMuted, state.isDeafened, user, broadcastVoiceEvent, startVoiceActivityDetection, stopVoiceActivityDetection, closeAllPeerConnections, fetchExistingParticipants, createOffer, getICEServers])
 
   const leaveChannel = useCallback(() => {
     const currentChannelId = state.channelId
@@ -1017,13 +1218,14 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         // Start screen sharing
+        // audio: false — второй аудиотрек скриншэра затирал голосовой поток в ontrack
         const screenStream = await navigator.mediaDevices.getDisplayMedia({
           video: {
             width: { ideal: 1920 },
             height: { ideal: 1080 },
             frameRate: { ideal: 30 }
           },
-          audio: true
+          audio: false
         })
         
         // Handle when user stops sharing via browser UI
@@ -1122,14 +1324,6 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       connectedUsers: prev.connectedUsers.filter(u => u.id !== userId)
     }))
-  }, [])
-
-  const getICEServers = useCallback(async (): Promise<RTCIceServer[]> => {
-    if (iceServersRef.current.length > 0) {
-      return iceServersRef.current
-    }
-    iceServersRef.current = await fetchICEServers()
-    return iceServersRef.current
   }, [])
 
   useEffect(() => {
