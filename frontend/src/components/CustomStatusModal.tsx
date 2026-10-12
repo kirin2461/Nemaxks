@@ -123,7 +123,7 @@ export default function CustomStatusModal({
           onClick={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-foreground">
               {language === 'ru' ? 'Установить статус' : 'Set Status'}
             </h2>
             <button
@@ -167,7 +167,7 @@ export default function CustomStatusModal({
                 onChange={e => setText(e.target.value)}
                 placeholder={language === 'ru' ? 'Что вы делаете?' : 'What are you doing?'}
                 maxLength={100}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-secondary border border-border text-white placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
               />
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function CustomStatusModal({
             <select
               value={duration}
               onChange={e => setDuration(Number(e.target.value))}
-              className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+              className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
             >
               {DURATION_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>
@@ -200,7 +200,7 @@ export default function CustomStatusModal({
                   <div key={preset.id || `default-${i}`} className="relative group">
                     <button
                       onClick={() => handlePresetClick(preset)}
-                      className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-muted text-sm text-white transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-muted text-sm text-foreground transition-colors"
                     >
                       {preset.emoji} {preset.text}
                     </button>
@@ -225,7 +225,7 @@ export default function CustomStatusModal({
                 value={presetName}
                 onChange={e => setPresetName(e.target.value)}
                 placeholder={language === 'ru' ? 'Название пресета' : 'Preset name'}
-                className="w-full px-3 py-2 rounded-lg bg-muted border border-gray-500 text-white placeholder-muted-foreground mb-2"
+                className="w-full px-3 py-2 rounded-lg bg-muted border border-gray-500 text-foreground placeholder-muted-foreground mb-2"
               />
               <div className="flex gap-2">
                 <button
@@ -237,7 +237,7 @@ export default function CustomStatusModal({
                 </button>
                 <button
                   onClick={() => setShowPresetForm(false)}
-                  className="px-3 py-2 rounded-lg bg-muted text-white hover:bg-gray-500"
+                  className="px-3 py-2 rounded-lg bg-muted text-foreground hover:bg-secondary"
                 >
                   {language === 'ru' ? 'Отмена' : 'Cancel'}
                 </button>

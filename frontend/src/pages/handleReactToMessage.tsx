@@ -1105,7 +1105,7 @@ export default function MessagesPage() {
                           {message.reply_to_id && (() => {
                             const repliedMessage = message.reply_to || messages.find(m => parseInt(m.id) === message.reply_to_id)
                             return (
-                              <div className={`mb-2 p-2 rounded border-l-2 ${isSent ? 'bg-white/10 border-white/30' : 'bg-muted border-primary/30'}`}>
+                              <div className={`mb-2 p-2 rounded border-l-2 ${isSent ? 'bg-muted border-white/30' : 'bg-muted border-primary/30'}`}>
                                 <p className={`text-xs font-medium ${isSent ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                                   {repliedMessage ? (String(repliedMessage.sender_id) === String(user?.id) ? 'You' : selectedUser?.username) : 'Message'}
                                 </p>

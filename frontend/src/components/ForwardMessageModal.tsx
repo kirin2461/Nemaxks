@@ -107,7 +107,7 @@ export function ForwardMessageModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Переслать сообщение" size="md">
       <div className="space-y-4">
-        <div className="p-3 bg-white/5 rounded-lg border-l-4 border-purple-500">
+        <div className="p-3 bg-muted/60 rounded-lg border-l-4 border-purple-500">
           <p className="text-foreground text-sm line-clamp-3">{messageContent}</p>
         </div>
 
@@ -117,7 +117,7 @@ export function ForwardMessageModal({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors"
             placeholder="Поиск друзей и каналов..."
           />
         </div>
@@ -139,7 +139,7 @@ export function ForwardMessageModal({
                 className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                   selectedTarget?.id === target.id && selectedTarget?.type === target.type
                     ? 'bg-purple-500/20 border border-purple-500'
-                    : 'bg-white/5 hover:bg-white/10 border border-transparent'
+                    : 'bg-muted/60 hover:bg-muted border border-transparent'
                 }`}
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
@@ -152,7 +152,7 @@ export function ForwardMessageModal({
                   )}
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-white font-medium">{target.name}</p>
+                  <p className="text-foreground font-medium">{target.name}</p>
                   {target.subtitle && (
                     <p className="text-muted-foreground text-sm">{target.subtitle}</p>
                   )}
@@ -169,7 +169,7 @@ export function ForwardMessageModal({
           <button
             onClick={handleClose}
             disabled={forwarding}
-            className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
           >
             Отмена
           </button>

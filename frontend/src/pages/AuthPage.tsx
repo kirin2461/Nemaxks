@@ -413,7 +413,7 @@ export default function AuthPage() {
             </div>
 
             {!isLogin && (
-              <div className="flex items-start gap-3 p-3 bg-white/5 border border-white/10 rounded-lg">
+              <div className="flex items-start gap-3 p-3 bg-muted/60 border border-border rounded-lg">
                 <input
                   id="agree-terms"
                   type="checkbox"

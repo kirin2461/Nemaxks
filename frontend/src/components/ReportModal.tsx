@@ -125,7 +125,7 @@ export function ReportModal({
                 className={`flex items-center gap-2 p-3 rounded-lg border transition-all text-left ${
                   category === cat.id
                     ? 'border-red-500 bg-red-500/10 text-red-300'
-                    : 'border-white/10 bg-white/5 text-foreground hover:bg-white/10'
+                    : 'border-border bg-muted/60 text-foreground hover:bg-muted'
                 }`}
               >
                 <span>{cat.icon}</span>
@@ -142,7 +142,7 @@ export function ReportModal({
             onChange={e => setDetails(e.target.value)}
             maxLength={500}
             rows={3}
-            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none transition-colors resize-none"
+            className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors resize-none"
             placeholder="Опишите ситуацию подробнее (необязательно)..."
           />
           <p className="text-xs text-muted-foreground mt-1">{details.length}/500</p>
@@ -158,7 +158,7 @@ export function ReportModal({
           <button
             onClick={handleClose}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
           >
             Отмена
           </button>

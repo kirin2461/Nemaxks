@@ -189,7 +189,7 @@ export const AudioLogsPanel: React.FC<AudioLogsPanelProps> = ({
       className
     )}>
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-medium text-white">Audio Logs</h4>
+        <h4 className="text-sm font-medium text-foreground">Audio Logs</h4>
         <span className="text-xs text-muted-foreground">{displayLogs.length} events</span>
       </div>
       <div

@@ -83,7 +83,7 @@ export default function ChallengesPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Target className="w-8 h-8 text-orange-400" />
-            <h1 className="text-3xl font-bold text-white">Задания</h1>
+            <h1 className="text-3xl font-bold text-foreground">Задания</h1>
           </div>
           
           {currency && (
@@ -105,7 +105,7 @@ export default function ChallengesPage() {
             <div className="flex items-center gap-3 mb-4">
               <Flame className="w-8 h-8 text-orange-400" />
               <div>
-                <h3 className="text-xl font-bold text-white">Серия входов</h3>
+                <h3 className="text-xl font-bold text-foreground">Серия входов</h3>
                 <p className="text-orange-300">{streak?.login_streak || 0} дней подряд</p>
               </div>
             </div>
@@ -143,7 +143,7 @@ export default function ChallengesPage() {
                 🎰
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Колесо удачи</h3>
+                <h3 className="text-xl font-bold text-foreground">Колесо удачи</h3>
                 <p className="text-purple-300">Испытай удачу!</p>
               </div>
             </div>
@@ -206,7 +206,7 @@ export default function ChallengesPage() {
                     ) : (
                       <Clock className="w-5 h-5 text-muted-foreground" />
                     )}
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-foreground">
                       {challenge.name_ru || challenge.name}
                     </h3>
                   </div>

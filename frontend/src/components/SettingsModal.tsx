@@ -73,7 +73,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Настройки" size="xl">
       <div className="flex gap-4 -mx-4">
-        <div className="w-48 border-r border-white/10 pr-4 pl-4">
+        <div className="w-48 border-r border-border pr-4 pl-4">
           {TABS.map(tab => (
             <button
               key={tab.id}
@@ -81,7 +81,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-1 transition-colors ${
                 activeTab === tab.id
                   ? 'bg-purple-500/20 text-purple-400'
-                  : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                  : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
               }`}
             >
               <tab.icon className="w-5 h-5" />
@@ -89,7 +89,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </button>
           ))}
           
-          <div className="border-t border-white/10 mt-4 pt-4">
+          <div className="border-t border-border mt-4 pt-4">
             <button
               onClick={logout}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
@@ -103,7 +103,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="flex-1 pr-4 max-h-96 overflow-y-auto">
           {activeTab === 'general' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white mb-4">Основные настройки</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Основные настройки</h3>
               
               <div className="space-y-3">
                 <div>
@@ -116,7 +116,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                           settings.language === lang.id
                             ? 'bg-purple-500 text-white'
-                            : 'bg-white/5 text-foreground hover:bg-white/10'
+                            : 'bg-muted/60 text-foreground hover:bg-muted'
                         }`}
                       >
                         <span>{lang.flag}</span>
@@ -126,11 +126,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
                   <div className="flex items-center gap-3">
                     {soundEnabled ? <Volume2 className="w-5 h-5 text-muted-foreground" /> : <VolumeX className="w-5 h-5 text-muted-foreground" />}
                     <div>
-                      <p className="text-white">Звуки уведомлений</p>
+                      <p className="text-foreground">Звуки уведомлений</p>
                       <p className="text-muted-foreground text-sm">Воспроизводить звук при новых сообщениях</p>
                     </div>
                   </div>
@@ -142,7 +142,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
           {activeTab === 'notifications' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white mb-4">Уведомления</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Уведомления</h3>
               
               {[
                 { key: 'notifyMessages', label: 'Личные сообщения', desc: 'Уведомлять о новых сообщениях' },
@@ -151,9 +151,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 { key: 'notifyGuilds', label: 'Гильдии', desc: 'Новости и события гильдий' },
                 { key: 'desktopNotifications', label: 'Push-уведомления', desc: 'Показывать уведомления на рабочем столе' },
               ].map(item => (
-                <div key={item.key} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <div key={item.key} className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
                   <div>
-                    <p className="text-white">{item.label}</p>
+                    <p className="text-foreground">{item.label}</p>
                     <p className="text-muted-foreground text-sm">{item.desc}</p>
                   </div>
                   <Toggle 
@@ -167,7 +167,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
           {activeTab === 'privacy' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white mb-4">Приватность</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Приватность</h3>
               
               {[
                 { key: 'showOnlineStatus', label: 'Статус онлайн', desc: 'Показывать когда вы в сети', icon: Eye },
@@ -175,11 +175,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 { key: 'allowDMs', label: 'Личные сообщения', desc: 'Разрешить сообщения от всех', icon: Lock },
                 { key: 'showReadReceipts', label: 'Прочитано', desc: 'Показывать что сообщение прочитано', icon: Eye },
               ].map(item => (
-                <div key={item.key} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <div key={item.key} className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
                   <div className="flex items-center gap-3">
                     <item.icon className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-white">{item.label}</p>
+                      <p className="text-foreground">{item.label}</p>
                       <p className="text-muted-foreground text-sm">{item.desc}</p>
                     </div>
                   </div>
@@ -190,11 +190,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
               ))}
 
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
                 <div className="flex items-center gap-3">
                   <Shield className="w-5 h-5 text-purple-400" />
                   <div>
-                    <p className="text-white">Двухфакторная аутентификация</p>
+                    <p className="text-foreground">Двухфакторная аутентификация</p>
                     <p className="text-muted-foreground text-sm">Дополнительная защита аккаунта</p>
                   </div>
                 </div>
@@ -207,7 +207,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
           {activeTab === 'appearance' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white mb-4">Внешний вид</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Внешний вид</h3>
               
               <div>
                 <label className="block text-sm text-muted-foreground mb-3">Тема оформления</label>
@@ -219,11 +219,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       className={`p-3 rounded-lg border transition-all ${
                         theme === t.id
                           ? 'border-purple-500 ring-2 ring-purple-500/30'
-                          : 'border-white/10 hover:border-white/30'
+                          : 'border-border hover:border-white/30'
                       }`}
                     >
                       <div className={`w-full h-12 rounded-lg mb-2 ${t.preview}`} />
-                      <p className="text-sm text-white">{t.name}</p>
+                      <p className="text-sm text-foreground">{t.name}</p>
                     </button>
                   ))}
                 </div>

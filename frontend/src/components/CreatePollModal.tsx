@@ -118,7 +118,7 @@ export default function CreatePollModal({
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-foreground">
                 {language === 'ru' ? 'Создать опрос' : 'Create Poll'}
               </h2>
             </div>
@@ -147,7 +147,7 @@ export default function CreatePollModal({
                 onChange={e => setQuestion(e.target.value)}
                 placeholder={language === 'ru' ? 'О чём спросить?' : 'What do you want to ask?'}
                 maxLength={200}
-                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-white placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
               />
             </div>
 
@@ -161,7 +161,7 @@ export default function CreatePollModal({
                 placeholder={language === 'ru' ? 'Дополнительная информация...' : 'Additional context...'}
                 maxLength={500}
                 rows={2}
-                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-white placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none resize-none"
               />
             </div>
 
@@ -178,7 +178,7 @@ export default function CreatePollModal({
                       onChange={e => updateOption(index, e.target.value)}
                       placeholder={`${language === 'ru' ? 'Вариант' : 'Option'} ${index + 1}`}
                       maxLength={100}
-                      className="flex-1 px-4 py-2 rounded-lg bg-secondary border border-border text-white placeholder-muted-foreground focus:border-purple-500 outline-none"
+                      className="flex-1 px-4 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 outline-none"
                     />
                     {options.length > 2 && (
                       <button
@@ -211,7 +211,7 @@ export default function CreatePollModal({
               <select
                 value={duration}
                 onChange={e => setDuration(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-white focus:border-purple-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:border-purple-500 outline-none"
               >
                 {DURATION_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>

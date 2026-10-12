@@ -196,7 +196,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
             className={`p-3 rounded-full transition ${
               callHook.isVideoEnabled
                 ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                : 'bg-secondary hover:bg-muted text-white'
+                : 'bg-secondary hover:bg-muted text-foreground'
             }`}
             title={callHook.isVideoEnabled ? 'Stop Video' : 'Start Video'}
           >
@@ -206,7 +206,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
           {/* Minimize */}
           <button
             onClick={() => setIsMinimized(true)}
-            className="p-3 rounded-full bg-secondary hover:bg-muted text-white transition"
+            className="p-3 rounded-full bg-secondary hover:bg-muted text-foreground transition"
             title="Minimize"
           >
             <Maximize2 size={20} />

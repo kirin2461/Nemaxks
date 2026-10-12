@@ -114,7 +114,7 @@ export default function ActivityFeedPage() {
                   <Icon className={`w-5 h-5 ${color}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`${activity.is_read ? 'text-foreground' : 'text-white font-medium'}`}>
+                  <p className={`${activity.is_read ? 'text-foreground' : 'text-foreground font-medium'}`}>
                     {getActivityMessage(activity)}
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">

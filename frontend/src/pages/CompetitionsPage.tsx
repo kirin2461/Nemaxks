@@ -70,7 +70,7 @@ export default function CompetitionsPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Trophy className="w-8 h-8 text-yellow-400" />
-          <h1 className="text-3xl font-bold text-white">Соревнования гильдий</h1>
+          <h1 className="text-3xl font-bold text-foreground">Соревнования гильдий</h1>
         </div>
 
         <div className="flex gap-2 mb-6">
@@ -103,7 +103,7 @@ export default function CompetitionsPage() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-lg font-bold text-white">{comp.name_ru || comp.name}</h3>
+                    <h3 className="text-lg font-bold text-foreground">{comp.name_ru || comp.name}</h3>
                     <p className="text-sm text-muted-foreground">{comp.description_ru || comp.description}</p>
                   </div>
                   <div className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -148,7 +148,7 @@ export default function CompetitionsPage() {
               animate={{ opacity: 1, x: 0 }}
               className="bg-card/50 rounded-xl p-6 border border-border"
             >
-              <h3 className="text-xl font-bold text-white mb-4">
+              <h3 className="text-xl font-bold text-foreground mb-4">
                 Таблица лидеров
               </h3>
 
@@ -163,7 +163,7 @@ export default function CompetitionsPage() {
                     >
                       {getRankIcon(entry.rank)}
                       <div className="flex-1">
-                        <p className="font-medium text-white">{entry.guild?.name || `Guild #${entry.guild_id}`}</p>
+                        <p className="font-medium text-foreground">{entry.guild?.name || `Guild #${entry.guild_id}`}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-yellow-400">{entry.score.toLocaleString()}</p>

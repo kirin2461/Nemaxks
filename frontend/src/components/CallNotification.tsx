@@ -57,7 +57,7 @@ const CallNotification: React.FC<CallNotificationProps> = ({
           </div>
 
           {/* Caller Info */}
-          <h2 className="text-2xl font-bold text-white mb-2">{callerName}</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">{callerName}</h2>
           <p className="text-blue-100 font-semibold">{callTypeLabel}</p>
           <p className="text-blue-100 text-sm mt-2">
             Calling{dots}

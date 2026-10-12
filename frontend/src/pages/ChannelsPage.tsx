@@ -1170,14 +1170,14 @@ export default function ChannelsPage() {
                           className={cn(
                             "w-full px-2 py-1.5 rounded-md flex items-center gap-2 group transition-all cursor-pointer relative",
                             isActive
-                              ? 'bg-[#3f4147] text-white'
+                              ? 'bg-muted text-foreground'
                               : isUnread
                                 ? 'text-white hover:bg-accent'
                                 : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                           )}
                         >
                           {isUnread && !isActive && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-2 bg-white rounded-r-full" />
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-2 bg-foreground rounded-r-full" />
                           )}
                           {getChannelIcon()}
                           <span className={cn(
@@ -1203,7 +1203,7 @@ export default function ChannelsPage() {
                               <div
                                 key={voiceUser.id}
                                 className={`flex items-center gap-2 px-2 py-1 rounded text-sm group/user ${
-                                  voiceUser.isSpeaking ? 'text-white' : 'text-muted-foreground hover:text-foreground'
+                                  voiceUser.isSpeaking ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                                 }`}
                               >
                                 <div className="relative">

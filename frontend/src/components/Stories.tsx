@@ -470,13 +470,13 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
               <div className="flex items-center gap-2">
                 <button 
                   onClick={(e) => { e.stopPropagation(); setIsPaused(!isPaused) }}
-                  className="p-2 text-white/80 hover:text-foreground"
+                  className="p-2 text-white/80 hover:text-white"
                 >
                   {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted) }}
-                  className="p-2 text-white/80 hover:text-foreground"
+                  className="p-2 text-white/80 hover:text-white"
                 >
                   {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </button>
@@ -490,7 +490,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                 )}
                 <button 
                   onClick={(e) => { e.stopPropagation(); closeViewer() }}
-                  className="p-2 text-white/80 hover:text-foreground"
+                  className="p-2 text-white/80 hover:text-white"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -502,7 +502,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
             <button
               onClick={(e) => { e.stopPropagation(); goToPrevStory() }}
               className={cn(
-                "absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white/80 hover:text-foreground hover:bg-black/70 transition-all z-10",
+                "absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-all z-10",
                 currentStoryIndex === 0 && "opacity-30 pointer-events-none"
               )}
             >
@@ -538,7 +538,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
             <button
               onClick={(e) => { e.stopPropagation(); goToNextStory() }}
               className={cn(
-                "absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white/80 hover:text-foreground hover:bg-black/70 transition-all z-10",
+                "absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-all z-10",
                 currentStoryIndex === stories.length - 1 && "opacity-30 pointer-events-none"
               )}
             >

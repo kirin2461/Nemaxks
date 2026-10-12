@@ -75,7 +75,7 @@ export function TwoFactorModal({ isOpen, onClose, onVerify, error }: TwoFactorMo
           <Shield className="w-8 h-8 text-purple-400" />
         </div>
         
-        <h2 className="text-xl font-bold text-white mb-2">Двухфакторная аутентификация</h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">Двухфакторная аутентификация</h2>
         <p className="text-muted-foreground text-sm mb-6">
           Введите 6-значный код из приложения-аутентификатора
         </p>
@@ -92,7 +92,7 @@ export function TwoFactorModal({ isOpen, onClose, onVerify, error }: TwoFactorMo
               onChange={e => handleChange(index, e.target.value)}
               onKeyDown={e => handleKeyDown(index, e)}
               disabled={loading}
-              className="w-12 h-14 text-center text-2xl font-bold bg-white/5 border border-white/20 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 outline-none transition-all disabled:opacity-50"
+              className="w-12 h-14 text-center text-2xl font-bold bg-muted/60 border border-white/20 rounded-lg text-foreground focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 outline-none transition-all disabled:opacity-50"
             />
           ))}
         </div>

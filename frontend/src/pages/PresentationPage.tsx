@@ -103,7 +103,7 @@ export default function PresentationPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
+            className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto"
           >
             Nemaks — платформа с геймификацией, AI-ассистентом и системой лицензий. 
             Общайтесь, зарабатывайте достижения и открывайте новые возможности.
@@ -134,7 +134,7 @@ export default function PresentationPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">Почему выбирают Nemaks?</h2>
-            <p className="text-muted-foreground">Все необходимые инструменты в одном приложении</p>
+            <p className="text-gray-400">Все необходимые инструменты в одном приложении</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((f, i) => (
@@ -148,7 +148,7 @@ export default function PresentationPage() {
               >
                 <div className="mb-4 group-hover:scale-110 transition-transform">{f.icon}</div>
                 <h3 className="text-xl font-bold mb-2">{f.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{f.description}</p>
+                <p className="text-gray-400 leading-relaxed">{f.description}</p>
               </motion.div>
             ))}
           </div>
@@ -163,10 +163,10 @@ export default function PresentationPage() {
             <div className="w-6 h-6 rounded-lg gradient-cosmic-rainbow-animated" />
             <span className="font-bold">Nemaks © 2026</span>
           </div>
-          <div className="flex gap-8 text-sm text-muted-foreground">
-            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+          <div className="flex gap-8 text-sm text-gray-500">
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
         </div>
       </footer>

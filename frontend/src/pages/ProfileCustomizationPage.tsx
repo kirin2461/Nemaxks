@@ -108,7 +108,7 @@ export default function ProfileCustomizationPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <User className="w-8 h-8 text-purple-400" />
-          <h1 className="text-3xl font-bold text-white">Кастомизация профиля</h1>
+          <h1 className="text-3xl font-bold text-foreground">Кастомизация профиля</h1>
         </div>
 
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -147,7 +147,7 @@ export default function ProfileCustomizationPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-white text-sm">{inv.item.name_ru || inv.item.name}</p>
+                    <p className="font-medium text-foreground text-sm">{inv.item.name_ru || inv.item.name}</p>
                     <p className={`text-xs capitalize ${rarityColors[inv.item.rarity]}`}>{inv.item.rarity}</p>
                   </div>
                   {isEquipped(inv.item_id) && (
@@ -180,7 +180,7 @@ export default function ProfileCustomizationPage() {
                 }`}>
                   <Award className={`w-6 h-6 ${hasBadge(badge.id) ? rarityColors[badge.rarity] : 'text-muted-foreground'}`} />
                 </div>
-                <p className="font-medium text-white text-sm">{badge.name_ru || badge.name}</p>
+                <p className="font-medium text-foreground text-sm">{badge.name_ru || badge.name}</p>
                 <p className="text-xs text-muted-foreground mt-1">{badge.description_ru || badge.description}</p>
                 <p className={`text-xs mt-2 capitalize ${rarityColors[badge.rarity]}`}>{badge.rarity}</p>
               </motion.div>
@@ -195,7 +195,7 @@ export default function ProfileCustomizationPage() {
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="w-full bg-secondary border border-border rounded-lg p-3 text-white resize-none"
+                className="w-full bg-secondary border border-border rounded-lg p-3 text-foreground resize-none"
                 rows={3}
                 placeholder="Расскажите о себе..."
               />
@@ -220,7 +220,7 @@ export default function ProfileCustomizationPage() {
               <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-2">
                   {profile?.show_level ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
-                  <span className="text-white">Показывать уровень</span>
+                  <span className="text-foreground">Показывать уровень</span>
                 </div>
                 <button
                   onClick={() => handleToggle('show_level')}
@@ -237,7 +237,7 @@ export default function ProfileCustomizationPage() {
               <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-2">
                   {profile?.show_achievements ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
-                  <span className="text-white">Показывать достижения</span>
+                  <span className="text-foreground">Показывать достижения</span>
                 </div>
                 <button
                   onClick={() => handleToggle('show_achievements')}
@@ -254,7 +254,7 @@ export default function ProfileCustomizationPage() {
               <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-2">
                   {profile?.show_activity ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
-                  <span className="text-white">Показывать активность</span>
+                  <span className="text-foreground">Показывать активность</span>
                 </div>
                 <button
                   onClick={() => handleToggle('show_activity')}

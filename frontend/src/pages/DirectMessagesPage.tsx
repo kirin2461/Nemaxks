@@ -197,7 +197,7 @@ const DirectMessagesPage: React.FC = () => {
         </button>
         <Avatar size="sm" userId={userId} alt={`User ${userId}`} />
         <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-white text-sm truncate">User {userId}</h2>
+          <h2 className="font-semibold text-foreground text-sm truncate">User {userId}</h2>
           <span className="text-xs text-muted-foreground">{t('messages.directMessage') || 'Личное сообщение'}</span>
         </div>
         <div className="flex items-center gap-1">

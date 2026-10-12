@@ -76,11 +76,11 @@ export function AchievementModal({ isOpen, onClose, achievement }: AchievementMo
             )}
           </div>
 
-          <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${rarity.text} bg-white/10 mb-3`}>
+          <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${rarity.text} bg-muted mb-3`}>
             {rarity.label}
           </div>
 
-          <h2 className="text-2xl font-black text-white mb-2">
+          <h2 className="text-2xl font-black text-foreground mb-2">
             {achievement.name}
           </h2>
           <p className="text-muted-foreground mb-6">

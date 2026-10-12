@@ -129,7 +129,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
               <span>Connected to @{linkStatus.telegram_username}</span>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/60">
               <span className="text-sm">Receive notifications in Telegram</span>
               <Button
                 variant="ghost"
@@ -163,7 +163,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
             </p>
 
             <div className="flex items-center gap-2">
-              <div className="flex-1 p-4 text-center font-mono text-2xl font-bold bg-white/5 rounded-lg border border-white/10">
+              <div className="flex-1 p-4 text-center font-mono text-2xl font-bold bg-muted/60 rounded-lg border border-border">
                 {linkCode}
               </div>
               <Button variant="ghost" size="sm" onClick={copyCode}>

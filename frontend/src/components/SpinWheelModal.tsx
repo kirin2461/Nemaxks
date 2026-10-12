@@ -126,7 +126,7 @@ export function SpinWheelModal({
         {result && !spinning && (
           <div className="mb-6 p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg border border-purple-500/30 animate-in fade-in zoom-in">
             <Gift className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-            <p className="text-white font-bold text-lg mb-1">Поздравляем!</p>
+            <p className="text-foreground font-bold text-lg mb-1">Поздравляем!</p>
             <p className="text-purple-300">Вы выиграли: {result.prize}</p>
           </div>
         )}

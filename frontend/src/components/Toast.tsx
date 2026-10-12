@@ -88,7 +88,7 @@ function Toast({ id, type, title, message, duration = 5000, action, onClose }: T
 
       <button
         onClick={handleClose}
-        className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
       >
         <X className="w-4 h-4" />
       </button>

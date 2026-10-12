@@ -132,7 +132,7 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
             </div>
           </div>
 
-          <h3 className="text-lg font-semibold text-white mb-1.5">{template.name}</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-1.5">{template.name}</h3>
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{template.description}</p>
 
           {features.length > 0 && (
@@ -140,7 +140,7 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
               {features.slice(0, 4).map((feature, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-xs text-foreground"
+                  className="px-2 py-0.5 bg-muted/60 border border-border rounded text-xs text-foreground"
                 >
                   {feature}
                 </span>
@@ -161,7 +161,7 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
               {onPreview && (
                 <button
                   onClick={() => onPreview(template)}
-                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-2 rounded-lg bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Eye size={16} />
                 </button>
@@ -250,11 +250,11 @@ export function FeaturedTemplateCard({ template, onApply, userPlan = "free", has
       </div>
       
       <div className="relative p-8">
-        <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${typeConfig.gradient} border border-white/10 ${typeConfig.accent} mb-6`}>
+        <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${typeConfig.gradient} border border-border ${typeConfig.accent} mb-6`}>
           {icon}
         </div>
         
-        <h3 className="text-2xl font-bold text-white mb-2">{template.name}</h3>
+        <h3 className="text-2xl font-bold text-foreground mb-2">{template.name}</h3>
         <p className="text-muted-foreground mb-6 max-w-md">{template.description}</p>
         
         {isLocked ? (

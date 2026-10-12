@@ -195,7 +195,7 @@ export function TemplatesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
           <p className="text-muted-foreground">{t("common.loading")}</p>
@@ -216,7 +216,7 @@ export function TemplatesPage() {
             <Crown className="text-purple-400" size={24} />
           </div>
           <div>
-            <p className="text-white font-medium">{t("templates.unlockWith")} {t("common.premium")}</p>
+            <p className="text-foreground font-medium">{t("templates.unlockWith")} {t("common.premium")}</p>
             <p className="text-muted-foreground text-sm">{freeTemplatesCount} {t("templates.access.free")}</p>
           </div>
         </div>
@@ -233,7 +233,7 @@ export function TemplatesPage() {
   /* Previously blocked non-premium users entirely - now showing all templates with access control
   if (!hasPremium) {
     return (
-      <div className="min-h-screen bg-background text-white p-6">
+      <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-2xl mx-auto text-center py-20">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -241,7 +241,7 @@ export function TemplatesPage() {
             className="bg-gradient-to-b from-card/50 to-background/50 border border-border rounded-3xl p-12"
           >
             <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-purple-600/30">
-              <Lock size={48} className="text-white" />
+              <Lock size={48} className="text-muted-foreground" />
             </div>
             <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Премиум функция
@@ -281,7 +281,7 @@ export function TemplatesPage() {
   */
 
   return (
-    <div className="min-h-screen bg-background text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -492,7 +492,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
             {categoryIcons[template.category] || <Building size={20} />}
           </div>
           <div>
-            <h3 className="font-semibold text-white">{template.name}</h3>
+            <h3 className="font-semibold text-foreground">{template.name}</h3>
             <p className="text-xs text-muted-foreground">{template.usage_count} использований</p>
           </div>
         </div>
@@ -555,7 +555,7 @@ function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
             {typeIcons[template.type] || <MessageCircle size={20} />}
           </div>
           <div>
-            <h3 className="font-semibold text-white">{template.name}</h3>
+            <h3 className="font-semibold text-foreground">{template.name}</h3>
             <p className="text-xs text-muted-foreground">{template.type} · {template.usage_count} использований</p>
           </div>
         </div>

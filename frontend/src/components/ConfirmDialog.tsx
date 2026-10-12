@@ -75,7 +75,7 @@ export function ConfirmDialog({
             <div className={cn("p-2 rounded-full bg-secondary", variantStyles[variant].icon)}>
               <AlertTriangle className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
           </div>
           <button
             onClick={onClose}

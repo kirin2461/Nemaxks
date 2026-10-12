@@ -90,7 +90,7 @@ export default function ShopPage() {
         <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
           <div className="flex items-center gap-3">
             <ShoppingBag className="w-8 h-8 text-purple-400" />
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">{t('shop.title')}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('shop.title')}</h1>
           </div>
           
           {currency && (
@@ -143,7 +143,7 @@ export default function ShopPage() {
                   <Sparkles className="w-12 h-12 text-muted-foreground" />
                 </div>
 
-                <h3 className="text-lg font-semibold text-white mb-1">{item.name_ru || item.name}</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-1">{item.name_ru || item.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{item.description_ru || item.description}</p>
 
                 {isOwned(item.id) ? (

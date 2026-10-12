@@ -89,7 +89,7 @@ export default function AchievementsPage() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <Zap className="w-5 h-5 text-yellow-400" />
-                  <span className="text-lg font-semibold text-white">
+                  <span className="text-lg font-semibold text-foreground">
                     {userLevel.current_xp.toLocaleString()} / {userLevel.xp_needed.toLocaleString()} XP
                   </span>
                 </div>
@@ -120,7 +120,7 @@ export default function AchievementsPage() {
               </div>
               
               <div className="text-right">
-                <div className="text-3xl font-bold text-white">{userLevel.total_xp.toLocaleString()}</div>
+                <div className="text-3xl font-bold text-foreground">{userLevel.total_xp.toLocaleString()}</div>
                 <div className="text-muted-foreground">{language === 'ru' ? 'Всего XP' : 'Total XP'}</div>
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function AchievementsPage() {
                     </div>
                     
                     <div className="flex-1">
-                      <h3 className="font-semibold text-white">
+                      <h3 className="font-semibold text-foreground">
                         {language === 'ru' ? ach.name_ru : ach.name}
                       </h3>
                       <p className="text-sm text-muted-foreground">
@@ -272,7 +272,7 @@ export default function AchievementsPage() {
                   </div>
                   
                   <div className="flex-1">
-                    <div className="font-semibold text-white">{entry.username}</div>
+                    <div className="font-semibold text-foreground">{entry.username}</div>
                     <div className="text-sm text-muted-foreground">
                       {language === 'ru' ? 'Уровень' : 'Level'} {entry.level}
                     </div>

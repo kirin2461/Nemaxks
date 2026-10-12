@@ -166,7 +166,7 @@ export function MediaUpload({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 rounded-lg hover:bg-white/10 transition-colors text-muted-foreground hover:text-foreground"
+          className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           title="Attach image or video"
         >
           <Upload className="w-5 h-5" />
@@ -182,7 +182,7 @@ export function MediaUpload({
 
       {selectedMedia && !isCompressing && (
         <div className="relative inline-block">
-          <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black/20">
+          <div className="relative rounded-lg overflow-hidden border border-border bg-black/20">
             {selectedMedia.type === 'image' ? (
               <img
                 src={selectedMedia.preview}

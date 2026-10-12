@@ -93,19 +93,19 @@ export function NotificationSettingsPage() {
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-3">
             <Bell className="w-8 h-8 text-purple-400" />
-            <h1 className="text-2xl font-bold text-white">Настройки уведомлений</h1>
+            <h1 className="text-2xl font-bold text-foreground">Настройки уведомлений</h1>
           </div>
         </div>
 
         <div className="space-y-6">
-          <section className="bg-card border border-white/10 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <section className="bg-card border border-border rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
               <Volume2 className="w-5 h-5 text-purple-400" />
               Основные настройки
             </h2>
@@ -113,7 +113,7 @@ export function NotificationSettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white">Звуки уведомлений</p>
+                  <p className="text-foreground">Звуки уведомлений</p>
                   <p className="text-muted-foreground text-sm">Воспроизводить звук при новых уведомлениях</p>
                 </div>
                 <Toggle
@@ -126,7 +126,7 @@ export function NotificationSettingsPage() {
                 <div className="flex items-center gap-3">
                   <Monitor className="w-5 h-5 text-muted-foreground" />
                   <div>
-                    <p className="text-white">Push-уведомления</p>
+                    <p className="text-foreground">Push-уведомления</p>
                     <p className="text-muted-foreground text-sm">Показывать уведомления на рабочем столе</p>
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export function NotificationSettingsPage() {
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-muted-foreground" />
                   <div>
-                    <p className="text-white">Email-уведомления</p>
+                    <p className="text-foreground">Email-уведомления</p>
                     <p className="text-muted-foreground text-sm">Отправлять уведомления на email</p>
                   </div>
                 </div>
@@ -152,8 +152,8 @@ export function NotificationSettingsPage() {
             </div>
           </section>
 
-          <section className="bg-card border border-white/10 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Типы уведомлений</h2>
+          <section className="bg-card border border-border rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Типы уведомлений</h2>
 
             <div className="space-y-3">
               {[
@@ -171,7 +171,7 @@ export function NotificationSettingsPage() {
               ].map(item => (
                 <div key={item.key} className="flex items-center justify-between py-2">
                   <div>
-                    <p className="text-white">{item.label}</p>
+                    <p className="text-foreground">{item.label}</p>
                     <p className="text-muted-foreground text-sm">{item.desc}</p>
                   </div>
                   <Toggle
@@ -183,8 +183,8 @@ export function NotificationSettingsPage() {
             </div>
           </section>
 
-          <section className="bg-card border border-white/10 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <section className="bg-card border border-border rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
               <Moon className="w-5 h-5 text-purple-400" />
               Тихие часы
             </h2>
@@ -192,7 +192,7 @@ export function NotificationSettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white">Включить тихие часы</p>
+                  <p className="text-foreground">Включить тихие часы</p>
                   <p className="text-muted-foreground text-sm">Отключить уведомления в определённое время</p>
                 </div>
                 <Toggle
@@ -209,7 +209,7 @@ export function NotificationSettingsPage() {
                       type="time"
                       value={prefs.quiet_hours_start || '22:00'}
                       onChange={e => setPrefs({ ...prefs, quiet_hours_start: e.target.value })}
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none"
+                      className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none"
                     />
                   </div>
                   <div className="flex-1">
@@ -218,7 +218,7 @@ export function NotificationSettingsPage() {
                       type="time"
                       value={prefs.quiet_hours_end || '08:00'}
                       onChange={e => setPrefs({ ...prefs, quiet_hours_end: e.target.value })}
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none"
+                      className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none"
                     />
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export function NotificationSettingsPage() {
           <div className="flex gap-3">
             <button
               onClick={handleTestNotification}
-              className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-white transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-muted/60 hover:bg-muted rounded-xl text-foreground transition-colors flex items-center justify-center gap-2"
             >
               <TestTube className="w-5 h-5" />
               Тестовое уведомление

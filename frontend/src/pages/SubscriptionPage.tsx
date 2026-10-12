@@ -81,10 +81,10 @@ const SubscriptionPage: React.FC = () => {
   const currentPlanId = currentSubscription?.plan_id;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-2">Subscription Plans</h1>
-        <p className="text-slate-300 mb-8">Choose the perfect plan for your needs</p>
+        <h1 className="text-4xl font-bold text-foreground mb-2">Subscription Plans</h1>
+        <p className="text-muted-foreground mb-8">Choose the perfect plan for your needs</p>
 
         {error && <div className="bg-red-500 text-white p-4 rounded mb-6">{error}</div>}
 
@@ -105,20 +105,20 @@ const SubscriptionPage: React.FC = () => {
               className={`rounded-lg p-6 transition-all ${
                 currentPlanId === plan.id
                   ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 border-2 border-indigo-400'
-                  : 'bg-slate-700 hover:bg-slate-600 border-2 border-slate-600'
+                  : 'bg-card hover:bg-secondary border-2 border-border'
               }`}
             >
-              <h2 className="text-2xl font-bold text-white mb-2">{plan.name}</h2>
-              <p className="text-slate-300 text-sm mb-4">{plan.base_price_note || ''}</p>
+              <h2 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h2>
+              <p className="text-muted-foreground text-sm mb-4">{plan.base_price_note || ''}</p>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-white">{plan.price}</span>
-                <span className="text-slate-300 ml-2">/{plan.currency}</span>
+                <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                <span className="text-muted-foreground ml-2">/{plan.currency}</span>
               </div>
               <div className="mb-6">
-                <h3 className="text-white font-semibold mb-3">Features:</h3>
+                <h3 className="text-foreground font-semibold mb-3">Features:</h3>
                 <ul className="space-y-2">
                   {plan.features?.map((feature, idx) => (
-                    <li key={idx} className="text-slate-300 flex items-start">
+                    <li key={idx} className="text-muted-foreground flex items-start">
                       <span className="mr-2">✓</span>
                       {feature}
                     </li>
@@ -130,8 +130,8 @@ const SubscriptionPage: React.FC = () => {
                 disabled={currentPlanId === plan.id || isProcessing}
                 className={`w-full py-2 rounded font-semibold transition-all ${
                   currentPlanId === plan.id
-                    ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                    : 'bg-white text-indigo-600 hover:bg-slate-100'
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
                 }`}
               >
                 {currentPlanId === plan.id ? 'Current Plan' : 'Select Plan'}

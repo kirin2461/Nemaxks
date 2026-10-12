@@ -149,7 +149,7 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-4 p-4 bg-white/5 rounded-lg">
+          <div className="grid grid-cols-3 gap-4 mt-4 p-4 bg-muted/60 rounded-lg">
             <div className="text-center">
               <p className="text-xl font-bold text-white">{user.friends_count || 0}</p>
               <p className="text-xs text-muted-foreground">Друзей</p>
@@ -196,11 +196,11 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
           </div>
 
           <div className="flex gap-2 mt-2">
-            <button className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-muted-foreground transition-colors flex items-center justify-center gap-2 text-sm">
+            <button className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-muted-foreground transition-colors flex items-center justify-center gap-2 text-sm">
               <Ban className="w-4 h-4" />
               Заблокировать
             </button>
-            <button className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-muted-foreground transition-colors flex items-center justify-center gap-2 text-sm">
+            <button className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-muted-foreground transition-colors flex items-center justify-center gap-2 text-sm">
               <Flag className="w-4 h-4" />
               Пожаловаться
             </button>

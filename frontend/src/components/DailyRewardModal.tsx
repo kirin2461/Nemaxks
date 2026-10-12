@@ -75,7 +75,7 @@ export function DailyRewardModal({
                   ? 'border-purple-500 bg-purple-500/20 ring-2 ring-purple-500/50'
                   : reward.claimed
                   ? 'border-green-500/50 bg-green-500/10'
-                  : 'border-white/10 bg-white/5'
+                  : 'border-border bg-muted/60'
               }`}
             >
               {reward.claimed && (
@@ -88,7 +88,7 @@ export function DailyRewardModal({
                 День {reward.day}
               </p>
               
-              <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-white/10 flex items-center justify-center">
+              <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-muted flex items-center justify-center">
                 {reward.special ? (
                   <span className="text-xl">{reward.special}</span>
                 ) : reward.gems ? (
@@ -128,7 +128,7 @@ export function DailyRewardModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+            className="flex-1 px-4 py-3 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
           >
             Закрыть
           </button>

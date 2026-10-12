@@ -224,7 +224,7 @@ export default function PremiumCheckoutPage() {
                   <Crown className="text-white" size={24} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">{plan?.name}</h2>
+                  <h2 className="text-xl font-bold text-foreground">{plan?.name}</h2>
                   <p className="text-muted-foreground text-sm">{plan?.description}</p>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export default function PremiumCheckoutPage() {
 
             <div className="space-y-6">
               <div className="bg-card/50 border border-border rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Промокод</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Промокод</h3>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -266,7 +266,7 @@ export default function PremiumCheckoutPage() {
                         setPromoValidation(null);
                       }}
                       placeholder="Введите промокод"
-                      className="w-full bg-background border border-border rounded-xl py-3 pl-10 pr-4 text-white placeholder-muted-foreground focus:border-purple-500 focus:outline-none"
+                      className="w-full bg-background border border-border rounded-xl py-3 pl-10 pr-4 text-foreground placeholder-muted-foreground focus:border-purple-500 focus:outline-none"
                     />
                   </div>
                   <button
@@ -291,7 +291,7 @@ export default function PremiumCheckoutPage() {
               </div>
 
               <div className="bg-card/50 border border-border rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Способ оплаты</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Способ оплаты</h3>
                 <div className="space-y-3">
                   <label 
                     className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
@@ -309,7 +309,7 @@ export default function PremiumCheckoutPage() {
                     />
                     <CreditCard className={paymentMethod === "card" ? "text-purple-400" : "text-muted-foreground"} size={24} />
                     <div>
-                      <p className="text-white font-medium">Банковская карта</p>
+                      <p className="text-foreground font-medium">Банковская карта</p>
                       <p className="text-muted-foreground text-sm">Visa, Mastercard, МИР</p>
                     </div>
                   </label>
@@ -330,7 +330,7 @@ export default function PremiumCheckoutPage() {
                     />
                     <Wallet className={paymentMethod === "sbp" ? "text-purple-400" : "text-muted-foreground"} size={24} />
                     <div>
-                      <p className="text-white font-medium">СБП</p>
+                      <p className="text-foreground font-medium">СБП</p>
                       <p className="text-muted-foreground text-sm">Система быстрых платежей</p>
                     </div>
                   </label>
@@ -340,7 +340,7 @@ export default function PremiumCheckoutPage() {
               <div className="bg-card/50 border border-border rounded-2xl p-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-muted-foreground">Стоимость плана</span>
-                  <span className="text-white">{plan?.base_price_rub} ₽</span>
+                  <span className="text-foreground">{plan?.base_price_rub} ₽</span>
                 </div>
                 {promoValidation?.valid && (
                   <div className="flex justify-between items-center mb-2 text-green-400">
@@ -350,7 +350,7 @@ export default function PremiumCheckoutPage() {
                 )}
                 <div className="border-t border-border pt-3 mt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-white font-semibold text-lg">Итого</span>
+                    <span className="text-foreground font-semibold text-lg">Итого</span>
                     <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                       {finalPrice} ₽
                     </span>
