@@ -78,12 +78,12 @@ export default function ChallengesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-nebula p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Target className="w-8 h-8 text-accent" />
-            <h1 className="text-3xl font-bold text-foreground">Задания</h1>
+            <h1 className="text-3xl font-bold gradient-brand-text">Задания</h1>
           </div>
           
           {currency && (
@@ -101,7 +101,7 @@ export default function ChallengesPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-accent/20 to-red-500/20 rounded-xl p-6 border border-accent/30">
+          <div className="glass rounded-xl p-6 border border-accent/30">
             <div className="flex items-center gap-3 mb-4">
               <Flame className="w-8 h-8 text-accent" />
               <div>
@@ -119,7 +119,7 @@ export default function ChallengesPage() {
                 className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${
                   claimedToday
                     ? 'bg-green-500/20 text-green-400 cursor-default'
-                    : 'bg-accent hover:bg-accent/80 text-white'
+                    : 'bg-gradient-brand hover:brightness-110 text-white shadow-soft hover:shadow-glow'
                 }`}
               >
                 {claimedToday ? (
@@ -137,9 +137,9 @@ export default function ChallengesPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-6 border border-primary/30">
+          <div className="glass rounded-xl p-6 border border-primary/30">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center">
                 🎰
               </div>
               <div>
@@ -154,7 +154,7 @@ export default function ChallengesPage() {
               <button
                 onClick={handleSpinWheel}
                 disabled={!currency || currency.coins < 25 || wheelSpinning}
-                className="px-4 py-2 rounded-lg font-medium bg-primary hover:bg-primary/80 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg font-medium bg-gradient-brand hover:brightness-110 text-white transition-all shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {wheelSpinning ? 'Крутится...' : 'Крутить'}
               </button>
@@ -178,8 +178,8 @@ export default function ChallengesPage() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? 'bg-accent text-white'
-                  : 'bg-card text-muted-foreground hover:bg-secondary'
+                  ? 'bg-gradient-brand text-white shadow-soft'
+                  : 'bg-card/50 text-muted-foreground hover:bg-secondary'
               }`}
             >
               {tab.icon}
@@ -194,8 +194,8 @@ export default function ChallengesPage() {
               key={challenge.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`bg-card/50 rounded-xl p-4 border ${
-                challenge.is_completed ? 'border-green-500/50' : 'border-border'
+              className={`bg-card/55 backdrop-blur-xl rounded-xl p-4 border shadow-soft ${
+                challenge.is_completed ? 'border-green-500/50' : 'border-border/50'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -217,7 +217,7 @@ export default function ChallengesPage() {
                   <div className="w-full bg-secondary rounded-full h-2 mb-2">
                     <div
                       className={`h-2 rounded-full transition-all ${
-                        challenge.is_completed ? 'bg-green-500' : 'bg-accent'
+                        challenge.is_completed ? 'bg-green-500' : 'bg-gradient-brand'
                       }`}
                       style={{ width: `${Math.min(100, ((challenge.progress || 0) / challenge.target) * 100)}%` }}
                     />

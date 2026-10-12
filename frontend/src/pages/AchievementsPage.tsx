@@ -61,27 +61,27 @@ export default function AchievementsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-primary/10 to-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40"></div>
+      <div className="min-h-screen bg-nebula flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/10 to-background p-6">
+    <div className="min-h-screen bg-nebula p-6">
       <div className="max-w-6xl mx-auto">
         {userLevel && (
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-primary/20"
+            className="glass rounded-xl p-6 mb-8"
           >
             <div className="flex items-center gap-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-gradient-brand glow flex items-center justify-center">
                   <span className="text-3xl font-bold text-white">{userLevel.level}</span>
                 </div>
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-brand shadow-soft px-3 py-1 rounded-full text-xs font-semibold">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-brand text-white px-3 py-1 rounded-full text-xs font-semibold shadow-soft">
                   {language === 'ru' ? 'Уровень' : 'Level'}
                 </div>
               </div>
@@ -173,9 +173,9 @@ export default function AchievementsPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`relative rounded-xl p-4 border ${
+                  className={`relative rounded-xl p-4 border backdrop-blur-xl transition-all ${
                     isUnlocked
-                      ? 'bg-card/70 border-primary/50'
+                      ? 'bg-card/55 border-primary/40 shadow-soft hover:shadow-glow'
                       : 'bg-card/30 border-border/50 opacity-60'
                   }`}
                 >
@@ -239,7 +239,7 @@ export default function AchievementsPage() {
               ))}
             </div>
             
-            <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-primary/20 overflow-hidden">
+            <div className="glass rounded-xl overflow-hidden">
               {leaderboard.map((entry, index) => (
                 <motion.div
                   key={entry.user_id}
