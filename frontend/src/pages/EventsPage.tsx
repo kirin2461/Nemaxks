@@ -55,9 +55,9 @@ export default function EventsPage() {
   const getEventStatusBadge = (event: GameEvent) => {
     const start = new Date(event.start_date);
     const end = new Date(event.end_date);
-    if (start > now) return { text: 'Upcoming', color: 'bg-accent' };
-    if (end < now) return { text: 'Ended', color: 'bg-muted' };
-    return { text: 'Active', color: 'bg-green-500' };
+    if (start > now) return { text: 'Скоро', color: 'bg-accent text-accent-foreground' };
+    if (end < now) return { text: 'Завершено', color: 'bg-muted text-muted-foreground' };
+    return { text: 'Активно', color: 'bg-green-500 text-white' };
   };
 
   const getThemeColors = (theme: string) => {
@@ -66,24 +66,24 @@ export default function EventsPage() {
       case 'halloween': return 'from-primary to-accent';
       case 'summer': return 'from-accent to-primary';
       case 'winter': return 'from-accent/70 to-primary/60';
-      default: return 'from-primary to-primary';
+      default: return 'from-primary to-accent';
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-nebula flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-nebula text-foreground p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Calendar className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-bold">Events</h1>
+          <h1 className="text-3xl font-bold gradient-brand-text">События</h1>
         </div>
 
         <div className="flex gap-2 mb-6">
@@ -94,10 +94,10 @@ export default function EventsPage() {
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === tab
                   ? 'bg-gradient-brand shadow-soft text-white'
-                  : 'bg-card text-muted-foreground hover:bg-secondary'
+                  : 'bg-card/50 text-muted-foreground hover:bg-secondary'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'active' ? 'Активные' : tab === 'upcoming' ? 'Предстоящие' : 'Завершённые'}
             </button>
           ))}
         </div>
@@ -105,9 +105,9 @@ export default function EventsPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             {filteredEvents.length === 0 ? (
-              <div className="bg-card rounded-xl p-8 text-center">
+              <div className="glass rounded-xl p-8 text-center">
                 <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No {activeTab} events</p>
+                <p className="text-muted-foreground">Нет событий</p>
               </div>
             ) : (
               filteredEvents.map(event => {
@@ -117,10 +117,10 @@ export default function EventsPage() {
                     key={event.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`bg-gradient-to-r ${getThemeColors(event.theme)} p-1 rounded-xl cursor-pointer`}
+                    className={`bg-gradient-to-r ${getThemeColors(event.theme)} p-px rounded-xl cursor-pointer shadow-soft hover:shadow-glow transition-shadow`}
                     onClick={() => setSelectedEvent(event.id)}
                   >
-                    <div className="bg-card rounded-xl p-6">
+                    <div className="bg-card/90 backdrop-blur-xl rounded-xl p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <div className="flex items-center gap-2 mb-2">
@@ -146,7 +146,7 @@ export default function EventsPage() {
                         {event.coin_bonus > 1 && (
                           <div className="flex items-center gap-1 text-accent">
                             <Star className="w-4 h-4" />
-                            <span>{event.coin_bonus}x Coins</span>
+                            <span>{event.coin_bonus}x монеты</span>
                           </div>
                         )}
                         {event.xp_bonus > 1 && (
@@ -166,10 +166,10 @@ export default function EventsPage() {
           <div className="space-y-6">
             {selectedEvent && eventDetails ? (
               <>
-                <div className="bg-card rounded-xl p-6">
+                <div className="glass rounded-xl p-6">
                   <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                     <Gift className="w-5 h-5 text-primary" />
-                    Rewards
+                    Награды
                   </h3>
                   <div className="space-y-3">
                     {eventDetails.rewards.map(reward => (
@@ -188,17 +188,17 @@ export default function EventsPage() {
                           disabled={claimRewardMutation.isPending}
                           className="px-3 py-1 bg-gradient-brand shadow-soft rounded-lg text-sm hover:brightness-110 disabled:opacity-50"
                         >
-                          Claim
+                          Забрать
                         </button>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-card rounded-xl p-6">
+                <div className="glass rounded-xl p-6">
                   <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-accent" />
-                    Leaderboard
+                    Лидерборд
                   </h3>
                   <div className="space-y-2">
                     {leaderboard.map((participant, idx) => (
@@ -213,8 +213,8 @@ export default function EventsPage() {
                         >
                           {idx + 1}
                         </span>
-                        <span className="flex-1">{participant.user?.username || 'User'}</span>
-                        <span className="text-primary font-medium">{participant.points} pts</span>
+                        <span className="flex-1">{participant.user?.username || 'Пользователь'}</span>
+                        <span className="text-primary font-medium">{participant.points} очков</span>
                       </div>
                     ))}
                   </div>
@@ -223,15 +223,15 @@ export default function EventsPage() {
                 <button
                   onClick={() => joinMutation.mutate(selectedEvent)}
                   disabled={joinMutation.isPending}
-                  className="w-full py-3 bg-gradient-to-r from-primary to-primary rounded-xl font-bold hover:opacity-90 disabled:opacity-50"
+                  className="w-full py-3 bg-gradient-brand text-white rounded-xl font-bold shadow-soft hover:brightness-110 hover:shadow-glow transition-all disabled:opacity-50"
                 >
-                  {joinMutation.isPending ? 'Joining...' : 'Join Event'}
+                  {joinMutation.isPending ? 'Вступление...' : 'Участвовать'}
                 </button>
               </>
             ) : (
-              <div className="bg-card rounded-xl p-8 text-center">
+              <div className="glass rounded-xl p-8 text-center">
                 <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Select an event to view details</p>
+                <p className="text-muted-foreground">Выберите событие, чтобы увидеть детали</p>
               </div>
             )}
           </div>

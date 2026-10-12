@@ -45,31 +45,31 @@ export default function GiftsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-nebula flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-nebula text-foreground p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Gift className="w-8 h-8 text-accent" />
-            <h1 className="text-3xl font-bold">Gifts</h1>
+            <h1 className="text-3xl font-bold gradient-brand-text">Подарки</h1>
             {unopenedCount > 0 && (
-              <span className="px-2 py-1 bg-accent rounded-full text-sm font-medium">
-                {unopenedCount} new
+              <span className="px-2 py-1 bg-gradient-brand text-white rounded-full text-sm font-medium shadow-soft">
+                {unopenedCount} новых
               </span>
             )}
           </div>
           <button
             onClick={() => setShowSendModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-accent rounded-lg hover:bg-accent/80"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-brand text-white rounded-lg shadow-soft hover:brightness-110 hover:shadow-glow transition-all"
           >
             <Send className="w-4 h-4" />
-            Send Gift
+            Отправить подарок
           </button>
         </div>
 
@@ -79,8 +79,10 @@ export default function GiftsPage() {
               key={gift.id}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className={`rounded-xl p-6 ${
-                gift.is_opened ? 'bg-card' : 'bg-gradient-to-br from-accent/20 to-primary/20 border border-accent/30'
+              className={`rounded-xl p-6 backdrop-blur-xl border ${
+                gift.is_opened
+                  ? 'bg-card/50 border-border/50'
+                  : 'bg-card/55 border-accent/40 shadow-soft glow'
               }`}
             >
               <div className="flex items-start gap-4">
@@ -94,7 +96,7 @@ export default function GiftsPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <User className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium">{gift.sender?.username || 'Someone'}</span>
+                    <span className="font-medium">{gift.sender?.username || 'Кто-то'}</span>
                   </div>
                   {gift.message && (
                     <p className="text-muted-foreground text-sm mb-2 flex items-center gap-1">
@@ -117,9 +119,9 @@ export default function GiftsPage() {
                     <button
                       onClick={() => openMutation.mutate(gift.id)}
                       disabled={openMutation.isPending}
-                      className="mt-3 w-full py-2 bg-accent rounded-lg font-medium hover:bg-accent/80 disabled:opacity-50"
+                      className="mt-3 w-full py-2 bg-gradient-brand text-white rounded-lg font-medium shadow-soft hover:brightness-110 disabled:opacity-50 transition-all"
                     >
-                      Open Gift
+                      Открыть подарок
                     </button>
                   )}
                 </div>
@@ -129,10 +131,10 @@ export default function GiftsPage() {
         </div>
 
         {receivedGifts.length === 0 && (
-          <div className="bg-card rounded-xl p-12 text-center">
+          <div className="glass rounded-xl p-12 text-center">
             <Gift className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">No gifts yet</h3>
-            <p className="text-muted-foreground">Gifts you receive will appear here</p>
+            <h3 className="text-xl font-bold mb-2">Подарков пока нет</h3>
+            <p className="text-muted-foreground">Полученные подарки появятся здесь</p>
           </div>
         )}
 
@@ -141,24 +143,24 @@ export default function GiftsPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-card rounded-xl p-6 w-full max-w-md m-4"
+              className="glass-strong rounded-xl p-6 w-full max-w-md m-4"
             >
-              <h3 className="text-xl font-bold mb-4">Send a Gift</h3>
+              <h3 className="text-xl font-bold mb-4">Отправить подарок</h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Recipient User ID</label>
+                  <label className="block text-sm text-muted-foreground mb-1">ID получателя</label>
                   <input
                     type="text"
                     value={receiverId}
                     onChange={e => setReceiverId(e.target.value)}
-                    placeholder="Enter user ID"
-                    className="w-full px-4 py-2 bg-secondary rounded-lg focus:ring-2 focus:ring-accent/50 outline-none"
+                    placeholder="Введите ID пользователя"
+                    className="input-field w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Select Item</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Выберите предмет</label>
                   <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
                     {inventory.map((inv: { id: number; item?: { id: number; name: string } }) => (
                       <button
@@ -166,23 +168,23 @@ export default function GiftsPage() {
                         onClick={() => setSelectedItem(inv.item?.id || inv.id)}
                         className={`p-2 rounded-lg text-xs ${
                           selectedItem === (inv.item?.id || inv.id)
-                            ? 'bg-accent'
+                            ? 'bg-gradient-brand text-white shadow-soft'
                             : 'bg-secondary hover:bg-muted'
                         }`}
                       >
-                        {inv.item?.name || 'Item'}
+                        {inv.item?.name || 'Предмет'}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Message (optional)</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Сообщение (необязательно)</label>
                   <textarea
                     value={message}
                     onChange={e => setMessage(e.target.value)}
-                    placeholder="Add a message..."
-                    className="w-full px-4 py-2 bg-secondary rounded-lg focus:ring-2 focus:ring-accent/50 outline-none resize-none"
+                    placeholder="Добавьте сообщение..."
+                    className="input-field w-full resize-none"
                     rows={2}
                   />
                 </div>
@@ -192,14 +194,14 @@ export default function GiftsPage() {
                     onClick={() => setShowSendModal(false)}
                     className="flex-1 py-2 bg-secondary rounded-lg hover:bg-muted"
                   >
-                    Cancel
+                    Отмена
                   </button>
                   <button
                     onClick={() => sendMutation.mutate()}
                     disabled={!selectedItem || !receiverId || sendMutation.isPending}
-                    className="flex-1 py-2 bg-accent rounded-lg font-medium hover:bg-accent/80 disabled:opacity-50"
+                    className="flex-1 py-2 bg-gradient-brand text-white rounded-lg font-medium shadow-soft hover:brightness-110 disabled:opacity-50 transition-all"
                   >
-                    Send Gift
+                    Отправить
                   </button>
                 </div>
               </div>
