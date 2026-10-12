@@ -17,7 +17,7 @@ export default function QRConfirmPage() {
   useEffect(() => {
     if (!token) {
       setStatus('error')
-      setMessage('Invalid QR code')
+      setMessage('Недействительный QR-код')
       return
     }
 
@@ -27,23 +27,23 @@ export default function QRConfirmPage() {
         
         if (result.status === 'expired') {
           setStatus('expired')
-          setMessage('This QR code has expired')
+          setMessage('Срок действия QR-кода истёк')
         } else if (result.status === 'confirmed') {
           setStatus('success')
-          setMessage('This login has already been confirmed')
+          setMessage('Этот вход уже подтверждён')
         } else if (result.status === 'pending') {
           setStatus('confirming')
         }
       } catch (err: any) {
         if (err.status === 410) {
           setStatus('expired')
-          setMessage('This QR code has expired')
+          setMessage('Срок действия QR-кода истёк')
         } else if (err.status === 404) {
           setStatus('error')
-          setMessage('Invalid QR code')
+          setMessage('Недействительный QR-код')
         } else {
           setStatus('error')
-          setMessage('Failed to verify QR code')
+          setMessage('Не удалось проверить QR-код')
         }
       }
     }
@@ -59,14 +59,14 @@ export default function QRConfirmPage() {
       const result = await authAPI.confirmQRLogin(token)
       setStatus('success')
       setConfirmedUser(result.username)
-      setMessage(`Login confirmed for ${result.username}`)
+      setMessage(`Вход подтверждён для ${result.username}`)
     } catch (err: any) {
       if (err.status === 410) {
         setStatus('expired')
-        setMessage('This QR code has expired')
+        setMessage('Срок действия QR-кода истёк')
       } else {
         setStatus('error')
-        setMessage(err.message || 'Failed to confirm login')
+        setMessage(err.message || 'Не удалось подтвердить вход')
       }
     }
   }
@@ -77,19 +77,19 @@ export default function QRConfirmPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background/50 p-4 relative z-10">
+      <div className="min-h-screen flex items-center justify-center bg-nebula p-4 relative z-10">
         <div className="w-full max-w-md text-center">
-          <div className="card-cosmic p-8">
-            <Shield className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Authentication Required</h1>
+          <div className="glass-strong rounded-xl p-8 animate-slide-in">
+            <Shield className="w-16 h-16 text-primary mx-auto mb-4" />
+            <h1 className="text-2xl font-bold mb-2">Требуется авторизация</h1>
             <p className="text-muted-foreground mb-6">
-              You need to be logged in on this device to confirm QR login for another device.
+              Вам нужно войти в аккаунт на этом устройстве, чтобы подтвердить вход по QR-коду на другом устройстве.
             </p>
             <button
               onClick={() => navigate('/auth')}
-              className="btn-cosmic w-full"
+              className="px-4 py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all w-full"
             >
-              Go to Login
+              Перейти ко входу
             </button>
           </div>
         </div>
@@ -98,37 +98,37 @@ export default function QRConfirmPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background/50 p-4 relative z-10">
+    <div className="min-h-screen flex items-center justify-center bg-nebula p-4 relative z-10">
       <div className="w-full max-w-md">
-        <div className="card-cosmic p-8 text-center">
+        <div className="glass-strong rounded-xl p-8 text-center animate-slide-in">
           {status === 'loading' && (
             <>
               <Loader2 className="w-16 h-16 text-primary mx-auto mb-4 animate-spin" />
-              <h1 className="text-2xl font-bold mb-2">Processing...</h1>
-              <p className="text-muted-foreground">Please wait</p>
+              <h1 className="text-2xl font-bold mb-2">Обработка...</h1>
+              <p className="text-muted-foreground">Пожалуйста, подождите</p>
             </>
           )}
 
           {status === 'confirming' && (
             <>
               <Smartphone className="w-16 h-16 text-primary mx-auto mb-4" />
-              <h1 className="text-2xl font-bold mb-2">Confirm Login</h1>
+              <h1 className="text-2xl font-bold mb-2">Подтверждение входа</h1>
               <p className="text-muted-foreground mb-6">
-                Another device is trying to log in as <span className="text-primary font-medium">{user?.username}</span>.
-                Do you want to allow this?
+                Другое устройство пытается войти как <span className="text-primary font-medium">{user?.username}</span>.
+                Разрешить этот вход?
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={handleCancel}
-                  className="flex-1 px-4 py-3 bg-muted hover:bg-muted/80 border border-border rounded-lg text-foreground transition-colors"
+                  className="flex-1 px-4 py-3 bg-muted hover:bg-primary/10 border border-border rounded-lg text-foreground transition-colors"
                 >
-                  Cancel
+                  Отмена
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="flex-1 btn-cosmic"
+                  className="flex-1 px-4 py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all"
                 >
-                  Confirm Login
+                  Подтвердить вход
                 </button>
               </div>
             </>
@@ -136,44 +136,44 @@ export default function QRConfirmPage() {
 
           {status === 'success' && (
             <>
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold mb-2">Login Confirmed!</h1>
+              <CheckCircle className="w-16 h-16 text-accent mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-2">Вход подтверждён!</h1>
               <p className="text-muted-foreground mb-6">
-                {confirmedUser ? `${confirmedUser} has been logged in on the other device.` : 'The other device is now logged in.'}
+                {confirmedUser ? `Пользователь ${confirmedUser} вошёл на другом устройстве.` : 'Другое устройство успешно вошло в аккаунт.'}
               </p>
               <button
                 onClick={() => navigate('/')}
-                className="btn-cosmic w-full"
+                className="px-4 py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all w-full"
               >
-                Go to Dashboard
+                На главную
               </button>
             </>
           )}
 
           {status === 'expired' && (
             <>
-              <XCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold mb-2">QR Code Expired</h1>
+              <XCircle className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-2">QR-код истёк</h1>
               <p className="text-muted-foreground mb-6">{message}</p>
               <button
                 onClick={() => navigate('/')}
-                className="btn-cosmic w-full"
+                className="px-4 py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all w-full"
               >
-                Go to Dashboard
+                На главную
               </button>
             </>
           )}
 
           {status === 'error' && (
             <>
-              <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold mb-2">Error</h1>
+              <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-2">Ошибка</h1>
               <p className="text-muted-foreground mb-6">{message}</p>
               <button
                 onClick={() => navigate('/')}
-                className="btn-cosmic w-full"
+                className="px-4 py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all w-full"
               >
-                Go to Dashboard
+                На главную
               </button>
             </>
           )}
