@@ -41,7 +41,7 @@ const content = {
       title: 'Супер-администратор',
       handle: '@kirin2461'
     },
-    footer: '© 2026 Nemaks. Все права защищены.'
+    footer: '© 2026 Nebula. Все права защищены.'
   },
   en: {
     title: 'Contact Us',
@@ -79,7 +79,7 @@ const content = {
       title: 'Super Administrator',
       handle: '@kirin2461'
     },
-    footer: '© 2026 Nemaks. All rights reserved.'
+    footer: '© 2026 Nebula. All rights reserved.'
   },
   zh: {
     title: '联系我们',
@@ -117,7 +117,7 @@ const content = {
       title: '超级管理员',
       handle: '@kirin2461'
     },
-    footer: '© 2026 Nemaks. 保留所有权利。'
+    footer: '© 2026 Nebula. 保留所有权利。'
   }
 }
 

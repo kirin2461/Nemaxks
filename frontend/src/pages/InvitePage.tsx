@@ -60,8 +60,8 @@ export default function InvitePage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Присоединяйся к Nemaks!',
-          text: 'Приглашаю тебя в Nemaks - современную платформу для общения',
+          title: 'Присоединяйся к Nebula!',
+          text: 'Приглашаю тебя в Nebula - современную платформу для общения',
           url: getInviteLink()
         })
       } catch (err) {
@@ -102,7 +102,7 @@ export default function InvitePage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Пригласить друзей</h1>
-            <p className="text-muted-foreground">Делись ссылкой и приглашай друзей в Nemaks</p>
+            <p className="text-muted-foreground">Делись ссылкой и приглашай друзей в Nebula</p>
           </div>
         </div>
 

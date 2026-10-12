@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🚀 Nemaks
+# 🌌 Nebula
+
+> Ребрендинг: ранее проект назывался **Nemaxks**.
 
 ### Modern Discord-like Communication Platform
 
@@ -25,7 +27,7 @@ _(Deployment link not available yet)_
 
 ## 📖 About
 
-**Nemaks** is a comprehensive, Discord-like communication platform designed for teams, communities, and organizations that prioritize server-side moderation and administrative control. Built with modern technologies and microservices architecture, Nemaks provides:
+**Nebula** is a comprehensive, Discord-like communication platform designed for teams, communities, and organizations that prioritize server-side moderation and administrative control. Built with modern technologies and microservices architecture, Nebula provides:
 
 - **Real-time messaging** with WebSocket support
 - **Voice and video calls** powered by WebRTC/LiveKit
@@ -33,9 +35,9 @@ _(Deployment link not available yet)_
 - **Advanced moderation tools** including audit logging and content retention
 - **Microservices architecture** with Go backend and Rust services for scalability
 
-### Why Nemaks?
+### Why Nebula?
 
-Unlike end-to-end encrypted platforms, Nemaks intentionally enables server-side moderation and administrative access with full audit trails. This makes it ideal for:
+Unlike end-to-end encrypted platforms, Nebula intentionally enables server-side moderation and administrative access with full audit trails. This makes it ideal for:
 
 - Organizations requiring content oversight and compliance
 - Communities needing robust moderation capabilities
@@ -519,13 +521,13 @@ Additional documentation available:
 
 ### 🔒 About / License screen
 
-Nemaks is distributed under the permissive MIT License, which allows use, modification, and redistribution of the software as long as the original license and copyright notice are preserved.[web:22][web:25]
+Nebula is distributed under the permissive MIT License, which allows use, modification, and redistribution of the software as long as the original license and copyright notice are preserved.[web:22][web:25]
 
 To make licensing and branding rules explicit inside the UI, it is recommended to add a dedicated **About / License** screen in the frontend:
 
-- Shows the project name and a short description of Nemaks.
+- Shows the project name and a short description of Nebula.
 - Displays the MIT License summary with a link to the full [`LICENSE`](./LICENSE) file.
-- Explains **branding & attribution** expectations (use of the Nemaks name and logo, requirement to mark unofficial forks, etc.).
+- Explains **branding & attribution** expectations (use of the Nebula name and logo, requirement to mark unofficial forks, etc.).
 - Highlights security and moderation design choices (no E2E encryption by design, server-side audit logging, RBAC).[page:1]
 
 A ready-to-use React + TypeScript + Tailwind component for this screen can be implemented under `src/pages/AboutPage.tsx` and mounted on the `/about` route using Wouter. A link such as **“About / License”** can then be placed in the footer or user menu so that users of hosted instances can always see the license and branding information from inside the app.[web:7][page:1]
@@ -534,7 +536,7 @@ A ready-to-use React + TypeScript + Tailwind component for this screen can be im
 
 ### Why no end-to-end encryption?
 
-Nemaks intentionally does not implement E2E encryption to enable:
+Nebula intentionally does not implement E2E encryption to enable:
 - Server-side content moderation
 - Administrative oversight with audit trails
 - Compliance with organizational policies
@@ -543,7 +545,7 @@ Nemaks intentionally does not implement E2E encryption to enable:
 
 This makes it suitable for organizations requiring content oversight rather than privacy-first messaging.
 
-### Can I deploy Nemaks for production?
+### Can I deploy Nebula for production?
 
 Yes, but please:
 - Review [SECURITY.md](./SECURITY.md) for security best practices
@@ -564,7 +566,7 @@ cargo build --release
 
 ### What's the difference between this and Discord?
 
-Nemaks is:
+Nebula is:
 - **Open-source** - Full control over your data and deployment
 - **Self-hosted** - Run on your own infrastructure
 - **Moderation-first** - Built for organizations requiring oversight

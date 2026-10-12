@@ -337,7 +337,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
               new Notification(data.username || 'Новое сообщение', {
                 body: data.content || data.message?.content || 'Новое сообщение',
                 tag: `msg-${senderId}`,
-                icon: '/logos/nemaks_logo_purple_gradient.png'
+                icon: '/nebula-logo.png'
               })
             }
           }
@@ -365,7 +365,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
               new Notification(data.username || 'Новое сообщение', {
                 body: data.content || data.message?.content || 'Новое сообщение',
                 tag: `msg-${senderId}`,
-                icon: '/logos/nemaks_logo_purple_gradient.png'
+                icon: '/nebula-logo.png'
               })
             }
           }
@@ -382,7 +382,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           new Notification('Запрос в друзья', {
             body: `${data.username || 'Кто-то'} хочет добавить вас в друзья`,
             tag: 'friend-request',
-            icon: '/logos/nemaks_logo_purple_gradient.png'
+            icon: '/nebula-logo.png'
           })
         }
         break
@@ -547,7 +547,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const unreadCount = notifications.filter(n => !n.read).length
 
   useEffect(() => {
-    const baseTitle = 'Nemaks'
+    const baseTitle = 'Nebula'
     if (unreadCount > 0) {
       document.title = `(${unreadCount}) ${baseTitle}`
     } else {

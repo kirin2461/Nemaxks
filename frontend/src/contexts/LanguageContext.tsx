@@ -13,7 +13,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const translations: Record<Language, Record<string, string>> = {
   ru: {
     // Auth page
-    'auth.welcome': 'Добро пожаловать в Nemaks',
+    'auth.welcome': 'Добро пожаловать в Nebula',
     'auth.signInSubtitle': 'Войдите в свой аккаунт',
     'auth.signUpSubtitle': 'Создайте новый аккаунт',
     'auth.username': 'Имя пользователя',
@@ -62,7 +62,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.offline': 'Не в сети',
 
     // Welcome page
-    'welcome.title': 'Добро пожаловать в Nemaks',
+    'welcome.title': 'Добро пожаловать в Nebula',
     'welcome.subtitle': 'Современная платформа для общения нового поколения',
     'welcome.feature1Title': 'Безопасное общение',
     'welcome.feature1Desc': 'Сквозное шифрование для защиты ваших сообщений',
@@ -274,7 +274,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   en: {
     // Auth page
-    'auth.welcome': 'Welcome to Nemaks',
+    'auth.welcome': 'Welcome to Nebula',
     'auth.signInSubtitle': 'Sign in to your account',
     'auth.signUpSubtitle': 'Create a new account',
     'auth.username': 'Username',
@@ -323,7 +323,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.offline': 'Offline',
 
     // Welcome page
-    'welcome.title': 'Welcome to Nemaks',
+    'welcome.title': 'Welcome to Nebula',
     'welcome.subtitle': 'A modern communication platform for the next generation',
     'welcome.feature1Title': 'Secure Communication',
     'welcome.feature1Desc': 'End-to-end encryption to protect your messages',

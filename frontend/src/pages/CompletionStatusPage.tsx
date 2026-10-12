@@ -8,7 +8,7 @@ interface StatusItem {
 
 const CompletionStatusPage: React.FC = () => {
   const projectStatus = {
-    name: "Nemaks",
+    name: "Nebula",
     status: "PRODUCTION READY",
     completionDate: "January 3, 2026",
     primaryUrl: "sdsa--slowlyslawa.replit.app",
@@ -104,7 +104,7 @@ const CompletionStatusPage: React.FC = () => {
 
       <div className="conclusion">
         <p className="conclusion-text">
-          The Nemaks communication platform has been successfully developed and
+          The Nebula communication platform has been successfully developed and
           tested. All systems are operational and the application is ready for
           production deployment.
         </p>

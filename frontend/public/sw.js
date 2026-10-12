@@ -1,10 +1,10 @@
 self.addEventListener('push', function(event) {
-  const data = event.data ? event.data.json() : { title: 'Nemaks', body: 'New notification' }
+  const data = event.data ? event.data.json() : { title: 'Nebula', body: 'New notification' }
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/logos/nemaks_logo_purple_gradient.png',
-      badge: '/logos/nemaks_logo_purple_gradient.png',
+      icon: '/nebula-logo.png',
+      badge: '/nebula-logo.png',
       tag: data.tag || 'default',
       data: data.url || '/'
     })

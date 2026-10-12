@@ -124,7 +124,7 @@ export default function DashboardPage() {
     {
       id: 1,
       type: 'welcome',
-      user: 'Nemaks',
+      user: 'Nebula',
       action: 'Добро пожаловать на платформу!',
       time: 'сейчас',
       icon: Activity,

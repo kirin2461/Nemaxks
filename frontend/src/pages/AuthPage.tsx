@@ -12,7 +12,7 @@ type Language = 'ru' | 'en'
 
 const translations = {
   ru: {
-    welcome: 'Добро пожаловать в Nemaks',
+    welcome: 'Добро пожаловать в Nebula',
     signInSubtitle: 'Войдите в свой аккаунт',
     signUpSubtitle: 'Создайте новый аккаунт',
     username: 'Имя пользователя',
@@ -43,7 +43,7 @@ const translations = {
     termsError: 'Необходимо принять Правила использования и Политику конфиденциальности',
   },
   en: {
-    welcome: 'Welcome to Nemaks',
+    welcome: 'Welcome to Nebula',
     signInSubtitle: 'Sign in to your account',
     signUpSubtitle: 'Create a new account',
     username: 'Username',
@@ -251,7 +251,7 @@ export default function AuthPage() {
   const CurrentThemeIcon = currentTheme.icon
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background/50 p-4 relative z-10">
+    <div className="min-h-screen flex items-center justify-center bg-nebula p-4 relative z-10">
       {/* Theme and Language selectors */}
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
         {/* Language selector */}
@@ -379,7 +379,7 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <div className="card-cosmic animate-slide-in">
+        <div className="glass-strong rounded-2xl p-6 animate-slide-in">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <label htmlFor="username" className="block text-sm font-medium text-foreground">
@@ -391,7 +391,7 @@ export default function AuthPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder={t.usernamePlaceholder}
-                className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary relative z-50"
+                className="input-field relative z-50"
                 required
               />
             </div>
@@ -407,7 +407,7 @@ export default function AuthPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t.passwordPlaceholder}
-                className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary relative z-50"
+                className="input-field relative z-50"
                 required
               />
             </div>
@@ -473,7 +473,7 @@ export default function AuthPage() {
             )}
 
             {showQR && isLogin && (
-              <div className="mt-6 p-6 bg-card/50 backdrop-blur-sm border border-border rounded-xl animate-slide-in">
+              <div className="mt-6 p-6 glass rounded-xl animate-slide-in">
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <Smartphone className="w-5 h-5 text-primary" />
