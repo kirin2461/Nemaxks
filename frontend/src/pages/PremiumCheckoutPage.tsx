@@ -179,7 +179,7 @@ export default function PremiumCheckoutPage() {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       </Layout>
     );
@@ -189,11 +189,11 @@ export default function PremiumCheckoutPage() {
     return (
       <Layout>
         <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-          <AlertCircle className="w-12 h-12 text-red-500" />
+          <AlertCircle className="w-12 h-12 text-red-400" />
           <p className="text-muted-foreground">{error}</p>
           <button 
             onClick={() => setLocation("/premium")}
-            className="text-purple-400 hover:text-purple-300"
+            className="text-primary hover:text-primary/80"
           >
             Вернуться к планам
           </button>
@@ -207,7 +207,7 @@ export default function PremiumCheckoutPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-screen bg-nebula p-6">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => setLocation("/premium")}
@@ -218,9 +218,9 @@ export default function PremiumCheckoutPage() {
           </button>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-card/50 border border-border rounded-2xl p-6">
+            <div className="glass rounded-2xl p-6 shadow-soft">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl">
+                <div className="p-3 bg-gradient-brand rounded-xl glow">
                   <Crown className="text-white" size={24} />
                 </div>
                 <div>
@@ -232,8 +232,8 @@ export default function PremiumCheckoutPage() {
               <div className="space-y-3 mb-6">
                 {features.map((feature: string, i: number) => (
                   <div key={i} className="flex items-center gap-3">
-                    <div className="p-1 bg-green-500/20 rounded-full">
-                      <Check size={14} className="text-green-400" />
+                    <div className="p-1 bg-accent/15 rounded-full">
+                      <Check size={14} className="text-accent" />
                     </div>
                     <span className="text-foreground text-sm">{feature}</span>
                   </div>
@@ -253,7 +253,7 @@ export default function PremiumCheckoutPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-card/50 border border-border rounded-2xl p-6">
+              <div className="glass rounded-2xl p-6 shadow-soft">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Промокод</h3>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
@@ -266,21 +266,21 @@ export default function PremiumCheckoutPage() {
                         setPromoValidation(null);
                       }}
                       placeholder="Введите промокод"
-                      className="w-full bg-background border border-border rounded-xl py-3 pl-10 pr-4 text-foreground placeholder-muted-foreground focus:border-purple-500 focus:outline-none"
+                      className="input-field !rounded-xl py-3 pl-10"
                     />
                   </div>
                   <button
                     onClick={validatePromoCode}
                     disabled={validatingPromo || !promoCode.trim()}
-                    className="px-4 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-secondary disabled:text-muted-foreground rounded-xl font-medium transition-colors"
+                    className="px-4 py-3 gradient-brand hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100 rounded-xl font-medium text-primary-foreground shadow-soft transition-all"
                   >
                     {validatingPromo ? <Loader2 className="w-5 h-5 animate-spin" /> : "Применить"}
                   </button>
                 </div>
                 {promoValidation && (
-                  <div className={`mt-3 p-3 rounded-lg ${promoValidation.valid ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"}`}>
+                  <div className={`mt-3 p-3 rounded-lg ${promoValidation.valid ? "bg-accent/10 border border-accent/30" : "bg-red-500/10 border border-red-500/30"}`}>
                     {promoValidation.valid ? (
-                      <p className="text-green-400 text-sm">
+                      <p className="text-accent text-sm">
                         Скидка {promoValidation.discount_percent}% применена!
                       </p>
                     ) : (
@@ -290,14 +290,14 @@ export default function PremiumCheckoutPage() {
                 )}
               </div>
 
-              <div className="bg-card/50 border border-border rounded-2xl p-6">
+              <div className="glass rounded-2xl p-6 shadow-soft">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Способ оплаты</h3>
                 <div className="space-y-3">
                   <label 
                     className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
                       paymentMethod === "card" 
-                        ? "border-purple-500 bg-purple-500/10" 
-                        : "border-border hover:border-border"
+                        ? "border-primary bg-primary/10 shadow-soft" 
+                        : "border-border hover:border-primary/40 hover:bg-primary/5"
                     }`}
                   >
                     <input
@@ -307,7 +307,7 @@ export default function PremiumCheckoutPage() {
                       onChange={() => setPaymentMethod("card")}
                       className="sr-only"
                     />
-                    <CreditCard className={paymentMethod === "card" ? "text-purple-400" : "text-muted-foreground"} size={24} />
+                    <CreditCard className={paymentMethod === "card" ? "text-primary" : "text-muted-foreground"} size={24} />
                     <div>
                       <p className="text-foreground font-medium">Банковская карта</p>
                       <p className="text-muted-foreground text-sm">Visa, Mastercard, МИР</p>
@@ -317,8 +317,8 @@ export default function PremiumCheckoutPage() {
                   <label 
                     className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
                       paymentMethod === "sbp" 
-                        ? "border-purple-500 bg-purple-500/10" 
-                        : "border-border hover:border-border"
+                        ? "border-primary bg-primary/10 shadow-soft" 
+                        : "border-border hover:border-primary/40 hover:bg-primary/5"
                     }`}
                   >
                     <input
@@ -328,7 +328,7 @@ export default function PremiumCheckoutPage() {
                       onChange={() => setPaymentMethod("sbp")}
                       className="sr-only"
                     />
-                    <Wallet className={paymentMethod === "sbp" ? "text-purple-400" : "text-muted-foreground"} size={24} />
+                    <Wallet className={paymentMethod === "sbp" ? "text-primary" : "text-muted-foreground"} size={24} />
                     <div>
                       <p className="text-foreground font-medium">СБП</p>
                       <p className="text-muted-foreground text-sm">Система быстрых платежей</p>
@@ -337,13 +337,13 @@ export default function PremiumCheckoutPage() {
                 </div>
               </div>
 
-              <div className="bg-card/50 border border-border rounded-2xl p-6">
+              <div className="glass rounded-2xl p-6 shadow-soft">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-muted-foreground">Стоимость плана</span>
                   <span className="text-foreground">{plan?.base_price_rub} ₽</span>
                 </div>
                 {promoValidation?.valid && (
-                  <div className="flex justify-between items-center mb-2 text-green-400">
+                  <div className="flex justify-between items-center mb-2 text-accent">
                     <span>Скидка по промокоду</span>
                     <span>-{plan!.base_price_rub - finalPrice} ₽</span>
                   </div>
@@ -351,7 +351,7 @@ export default function PremiumCheckoutPage() {
                 <div className="border-t border-border pt-3 mt-3">
                   <div className="flex justify-between items-center">
                     <span className="text-foreground font-semibold text-lg">Итого</span>
-                    <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                    <span className="text-2xl font-bold gradient-brand-text">
                       {finalPrice} ₽
                     </span>
                   </div>
@@ -367,7 +367,7 @@ export default function PremiumCheckoutPage() {
               <button
                 onClick={handleCheckout}
                 disabled={processing}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-gray-600 disabled:to-gray-600 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-600/30"
+                className="w-full py-4 gradient-brand hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100 rounded-xl font-semibold text-lg text-primary-foreground flex items-center justify-center gap-2 transition-all shadow-glow"
               >
                 {processing ? (
                   <>

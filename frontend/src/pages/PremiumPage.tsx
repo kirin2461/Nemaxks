@@ -236,13 +236,13 @@ export default function PremiumPage() {
     <Layout>
       <div className="p-4 sm:p-8 max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/30 mb-6">
-            <Crown className="w-5 h-5 text-yellow-500" />
-            <span className="text-yellow-500 font-medium">Nebula Premium</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/15 border border-primary/30 glow mb-6">
+            <Crown className="w-5 h-5 text-primary" />
+            <span className="gradient-brand-text font-medium">Nebula Premium</span>
           </div>
           
           <h1 className="text-3xl sm:text-5xl font-bold mb-4">
-            <span className="gradient-text">Раскройте весь потенциал</span>
+            <span className="gradient-brand-text">Раскройте весь потенциал</span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-6">
             Эксклюзивные функции, приоритетная поддержка и уникальные возможности для продвинутых пользователей
@@ -262,9 +262,9 @@ export default function PremiumPage() {
         </div>
 
         {userPremium?.has_premium && (
-          <Card className="cosmic-border p-6 mb-8 bg-gradient-to-r from-yellow-500/10 to-amber-500/10">
+          <Card className="glass rounded-xl p-6 mb-8 shadow-soft">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-brand flex items-center justify-center glow">
                 <Crown className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
@@ -276,13 +276,13 @@ export default function PremiumPage() {
                   </p>
                 )}
               </div>
-              <Shield className="w-8 h-8 text-green-500" />
+              <Shield className="w-8 h-8 text-accent" />
             </div>
           </Card>
         )}
 
         <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-          <Crown className="w-6 h-6 text-yellow-500" />
+          <Crown className="w-6 h-6 text-primary" />
           Выберите подписку
         </h2>
         <p className="text-muted-foreground text-center mb-8">
@@ -299,32 +299,32 @@ export default function PremiumPage() {
               <Card
                 key={plan.id}
                 className={cn(
-                  "cosmic-border relative overflow-hidden transition-all hover:scale-[1.02]",
-                  isPro && "ring-2 ring-blue-500/50",
-                  isPremium && "ring-2 ring-purple-500/50"
+                  "glass rounded-xl relative overflow-hidden transition-all hover:scale-[1.02] shadow-soft",
+                  isPro && "ring-2 ring-accent/50 glow",
+                  isPremium && "ring-2 ring-primary/50 glow"
                 )}
               >
                 {isPro && (
-                  <div className="absolute top-0 right-0 px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-bl-lg">
+                  <div className="absolute top-0 right-0 px-3 py-1 gradient-brand text-primary-foreground text-xs font-medium rounded-bl-lg">
                     Популярный
                   </div>
                 )}
                 {isPremium && (
-                  <div className="absolute top-0 right-0 px-3 py-1 bg-purple-500 text-white text-xs font-medium rounded-bl-lg">
+                  <div className="absolute top-0 right-0 px-3 py-1 gradient-brand text-primary-foreground text-xs font-medium rounded-bl-lg">
                     Максимум
                   </div>
                 )}
                 
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    {isStart && <Zap className="w-5 h-5 text-green-500" />}
-                    {isPro && <Star className="w-5 h-5 text-blue-500" />}
-                    {isPremium && <Crown className="w-5 h-5 text-purple-500" />}
+                    {isStart && <Zap className="w-5 h-5 text-accent" />}
+                    {isPro && <Star className="w-5 h-5 text-accent" />}
+                    {isPremium && <Crown className="w-5 h-5 text-primary" />}
                     <h3 className="text-xl font-bold">{plan.name}</h3>
                   </div>
                   
                   <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-3xl font-bold">
+                    <span className="text-3xl font-bold gradient-brand-text">
                       {plan.base_price_rub > 0 ? `${plan.base_price_rub}₽` : "Бесплатно"}
                     </span>
                     {plan.base_price_rub > 0 && <span className="text-muted-foreground">/мес</span>}
@@ -336,32 +336,32 @@ export default function PremiumPage() {
                     
                     <ul className="space-y-2 mb-6 text-sm">
                       <li className="flex items-center gap-2">
-                        <Video className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <Video className="w-4 h-4 text-accent flex-shrink-0" />
                         <span>Видео: {plan.video_retention_days} дней</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <MessageCircle className="w-4 h-4 text-primary flex-shrink-0" />
                         <span>Сообщения: {plan.messages_retention_days} дней</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <Bot className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                        <Bot className="w-4 h-4 text-accent flex-shrink-0" />
                         <span>Jarvis AI: {plan.jarvis_daily_limit}/день</span>
                       </li>
                       {plan.boards_persist_flag && (
                         <li className="flex items-center gap-2">
-                          <BookOpen className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                          <BookOpen className="w-4 h-4 text-primary flex-shrink-0" />
                           <span>Интерактивные доски и тетради</span>
                         </li>
                       )}
                       {plan.overage_storage_enabled && (
                         <li className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          <Check className="w-4 h-4 text-accent flex-shrink-0" />
                           <span>Докупка хранилища (50₽/ГБ)</span>
                         </li>
                       )}
                       {plan.traffic_reports_enabled && (
                         <li className="flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+                          <TrendingUp className="w-4 h-4 text-accent flex-shrink-0" />
                           <span>Отчёты по трафику</span>
                         </li>
                       )}
@@ -370,9 +370,8 @@ export default function PremiumPage() {
                     <Button
                       className={cn(
                         "w-full",
-                        isStart && "bg-green-600 hover:bg-green-700",
-                        isPro && "bg-gradient-to-r from-blue-500 to-cyan-500",
-                        isPremium && "bg-gradient-to-r from-purple-500 to-pink-500"
+                        isStart && "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                        (isPro || isPremium) && "glow"
                       )}
                       onClick={() => {
                         if (!isAuthenticated) {
@@ -394,7 +393,7 @@ export default function PremiumPage() {
             })}
           </div>
 
-          <Card className="cosmic-border p-6 mt-6">
+          <Card className="glass rounded-xl p-6 mt-6 shadow-soft">
             <div className="text-center">
               <h3 className="font-semibold mb-2">Для организаций: seat-based биллинг</h3>
               <p className="text-muted-foreground text-sm mb-4">
@@ -402,26 +401,26 @@ export default function PremiumPage() {
               </p>
               <div className="flex justify-center gap-8">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-500">35₽</div>
+                  <div className="text-2xl font-bold text-accent">35₽</div>
                   <div className="text-sm text-muted-foreground">Студент-редактор/мес</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-500">500₽</div>
+                  <div className="text-2xl font-bold text-primary">500₽</div>
                   <div className="text-sm text-muted-foreground">Преподаватель/мес</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-500">0₽</div>
+                  <div className="text-2xl font-bold gradient-brand-text">0₽</div>
                   <div className="text-sm text-muted-foreground">Читатель</div>
                 </div>
               </div>
             </div>
           </Card>
 
-        <Card className="cosmic-border p-6 mb-8">
+        <Card className="glass rounded-xl p-6 mb-8 shadow-soft">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Percent className="w-5 h-5 text-green-500" />
+                <Percent className="w-5 h-5 text-accent" />
                 Промокод
               </h3>
               <div className="flex gap-2">
@@ -430,7 +429,7 @@ export default function PremiumPage() {
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                   placeholder="Введите код"
-                  className="flex-1 px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none"
+                  className="input-field flex-1"
                 />
                 <Button onClick={handleValidatePromo} loading={validatingPromo} variant="secondary">
                   Применить
@@ -439,7 +438,7 @@ export default function PremiumPage() {
               {promoValidation && (
                 <div className={cn(
                   "mt-2 text-sm",
-                  promoValidation.valid ? "text-green-500" : "text-red-500"
+                  promoValidation.valid ? "text-accent" : "text-red-400"
                 )}>
                   {promoValidation.valid 
                     ? `Скидка ${promoValidation.discount_percent || promoValidation.discount_amount}${promoValidation.discount_percent ? '%' : '₽'} применена!`
@@ -450,7 +449,7 @@ export default function PremiumPage() {
 
             <div>
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-pink-500" />
+                <Gift className="w-5 h-5 text-primary" />
                 Активировать подарок
               </h3>
               <div className="flex gap-2">
@@ -459,7 +458,7 @@ export default function PremiumPage() {
                   value={redeemCode}
                   onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
                   placeholder="GIFT-XXXXXXXX"
-                  className="flex-1 px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none"
+                  className="input-field flex-1"
                 />
                 <Button onClick={handleRedeemGift} variant="secondary">
                   Активировать
@@ -484,8 +483,8 @@ export default function PremiumPage() {
           <h2 className="text-2xl font-bold text-center mb-8">Все преимущества Premium</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {allFeatures.map((feature, i) => (
-              <div key={i} className="p-5 rounded-xl bg-card/50 border border-border/50 flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <div key={i} className="p-5 rounded-xl glass shadow-soft flex items-start gap-4 hover:bg-primary/5 transition-colors">
+                <div className="w-10 h-10 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center flex-shrink-0">
                   <feature.icon className="w-5 h-5 text-primary" />
                 </div>
                 <div>
@@ -501,10 +500,10 @@ export default function PremiumPage() {
           <h2 className="text-2xl font-bold text-center mb-6">Частые вопросы</h2>
           <div className="max-w-2xl mx-auto space-y-3">
             {faqItems.map((item, i) => (
-              <div key={i} className="border border-border rounded-lg overflow-hidden">
+              <div key={i} className="glass rounded-xl overflow-hidden">
                 <button
                   onClick={() => setShowFAQ(showFAQ === i ? null : i)}
-                  className="w-full p-4 flex items-center justify-between text-left hover:bg-card/50 transition-colors"
+                  className="w-full p-4 flex items-center justify-between text-left hover:bg-primary/5 transition-colors"
                 >
                   <span className="font-medium">{item.q}</span>
                   {showFAQ === i ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -523,11 +522,11 @@ export default function PremiumPage() {
         </div>
 
         {showGiftModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md cosmic-border p-6">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md glass-strong rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Gift className="w-5 h-5 text-pink-500" />
+                  <Gift className="w-5 h-5 text-primary" />
                   Подарить Premium
                 </h3>
                 <button onClick={() => setShowGiftModal(false)} className="text-muted-foreground hover:text-foreground">
@@ -543,7 +542,7 @@ export default function PremiumPage() {
                     value={giftRecipient}
                     onChange={(e) => setGiftRecipient(e.target.value)}
                     placeholder="username"
-                    className="w-full px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none"
+                    className="input-field"
                   />
                 </div>
                 <div>
@@ -553,7 +552,7 @@ export default function PremiumPage() {
                     onChange={(e) => setGiftMessage(e.target.value)}
                     placeholder="Поздравляю!"
                     rows={2}
-                    className="w-full px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none resize-none"
+                    className="input-field resize-none"
                   />
                 </div>
                 
@@ -565,8 +564,7 @@ export default function PremiumPage() {
                       loading={purchasing === plan.slug}
                       className={cn(
                         "w-full",
-                        plan.slug === "pro" && "bg-gradient-to-r from-blue-500 to-cyan-500",
-                        plan.slug === "premium" && "bg-gradient-to-r from-purple-500 to-pink-500"
+                        (plan.slug === "pro" || plan.slug === "premium") && "glow"
                       )}
                     >
                       Подарить {plan.name} ({plan.base_price_rub}₽)
