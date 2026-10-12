@@ -168,7 +168,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-gray-800">{username}'s Document</h2>
           <span className={`inline-block w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-          <span className="text-xs text-gray-600">{isConnected ? 'Connected' : 'Offline'}</span>
+          <span className="text-xs text-muted-foreground">{isConnected ? 'Connected' : 'Offline'}</span>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -217,7 +217,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       </div>
 
       {/* Status Bar */}
-      <div className="flex items-center justify-between p-3 border-t border-gray-200 bg-gray-50 text-xs text-gray-600">
+      <div className="flex items-center justify-between p-3 border-t border-gray-200 bg-gray-50 text-xs text-muted-foreground">
         <div>Characters: {content.length}</div>
         <div>Version: {version}</div>
         <div>Last saved: {new Date().toLocaleTimeString()}</div>

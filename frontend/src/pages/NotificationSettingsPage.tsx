@@ -63,7 +63,7 @@ export function NotificationSettingsPage() {
       disabled={disabled}
       className={`relative w-11 h-6 rounded-full transition-colors ${
         disabled ? 'opacity-50 cursor-not-allowed' : ''
-      } ${checked ? 'bg-purple-500' : 'bg-gray-600'}`}
+      } ${checked ? 'bg-purple-500' : 'bg-muted'}`}
     >
       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
         checked ? 'left-6' : 'left-1'
@@ -73,7 +73,7 @@ export function NotificationSettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#16213e] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -81,19 +81,19 @@ export function NotificationSettingsPage() {
 
   if (!prefs) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#16213e] flex items-center justify-center">
-        <p className="text-gray-400">Не удалось загрузить настройки</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Не удалось загрузить настройки</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#16213e] p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -104,7 +104,7 @@ export function NotificationSettingsPage() {
         </div>
 
         <div className="space-y-6">
-          <section className="bg-[#1a1a2e] border border-white/10 rounded-xl p-6">
+          <section className="bg-card border border-white/10 rounded-xl p-6">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Volume2 className="w-5 h-5 text-purple-400" />
               Основные настройки
@@ -114,7 +114,7 @@ export function NotificationSettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white">Звуки уведомлений</p>
-                  <p className="text-gray-400 text-sm">Воспроизводить звук при новых уведомлениях</p>
+                  <p className="text-muted-foreground text-sm">Воспроизводить звук при новых уведомлениях</p>
                 </div>
                 <Toggle
                   checked={prefs.sound_enabled}
@@ -124,10 +124,10 @@ export function NotificationSettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Monitor className="w-5 h-5 text-gray-400" />
+                  <Monitor className="w-5 h-5 text-muted-foreground" />
                   <div>
                     <p className="text-white">Push-уведомления</p>
-                    <p className="text-gray-400 text-sm">Показывать уведомления на рабочем столе</p>
+                    <p className="text-muted-foreground text-sm">Показывать уведомления на рабочем столе</p>
                   </div>
                 </div>
                 <Toggle
@@ -138,10 +138,10 @@ export function NotificationSettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-gray-400" />
+                  <Mail className="w-5 h-5 text-muted-foreground" />
                   <div>
                     <p className="text-white">Email-уведомления</p>
-                    <p className="text-gray-400 text-sm">Отправлять уведомления на email</p>
+                    <p className="text-muted-foreground text-sm">Отправлять уведомления на email</p>
                   </div>
                 </div>
                 <Toggle
@@ -152,7 +152,7 @@ export function NotificationSettingsPage() {
             </div>
           </section>
 
-          <section className="bg-[#1a1a2e] border border-white/10 rounded-xl p-6">
+          <section className="bg-card border border-white/10 rounded-xl p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Типы уведомлений</h2>
 
             <div className="space-y-3">
@@ -172,7 +172,7 @@ export function NotificationSettingsPage() {
                 <div key={item.key} className="flex items-center justify-between py-2">
                   <div>
                     <p className="text-white">{item.label}</p>
-                    <p className="text-gray-400 text-sm">{item.desc}</p>
+                    <p className="text-muted-foreground text-sm">{item.desc}</p>
                   </div>
                   <Toggle
                     checked={prefs[item.key as keyof NotificationPreferences] as boolean}
@@ -183,7 +183,7 @@ export function NotificationSettingsPage() {
             </div>
           </section>
 
-          <section className="bg-[#1a1a2e] border border-white/10 rounded-xl p-6">
+          <section className="bg-card border border-white/10 rounded-xl p-6">
             <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Moon className="w-5 h-5 text-purple-400" />
               Тихие часы
@@ -193,7 +193,7 @@ export function NotificationSettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white">Включить тихие часы</p>
-                  <p className="text-gray-400 text-sm">Отключить уведомления в определённое время</p>
+                  <p className="text-muted-foreground text-sm">Отключить уведомления в определённое время</p>
                 </div>
                 <Toggle
                   checked={prefs.quiet_hours_enabled}
@@ -204,7 +204,7 @@ export function NotificationSettingsPage() {
               {prefs.quiet_hours_enabled && (
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <label className="block text-sm text-gray-400 mb-1">Начало</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Начало</label>
                     <input
                       type="time"
                       value={prefs.quiet_hours_start || '22:00'}
@@ -213,7 +213,7 @@ export function NotificationSettingsPage() {
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-sm text-gray-400 mb-1">Конец</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Конец</label>
                     <input
                       type="time"
                       value={prefs.quiet_hours_end || '08:00'}

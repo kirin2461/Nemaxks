@@ -65,14 +65,14 @@ export default function QuestsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Scroll className="w-8 h-8 text-purple-400" />
@@ -95,7 +95,7 @@ export default function QuestsPage() {
                   className={`bg-gradient-to-r ${getCategoryColor(chain.category)} p-0.5 rounded-xl cursor-pointer`}
                   onClick={() => setSelectedChain(chain.id)}
                 >
-                  <div className="bg-gray-800 rounded-xl p-6">
+                  <div className="bg-card rounded-xl p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
                         <div className="text-3xl">{getCategoryIcon(chain.category)}</div>
@@ -106,10 +106,10 @@ export default function QuestsPage() {
                               <CheckCircle className="w-5 h-5 text-green-400" />
                             )}
                           </div>
-                          <p className="text-gray-400 text-sm mb-3">{chain.description}</p>
+                          <p className="text-muted-foreground text-sm mb-3">{chain.description}</p>
                           
                           <div className="flex items-center gap-4 text-sm">
-                            <span className="text-gray-400">
+                            <span className="text-muted-foreground">
                               {progress?.current_step || 0}/{chain.total_steps} steps
                             </span>
                             {finalReward.coins && (
@@ -133,18 +133,18 @@ export default function QuestsPage() {
                           </div>
                         </div>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
                     </div>
 
                     {isStarted && !isCompleted && (
                       <div className="mt-4">
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-gray-400">Progress</span>
+                          <span className="text-muted-foreground">Progress</span>
                           <span className="text-purple-400">
                             {Math.round(((progress?.current_step || 1) / chain.total_steps) * 100)}%
                           </span>
                         </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="w-full bg-secondary rounded-full h-2">
                           <div
                             className="bg-purple-600 h-2 rounded-full transition-all"
                             style={{
@@ -160,16 +160,16 @@ export default function QuestsPage() {
             })}
 
             {chains.length === 0 && (
-              <div className="bg-gray-800 rounded-xl p-8 text-center">
-                <Scroll className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No quests available yet</p>
+              <div className="bg-card rounded-xl p-8 text-center">
+                <Scroll className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No quests available yet</p>
               </div>
             )}
           </div>
 
           <div>
             {selectedChain ? (
-              <div className="bg-gray-800 rounded-xl p-6 sticky top-6">
+              <div className="bg-card rounded-xl p-6 sticky top-6">
                 <h3 className="text-lg font-bold mb-4">Quest Steps</h3>
                 
                 {(() => {
@@ -193,22 +193,22 @@ export default function QuestsPage() {
                                   ? 'bg-green-600/10 border-green-600/30'
                                   : isCurrent
                                   ? 'bg-purple-600/10 border-purple-600/50'
-                                  : 'bg-gray-700/30 border-gray-700'
+                                  : 'bg-secondary/30 border-border'
                               }`}
                             >
                               <div className="flex items-start gap-3">
                                 {isCompleted ? (
                                   <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
                                 ) : isLocked ? (
-                                  <Lock className="w-5 h-5 text-gray-500 mt-0.5" />
+                                  <Lock className="w-5 h-5 text-muted-foreground mt-0.5" />
                                 ) : (
                                   <Circle className="w-5 h-5 text-purple-400 mt-0.5" />
                                 )}
                                 <div className="flex-1">
-                                  <p className={`font-medium ${isLocked ? 'text-gray-500' : ''}`}>
+                                  <p className={`font-medium ${isLocked ? 'text-muted-foreground' : ''}`}>
                                     {step.name}
                                   </p>
-                                  <p className="text-xs text-gray-400 mt-1">
+                                  <p className="text-xs text-muted-foreground mt-1">
                                     {step.description}
                                   </p>
                                   {!isLocked && (
@@ -253,9 +253,9 @@ export default function QuestsPage() {
                 })()}
               </div>
             ) : (
-              <div className="bg-gray-800 rounded-xl p-8 text-center sticky top-6">
-                <Scroll className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">Select a quest to view steps</p>
+              <div className="bg-card rounded-xl p-8 text-center sticky top-6">
+                <Scroll className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Select a quest to view steps</p>
               </div>
             )}
           </div>

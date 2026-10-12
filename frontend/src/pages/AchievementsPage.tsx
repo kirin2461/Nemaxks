@@ -61,20 +61,20 @@ export default function AchievementsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/10 to-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/10 to-background p-6">
       <div className="max-w-6xl mx-auto">
         {userLevel && (
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-purple-500/20"
+            className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-purple-500/20"
           >
             <div className="flex items-center gap-6">
               <div className="relative">
@@ -94,7 +94,7 @@ export default function AchievementsPage() {
                   </span>
                 </div>
                 
-                <div className="w-full h-4 bg-gray-700 rounded-full overflow-hidden">
+                <div className="w-full h-4 bg-secondary rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${userLevel.progress}%` }}
@@ -103,7 +103,7 @@ export default function AchievementsPage() {
                   />
                 </div>
                 
-                <div className="flex gap-6 mt-4 text-sm text-gray-400">
+                <div className="flex gap-6 mt-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
                     <span>{userLevel.messages} {language === 'ru' ? 'сообщений' : 'messages'}</span>
@@ -121,7 +121,7 @@ export default function AchievementsPage() {
               
               <div className="text-right">
                 <div className="text-3xl font-bold text-white">{userLevel.total_xp.toLocaleString()}</div>
-                <div className="text-gray-400">{language === 'ru' ? 'Всего XP' : 'Total XP'}</div>
+                <div className="text-muted-foreground">{language === 'ru' ? 'Всего XP' : 'Total XP'}</div>
               </div>
             </div>
           </motion.div>
@@ -133,7 +133,7 @@ export default function AchievementsPage() {
             className={`px-6 py-3 rounded-xl font-semibold transition-all ${
               activeTab === 'achievements'
                 ? 'bg-purple-600 text-white'
-                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                : 'bg-card/50 text-muted-foreground hover:bg-secondary/50'
             }`}
           >
             <Trophy className="w-5 h-5 inline-block mr-2" />
@@ -144,7 +144,7 @@ export default function AchievementsPage() {
             className={`px-6 py-3 rounded-xl font-semibold transition-all ${
               activeTab === 'leaderboard'
                 ? 'bg-purple-600 text-white'
-                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                : 'bg-card/50 text-muted-foreground hover:bg-secondary/50'
             }`}
           >
             <TrendingUp className="w-5 h-5 inline-block mr-2" />
@@ -154,7 +154,7 @@ export default function AchievementsPage() {
           <div className="ml-auto">
             <button
               onClick={() => setLanguage(l => l === 'ru' ? 'en' : 'ru')}
-              className="px-4 py-2 rounded-lg bg-gray-800/50 text-gray-400 hover:bg-gray-700/50"
+              className="px-4 py-2 rounded-lg bg-card/50 text-muted-foreground hover:bg-secondary/50"
             >
               {language === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}
             </button>
@@ -175,8 +175,8 @@ export default function AchievementsPage() {
                   transition={{ delay: index * 0.05 }}
                   className={`relative rounded-xl p-4 border ${
                     isUnlocked
-                      ? 'bg-gray-800/70 border-purple-500/50'
-                      : 'bg-gray-800/30 border-gray-700/50 opacity-60'
+                      ? 'bg-card/70 border-purple-500/50'
+                      : 'bg-card/30 border-border/50 opacity-60'
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -188,7 +188,7 @@ export default function AchievementsPage() {
                       <h3 className="font-semibold text-white">
                         {language === 'ru' ? ach.name_ru : ach.name}
                       </h3>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-muted-foreground">
                         {language === 'ru' ? ach.description_ru : ach.description}
                       </p>
                       
@@ -229,7 +229,7 @@ export default function AchievementsPage() {
                   className={`px-4 py-2 rounded-lg transition-all ${
                     leaderboardPeriod === period
                       ? 'bg-purple-600 text-white'
-                      : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                      : 'bg-card/50 text-muted-foreground hover:bg-secondary/50'
                   }`}
                 >
                   {period === 'all' ? (language === 'ru' ? 'Все время' : 'All Time') :
@@ -239,14 +239,14 @@ export default function AchievementsPage() {
               ))}
             </div>
             
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-500/20 overflow-hidden">
+            <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-purple-500/20 overflow-hidden">
               {leaderboard.map((entry, index) => (
                 <motion.div
                   key={entry.user_id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  className={`flex items-center gap-4 p-4 border-b border-gray-700/50 last:border-0 ${
+                  className={`flex items-center gap-4 p-4 border-b border-border/50 last:border-0 ${
                     index < 3 ? 'bg-gradient-to-r from-purple-900/30 to-transparent' : ''
                   }`}
                 >
@@ -254,7 +254,7 @@ export default function AchievementsPage() {
                     entry.rank === 1 ? 'bg-yellow-500 text-black' :
                     entry.rank === 2 ? 'bg-gray-400 text-black' :
                     entry.rank === 3 ? 'bg-orange-600 text-white' :
-                    'bg-gray-700 text-gray-300'
+                    'bg-secondary text-foreground'
                   }`}>
                     {entry.rank <= 3 ? (
                       <Crown className="w-5 h-5" />
@@ -273,20 +273,20 @@ export default function AchievementsPage() {
                   
                   <div className="flex-1">
                     <div className="font-semibold text-white">{entry.username}</div>
-                    <div className="text-sm text-gray-400">
+                    <div className="text-sm text-muted-foreground">
                       {language === 'ru' ? 'Уровень' : 'Level'} {entry.level}
                     </div>
                   </div>
                   
                   <div className="text-right">
                     <div className="text-lg font-bold text-purple-400">{entry.total_xp.toLocaleString()}</div>
-                    <div className="text-xs text-gray-500">XP</div>
+                    <div className="text-xs text-muted-foreground">XP</div>
                   </div>
                 </motion.div>
               ))}
               
               {leaderboard.length === 0 && (
-                <div className="p-8 text-center text-gray-400">
+                <div className="p-8 text-center text-muted-foreground">
                   {language === 'ru' ? 'Пока нет данных' : 'No data yet'}
                 </div>
               )}

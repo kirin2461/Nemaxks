@@ -10,9 +10,9 @@ export function VoiceStatusBar() {
   }
 
   return (
-    <div className="bg-[#1e1f22] border-t border-[#2b2d31]">
+    <div className="bg-card border-t border-border">
       <div className="flex items-center gap-2 p-2">
-        <div className="flex-1 flex items-center gap-2 min-w-0 hover:bg-[#35373c] rounded px-2 py-1 transition-colors">
+        <div className="flex-1 flex items-center gap-2 min-w-0 hover:bg-accent rounded px-2 py-1 transition-colors">
           <Signal className={cn(
             "w-4 h-4 flex-shrink-0",
             state.connectionQuality === 'excellent' && "text-green-500",
@@ -31,8 +31,8 @@ export function VoiceStatusBar() {
           <button
             onClick={toggleMute}
             className={cn(
-              "p-2 rounded hover:bg-[#35373c] transition-colors",
-              state.isMuted ? "text-red-400" : "text-[#dbdee1]"
+              "p-2 rounded hover:bg-accent transition-colors",
+              state.isMuted ? "text-red-400" : "text-foreground"
             )}
             title={state.isMuted ? "Включить микрофон" : "Отключить микрофон"}
           >
@@ -42,8 +42,8 @@ export function VoiceStatusBar() {
           <button
             onClick={toggleDeafen}
             className={cn(
-              "p-2 rounded hover:bg-[#35373c] transition-colors",
-              state.isDeafened ? "text-red-400" : "text-[#dbdee1]"
+              "p-2 rounded hover:bg-accent transition-colors",
+              state.isDeafened ? "text-red-400" : "text-foreground"
             )}
             title={state.isDeafened ? "Включить звук" : "Отключить звук"}
           >

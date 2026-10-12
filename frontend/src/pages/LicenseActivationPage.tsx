@@ -136,7 +136,7 @@ export default function LicenseActivationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/10 to-background text-white">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
@@ -152,7 +152,7 @@ export default function LicenseActivationPage() {
             <Key className="w-8 h-8 sm:w-10 sm:h-10 text-purple-400" />
             <h1 className="text-2xl sm:text-4xl font-bold">Активация лицензии</h1>
           </div>
-          <p className="text-gray-400 text-sm sm:text-lg max-w-2xl mx-auto px-2">
+          <p className="text-muted-foreground text-sm sm:text-lg max-w-2xl mx-auto px-2">
             Для доступа к платформе Nemaks необходима действующая лицензия.
             Выберите подходящий тариф или активируйте имеющийся ключ.
           </p>
@@ -164,41 +164,41 @@ export default function LicenseActivationPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gray-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-gray-700/50"
+            className="bg-card/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-border/50"
           >
             <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
               <Key className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
               Активировать ключ
             </h2>
 
-            <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">
+            <p className="text-muted-foreground text-sm sm:text-base mb-4 sm:mb-6">
               Если у вас уже есть ключ лицензии, введите его ниже для активации.
             </p>
 
             {/* Тестовый ключ */}
             <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg sm:rounded-xl border border-purple-500/30">
-              <p className="text-xs sm:text-sm text-gray-300 mb-2">
+              <p className="text-xs sm:text-sm text-foreground mb-2">
                 Пробный ключ (25 дней Premium, однократная активация):
               </p>
               <button
                 onClick={() => setLicenseKey('NEMKS-TEST0-TEST0-TEST0')}
-                className="w-full py-2 sm:py-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg font-mono text-sm sm:text-lg text-purple-300 tracking-wider transition-all flex items-center justify-center gap-2"
+                className="w-full py-2 sm:py-3 bg-secondary/50 hover:bg-muted/50 rounded-lg font-mono text-sm sm:text-lg text-purple-300 tracking-wider transition-all flex items-center justify-center gap-2"
               >
                 <span>NEMKS-TEST0-TEST0-TEST0</span>
-                <span className="text-xs text-gray-400">(нажмите для вставки)</span>
+                <span className="text-xs text-muted-foreground">(нажмите для вставки)</span>
               </button>
             </div>
 
             <div className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-xs sm:text-sm text-gray-400 mb-2">Ключ лицензии</label>
+                <label className="block text-xs sm:text-sm text-muted-foreground mb-2">Ключ лицензии</label>
                 <input
                   type="text"
                   value={licenseKey}
                   onChange={handleKeyChange}
                   placeholder="NEMKS-XXXXX-XXXXX-XXXXX"
                   maxLength={23}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-4 bg-gray-700/50 rounded-lg sm:rounded-xl text-center text-base sm:text-xl font-mono tracking-wider outline-none focus:ring-2 focus:ring-purple-500 uppercase"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-4 bg-secondary/50 rounded-lg sm:rounded-xl text-center text-base sm:text-xl font-mono tracking-wider outline-none focus:ring-2 focus:ring-purple-500 uppercase"
                 />
               </div>
 
@@ -241,8 +241,8 @@ export default function LicenseActivationPage() {
               </button>
             </div>
 
-            <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-700">
-              <p className="text-gray-500 text-xs sm:text-sm text-center">
+            <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border">
+              <p className="text-muted-foreground text-xs sm:text-sm text-center">
                 Формат ключа: <code className="text-purple-400 text-xs sm:text-sm">NEMKS-XXXXX-XXXXX-XXXXX</code>
               </p>
             </div>
@@ -262,9 +262,9 @@ export default function LicenseActivationPage() {
 
           {/* Разделитель */}
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="flex-1 h-px bg-gray-700" />
-            <span className="text-gray-500 text-xs sm:text-sm whitespace-nowrap">или купите лицензию</span>
-            <div className="flex-1 h-px bg-gray-700" />
+            <div className="flex-1 h-px bg-secondary" />
+            <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap">или купите лицензию</span>
+            <div className="flex-1 h-px bg-secondary" />
           </div>
 
           {/* Выбор тарифа - вторым */}
@@ -272,7 +272,7 @@ export default function LicenseActivationPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gray-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-gray-700/50"
+            className="bg-card/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-border/50"
           >
             <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
               <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
@@ -290,7 +290,7 @@ export default function LicenseActivationPage() {
                   className={`relative p-4 sm:p-5 rounded-lg sm:rounded-xl cursor-pointer transition-all ${
                     selectedTier?.type === tier.type
                       ? 'bg-purple-600/30 border-2 border-purple-500'
-                      : 'bg-gray-700/50 border-2 border-transparent hover:border-gray-600'
+                      : 'bg-secondary/50 border-2 border-transparent hover:border-border'
                   }`}
                 >
                   {tier.popular && (
@@ -302,14 +302,14 @@ export default function LicenseActivationPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-base sm:text-lg font-bold">{tier.label_ru}</h3>
-                      <p className="text-gray-400 text-xs sm:text-sm flex items-center gap-1">
+                      <p className="text-muted-foreground text-xs sm:text-sm flex items-center gap-1">
                         <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                         {tier.duration_days} дней
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-xl sm:text-2xl font-bold text-purple-400">{tier.price_rub}₽</p>
-                      <p className="text-gray-500 text-xs sm:text-sm">${tier.price_usd}</p>
+                      <p className="text-muted-foreground text-xs sm:text-sm">${tier.price_usd}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -327,7 +327,7 @@ export default function LicenseActivationPage() {
                 >
                   Купить {selectedTier.label_ru.toLowerCase()} лицензию
                 </button>
-                <p className="text-center text-gray-500 text-xs sm:text-sm mt-2">
+                <p className="text-center text-muted-foreground text-xs sm:text-sm mt-2">
                   Безопасная оплата через YooKassa
                 </p>
               </motion.div>
@@ -339,7 +339,7 @@ export default function LicenseActivationPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gray-800/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-700/50"
+            className="bg-card/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-border/50"
           >
             <h3 className="font-bold text-sm sm:text-base mb-3 sm:mb-4 flex items-center gap-2">
               <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
@@ -347,7 +347,7 @@ export default function LicenseActivationPage() {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm">
+                <div key={index} className="flex items-center gap-2 sm:gap-3 text-foreground text-sm">
                   <benefit.icon className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 flex-shrink-0" />
                   <span>{benefit.text}</span>
                 </div>

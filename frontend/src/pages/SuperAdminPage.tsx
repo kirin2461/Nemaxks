@@ -1067,7 +1067,7 @@ function ServiceStatusBadge({ name, status }: { name: string; status: string }) 
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    user: 'bg-gray-500/20 text-gray-400',
+    user: 'bg-gray-500/20 text-muted-foreground',
     moderator: 'bg-blue-500/20 text-blue-400',
     admin: 'bg-purple-500/20 text-purple-400',
     super_admin: 'bg-yellow-500/20 text-yellow-400',

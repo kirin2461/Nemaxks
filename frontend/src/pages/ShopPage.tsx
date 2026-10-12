@@ -85,7 +85,7 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-4 sm:p-6 pb-20 lg:pb-0">
+    <div className="min-h-screen bg-background p-4 sm:p-6 pb-20 lg:pb-0">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
           <div className="flex items-center gap-3">
@@ -115,7 +115,7 @@ export default function ShopPage() {
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeCategory === cat
                   ? 'bg-purple-500 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  : 'bg-card text-muted-foreground hover:bg-secondary'
               }`}
             >
               {categoryIcons[cat]}
@@ -133,18 +133,18 @@ export default function ShopPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className={`relative bg-gray-800/50 rounded-xl border-2 p-4 ${rarityColors[item.rarity]}`}
+                className={`relative bg-card/50 rounded-xl border-2 p-4 ${rarityColors[item.rarity]}`}
               >
                 <div className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium capitalize bg-black/50">
                   {item.rarity}
                 </div>
 
-                <div className="h-32 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg mb-4 flex items-center justify-center">
-                  <Sparkles className="w-12 h-12 text-gray-500" />
+                <div className="h-32 bg-gradient-to-br from-secondary to-muted rounded-lg mb-4 flex items-center justify-center">
+                  <Sparkles className="w-12 h-12 text-muted-foreground" />
                 </div>
 
                 <h3 className="text-lg font-semibold text-white mb-1">{item.name_ru || item.name}</h3>
-                <p className="text-sm text-gray-400 mb-4">{item.description_ru || item.description}</p>
+                <p className="text-sm text-muted-foreground mb-4">{item.description_ru || item.description}</p>
 
                 {isOwned(item.id) ? (
                   <button
@@ -194,8 +194,8 @@ export default function ShopPage() {
 
         {items.length === 0 && (
           <div className="text-center py-16">
-            <ShoppingBag className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">{t('shop.noItems', 'Нет товаров в этой категории')}</p>
+            <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">{t('shop.noItems', 'Нет товаров в этой категории')}</p>
           </div>
         )}
       </div>

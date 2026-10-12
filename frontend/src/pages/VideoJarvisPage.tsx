@@ -210,7 +210,7 @@ export default function VideoJarvisPage() {
                   <div className="w-24 h-24 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
                     <Play className="w-12 h-12 text-white" />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">comming soon</p>
+                  <p className="text-xs text-muted-foreground mt-1">comming soon</p>
                   <p className="text-white/90 text-lg font-medium">Video Player</p>
                   <p className="text-white/60 text-sm">Demo mode - actual video integration pending</p>
                 </div>

@@ -167,7 +167,7 @@ export default function SettingsPage() {
                         'flex items-center gap-3 p-4 rounded-xl border-2 transition-all',
                         i18n.language === lang.code
                           ? 'border-primary bg-primary/10'
-                          : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
+                          : 'border-border hover:border-border bg-card/50'
                       )}
                     >
                       <span className="text-2xl">{lang.flag}</span>

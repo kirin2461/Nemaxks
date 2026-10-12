@@ -421,7 +421,7 @@ export default function AuthPage() {
                   onChange={(e) => setAgreeToTerms(e.target.checked)}
                   className="w-5 h-5 mt-0.5 rounded border-border bg-background text-primary focus:ring-primary cursor-pointer"
                 />
-                <label htmlFor="agree-terms" className="text-sm text-gray-300 cursor-pointer leading-relaxed">
+                <label htmlFor="agree-terms" className="text-sm text-foreground cursor-pointer leading-relaxed">
                   {t.agreeTerms}{' '}
                   <Link href="/terms" className="text-primary hover:underline">
                     {t.termsOfUse}

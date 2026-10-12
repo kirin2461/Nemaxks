@@ -136,9 +136,9 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-800">{item.name}</h4>
                         {item.description && (
-                          <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                         )}
-                        <div className="flex gap-2 mt-2 text-xs text-gray-500">
+                        <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
                           <span>Owner: {item.ownerRole}</span>
                           <span>Updated: {new Date(item.updatedAt).toLocaleDateString()}</span>
                         </div>
@@ -193,9 +193,9 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-800">{item.name}</h4>
                         {item.description && (
-                          <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                         )}
-                        <div className="flex gap-2 mt-2 text-xs text-gray-500">
+                        <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
                           <span>Owner: {item.ownerRole}</span>
                           <span>Updated: {new Date(item.updatedAt).toLocaleDateString()}</span>
                         </div>
@@ -222,9 +222,9 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
         {/* Empty State */}
         {visibleItems.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-500">No tools available for this channel yet.</p>
+            <p className="text-muted-foreground">No tools available for this channel yet.</p>
             {userRole !== 'member' && (
-              <p className="text-sm text-gray-400 mt-2">Create boards or notebooks to get started.</p>
+              <p className="text-sm text-muted-foreground mt-2">Create boards or notebooks to get started.</p>
             )}
           </div>
         )}

@@ -140,7 +140,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
                 {notificationsEnabled ? (
                   <Bell className="w-5 h-5 text-green-500" />
                 ) : (
-                  <BellOff className="w-5 h-5 text-gray-400" />
+                  <BellOff className="w-5 h-5 text-muted-foreground" />
                 )}
               </Button>
             </div>

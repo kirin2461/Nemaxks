@@ -107,19 +107,19 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#313338] text-white overflow-hidden">
-      <div className="flex items-center justify-between p-4 border-b border-[#1e1f22]">
+    <div className="flex flex-col h-full bg-card text-card-foreground overflow-hidden">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="bg-[#4e5058] p-2 rounded-full">
+          <div className="bg-muted p-2 rounded-full">
             <Users className="w-5 h-5" />
           </div>
           <div>
             <h2 className="font-bold text-lg leading-tight">{channelName}</h2>
-            <p className="text-sm text-[#b5bac1]">{guildName} • {voiceState.connectedUsers.length} участников</p>
+            <p className="text-sm text-muted-foreground">{guildName} • {voiceState.connectedUsers.length} участников</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-[#4e5058] rounded-md transition-colors text-[#b5bac1] hover:text-white">
+          <button className="p-2 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
             <Settings className="w-5 h-5" />
           </button>
         </div>
@@ -129,7 +129,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
           {/* Local User */}
           <div className={cn(
-            "relative aspect-video bg-[#1e1f22] rounded-xl flex items-center justify-center transition-all duration-300 ring-2",
+            "relative aspect-video bg-background rounded-xl flex items-center justify-center transition-all duration-300 ring-2",
             voiceState.isSpeaking ? "ring-[#23a559]" : "ring-transparent"
           )}>
             {voiceState.hasVideo && localVideoStream ? (
@@ -143,7 +143,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
             ) : (
               <div className="flex flex-col items-center gap-4">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-[#5865f2] flex items-center justify-center text-3xl font-bold border-4 border-[#313338]">
+                  <div className="w-24 h-24 rounded-full bg-[#5865f2] flex items-center justify-center text-3xl font-bold border-4 border-card">
                     {user?.avatar ? (
                       <img src={user.avatar} className="w-full h-full rounded-full object-cover" alt="" />
                     ) : (
@@ -151,7 +151,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
                     )}
                   </div>
                   {voiceState.isMuted && (
-                    <div className="absolute -bottom-1 -right-1 bg-[#ed4245] p-1.5 rounded-full border-2 border-[#1e1f22]">
+                    <div className="absolute -bottom-1 -right-1 bg-[#ed4245] p-1.5 rounded-full border-2 border-border">
                       <MicOff className="w-4 h-4" />
                     </div>
                   )}
@@ -168,7 +168,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
 
           {/* Local Screen Share */}
           {voiceState.isScreenSharing && localScreenStream && (
-            <div className="relative aspect-video bg-[#1e1f22] rounded-xl overflow-hidden col-span-2">
+            <div className="relative aspect-video bg-background rounded-xl overflow-hidden col-span-2">
               <video
                 ref={localScreenRef}
                 autoPlay
@@ -187,7 +187,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
             <div key={remoteUser.id}>
               {/* User Video */}
               <div className={cn(
-                "relative aspect-video bg-[#1e1f22] rounded-xl flex items-center justify-center transition-all duration-300 ring-2 mb-2",
+                "relative aspect-video bg-background rounded-xl flex items-center justify-center transition-all duration-300 ring-2 mb-2",
                 remoteUser.isSpeaking ? "ring-[#23a559]" : "ring-transparent"
               )}>
                 {remoteUser.hasVideo && remoteUser.videoStream ? (
@@ -195,7 +195,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
                 ) : (
                   <div className="flex flex-col items-center gap-4">
                     <div className="relative">
-                      <div className="w-24 h-24 rounded-full bg-[#4e5058] flex items-center justify-center text-3xl font-bold border-4 border-[#313338]">
+                      <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold border-4 border-card">
                         {remoteUser.avatar ? (
                           <img src={remoteUser.avatar} className="w-full h-full rounded-full object-cover" alt="" />
                         ) : (
@@ -203,7 +203,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
                         )}
                       </div>
                       {remoteUser.isMuted && (
-                        <div className="absolute -bottom-1 -right-1 bg-[#ed4245] p-1.5 rounded-full border-2 border-[#1e1f22]">
+                        <div className="absolute -bottom-1 -right-1 bg-[#ed4245] p-1.5 rounded-full border-2 border-border">
                           <MicOff className="w-4 h-4" />
                         </div>
                       )}
@@ -228,14 +228,14 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
                     max="200" 
                     value={remoteUser.volume}
                     onChange={(e) => setUserVolume(String(remoteUser.id), parseInt(e.target.value))}
-                    className="w-16 h-1 bg-[#4e5058] rounded-lg appearance-none cursor-pointer accent-[#5865f2]"
+                    className="w-16 h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-[#5865f2]"
                   />
                 </div>
               </div>
 
               {/* User Screen Share */}
               {remoteUser.isScreenSharing && remoteUser.screenStream && (
-                <div className="relative aspect-video bg-[#1e1f22] rounded-xl overflow-hidden">
+                <div className="relative aspect-video bg-background rounded-xl overflow-hidden">
                   <VideoStream stream={remoteUser.screenStream} />
                   <div className="absolute top-2 left-2 bg-[#5865f2] px-3 py-1 rounded-full text-sm font-medium">
                     {remoteUser.username} демонстрирует экран
@@ -247,12 +247,12 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
         </div>
       </div>
 
-      <div className="p-4 bg-[#1e1f22] flex items-center justify-center gap-4">
+      <div className="p-4 bg-background flex items-center justify-center gap-4">
         <button
           onClick={toggleMute}
           className={cn(
             "p-4 rounded-full transition-all duration-200",
-            voiceState.isMuted ? "bg-[#ed4245] text-white" : "bg-[#4e5058] text-[#dbdee1] hover:bg-[#6d6f78]"
+            voiceState.isMuted ? "bg-[#ed4245] text-white" : "bg-muted text-foreground hover:bg-[#6d6f78]"
           )}
           title={voiceState.isMuted ? "Включить микрофон" : "Выключить микрофон"}
         >
@@ -262,7 +262,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
           onClick={toggleDeafen}
           className={cn(
             "p-4 rounded-full transition-all duration-200",
-            voiceState.isDeafened ? "bg-[#ed4245] text-white" : "bg-[#4e5058] text-[#dbdee1] hover:bg-[#6d6f78]"
+            voiceState.isDeafened ? "bg-[#ed4245] text-white" : "bg-muted text-foreground hover:bg-[#6d6f78]"
           )}
           title={voiceState.isDeafened ? "Включить звук" : "Выключить звук"}
         >
@@ -272,7 +272,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
           onClick={handleToggleVideo}
           className={cn(
             "p-4 rounded-full transition-all duration-200",
-            voiceState.hasVideo ? "bg-[#5865f2] text-white" : "bg-[#4e5058] text-[#dbdee1] hover:bg-[#6d6f78]"
+            voiceState.hasVideo ? "bg-[#5865f2] text-white" : "bg-muted text-foreground hover:bg-[#6d6f78]"
           )}
           title={voiceState.hasVideo ? "Выключить видео" : "Включить видео"}
         >
@@ -282,7 +282,7 @@ export function VoiceChannel({ channelId, channelName, guildName, onDisconnect }
           onClick={handleToggleScreenShare}
           className={cn(
             "p-4 rounded-full transition-all duration-200",
-            voiceState.isScreenSharing ? "bg-[#5865f2] text-white" : "bg-[#4e5058] text-[#dbdee1] hover:bg-[#6d6f78]"
+            voiceState.isScreenSharing ? "bg-[#5865f2] text-white" : "bg-muted text-foreground hover:bg-[#6d6f78]"
           )}
           title={voiceState.isScreenSharing ? "Остановить демонстрацию экрана" : "Демонстрировать экран"}
         >

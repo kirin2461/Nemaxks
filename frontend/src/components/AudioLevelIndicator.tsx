@@ -107,7 +107,7 @@ export const AudioLevelIndicator: React.FC<AudioLevelIndicatorProps> = ({
       {showLabel && (
         <span className={cn(
           'text-xs mr-2 transition-colors',
-          isTransmitting ? 'text-green-400' : 'text-gray-400'
+          isTransmitting ? 'text-green-400' : 'text-muted-foreground'
         )}>
           {label}
         </span>
@@ -118,7 +118,7 @@ export const AudioLevelIndicator: React.FC<AudioLevelIndicatorProps> = ({
             key={index}
             className={cn(
               'w-1 rounded-sm transition-all duration-75',
-              isTransmitting ? 'bg-green-500' : 'bg-gray-600'
+              isTransmitting ? 'bg-green-500' : 'bg-muted'
             )}
             style={{
               height: `${Math.max(4, level * 16)}px`,
@@ -171,7 +171,7 @@ export const AudioLogsPanel: React.FC<AudioLogsPanelProps> = ({
       case 'error':
         return 'text-red-400'
       default:
-        return 'text-gray-400'
+        return 'text-muted-foreground'
     }
   }
 
@@ -185,24 +185,24 @@ export const AudioLogsPanel: React.FC<AudioLogsPanelProps> = ({
 
   return (
     <div className={cn(
-      'bg-gray-900/90 rounded-lg border border-gray-700 p-3',
+      'bg-background/90 rounded-lg border border-border p-3',
       className
     )}>
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-sm font-medium text-white">Audio Logs</h4>
-        <span className="text-xs text-gray-500">{displayLogs.length} events</span>
+        <span className="text-xs text-muted-foreground">{displayLogs.length} events</span>
       </div>
       <div
         ref={scrollRef}
         className="h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
       >
         {displayLogs.length === 0 ? (
-          <p className="text-xs text-gray-500 italic">No audio events yet...</p>
+          <p className="text-xs text-muted-foreground italic">No audio events yet...</p>
         ) : (
           <div className="space-y-1">
             {displayLogs.map((log) => (
               <div key={log.id} className="flex items-start gap-2 text-xs">
-                <span className="text-gray-500 shrink-0">{formatTime(log.timestamp)}</span>
+                <span className="text-muted-foreground shrink-0">{formatTime(log.timestamp)}</span>
                 <span className={cn('flex-1', getTypeColor(log.type))}>
                   {log.message}
                 </span>
