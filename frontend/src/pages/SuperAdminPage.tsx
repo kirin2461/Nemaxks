@@ -310,8 +310,8 @@ export default function SuperAdminPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-            <p className="text-muted-foreground">Super Admin access required</p>
+            <h2 className="text-2xl font-bold mb-2">Доступ запрещён</h2>
+            <p className="text-muted-foreground">Требуются права супер-администратора</p>
           </div>
         </div>
       </Layout>
@@ -319,11 +319,11 @@ export default function SuperAdminPage() {
   }
 
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'guilds', label: 'Guilds', icon: Building2 },
-    { id: 'moderation', label: 'Moderation', icon: Shield },
-    { id: 'monitoring', label: 'Monitoring', icon: Activity },
+    { id: 'dashboard', label: 'Обзор', icon: BarChart3 },
+    { id: 'users', label: 'Пользователи', icon: Users },
+    { id: 'guilds', label: 'Серверы', icon: Building2 },
+    { id: 'moderation', label: 'Модерация', icon: Shield },
+    { id: 'monitoring', label: 'Мониторинг', icon: Activity },
     { id: 'jarvis', label: 'JARVIS', icon: Bot },
     { id: 'banners', label: 'Уведомления', icon: Bell },
   ] as const
@@ -363,22 +363,22 @@ export default function SuperAdminPage() {
             {activeTab === 'dashboard' && stats && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard icon={Users} label="Total Users" value={stats.users} color="blue" />
-                  <StatCard icon={Globe} label="Online Now" value={stats.online_users} color="green" />
-                  <StatCard icon={TrendingUp} label="New Today" value={stats.today_new_users} color="purple" />
-                  <StatCard icon={Key} label="Active Sessions" value={stats.active_sessions} color="yellow" />
+                  <StatCard icon={Users} label="Всего пользователей" value={stats.users} color="blue" />
+                  <StatCard icon={Globe} label="Сейчас онлайн" value={stats.online_users} color="green" />
+                  <StatCard icon={TrendingUp} label="Новые сегодня" value={stats.today_new_users} color="purple" />
+                  <StatCard icon={Key} label="Активные сессии" value={stats.active_sessions} color="yellow" />
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard icon={MessageSquare} label="Messages Today" value={stats.today_messages} color="cyan" />
-                  <StatCard icon={Building2} label="Guilds" value={stats.guilds} color="indigo" />
-                  <StatCard icon={AlertTriangle} label="Pending Reports" value={stats.pending_reports} color="orange" />
-                  <StatCard icon={Ban} label="Active Bans" value={stats.active_bans} color="red" />
+                  <StatCard icon={MessageSquare} label="Сообщения сегодня" value={stats.today_messages} color="cyan" />
+                  <StatCard icon={Building2} label="Серверы" value={stats.guilds} color="indigo" />
+                  <StatCard icon={AlertTriangle} label="Ожидающие жалобы" value={stats.pending_reports} color="orange" />
+                  <StatCard icon={Ban} label="Активные баны" value={stats.active_bans} color="red" />
                 </div>
 
                 {serviceStatus && (
                   <div className="glass rounded-xl p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Server className="w-5 h-5" /> Service Status
+                      <Server className="w-5 h-5" /> Статус сервисов
                     </h3>
                     <div className="grid grid-cols-3 gap-4">
                       <ServiceStatusBadge name="Database" status={serviceStatus.services.database} />
@@ -398,7 +398,7 @@ export default function SuperAdminPage() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <input
                         type="text"
-                        placeholder="Search users..."
+                        placeholder="Поиск пользователей..."
                         value={userSearch}
                         onChange={(e) => { setUserSearch(e.target.value); setUsersPage(1) }}
                         className="input-field pl-10"
@@ -410,20 +410,20 @@ export default function SuperAdminPage() {
                     onChange={(e) => { setRoleFilter(e.target.value); setUsersPage(1) }}
                     className="input-field !w-auto px-4 py-2"
                   >
-                    <option value="">All Roles</option>
-                    <option value="user">User</option>
-                    <option value="moderator">Moderator</option>
-                    <option value="admin">Admin</option>
-                    <option value="super_admin">Super Admin</option>
+                    <option value="">Все роли</option>
+                    <option value="user">Пользователь</option>
+                    <option value="moderator">Модератор</option>
+                    <option value="admin">Администратор</option>
+                    <option value="super_admin">Супер-администратор</option>
                   </select>
                   <select
                     value={statusFilter}
                     onChange={(e) => { setStatusFilter(e.target.value); setUsersPage(1) }}
                     className="input-field !w-auto px-4 py-2"
                   >
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="banned">Banned</option>
+                    <option value="">Все статусы</option>
+                    <option value="active">Активен</option>
+                    <option value="banned">Заблокирован</option>
                   </select>
                 </div>
 
@@ -432,10 +432,10 @@ export default function SuperAdminPage() {
                     <table className="w-full">
                       <thead className="bg-primary/10 text-muted-foreground">
                         <tr>
-                          <th className="text-left p-3">User</th>
-                          <th className="text-left p-3">Role</th>
-                          <th className="text-left p-3">Status</th>
-                          <th className="text-left p-3">Actions</th>
+                          <th className="text-left p-3">Пользователь</th>
+                          <th className="text-left p-3">Роль</th>
+                          <th className="text-left p-3">Статус</th>
+                          <th className="text-left p-3">Действия</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -457,15 +457,15 @@ export default function SuperAdminPage() {
                               <div className="flex items-center gap-2">
                                 {u.is_banned ? (
                                   <span className="text-red-400 text-sm flex items-center gap-1">
-                                    <Ban className="w-3 h-3" /> Banned
+                                    <Ban className="w-3 h-3" /> Заблокирован
                                   </span>
                                 ) : (
                                   <span className="text-accent text-sm flex items-center gap-1">
-                                    <CheckCircle className="w-3 h-3" /> Active
+                                    <CheckCircle className="w-3 h-3" /> Активен
                                   </span>
                                 )}
                                 {u.has_2fa && (
-                                  <span title="2FA Enabled"><Lock className="w-3 h-3 text-primary" /></span>
+                                  <span title="2FA включена"><Lock className="w-3 h-3 text-primary" /></span>
                                 )}
                               </div>
                             </td>
@@ -473,7 +473,7 @@ export default function SuperAdminPage() {
                               <button
                                 onClick={() => loadUserDetail(u.id)}
                                 className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-                                title="View Details"
+                                title="Подробнее"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
@@ -518,30 +518,30 @@ export default function SuperAdminPage() {
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="bg-primary/10 border border-primary/15 p-2 rounded-lg">
                           <div className="text-lg font-bold">{selectedUser.stats.posts}</div>
-                          <div className="text-xs text-muted-foreground">Posts</div>
+                          <div className="text-xs text-muted-foreground">Посты</div>
                         </div>
                         <div className="bg-primary/10 border border-primary/15 p-2 rounded-lg">
                           <div className="text-lg font-bold">{selectedUser.stats.messages}</div>
-                          <div className="text-xs text-muted-foreground">Messages</div>
+                          <div className="text-xs text-muted-foreground">Сообщения</div>
                         </div>
                         <div className="bg-primary/10 border border-primary/15 p-2 rounded-lg">
                           <div className="text-lg font-bold">{selectedUser.stats.guilds}</div>
-                          <div className="text-xs text-muted-foreground">Guilds</div>
+                          <div className="text-xs text-muted-foreground">Серверы</div>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Change Role</label>
+                        <label className="text-sm font-medium">Изменить роль</label>
                         <select
                           value={selectedUser.user.role}
                           onChange={(e) => handleChangeRole(Number(selectedUser.user.id), e.target.value)}
                           disabled={actionLoading}
                           className="input-field"
                         >
-                          <option value="user">User</option>
-                          <option value="moderator">Moderator</option>
-                          <option value="admin">Admin</option>
-                          <option value="super_admin">Super Admin</option>
+                          <option value="user">Пользователь</option>
+                          <option value="moderator">Модератор</option>
+                          <option value="admin">Администратор</option>
+                          <option value="super_admin">Супер-администратор</option>
                         </select>
                       </div>
 
@@ -551,7 +551,7 @@ export default function SuperAdminPage() {
                           disabled={actionLoading}
                           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/25 rounded-lg transition-colors"
                         >
-                          <Key className="w-4 h-4" /> Reset Password
+                          <Key className="w-4 h-4" /> Сбросить пароль
                         </button>
                         {tempPassword && (
                           <div className="p-2 bg-background/40 border border-border rounded-lg flex items-center justify-between">
@@ -571,7 +571,7 @@ export default function SuperAdminPage() {
                         disabled={actionLoading}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-500/15 text-orange-400 border border-orange-500/30 hover:bg-orange-500/25 rounded-lg transition-colors"
                       >
-                        <LogOut className="w-4 h-4" /> Revoke All Sessions
+                        <LogOut className="w-4 h-4" /> Завершить все сессии
                       </button>
 
                       {selectedUser.is_banned ? (
@@ -580,28 +580,28 @@ export default function SuperAdminPage() {
                           disabled={actionLoading}
                           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25 rounded-lg transition-colors"
                         >
-                          <Unlock className="w-4 h-4" /> Unban User
+                          <Unlock className="w-4 h-4" /> Разблокировать
                         </button>
                       ) : (
                         <button
                           onClick={() => {
-                            const reason = prompt('Ban reason:')
+                            const reason = prompt('Причина бана:')
                             if (reason) handleBanUser(Number(selectedUser.user.id), reason)
                           }}
                           disabled={actionLoading}
                           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25 rounded-lg transition-colors"
                         >
-                          <Ban className="w-4 h-4" /> Ban User
+                          <Ban className="w-4 h-4" /> Заблокировать
                         </button>
                       )}
 
                       {selectedUser.sessions.length > 0 && (
                         <div>
-                          <h4 className="font-medium mb-2">Active Sessions ({selectedUser.sessions.length})</h4>
+                          <h4 className="font-medium mb-2">Активные сессии ({selectedUser.sessions.length})</h4>
                           <div className="space-y-1 max-h-32 overflow-y-auto">
                             {selectedUser.sessions.map(s => (
                               <div key={s.id} className="text-xs bg-background/40 border border-border p-2 rounded-lg flex justify-between">
-                                <span>{s.device_info || 'Unknown'}</span>
+                                <span>{s.device_info || 'Неизвестно'}</span>
                                 <span className="text-muted-foreground">{s.ip_address}</span>
                               </div>
                             ))}
@@ -620,7 +620,7 @@ export default function SuperAdminPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="text"
-                    placeholder="Search guilds..."
+                    placeholder="Поиск серверов..."
                     value={guildSearch}
                     onChange={(e) => { setGuildSearch(e.target.value); setGuildsPage(1) }}
                     className="input-field pl-10"
@@ -631,12 +631,12 @@ export default function SuperAdminPage() {
                   <table className="w-full">
                     <thead className="bg-primary/10 text-muted-foreground">
                       <tr>
-                        <th className="text-left p-3">Guild</th>
-                        <th className="text-left p-3">Owner</th>
-                        <th className="text-left p-3">Members</th>
-                        <th className="text-left p-3">Channels</th>
-                        <th className="text-left p-3">Messages</th>
-                        <th className="text-left p-3">Actions</th>
+                        <th className="text-left p-3">Сервер</th>
+                        <th className="text-left p-3">Владелец</th>
+                        <th className="text-left p-3">Участники</th>
+                        <th className="text-left p-3">Каналы</th>
+                        <th className="text-left p-3">Сообщения</th>
+                        <th className="text-left p-3">Действия</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -668,14 +668,14 @@ export default function SuperAdminPage() {
                               <button
                                 onClick={() => handleTransferGuild(g.id)}
                                 className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-                                title="Transfer Ownership"
+                                title="Передать владение"
                               >
                                 <Crown className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteGuild(g.id, g.name)}
                                 className="p-2 hover:bg-red-500/15 rounded-lg text-red-400 transition-colors"
-                                title="Delete Guild"
+                                title="Удалить сервер"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -713,22 +713,22 @@ export default function SuperAdminPage() {
             {activeTab === 'moderation' && (
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5" /> Pending Reports
+                  <AlertTriangle className="w-5 h-5" /> Ожидающие жалобы
                 </h2>
                 <div className="glass rounded-xl overflow-hidden">
                   {reports.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
-                      No pending reports
+                      Нет ожидающих жалоб
                     </div>
                   ) : (
                     <table className="w-full">
                       <thead className="bg-primary/10 text-muted-foreground">
                         <tr>
-                          <th className="text-left p-3">Reporter</th>
-                          <th className="text-left p-3">Type</th>
-                          <th className="text-left p-3">Reason</th>
-                          <th className="text-left p-3">Status</th>
-                          <th className="text-left p-3">Date</th>
+                          <th className="text-left p-3">Автор жалобы</th>
+                          <th className="text-left p-3">Тип</th>
+                          <th className="text-left p-3">Причина</th>
+                          <th className="text-left p-3">Статус</th>
+                          <th className="text-left p-3">Дата</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -764,7 +764,7 @@ export default function SuperAdminPage() {
                 {serviceStatus && (
                   <div className="glass rounded-xl p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Server className="w-5 h-5" /> Service Status
+                      <Server className="w-5 h-5" /> Статус сервисов
                     </h3>
                     <div className="grid grid-cols-3 gap-4">
                       <ServiceStatusBadge name="Database" status={serviceStatus.services.database} />
@@ -811,12 +811,12 @@ export default function SuperAdminPage() {
             {activeTab === 'jarvis' && jarvisStats && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
-                  <StatCard icon={Bot} label="Total Requests" value={jarvisStats.total_requests} color="purple" />
-                  <StatCard icon={Clock} label="Today's Requests" value={jarvisStats.today_requests} color="blue" />
+                  <StatCard icon={Bot} label="Всего запросов" value={jarvisStats.total_requests} color="purple" />
+                  <StatCard icon={Clock} label="Запросы сегодня" value={jarvisStats.today_requests} color="blue" />
                 </div>
 
                 <div className="glass rounded-xl p-6 shadow-soft">
-                  <h3 className="text-lg font-semibold mb-4">Top JARVIS Users</h3>
+                  <h3 className="text-lg font-semibold mb-4">Топ пользователей JARVIS</h3>
                   <div className="space-y-2">
                     {(jarvisStats.top_users || []).map((u, i) => (
                       <div key={u.user_id} className="flex items-center justify-between p-3 bg-background/40 border border-border rounded-lg hover:bg-primary/5 transition-colors">

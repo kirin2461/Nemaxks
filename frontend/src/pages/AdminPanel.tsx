@@ -308,7 +308,7 @@ export default function AdminPanel() {
                             {u.role || 'user'}
                           </span>
                           <button
-                            onClick={() => handleBanUser(u.id, 'Admin action')}
+                            onClick={() => handleBanUser(u.id, 'Действие администратора')}
                             className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
                           >
                             <Ban className="w-4 h-4" />
@@ -609,7 +609,7 @@ export default function AdminPanel() {
                   />
                   <div className="glass rounded-xl p-6 shadow-soft">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-muted-foreground">Churn Rate</span>
+                      <span className="text-muted-foreground">Отток</span>
                       <RefreshCw className="w-5 h-5 text-orange-500" />
                     </div>
                     <p className="text-3xl font-bold">{billingStats.churn_rate.toFixed(1)}%</p>
