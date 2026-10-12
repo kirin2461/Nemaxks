@@ -163,7 +163,7 @@ export default function AdminPanel() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="bg-card border border-border rounded-lg p-8 max-w-md text-center">
+          <div className="glass-strong rounded-xl p-8 max-w-md text-center">
             <Shield className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
             <h1 className="text-2xl font-bold mb-4">Доступ запрещён</h1>
             <p className="text-muted-foreground mb-6">
@@ -192,10 +192,10 @@ export default function AdminPanel() {
       <div className="p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Панель администратора</h1>
+            <h1 className="text-3xl font-bold gradient-brand-text">Панель администратора</h1>
             <p className="text-muted-foreground mt-1">Управление платформой и модерация</p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/25 text-sm">
             <Shield className="w-4 h-4" />
             {user.role === 'admin' ? 'Администратор' : 'Модератор'}
           </div>
@@ -207,10 +207,10 @@ export default function AdminPanel() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
+                'flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200',
                 activeTab === tab.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'hover:bg-muted text-muted-foreground'
+                  ? 'gradient-brand text-primary-foreground shadow-soft'
+                  : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
               )}
             >
               <tab.icon className="w-4 h-4" />
@@ -273,7 +273,7 @@ export default function AdminPanel() {
             )}
 
             {activeTab === 'users' && (
-              <div className="bg-card rounded-lg border border-border">
+              <div className="glass rounded-xl">
                 <div className="p-4 border-b border-border">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -282,7 +282,7 @@ export default function AdminPanel() {
                       placeholder="Поиск пользователей..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="input-field pl-10"
                     />
                   </div>
                 </div>
@@ -290,7 +290,7 @@ export default function AdminPanel() {
                   {users
                     .filter(u => u.username.toLowerCase().includes(searchQuery.toLowerCase()))
                     .map((u) => (
-                      <div key={u.id} className="flex items-center justify-between p-4 hover:bg-muted/50">
+                      <div key={u.id} className="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors">
                         <div className="flex items-center gap-3">
                           <Avatar alt={u.username} size="md" />
                           <div>
@@ -300,16 +300,16 @@ export default function AdminPanel() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={cn(
-                            'px-2 py-1 rounded text-xs',
-                            u.role === 'admin' ? 'bg-red-500/20 text-red-500' :
-                            u.role === 'moderator' ? 'bg-yellow-500/20 text-yellow-500' :
+                            'px-2 py-1 rounded-full text-xs',
+                            u.role === 'admin' ? 'bg-primary/15 text-primary border border-primary/25' :
+                            u.role === 'moderator' ? 'bg-accent/15 text-accent border border-accent/25' :
                             'bg-muted text-muted-foreground'
                           )}>
                             {u.role || 'user'}
                           </span>
                           <button
-                            onClick={() => handleBanUser(u.id, 'Admin action')}
-                            className="p-2 rounded-lg hover:bg-red-500/10 text-red-500"
+                            onClick={() => handleBanUser(u.id, 'Действие администратора')}
+                            className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
                           >
                             <Ban className="w-4 h-4" />
                           </button>
@@ -321,7 +321,7 @@ export default function AdminPanel() {
             )}
 
             {activeTab === 'bans' && (
-              <div className="bg-card rounded-lg border border-border">
+              <div className="glass rounded-xl">
                 <div className="divide-y divide-border">
                   {ipBans.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
@@ -346,7 +346,7 @@ export default function AdminPanel() {
             )}
 
             {activeTab === 'reports' && (
-              <div className="bg-card rounded-lg border border-border">
+              <div className="glass rounded-xl">
                 <div className="divide-y divide-border">
                   {reports.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
@@ -359,10 +359,10 @@ export default function AdminPanel() {
                           <div>
                             <div className="flex items-center gap-2 mb-2">
                               <span className={cn(
-                                'px-2 py-0.5 rounded text-xs',
-                                report.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
-                                report.status === 'resolved' ? 'bg-green-500/20 text-green-500' :
-                                'bg-red-500/20 text-red-500'
+                                'px-2 py-0.5 rounded-full text-xs',
+                                report.status === 'pending' ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25' :
+                                report.status === 'resolved' ? 'bg-accent/15 text-accent border border-accent/25' :
+                                'bg-red-500/15 text-red-400 border border-red-500/25'
                               )}>
                                 {report.status}
                               </span>
@@ -382,7 +382,7 @@ export default function AdminPanel() {
                               </button>
                               <button
                                 onClick={() => handleResolveReport(report.id, 'rejected')}
-                                className="p-2 rounded-lg hover:bg-red-500/10 text-red-500"
+                                className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -397,7 +397,7 @@ export default function AdminPanel() {
             )}
 
             {activeTab === 'logs' && (
-              <div className="bg-card rounded-lg border border-border">
+              <div className="glass rounded-xl">
                 <div className="divide-y divide-border">
                   {logs.map((log) => (
                     <div key={log.id} className="p-4 flex items-center gap-4">
@@ -427,12 +427,12 @@ export default function AdminPanel() {
                       value={newWord}
                       onChange={(e) => setNewWord(e.target.value)}
                       placeholder="Слово или regex..."
-                      className="flex-1 min-w-[200px] px-3 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="input-field flex-1 min-w-[200px]"
                     />
                     <select
                       value={newWordCategory}
                       onChange={(e) => setNewWordCategory(e.target.value)}
-                      className="px-3 py-2 rounded-lg bg-background border border-border"
+                      className="input-field !w-auto px-3 py-2"
                     >
                       <option value="general">Общее</option>
                       <option value="criminal">Криминал</option>
@@ -452,7 +452,7 @@ export default function AdminPanel() {
                     </label>
                     <button
                       onClick={handleAddForbiddenWord}
-                      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 flex items-center gap-2"
+                      className="px-4 py-2 rounded-lg gradient-brand text-primary-foreground shadow-soft hover:brightness-110 flex items-center gap-2 transition-all"
                     >
                       <Plus className="w-4 h-4" />
                       Добавить
@@ -460,7 +460,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div className="bg-card rounded-lg border border-border">
+                <div className="glass rounded-xl">
                   <div className="divide-y divide-border">
                     {forbiddenWords.length === 0 ? (
                       <div className="p-8 text-center text-muted-foreground">
@@ -468,19 +468,19 @@ export default function AdminPanel() {
                       </div>
                     ) : (
                       forbiddenWords.map((word) => (
-                        <div key={word.id} className="flex items-center justify-between p-4 hover:bg-muted/50">
+                        <div key={word.id} className="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors">
                           {editingWord?.id === word.id ? (
                             <div className="flex-1 flex items-center gap-3">
                               <input
                                 type="text"
                                 value={editingWord.word}
                                 onChange={(e) => setEditingWord({ ...editingWord, word: e.target.value })}
-                                className="flex-1 px-3 py-2 rounded-lg bg-background border border-border"
+                                className="input-field flex-1"
                               />
                               <select
                                 value={editingWord.category}
                                 onChange={(e) => setEditingWord({ ...editingWord, category: e.target.value })}
-                                className="px-3 py-2 rounded-lg bg-background border border-border"
+                                className="input-field !w-auto px-3 py-2"
                               >
                                 <option value="general">Общее</option>
                                 <option value="criminal">Криминал</option>
@@ -505,19 +505,19 @@ export default function AdminPanel() {
                           ) : (
                             <>
                               <div className="flex items-center gap-3">
-                                <span className="font-mono bg-muted px-2 py-1 rounded">{word.word}</span>
+                                <span className="font-mono bg-muted/70 px-2 py-1 rounded-lg border border-border">{word.word}</span>
                                 <span className={cn(
-                                  'px-2 py-0.5 rounded text-xs',
-                                  word.category === 'criminal' ? 'bg-red-500/20 text-red-500' :
-                                  word.category === 'violence' ? 'bg-orange-500/20 text-orange-500' :
-                                  word.category === 'spam' ? 'bg-yellow-500/20 text-yellow-500' :
-                                  word.category === 'fraud' ? 'bg-purple-500/20 text-purple-500' :
+                                  'px-2 py-0.5 rounded-full text-xs',
+                                  word.category === 'criminal' ? 'bg-red-500/15 text-red-400 border border-red-500/25' :
+                                  word.category === 'violence' ? 'bg-orange-500/15 text-orange-400 border border-orange-500/25' :
+                                  word.category === 'spam' ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25' :
+                                  word.category === 'fraud' ? 'bg-primary/15 text-primary border border-primary/25' :
                                   'bg-muted text-muted-foreground'
                                 )}>
                                   {word.category}
                                 </span>
                                 {word.is_regex && (
-                                  <span className="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-500">
+                                  <span className="px-2 py-0.5 rounded-full text-xs bg-accent/15 text-accent border border-accent/25">
                                     regex
                                   </span>
                                 )}
@@ -531,7 +531,7 @@ export default function AdminPanel() {
                                 </button>
                                 <button
                                   onClick={() => handleDeleteForbiddenWord(word.id)}
-                                  className="p-2 rounded-lg hover:bg-red-500/10 text-red-500"
+                                  className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -547,7 +547,7 @@ export default function AdminPanel() {
             )}
 
             {activeTab === 'attempts' && (
-              <div className="bg-card rounded-lg border border-border">
+              <div className="glass rounded-xl">
                 <div className="divide-y divide-border">
                   {forbiddenAttempts.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
@@ -562,7 +562,7 @@ export default function AdminPanel() {
                               <span className="text-sm text-muted-foreground">
                                 Пользователь #{attempt.user_id}
                               </span>
-                              <span className="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-500">
+                              <span className="px-2 py-0.5 rounded-full text-xs bg-red-500/15 text-red-400 border border-red-500/25">
                                 {attempt.context}
                               </span>
                             </div>
@@ -607,9 +607,9 @@ export default function AdminPanel() {
                     icon={TrendingUp}
                     color="text-blue-500"
                   />
-                  <div className="bg-card rounded-lg border border-border p-6">
+                  <div className="glass rounded-xl p-6 shadow-soft">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-muted-foreground">Churn Rate</span>
+                      <span className="text-muted-foreground">Отток</span>
                       <RefreshCw className="w-5 h-5 text-orange-500" />
                     </div>
                     <p className="text-3xl font-bold">{billingStats.churn_rate.toFixed(1)}%</p>
@@ -617,7 +617,7 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-card rounded-lg border border-border p-6">
+                  <div className="glass rounded-xl p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4">Статистика за месяц</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between">
@@ -637,9 +637,9 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  <div className="bg-card rounded-lg border border-border p-6">
+                  <div className="glass rounded-xl p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4">MRR</h3>
-                    <div className="text-4xl font-bold text-purple-500">
+                    <div className="text-4xl font-bold gradient-brand-text">
                       {billingStats.monthly_revenue.toLocaleString()} ₽
                     </div>
                     <p className="text-muted-foreground mt-2">
@@ -648,7 +648,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div className="bg-card rounded-lg border border-border">
+                <div className="glass rounded-xl">
                   <div className="p-4 border-b border-border">
                     <h3 className="font-semibold">Последние транзакции</h3>
                   </div>
@@ -663,7 +663,7 @@ export default function AdminPanel() {
                           <div className="flex items-center gap-3">
                             <div className={cn(
                               "w-10 h-10 rounded-full flex items-center justify-center",
-                              tx.status === 'succeeded' ? "bg-green-500/20" : tx.status === 'pending' ? "bg-yellow-500/20" : "bg-red-500/20"
+                              tx.status === 'succeeded' ? "bg-accent/15" : tx.status === 'pending' ? "bg-yellow-500/15" : "bg-red-500/15"
                             )}>
                               {tx.status === 'succeeded' ? (
                                 <CheckCircle className="w-5 h-5 text-green-500" />
@@ -715,7 +715,7 @@ function StatCard({
   color: string
 }) {
   return (
-    <div className="bg-card rounded-lg border border-border p-6">
+    <div className="glass rounded-xl p-6 shadow-soft">
       <div className="flex items-center justify-between mb-4">
         <span className="text-muted-foreground">{title}</span>
         <Icon className={cn('w-5 h-5', color)} />

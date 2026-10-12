@@ -66,32 +66,32 @@ export default function ServerJoinPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-nebula">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="card p-8 max-w-md w-full text-center space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-nebula p-4">
+      <div className="glass-strong rounded-xl p-8 max-w-md w-full text-center space-y-6 animate-slide-in">
         <Logo className="mx-auto" />
 
         {error ? (
           <>
-            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto">
-              <AlertCircle className="w-8 h-8 text-red-500" />
+            <div className="w-16 h-16 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-8 h-8 text-red-400" />
             </div>
             <h1 className="text-2xl font-bold">Ошибка</h1>
             <p className="text-muted-foreground">{error}</p>
-            <button onClick={() => setLocation('/channels')} className="btn-primary w-full">
+            <button onClick={() => setLocation('/channels')} className="w-full py-2.5 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50">
               Перейти к каналам
             </button>
           </>
         ) : success ? (
           <>
-            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-              <Check className="w-8 h-8 text-green-500" />
+            <div className="w-16 h-16 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto glow">
+              <Check className="w-8 h-8 text-accent" />
             </div>
             <h1 className="text-2xl font-bold">Добро пожаловать!</h1>
             <p className="text-muted-foreground">
@@ -100,12 +100,12 @@ export default function ServerJoinPage() {
           </>
         ) : (
           <>
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto">
+            <div className="w-20 h-20 rounded-full bg-gradient-brand flex items-center justify-center mx-auto glow">
               <Users className="w-10 h-10 text-white" />
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold mb-2">Приглашение на сервер</h1>
+              <h1 className="text-2xl font-bold mb-2 gradient-brand-text">Приглашение на сервер</h1>
               <p className="text-muted-foreground">
                 Вас пригласили присоединиться к серверу
               </p>
@@ -116,7 +116,7 @@ export default function ServerJoinPage() {
                 <button
                   onClick={handleJoin}
                   disabled={joining}
-                  className="btn-primary w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm sm:text-base"
+                  className="w-full py-2.5 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 px-3 text-sm sm:text-base"
                 >
                   {joining ? (
                     <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
@@ -132,7 +132,7 @@ export default function ServerJoinPage() {
                 <>
                   <button
                     onClick={handleJoin}
-                    className="btn-primary w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm sm:text-base"
+                    className="w-full py-2.5 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 px-3 text-sm sm:text-base"
                   >
                     <LogIn className="w-5 h-5 flex-shrink-0" />
                     <span className="hidden sm:inline">Войти и присоединиться</span>

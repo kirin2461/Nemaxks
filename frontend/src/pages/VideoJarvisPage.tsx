@@ -36,10 +36,10 @@ interface Message {
 
 // Demo chapters
 const DEMO_CHAPTERS: Chapter[] = [
-  { id: '1', title: 'Introduction', timestamp: 0, duration: 120, summary: 'Overview of the topic' },
-  { id: '2', title: 'Core Concepts', timestamp: 120, duration: 300, summary: 'Main ideas explained' },
-  { id: '3', title: 'Practical Examples', timestamp: 420, duration: 240, summary: 'Real-world applications' },
-  { id: '4', title: 'Advanced Topics', timestamp: 660, duration: 180, summary: 'Deep dive into details' },
+  { id: '1', title: 'Введение', timestamp: 0, duration: 120, summary: 'Обзор темы' },
+  { id: '2', title: 'Ключевые концепции', timestamp: 120, duration: 300, summary: 'Разбор основных идей' },
+  { id: '3', title: 'Практические примеры', timestamp: 420, duration: 240, summary: 'Реальные применения' },
+  { id: '4', title: 'Продвинутые темы', timestamp: 660, duration: 180, summary: 'Глубокое погружение в детали' },
 ]
 
 // Demo messages
@@ -47,7 +47,7 @@ const DEMO_MESSAGES: Message[] = [
   {
     id: '1',
     type: 'jarvis',
-    content: 'Hello! I\'m Jarvis, your AI assistant. I\'m here to help you understand this video better. Ask me anything!',
+    content: 'Здравствуйте! Я Jarvis, ваш AI-ассистент. Помогу разобраться в этом видео. Спрашивайте о чём угодно!',
     timestamp: new Date(Date.now() - 60000),
   },
 ]
@@ -123,7 +123,7 @@ export default function VideoJarvisPage() {
           msg.isLoading
             ? {
                 ...msg,
-                content: 'Based on the current scene, I can help you understand the key concepts being discussed. Would you like me to create a summary or explain any specific part?',
+                content: 'Основываясь на текущей сцене, я могу помочь разобраться в обсуждаемых концепциях. Создать краткое содержание или объяснить конкретный фрагмент?',
                 isLoading: false,
               }
             : msg
@@ -139,10 +139,10 @@ export default function VideoJarvisPage() {
   }
 
   const quickActions = [
-    { icon: FileText, label: 'Summarize', action: () => handleQuickAction('Please summarize this video') },
-    { icon: BookOpen, label: 'Explain Scene', action: () => handleQuickAction('Explain what\'s happening now') },
-    { icon: Search, label: 'Find Similar', action: () => handleQuickAction('Find similar videos') },
-    { icon: Code, label: 'Code Examples', action: () => handleQuickAction('Show code examples from this video') },
+    { icon: FileText, label: 'Краткое содержание', action: () => handleQuickAction('Сделай краткое содержание видео') },
+    { icon: BookOpen, label: 'Объясни сцену', action: () => handleQuickAction('Объясни, что происходит сейчас') },
+    { icon: Search, label: 'Похожие видео', action: () => handleQuickAction('Найди похожие видео') },
+    { icon: Code, label: 'Примеры кода', action: () => handleQuickAction('Покажи примеры кода из видео') },
   ]
 
   const formatTime = (seconds: number) => {
@@ -168,8 +168,8 @@ export default function VideoJarvisPage() {
           <div className="mb-6 animate-fade-in">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold gradient-text mb-2">
-                  Advanced React Patterns & Performance
+                <h1 className="text-3xl font-bold gradient-brand-text mb-2">
+                  Продвинутые паттерны React и производительность
                 </h1>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
@@ -177,11 +177,11 @@ export default function VideoJarvisPage() {
                     {formatTime(duration)}
                   </span>
                   <span>•</span>
-                  <span>4 chapters</span>
+                  <span>4 главы</span>
                   {jarvisStatus !== 'Ready' && (
                     <>
                       <span>•</span>
-                      <span className="badge-cosmic flex items-center gap-1 animate-pulse">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/15 text-accent border border-accent/25 animate-pulse">
                         <Sparkles className="w-3 h-3" />
                         AI {jarvisStatus}...
                       </span>
@@ -194,25 +194,25 @@ export default function VideoJarvisPage() {
                   setJarvisFocusMode(!jarvisFocusMode)
                   playJarvisAudio('system_diagnostic')
                 }}
-                className="btn-cosmic"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50"
               >
                 <Zap className="w-4 h-4 mr-2" />
-                {jarvisFocusMode ? 'Exit' : 'Jarvis'} Focus
+                {jarvisFocusMode ? 'Выйти из' : 'Jarvis'} фокуса
               </button>
             </div>
           </div>
 
           {/* Video Player */}
-          <div className="card-cosmic glass-cosmic glow-cosmic rounded-2xl overflow-hidden gradient-border mb-6 animate-slide-in">
+          <div className="glass rounded-2xl overflow-hidden shadow-glow mb-6 animate-slide-in">
             <div className="relative bg-black aspect-video">
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-900/50 to-blue-900/50">
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/10">
                 <div className="text-center">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
+                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-brand flex items-center justify-center glow">
                     <Play className="w-12 h-12 text-white" />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">comming soon</p>
-                  <p className="text-white/90 text-lg font-medium">Video Player</p>
-                  <p className="text-white/60 text-sm">Demo mode - actual video integration pending</p>
+                  <p className="text-xs text-muted-foreground mt-1">скоро</p>
+                  <p className="text-foreground/90 text-lg font-medium">Видеоплеер</p>
+                  <p className="text-muted-foreground text-sm">Демо-режим — интеграция видео в разработке</p>
                 </div>
               </div>
 
@@ -245,9 +245,9 @@ export default function VideoJarvisPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="btn-cosmic text-sm pulse-call" onClick={() => playJarvisAudio('welcome_sir')}>
+                    <button className="inline-flex items-center px-3 py-1.5 rounded-lg gradient-brand text-primary-foreground text-sm font-medium shadow-soft hover:brightness-110 transition-all pulse-call" onClick={() => playJarvisAudio('welcome_sir')}>
                       <Sparkles className="w-4 h-4 mr-1" />
-                      Ask Jarvis about this moment
+                      Спросить Jarvis об этом моменте
                     </button>
                     <button className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
                       <Settings className="w-5 h-5 text-white" />
@@ -265,21 +265,21 @@ export default function VideoJarvisPage() {
           <div className="animate-slide-in" style={{ animationDelay: '0.2s' }}>
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              AI-Generated Chapters
+              Главы, созданные AI
             </h3>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {DEMO_CHAPTERS.map((chapter, index) => (
                 <div
                   key={chapter.id}
-                  className="pill-card gradient-aurora shimmer-cosmic min-w-[200px] animate-slide-in"
+                  className="glass rounded-xl px-4 py-3 min-w-[200px] animate-slide-in hover:border-accent/40 transition-colors"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-white">{chapter.title}</span>
-                    <span className="text-xs text-white/70">{formatTime(chapter.timestamp)}</span>
+                    <span className="text-sm font-semibold text-foreground">{chapter.title}</span>
+                    <span className="text-xs text-accent">{formatTime(chapter.timestamp)}</span>
                   </div>
                   {chapter.summary && (
-                    <p className="text-xs text-white/80 line-clamp-1">{chapter.summary}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{chapter.summary}</p>
                   )}
                 </div>
               ))}
@@ -290,20 +290,20 @@ export default function VideoJarvisPage() {
         {/* Jarvis AI Panel */}
         {jarvisPanelOpen && (
           <aside className={cn(
-            'discord-sidebar slide-in-right glass-cosmic-dark',
+            'w-96 flex flex-col border-l border-border glass slide-in-right',
             jarvisFocusMode && 'opacity-100 scale-100'
           )}>
             <div className="p-6 border-b border-border/30">
               <div className="flex items-center gap-4 mb-4">
                 <div 
-                  className="w-16 h-16 rounded-full gradient-cosmic-rainbow-animated flex items-center justify-center orb-glow cursor-pointer"
+                  className="w-16 h-16 rounded-full bg-gradient-brand flex items-center justify-center glow cursor-pointer"
                   onClick={() => playJarvisAudio('rebooted')}
                 >
                   <Sparkles className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold gradient-text">Jarvis AI</h2>
-                  <div className="badge-cosmic text-xs mt-1">
+                  <h2 className="text-xl font-bold gradient-brand-text">Jarvis AI</h2>
+                  <div className="inline-flex px-2.5 py-0.5 rounded-full text-xs mt-1 bg-accent/15 text-accent border border-accent/25">
                     {jarvisStatus}
                   </div>
                 </div>
@@ -315,15 +315,15 @@ export default function VideoJarvisPage() {
                 <div
                   key={message.id}
                   className={cn(
-                    'telegram-message message-in',
-                    message.type === 'user' ? 'sent' : 'received'
+                    'rounded-2xl px-4 py-2 max-w-[85%] break-words animate-slide-in',
+                    message.type === 'user' ? 'bg-gradient-brand text-primary-foreground ml-auto shadow-soft' : 'glass mr-auto'
                   )}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   {message.isLoading ? (
                     <div className="flex items-center gap-2">
-                      <div className="skeleton-cosmic h-4 w-4 rounded-full" />
-                      <div className="skeleton-cosmic h-4 w-32" />
+                      <div className="h-4 w-4 rounded-full bg-accent/40 animate-pulse" />
+                      <div className="h-4 w-32 rounded bg-accent/20 animate-pulse" />
                     </div>
                   ) : (
                     <>
@@ -349,7 +349,7 @@ export default function VideoJarvisPage() {
                     <button
                       key={action.label}
                       onClick={action.action}
-                      className="badge-cosmic flex items-center gap-1"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs glass hover:bg-accent/15 hover:text-accent transition-colors"
                     >
                       <Icon className="w-3 h-3" />
                       {action.label}
@@ -364,8 +364,8 @@ export default function VideoJarvisPage() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Ask Jarvis anything..."
-                  className="input-cosmic flex-1"
+                  placeholder="Спросите Jarvis о чём угодно..."
+                  className="input-field flex-1"
                 />
                 <input
                   type="file"
@@ -375,7 +375,7 @@ export default function VideoJarvisPage() {
                       // Check file size (50 MB = 52428800 bytes)
                       const MAX_FILE_SIZE = 50 * 1024 * 1024;
                       if (file.size > MAX_FILE_SIZE) {
-                        alert('File size exceeds 50 MB limit');
+                        alert('Размер файла превышает лимит 50 МБ');
                       } else {
                         // You can add file upload logic here
                         console.log('File ready to upload:', file.name, file.size);
@@ -386,13 +386,13 @@ export default function VideoJarvisPage() {
                   id="file-upload"
                   accept="*"
                 />
-                <label htmlFor="file-upload" className="cursor-pointer text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block">
-                  📎 Attach File (Max 50 MB)
+                <label htmlFor="file-upload" className="cursor-pointer text-accent hover:text-accent/80 text-sm mt-2 inline-block">
+                  📎 Прикрепить файл (макс. 50 МБ)
                 </label>
                 <button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim()}
-                  className="btn-cosmic px-4"
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50 !px-4"
                 >
                   <Send className="w-4 h-4" />
                 </button>

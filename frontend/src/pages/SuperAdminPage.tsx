@@ -310,8 +310,8 @@ export default function SuperAdminPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-            <p className="text-muted-foreground">Super Admin access required</p>
+            <h2 className="text-2xl font-bold mb-2">Доступ запрещён</h2>
+            <p className="text-muted-foreground">Требуются права супер-администратора</p>
           </div>
         </div>
       </Layout>
@@ -319,11 +319,11 @@ export default function SuperAdminPage() {
   }
 
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'guilds', label: 'Guilds', icon: Building2 },
-    { id: 'moderation', label: 'Moderation', icon: Shield },
-    { id: 'monitoring', label: 'Monitoring', icon: Activity },
+    { id: 'dashboard', label: 'Обзор', icon: BarChart3 },
+    { id: 'users', label: 'Пользователи', icon: Users },
+    { id: 'guilds', label: 'Серверы', icon: Building2 },
+    { id: 'moderation', label: 'Модерация', icon: Shield },
+    { id: 'monitoring', label: 'Мониторинг', icon: Activity },
     { id: 'jarvis', label: 'JARVIS', icon: Bot },
     { id: 'banners', label: 'Уведомления', icon: Bell },
   ] as const
@@ -332,8 +332,8 @@ export default function SuperAdminPage() {
     <Layout>
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center gap-3 mb-6">
-          <Crown className="w-8 h-8 text-yellow-500" />
-          <h1 className="text-3xl font-bold">Super Admin Dashboard</h1>
+          <Crown className="w-8 h-8 text-primary" />
+          <h1 className="text-3xl font-bold gradient-brand-text">Панель супер-администратора</h1>
         </div>
 
         <div className="flex gap-2 mb-6 flex-wrap">
@@ -342,10 +342,10 @@ export default function SuperAdminPage() {
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setSelectedUser(null) }}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+                "flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200",
                 activeTab === tab.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card hover:bg-accent"
+                  ? "gradient-brand text-primary-foreground shadow-soft"
+                  : "glass text-muted-foreground hover:bg-primary/10 hover:text-foreground"
               )}
             >
               <tab.icon className="w-4 h-4" />
@@ -363,22 +363,22 @@ export default function SuperAdminPage() {
             {activeTab === 'dashboard' && stats && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard icon={Users} label="Total Users" value={stats.users} color="blue" />
-                  <StatCard icon={Globe} label="Online Now" value={stats.online_users} color="green" />
-                  <StatCard icon={TrendingUp} label="New Today" value={stats.today_new_users} color="purple" />
-                  <StatCard icon={Key} label="Active Sessions" value={stats.active_sessions} color="yellow" />
+                  <StatCard icon={Users} label="Всего пользователей" value={stats.users} color="blue" />
+                  <StatCard icon={Globe} label="Сейчас онлайн" value={stats.online_users} color="green" />
+                  <StatCard icon={TrendingUp} label="Новые сегодня" value={stats.today_new_users} color="purple" />
+                  <StatCard icon={Key} label="Активные сессии" value={stats.active_sessions} color="yellow" />
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <StatCard icon={MessageSquare} label="Messages Today" value={stats.today_messages} color="cyan" />
-                  <StatCard icon={Building2} label="Guilds" value={stats.guilds} color="indigo" />
-                  <StatCard icon={AlertTriangle} label="Pending Reports" value={stats.pending_reports} color="orange" />
-                  <StatCard icon={Ban} label="Active Bans" value={stats.active_bans} color="red" />
+                  <StatCard icon={MessageSquare} label="Сообщения сегодня" value={stats.today_messages} color="cyan" />
+                  <StatCard icon={Building2} label="Серверы" value={stats.guilds} color="indigo" />
+                  <StatCard icon={AlertTriangle} label="Ожидающие жалобы" value={stats.pending_reports} color="orange" />
+                  <StatCard icon={Ban} label="Активные баны" value={stats.active_bans} color="red" />
                 </div>
 
                 {serviceStatus && (
-                  <div className="bg-card rounded-lg p-6">
+                  <div className="glass rounded-xl p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Server className="w-5 h-5" /> Service Status
+                      <Server className="w-5 h-5" /> Статус сервисов
                     </h3>
                     <div className="grid grid-cols-3 gap-4">
                       <ServiceStatusBadge name="Database" status={serviceStatus.services.database} />
@@ -398,49 +398,49 @@ export default function SuperAdminPage() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <input
                         type="text"
-                        placeholder="Search users..."
+                        placeholder="Поиск пользователей..."
                         value={userSearch}
                         onChange={(e) => { setUserSearch(e.target.value); setUsersPage(1) }}
-                        className="w-full pl-10 pr-4 py-2 bg-card border rounded-lg"
+                        className="input-field pl-10"
                       />
                     </div>
                   </div>
                   <select
                     value={roleFilter}
                     onChange={(e) => { setRoleFilter(e.target.value); setUsersPage(1) }}
-                    className="px-4 py-2 bg-card border rounded-lg"
+                    className="input-field !w-auto px-4 py-2"
                   >
-                    <option value="">All Roles</option>
-                    <option value="user">User</option>
-                    <option value="moderator">Moderator</option>
-                    <option value="admin">Admin</option>
-                    <option value="super_admin">Super Admin</option>
+                    <option value="">Все роли</option>
+                    <option value="user">Пользователь</option>
+                    <option value="moderator">Модератор</option>
+                    <option value="admin">Администратор</option>
+                    <option value="super_admin">Супер-администратор</option>
                   </select>
                   <select
                     value={statusFilter}
                     onChange={(e) => { setStatusFilter(e.target.value); setUsersPage(1) }}
-                    className="px-4 py-2 bg-card border rounded-lg"
+                    className="input-field !w-auto px-4 py-2"
                   >
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="banned">Banned</option>
+                    <option value="">Все статусы</option>
+                    <option value="active">Активен</option>
+                    <option value="banned">Заблокирован</option>
                   </select>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 bg-card rounded-lg overflow-hidden">
+                  <div className="lg:col-span-2 glass rounded-xl overflow-hidden">
                     <table className="w-full">
-                      <thead className="bg-accent">
+                      <thead className="bg-primary/10 text-muted-foreground">
                         <tr>
-                          <th className="text-left p-3">User</th>
-                          <th className="text-left p-3">Role</th>
-                          <th className="text-left p-3">Status</th>
-                          <th className="text-left p-3">Actions</th>
+                          <th className="text-left p-3">Пользователь</th>
+                          <th className="text-left p-3">Роль</th>
+                          <th className="text-left p-3">Статус</th>
+                          <th className="text-left p-3">Действия</th>
                         </tr>
                       </thead>
                       <tbody>
                         {users.map(u => (
-                          <tr key={u.id} className="border-t border-border hover:bg-accent/50">
+                          <tr key={u.id} className="border-t border-border hover:bg-primary/5 transition-colors">
                             <td className="p-3">
                               <div className="flex items-center gap-3">
                                 <Avatar alt={u.username} src={u.avatar} size="sm" />
@@ -456,24 +456,24 @@ export default function SuperAdminPage() {
                             <td className="p-3">
                               <div className="flex items-center gap-2">
                                 {u.is_banned ? (
-                                  <span className="text-red-500 text-sm flex items-center gap-1">
-                                    <Ban className="w-3 h-3" /> Banned
+                                  <span className="text-red-400 text-sm flex items-center gap-1">
+                                    <Ban className="w-3 h-3" /> Заблокирован
                                   </span>
                                 ) : (
-                                  <span className="text-green-500 text-sm flex items-center gap-1">
-                                    <CheckCircle className="w-3 h-3" /> Active
+                                  <span className="text-accent text-sm flex items-center gap-1">
+                                    <CheckCircle className="w-3 h-3" /> Активен
                                   </span>
                                 )}
                                 {u.has_2fa && (
-                                  <span title="2FA Enabled"><Lock className="w-3 h-3 text-blue-500" /></span>
+                                  <span title="2FA включена"><Lock className="w-3 h-3 text-primary" /></span>
                                 )}
                               </div>
                             </td>
                             <td className="p-3">
                               <button
                                 onClick={() => loadUserDetail(u.id)}
-                                className="p-2 hover:bg-accent rounded"
-                                title="View Details"
+                                className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+                                title="Подробнее"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
@@ -482,7 +482,7 @@ export default function SuperAdminPage() {
                         ))}
                       </tbody>
                     </table>
-                    <div className="p-3 flex justify-between items-center border-t">
+                    <div className="p-3 flex justify-between items-center border-t border-border">
                       <span className="text-sm text-muted-foreground">
                         Page {usersPage} of {Math.ceil(usersTotal / 20)}
                       </span>
@@ -490,14 +490,14 @@ export default function SuperAdminPage() {
                         <button
                           onClick={() => setUsersPage(p => Math.max(1, p - 1))}
                           disabled={usersPage <= 1}
-                          className="px-3 py-1 bg-accent rounded disabled:opacity-50"
+                          className="px-3 py-1 glass rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors"
                         >
                           Prev
                         </button>
                         <button
                           onClick={() => setUsersPage(p => p + 1)}
                           disabled={usersPage >= Math.ceil(usersTotal / 20)}
-                          className="px-3 py-1 bg-accent rounded disabled:opacity-50"
+                          className="px-3 py-1 glass rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors"
                         >
                           Next
                         </button>
@@ -506,7 +506,7 @@ export default function SuperAdminPage() {
                   </div>
 
                   {selectedUser && (
-                    <div className="bg-card rounded-lg p-4 space-y-4">
+                    <div className="glass rounded-xl p-4 space-y-4 shadow-soft">
                       <div className="flex items-center gap-3">
                         <Avatar alt={selectedUser.user.username} src={selectedUser.user.avatar} size="lg" />
                         <div>
@@ -516,32 +516,32 @@ export default function SuperAdminPage() {
                       </div>
 
                       <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="bg-accent p-2 rounded">
+                        <div className="bg-primary/10 border border-primary/15 p-2 rounded-lg">
                           <div className="text-lg font-bold">{selectedUser.stats.posts}</div>
-                          <div className="text-xs text-muted-foreground">Posts</div>
+                          <div className="text-xs text-muted-foreground">Посты</div>
                         </div>
-                        <div className="bg-accent p-2 rounded">
+                        <div className="bg-primary/10 border border-primary/15 p-2 rounded-lg">
                           <div className="text-lg font-bold">{selectedUser.stats.messages}</div>
-                          <div className="text-xs text-muted-foreground">Messages</div>
+                          <div className="text-xs text-muted-foreground">Сообщения</div>
                         </div>
-                        <div className="bg-accent p-2 rounded">
+                        <div className="bg-primary/10 border border-primary/15 p-2 rounded-lg">
                           <div className="text-lg font-bold">{selectedUser.stats.guilds}</div>
-                          <div className="text-xs text-muted-foreground">Guilds</div>
+                          <div className="text-xs text-muted-foreground">Серверы</div>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Change Role</label>
+                        <label className="text-sm font-medium">Изменить роль</label>
                         <select
                           value={selectedUser.user.role}
                           onChange={(e) => handleChangeRole(Number(selectedUser.user.id), e.target.value)}
                           disabled={actionLoading}
-                          className="w-full px-3 py-2 bg-accent rounded"
+                          className="input-field"
                         >
-                          <option value="user">User</option>
-                          <option value="moderator">Moderator</option>
-                          <option value="admin">Admin</option>
-                          <option value="super_admin">Super Admin</option>
+                          <option value="user">Пользователь</option>
+                          <option value="moderator">Модератор</option>
+                          <option value="admin">Администратор</option>
+                          <option value="super_admin">Супер-администратор</option>
                         </select>
                       </div>
 
@@ -549,12 +549,12 @@ export default function SuperAdminPage() {
                         <button
                           onClick={() => handleResetPassword(Number(selectedUser.user.id))}
                           disabled={actionLoading}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded"
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/25 rounded-lg transition-colors"
                         >
-                          <Key className="w-4 h-4" /> Reset Password
+                          <Key className="w-4 h-4" /> Сбросить пароль
                         </button>
                         {tempPassword && (
-                          <div className="p-2 bg-accent rounded flex items-center justify-between">
+                          <div className="p-2 bg-background/40 border border-border rounded-lg flex items-center justify-between">
                             <code className="text-sm">{tempPassword}</code>
                             <button
                               onClick={() => { navigator.clipboard.writeText(tempPassword); setTempPassword(null) }}
@@ -569,39 +569,39 @@ export default function SuperAdminPage() {
                       <button
                         onClick={() => handleRevokeAllSessions(Number(selectedUser.user.id))}
                         disabled={actionLoading}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-500/15 text-orange-400 border border-orange-500/30 hover:bg-orange-500/25 rounded-lg transition-colors"
                       >
-                        <LogOut className="w-4 h-4" /> Revoke All Sessions
+                        <LogOut className="w-4 h-4" /> Завершить все сессии
                       </button>
 
                       {selectedUser.is_banned ? (
                         <button
                           onClick={() => handleUnbanUser(Number(selectedUser.user.id))}
                           disabled={actionLoading}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25 rounded-lg transition-colors"
                         >
-                          <Unlock className="w-4 h-4" /> Unban User
+                          <Unlock className="w-4 h-4" /> Разблокировать
                         </button>
                       ) : (
                         <button
                           onClick={() => {
-                            const reason = prompt('Ban reason:')
+                            const reason = prompt('Причина бана:')
                             if (reason) handleBanUser(Number(selectedUser.user.id), reason)
                           }}
                           disabled={actionLoading}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25 rounded-lg transition-colors"
                         >
-                          <Ban className="w-4 h-4" /> Ban User
+                          <Ban className="w-4 h-4" /> Заблокировать
                         </button>
                       )}
 
                       {selectedUser.sessions.length > 0 && (
                         <div>
-                          <h4 className="font-medium mb-2">Active Sessions ({selectedUser.sessions.length})</h4>
+                          <h4 className="font-medium mb-2">Активные сессии ({selectedUser.sessions.length})</h4>
                           <div className="space-y-1 max-h-32 overflow-y-auto">
                             {selectedUser.sessions.map(s => (
-                              <div key={s.id} className="text-xs bg-accent p-2 rounded flex justify-between">
-                                <span>{s.device_info || 'Unknown'}</span>
+                              <div key={s.id} className="text-xs bg-background/40 border border-border p-2 rounded-lg flex justify-between">
+                                <span>{s.device_info || 'Неизвестно'}</span>
                                 <span className="text-muted-foreground">{s.ip_address}</span>
                               </div>
                             ))}
@@ -620,31 +620,31 @@ export default function SuperAdminPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="text"
-                    placeholder="Search guilds..."
+                    placeholder="Поиск серверов..."
                     value={guildSearch}
                     onChange={(e) => { setGuildSearch(e.target.value); setGuildsPage(1) }}
-                    className="w-full pl-10 pr-4 py-2 bg-card border rounded-lg"
+                    className="input-field pl-10"
                   />
                 </div>
 
-                <div className="bg-card rounded-lg overflow-hidden">
+                <div className="glass rounded-xl overflow-hidden">
                   <table className="w-full">
-                    <thead className="bg-accent">
+                    <thead className="bg-primary/10 text-muted-foreground">
                       <tr>
-                        <th className="text-left p-3">Guild</th>
-                        <th className="text-left p-3">Owner</th>
-                        <th className="text-left p-3">Members</th>
-                        <th className="text-left p-3">Channels</th>
-                        <th className="text-left p-3">Messages</th>
-                        <th className="text-left p-3">Actions</th>
+                        <th className="text-left p-3">Сервер</th>
+                        <th className="text-left p-3">Владелец</th>
+                        <th className="text-left p-3">Участники</th>
+                        <th className="text-left p-3">Каналы</th>
+                        <th className="text-left p-3">Сообщения</th>
+                        <th className="text-left p-3">Действия</th>
                       </tr>
                     </thead>
                     <tbody>
                       {guilds.map(g => (
-                        <tr key={g.id} className="border-t border-border hover:bg-accent/50">
+                        <tr key={g.id} className="border-t border-border hover:bg-primary/5 transition-colors">
                           <td className="p-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+                              <div className="w-10 h-10 bg-primary/15 text-primary rounded-lg flex items-center justify-center overflow-hidden">
                                 {g.icon ? (
                                   <img src={g.icon} alt="" className="w-full h-full object-cover rounded-lg" />
                                 ) : (
@@ -667,15 +667,15 @@ export default function SuperAdminPage() {
                             <div className="flex gap-1">
                               <button
                                 onClick={() => handleTransferGuild(g.id)}
-                                className="p-2 hover:bg-accent rounded"
-                                title="Transfer Ownership"
+                                className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+                                title="Передать владение"
                               >
                                 <Crown className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteGuild(g.id, g.name)}
-                                className="p-2 hover:bg-red-500/20 rounded text-red-500"
-                                title="Delete Guild"
+                                className="p-2 hover:bg-red-500/15 rounded-lg text-red-400 transition-colors"
+                                title="Удалить сервер"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -685,7 +685,7 @@ export default function SuperAdminPage() {
                       ))}
                     </tbody>
                   </table>
-                  <div className="p-3 flex justify-between items-center border-t">
+                  <div className="p-3 flex justify-between items-center border-t border-border">
                     <span className="text-sm text-muted-foreground">
                       Total: {guildsTotal} guilds
                     </span>
@@ -693,14 +693,14 @@ export default function SuperAdminPage() {
                       <button
                         onClick={() => setGuildsPage(p => Math.max(1, p - 1))}
                         disabled={guildsPage <= 1}
-                        className="px-3 py-1 bg-accent rounded disabled:opacity-50"
+                        className="px-3 py-1 glass rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors"
                       >
                         Prev
                       </button>
                       <button
                         onClick={() => setGuildsPage(p => p + 1)}
                         disabled={guildsPage >= Math.ceil(guildsTotal / 20)}
-                        className="px-3 py-1 bg-accent rounded disabled:opacity-50"
+                        className="px-3 py-1 glass rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors"
                       >
                         Next
                       </button>
@@ -713,22 +713,22 @@ export default function SuperAdminPage() {
             {activeTab === 'moderation' && (
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5" /> Pending Reports
+                  <AlertTriangle className="w-5 h-5" /> Ожидающие жалобы
                 </h2>
-                <div className="bg-card rounded-lg overflow-hidden">
+                <div className="glass rounded-xl overflow-hidden">
                   {reports.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
-                      No pending reports
+                      Нет ожидающих жалоб
                     </div>
                   ) : (
                     <table className="w-full">
-                      <thead className="bg-accent">
+                      <thead className="bg-primary/10 text-muted-foreground">
                         <tr>
-                          <th className="text-left p-3">Reporter</th>
-                          <th className="text-left p-3">Type</th>
-                          <th className="text-left p-3">Reason</th>
-                          <th className="text-left p-3">Status</th>
-                          <th className="text-left p-3">Date</th>
+                          <th className="text-left p-3">Автор жалобы</th>
+                          <th className="text-left p-3">Тип</th>
+                          <th className="text-left p-3">Причина</th>
+                          <th className="text-left p-3">Статус</th>
+                          <th className="text-left p-3">Дата</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -739,10 +739,10 @@ export default function SuperAdminPage() {
                             <td className="p-3">{r.reason}</td>
                             <td className="p-3">
                               <span className={cn(
-                                "px-2 py-1 rounded text-xs",
-                                r.status === 'pending' && "bg-yellow-500/20 text-yellow-500",
-                                r.status === 'resolved' && "bg-green-500/20 text-green-500",
-                                r.status === 'rejected' && "bg-red-500/20 text-red-500"
+                                "px-2 py-1 rounded-full text-xs",
+                                r.status === 'pending' && "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25",
+                                r.status === 'resolved' && "bg-accent/15 text-accent border border-accent/25",
+                                r.status === 'rejected' && "bg-red-500/15 text-red-400 border border-red-500/25"
                               )}>
                                 {r.status}
                               </span>
@@ -762,9 +762,9 @@ export default function SuperAdminPage() {
             {activeTab === 'monitoring' && (
               <div className="space-y-6">
                 {serviceStatus && (
-                  <div className="bg-card rounded-lg p-6">
+                  <div className="glass rounded-xl p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Server className="w-5 h-5" /> Service Status
+                      <Server className="w-5 h-5" /> Статус сервисов
                     </h3>
                     <div className="grid grid-cols-3 gap-4">
                       <ServiceStatusBadge name="Database" status={serviceStatus.services.database} />
@@ -774,19 +774,19 @@ export default function SuperAdminPage() {
                   </div>
                 )}
 
-                <div className="bg-card rounded-lg p-6">
+                <div className="glass rounded-xl p-6 shadow-soft">
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <FileText className="w-5 h-5" /> Security Logs
                   </h3>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {securityLogs.map(log => (
-                      <div key={log.id} className="flex items-center justify-between p-3 bg-accent rounded">
+                      <div key={log.id} className="flex items-center justify-between p-3 bg-background/40 border border-border rounded-lg hover:bg-primary/5 transition-colors">
                         <div className="flex items-center gap-3">
                           <span className={cn(
                             "w-2 h-2 rounded-full",
-                            log.action.includes('fail') ? "bg-red-500" :
-                            log.action.includes('ban') ? "bg-orange-500" :
-                            "bg-blue-500"
+                            log.action.includes('fail') ? "bg-red-400" :
+                            log.action.includes('ban') ? "bg-orange-400" :
+                            "bg-primary"
                           )} />
                           <div>
                             <div className="font-medium">{log.action}</div>
@@ -811,17 +811,17 @@ export default function SuperAdminPage() {
             {activeTab === 'jarvis' && jarvisStats && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
-                  <StatCard icon={Bot} label="Total Requests" value={jarvisStats.total_requests} color="purple" />
-                  <StatCard icon={Clock} label="Today's Requests" value={jarvisStats.today_requests} color="blue" />
+                  <StatCard icon={Bot} label="Всего запросов" value={jarvisStats.total_requests} color="purple" />
+                  <StatCard icon={Clock} label="Запросы сегодня" value={jarvisStats.today_requests} color="blue" />
                 </div>
 
-                <div className="bg-card rounded-lg p-6">
-                  <h3 className="text-lg font-semibold mb-4">Top JARVIS Users</h3>
+                <div className="glass rounded-xl p-6 shadow-soft">
+                  <h3 className="text-lg font-semibold mb-4">Топ пользователей JARVIS</h3>
                   <div className="space-y-2">
                     {(jarvisStats.top_users || []).map((u, i) => (
-                      <div key={u.user_id} className="flex items-center justify-between p-3 bg-accent rounded">
+                      <div key={u.user_id} className="flex items-center justify-between p-3 bg-background/40 border border-border rounded-lg hover:bg-primary/5 transition-colors">
                         <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-sm font-bold">
+                          <span className="w-6 h-6 bg-gradient-brand text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
                             {i + 1}
                           </span>
                           <span className="font-medium">{u.username}</span>
@@ -844,14 +844,14 @@ export default function SuperAdminPage() {
                       setShowBannerForm(true)
                       setEditingBanner(null)
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                    className="flex items-center gap-2 px-4 py-2 gradient-brand text-primary-foreground rounded-lg shadow-soft hover:brightness-110 transition-all"
                   >
                     <Plus className="w-4 h-4" /> Создать уведомление
                   </button>
                 </div>
 
                 {(showBannerForm || editingBanner) && (
-                  <div className="bg-card rounded-lg p-6 border border-border">
+                  <div className="glass rounded-xl p-6">
                     <h3 className="text-lg font-semibold mb-4">
                       {editingBanner ? 'Редактировать уведомление' : 'Новое уведомление'}
                     </h3>
@@ -862,7 +862,7 @@ export default function SuperAdminPage() {
                           type="text"
                           value={bannerForm.title}
                           onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })}
-                          className="w-full px-3 py-2 bg-background border rounded-lg"
+                          className="input-field"
                           placeholder="Заголовок уведомления"
                         />
                       </div>
@@ -871,7 +871,7 @@ export default function SuperAdminPage() {
                         <textarea
                           value={bannerForm.message}
                           onChange={(e) => setBannerForm({ ...bannerForm, message: e.target.value })}
-                          className="w-full px-3 py-2 bg-background border rounded-lg resize-none"
+                          className="input-field resize-none"
                           rows={3}
                           placeholder="Текст уведомления"
                         />
@@ -882,7 +882,7 @@ export default function SuperAdminPage() {
                           <select
                             value={bannerForm.type}
                             onChange={(e) => setBannerForm({ ...bannerForm, type: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border rounded-lg"
+                            className="input-field"
                           >
                             <option value="info">Информация</option>
                             <option value="success">Успех</option>
@@ -896,7 +896,7 @@ export default function SuperAdminPage() {
                             type="datetime-local"
                             value={bannerForm.expires_at}
                             onChange={(e) => setBannerForm({ ...bannerForm, expires_at: e.target.value })}
-                            className="w-full px-3 py-2 bg-background border rounded-lg"
+                            className="input-field"
                           />
                         </div>
                       </div>
@@ -904,7 +904,7 @@ export default function SuperAdminPage() {
                         <button
                           onClick={editingBanner ? handleUpdateBanner : handleCreateBanner}
                           disabled={actionLoading || !bannerForm.title || !bannerForm.message}
-                          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                          className="px-4 py-2 gradient-brand text-primary-foreground rounded-lg shadow-soft hover:brightness-110 disabled:opacity-50 transition-all"
                         >
                           {editingBanner ? 'Сохранить' : 'Создать'}
                         </button>
@@ -914,7 +914,7 @@ export default function SuperAdminPage() {
                             setEditingBanner(null)
                             setBannerForm({ title: '', message: '', type: 'info', expires_at: '' })
                           }}
-                          className="px-4 py-2 border border-border rounded-lg hover:bg-accent"
+                          className="px-4 py-2 border border-border rounded-lg hover:bg-primary/10 transition-colors"
                         >
                           Отмена
                         </button>
@@ -934,7 +934,7 @@ export default function SuperAdminPage() {
                       <div
                         key={banner.id}
                         className={cn(
-                          "bg-card rounded-lg p-4 border-l-4",
+                          "glass rounded-xl p-4 border-l-4",
                           banner.type === 'info' && "border-blue-500",
                           banner.type === 'success' && "border-green-500",
                           banner.type === 'warning' && "border-yellow-500",
@@ -945,13 +945,13 @@ export default function SuperAdminPage() {
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              {banner.type === 'info' && <Info className="w-4 h-4 text-blue-500" />}
-                              {banner.type === 'success' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                              {banner.type === 'warning' && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
-                              {banner.type === 'error' && <AlertCircle className="w-4 h-4 text-red-500" />}
+                              {banner.type === 'info' && <Info className="w-4 h-4 text-primary" />}
+                              {banner.type === 'success' && <CheckCircle className="w-4 h-4 text-accent" />}
+                              {banner.type === 'warning' && <AlertTriangle className="w-4 h-4 text-yellow-400" />}
+                              {banner.type === 'error' && <AlertCircle className="w-4 h-4 text-red-400" />}
                               <h4 className="font-semibold">{banner.title}</h4>
                               {!banner.is_active && (
-                                <span className="text-xs bg-muted px-2 py-0.5 rounded">Неактивно</span>
+                                <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Неактивно</span>
                               )}
                             </div>
                             <p className="text-muted-foreground">{banner.message}</p>
@@ -970,7 +970,7 @@ export default function SuperAdminPage() {
                               className={cn(
                                 "p-2 rounded-lg transition-colors",
                                 banner.is_active 
-                                  ? "bg-green-500/20 text-green-500 hover:bg-green-500/30"
+                                  ? "bg-accent/15 text-accent hover:bg-accent/25"
                                   : "bg-muted text-muted-foreground hover:bg-muted/80"
                               )}
                               title={banner.is_active ? 'Деактивировать' : 'Активировать'}
@@ -987,7 +987,7 @@ export default function SuperAdminPage() {
                                   expires_at: banner.expires_at ? banner.expires_at.slice(0, 16) : ''
                                 })
                               }}
-                              className="p-2 rounded-lg bg-blue-500/20 text-blue-500 hover:bg-blue-500/30"
+                              className="p-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
                               title="Редактировать"
                             >
                               <Edit className="w-4 h-4" />
@@ -995,7 +995,7 @@ export default function SuperAdminPage() {
                             <button
                               onClick={() => handleDeleteBanner(banner.id)}
                               disabled={actionLoading}
-                              className="p-2 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500/30"
+                              className="p-2 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors"
                               title="Удалить"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1017,18 +1017,18 @@ export default function SuperAdminPage() {
 
 function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number; color: string }) {
   const colors: Record<string, string> = {
-    blue: 'bg-blue-500/10 text-blue-500',
-    green: 'bg-green-500/10 text-green-500',
-    purple: 'bg-purple-500/10 text-purple-500',
-    yellow: 'bg-yellow-500/10 text-yellow-500',
-    cyan: 'bg-cyan-500/10 text-cyan-500',
-    indigo: 'bg-indigo-500/10 text-indigo-500',
-    orange: 'bg-orange-500/10 text-orange-500',
-    red: 'bg-red-500/10 text-red-500',
+    blue: 'bg-primary/15 text-primary',
+    green: 'bg-accent/15 text-accent',
+    purple: 'bg-primary/15 text-primary',
+    yellow: 'bg-yellow-500/15 text-yellow-400',
+    cyan: 'bg-accent/15 text-accent',
+    indigo: 'bg-primary/15 text-primary',
+    orange: 'bg-orange-500/15 text-orange-400',
+    red: 'bg-red-500/15 text-red-400',
   }
   
   return (
-    <div className="bg-card p-4 rounded-lg">
+    <div className="glass p-4 rounded-xl shadow-soft">
       <div className="flex items-center gap-3">
         <div className={cn("p-2 rounded-lg", colors[color])}>
           <Icon className="w-5 h-5" />
@@ -1048,16 +1048,16 @@ function ServiceStatusBadge({ name, status }: { name: string; status: string }) 
   return (
     <div className={cn(
       "p-4 rounded-lg flex items-center gap-3",
-      isConnected ? "bg-green-500/10" : "bg-red-500/10"
+      isConnected ? "bg-accent/10 border border-accent/25" : "bg-red-500/10 border border-red-500/25"
     )}>
       {isConnected ? (
-        <Wifi className="w-5 h-5 text-green-500" />
+        <Wifi className="w-5 h-5 text-accent" />
       ) : (
-        <WifiOff className="w-5 h-5 text-red-500" />
+        <WifiOff className="w-5 h-5 text-red-400" />
       )}
       <div>
         <div className="font-medium">{name}</div>
-        <div className={cn("text-sm", isConnected ? "text-green-500" : "text-red-500")}>
+        <div className={cn("text-sm", isConnected ? "text-accent" : "text-red-400")}>
           {status}
         </div>
       </div>
@@ -1067,14 +1067,14 @@ function ServiceStatusBadge({ name, status }: { name: string; status: string }) 
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    user: 'bg-gray-500/20 text-muted-foreground',
-    moderator: 'bg-blue-500/20 text-blue-400',
-    admin: 'bg-purple-500/20 text-purple-400',
-    super_admin: 'bg-yellow-500/20 text-yellow-400',
+    user: 'bg-muted text-muted-foreground',
+    moderator: 'bg-accent/15 text-accent border border-accent/25',
+    admin: 'bg-primary/15 text-primary border border-primary/25',
+    super_admin: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25',
   }
   
   return (
-    <span className={cn("px-2 py-1 rounded text-xs font-medium", colors[role] || colors.user)}>
+    <span className={cn("px-2 py-1 rounded-full text-xs font-medium", colors[role] || colors.user)}>
       {role}
     </span>
   )

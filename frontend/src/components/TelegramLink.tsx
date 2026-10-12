@@ -64,7 +64,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
       setExpiresIn(result.expires_in);
     } catch (error) {
       console.error('Failed to create Telegram link:', error);
-      alert('Failed to create link. Please try again.');
+      alert('Не удалось создать ссылку. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
     }
@@ -72,7 +72,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
 
   const handleUnlink = async () => {
     console.log('Unlinking Telegram...');
-    if (!confirm('Are you sure you want to unlink your Telegram account?')) {
+    if (!confirm('Вы уверены, что хотите отвязать Telegram-аккаунт?')) {
       return;
     }
     setLoading(true);
@@ -83,7 +83,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
       setNotificationsEnabled(false);
     } catch (error) {
       console.error('Failed to unlink Telegram:', error);
-      alert('Failed to unlink. Please try again.');
+      alert('Не удалось отвязать аккаунт. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
     }
@@ -117,20 +117,20 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-blue-500" />
+          <MessageCircle className="w-5 h-5 text-accent" />
           Telegram
         </CardTitle>
       </CardHeader>
       <CardContent>
         {linkStatus?.linked ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-green-500">
+            <div className="flex items-center gap-2 text-accent">
               <Check className="w-5 h-5" />
-              <span>Connected to @{linkStatus.telegram_username}</span>
+              <span>Подключено: @{linkStatus.telegram_username}</span>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/60">
-              <span className="text-sm">Receive notifications in Telegram</span>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40 border border-border">
+              <span className="text-sm">Получать уведомления в Telegram</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -138,7 +138,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
                 disabled={loading}
               >
                 {notificationsEnabled ? (
-                  <Bell className="w-5 h-5 text-green-500" />
+                  <Bell className="w-5 h-5 text-accent" />
                 ) : (
                   <BellOff className="w-5 h-5 text-muted-foreground" />
                 )}
@@ -153,22 +153,22 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
               className="w-full"
             >
               <X className="w-4 h-4 mr-2" />
-              Unlink Telegram
+              Отвязать Telegram
             </Button>
           </div>
         ) : linkCode ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Send this code to @{botUsername} on Telegram:
+              Отправьте этот код боту @{botUsername} в Telegram:
             </p>
 
             <div className="flex items-center gap-2">
-              <div className="flex-1 p-4 text-center font-mono text-2xl font-bold bg-muted/60 rounded-lg border border-border">
+              <div className="flex-1 p-4 text-center font-mono text-2xl font-bold bg-muted/40 rounded-lg border border-border">
                 {linkCode}
               </div>
               <Button variant="ghost" size="sm" onClick={copyCode}>
                 {codeCopied ? (
-                  <Check className="w-5 h-5 text-green-500" />
+                  <Check className="w-5 h-5 text-accent" />
                 ) : (
                   <Copy className="w-5 h-5" />
                 )}
@@ -176,7 +176,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
             </div>
 
             <p className="text-sm text-muted-foreground text-center">
-              Code expires in {Math.floor(expiresIn / 60)}:{(expiresIn % 60).toString().padStart(2, '0')}
+              Код истекает через {Math.floor(expiresIn / 60)}:{(expiresIn % 60).toString().padStart(2, '0')}
             </p>
 
             <a
@@ -187,7 +187,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
             >
               <Button variant="secondary" className="w-full">
                 <MessageCircle className="w-4 h-4 mr-2" />
-                Open @{botUsername}
+                Открыть @{botUsername}
               </Button>
             </a>
 
@@ -201,13 +201,13 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
               className="w-full"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              Check status
+              Проверить статус
             </Button>
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Link your Telegram account to receive notifications.
+              Привяжите Telegram-аккаунт, чтобы получать уведомления.
             </p>
             <Button
               onClick={handleCreateLink}
@@ -215,7 +215,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
               className="w-full"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
-              Link Telegram
+              Привязать Telegram
             </Button>
           </div>
         )}

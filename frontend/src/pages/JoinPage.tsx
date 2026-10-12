@@ -61,32 +61,32 @@ export default function JoinPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-nebula">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="card p-8 max-w-md w-full text-center space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-nebula p-4">
+      <div className="glass-strong rounded-xl p-8 max-w-md w-full text-center space-y-6 animate-slide-in">
         <Logo className="mx-auto" />
 
         {error ? (
           <>
-            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto">
-              <AlertCircle className="w-8 h-8 text-red-500" />
+            <div className="w-16 h-16 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-8 h-8 text-red-400" />
             </div>
             <h1 className="text-2xl font-bold">Ошибка</h1>
             <p className="text-muted-foreground">{error}</p>
-            <button onClick={() => setLocation('/auth')} className="btn-primary w-full">
+            <button onClick={() => setLocation('/auth')} className="w-full py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50">
               Перейти к авторизации
             </button>
           </>
         ) : success ? (
           <>
-            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-              <Check className="w-8 h-8 text-green-500" />
+            <div className="w-16 h-16 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto glow">
+              <Check className="w-8 h-8 text-accent" />
             </div>
             <h1 className="text-2xl font-bold">Добро пожаловать!</h1>
             <p className="text-muted-foreground">
@@ -95,7 +95,7 @@ export default function JoinPage() {
           </>
         ) : (
           <>
-            <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
+            <div className="w-20 h-20 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center mx-auto glow overflow-hidden">
               {inviter?.avatar ? (
                 <img
                   src={inviter.avatar}
@@ -108,7 +108,7 @@ export default function JoinPage() {
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold mb-2">Приглашение в Nebula</h1>
+              <h1 className="text-2xl font-bold mb-2 gradient-brand-text">Приглашение в Nebula</h1>
               <p className="text-muted-foreground">
                 <span className="font-semibold text-primary">{inviter?.username}</span> приглашает вас присоединиться к Nebula
               </p>
@@ -119,7 +119,7 @@ export default function JoinPage() {
                 <button
                   onClick={handleJoin}
                   disabled={joining}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {joining ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
@@ -134,7 +134,7 @@ export default function JoinPage() {
                 <>
                   <button
                     onClick={handleJoin}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     <LogIn className="w-5 h-5" />
                     Войти и присоединиться

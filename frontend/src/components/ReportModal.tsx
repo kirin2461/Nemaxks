@@ -124,8 +124,8 @@ export function ReportModal({
                 onClick={() => setCategory(cat.id)}
                 className={`flex items-center gap-2 p-3 rounded-lg border transition-all text-left ${
                   category === cat.id
-                    ? 'border-red-500 bg-red-500/10 text-red-300'
-                    : 'border-border bg-muted/60 text-foreground hover:bg-muted'
+                    ? 'border-red-500/50 bg-red-500/15 text-red-300'
+                    : 'border-border bg-muted/40 text-foreground hover:bg-primary/5 hover:border-primary/30'
                 }`}
               >
                 <span>{cat.icon}</span>
@@ -142,7 +142,7 @@ export function ReportModal({
             onChange={e => setDetails(e.target.value)}
             maxLength={500}
             rows={3}
-            className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors resize-none"
+            className="input-field resize-none"
             placeholder="Опишите ситуацию подробнее (необязательно)..."
           />
           <p className="text-xs text-muted-foreground mt-1">{details.length}/500</p>
@@ -165,7 +165,7 @@ export function ReportModal({
           <button
             onClick={handleSubmit}
             disabled={loading || !category}
-            className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-soft"
           >
             {loading ? (
               <>

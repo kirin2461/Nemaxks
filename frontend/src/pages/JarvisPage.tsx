@@ -192,55 +192,55 @@ interface JarvisStatus {
 const CAPABILITIES: Capability[] = [
   {
     id: 'code',
-    name: 'Code Assistant',
+    name: 'Помощь с кодом',
     icon: <Code className="w-6 h-6" />,
-    description: 'Write, review, and debug code',
-    examples: ['Write a React component', 'Debug my function', 'Explain this code']
+    description: 'Написание, ревью и отладка кода',
+    examples: ['Напиши React-компонент', 'Отладь мою функцию', 'Объясни этот код']
   },
   {
     id: 'search',
-    name: 'Web Search',
+    name: 'Поиск в сети',
     icon: <Globe className="w-6 h-6" />,
-    description: 'Search and summarize information',
-    examples: ['What is quantum computing?', 'Latest news about AI', 'Research a topic']
+    description: 'Поиск и краткое изложение информации',
+    examples: ['Что такое квантовые вычисления?', 'Последние новости об ИИ', 'Исследуй тему']
   },
   {
     id: 'write',
-    name: 'Content Writing',
+    name: 'Написание текстов',
     icon: <FileText className="w-6 h-6" />,
-    description: 'Write articles, emails, and documents',
-    examples: ['Write an email', 'Create a blog post', 'Summarize this text']
+    description: 'Статьи, письма и документы',
+    examples: ['Напиши письмо', 'Создай пост для блога', 'Сожми этот текст']
   },
   {
     id: 'analyze',
-    name: 'Data Analysis',
+    name: 'Анализ данных',
     icon: <Calculator className="w-6 h-6" />,
-    description: 'Analyze data and create insights',
-    examples: ['Analyze this data', 'Create a chart', 'Find patterns']
+    description: 'Анализ данных и выводы',
+    examples: ['Проанализируй данные', 'Построй график', 'Найди закономерности']
   },
   {
     id: 'create',
-    name: 'Creative Ideas',
+    name: 'Креативные идеи',
     icon: <Lightbulb className="w-6 h-6" />,
-    description: 'Brainstorm and generate ideas',
-    examples: ['Give me startup ideas', 'Name suggestions', 'Creative solutions']
+    description: 'Мозговой штурм и генерация идей',
+    examples: ['Идеи для стартапа', 'Предложи названия', 'Креативные решения']
   },
   {
     id: 'learn',
-    name: 'Learning Helper',
+    name: 'Помощь в обучении',
     icon: <BookOpen className="w-6 h-6" />,
-    description: 'Explain concepts and teach',
-    examples: ['Explain machine learning', 'Teach me Python', 'Quiz me on history']
+    description: 'Объяснение концепций и обучение',
+    examples: ['Объясни машинное обучение', 'Научи меня Python', 'Устрой quiz по истории']
   },
 ]
 
 const QUICK_PROMPTS = [
-  'Write a React component for a todo list',
-  'Explain how blockchain works',
-  'Help me debug this code',
-  'Generate 5 business ideas',
-  'Summarize the latest AI news',
-  'Create a project roadmap',
+  'Напиши React-компонент для списка задач',
+  'Объясни, как работает блокчейн',
+  'Помоги отладить этот код',
+  'Сгенерируй 5 бизнес-идей',
+  'Кратко изложи последние новости об ИИ',
+  'Составь дорожную карту проекта',
 ]
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL || ''
@@ -962,15 +962,15 @@ export default function JarvisPage() {
     <Layout>
       <div className="h-screen flex">
         <div className="flex-1 flex flex-col">
-          <div className="p-4 border-b border-border bg-card">
+          <div className="p-4 border-b border-border glass">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className={cn(
                   'w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500',
-                  jarvisStatus === 'Ready' && 'bg-gradient-to-br from-primary to-accent',
-                  jarvisStatus === 'Listening' && 'bg-gradient-to-br from-green-500 to-emerald-500 animate-pulse',
-                  jarvisStatus === 'Thinking' && 'bg-gradient-to-br from-yellow-500 to-orange-500 animate-spin-slow',
-                  jarvisStatus === 'Speaking' && 'bg-gradient-to-br from-blue-500 to-cyan-500 pulse-call'
+                  jarvisStatus === 'Ready' && 'bg-gradient-brand glow',
+                  jarvisStatus === 'Listening' && 'bg-gradient-to-br from-accent to-emerald-400 animate-pulse glow',
+                  jarvisStatus === 'Thinking' && 'bg-gradient-to-br from-yellow-400 to-orange-500 animate-spin-slow',
+                  jarvisStatus === 'Speaking' && 'bg-gradient-to-br from-primary to-accent pulse-call'
                 )}>
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
@@ -979,14 +979,14 @@ export default function JarvisPage() {
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
                     <span className={cn(
                       'w-2 h-2 rounded-full',
-                      jarvisStatus === 'Ready' && 'bg-green-500',
-                      jarvisStatus === 'Listening' && 'bg-green-500 animate-pulse',
-                      jarvisStatus === 'Thinking' && 'bg-yellow-500 animate-pulse',
-                      jarvisStatus === 'Speaking' && 'bg-blue-500 animate-pulse'
+                      jarvisStatus === 'Ready' && 'bg-accent',
+                      jarvisStatus === 'Listening' && 'bg-accent animate-pulse',
+                      jarvisStatus === 'Thinking' && 'bg-yellow-400 animate-pulse',
+                      jarvisStatus === 'Speaking' && 'bg-primary animate-pulse'
                     )} />
                     {jarvisStatus}
                     {aiStatus && (
-                      <span className="text-xs ml-2 px-2 py-0.5 rounded bg-muted">
+                      <span className="text-xs ml-2 px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/25">
                         {aiStatus.active_provider === 'deepseek' && <Zap className="w-3 h-3 inline mr-1" />}
                         {aiStatus.active_provider === 'huggingface' && <Activity className="w-3 h-3 inline mr-1" />}
                         {aiStatus.active_provider || 'offline'}
@@ -1001,8 +1001,8 @@ export default function JarvisPage() {
                   className={cn(
                     "p-2 rounded-lg transition-colors flex items-center gap-1",
                     alwaysListening 
-                      ? "bg-green-500/20 text-green-500 hover:bg-green-500/30" 
-                      : "hover:bg-accent/20"
+                      ? "bg-accent/15 text-accent hover:bg-accent/25" 
+                      : "hover:bg-primary/10"
                   )}
                   title={alwaysListening ? "Отключить постоянное прослушивание" : "Включить постоянное прослушивание"}
                 >
@@ -1012,8 +1012,8 @@ export default function JarvisPage() {
                 <button
                   onClick={toggleMute}
                   className={cn(
-                    "p-2 rounded-lg hover:bg-accent/20 transition-colors",
-                    isMuted && "text-red-500"
+                    "p-2 rounded-lg hover:bg-primary/10 transition-colors",
+                    isMuted && "text-red-400"
                   )}
                   title={isMuted ? "Включить звук" : "Выключить звук"}
                 >
@@ -1021,14 +1021,14 @@ export default function JarvisPage() {
                 </button>
                 <button
                   onClick={() => fetchAiStatus()}
-                  className="p-2 rounded-lg hover:bg-accent/20 transition-colors"
+                  className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
                   title="Обновить статус"
                 >
                   <History className="w-5 h-5" />
                 </button>
                 <button
                   onClick={clearChat}
-                  className="p-2 rounded-lg hover:bg-accent/20 transition-colors"
+                  className="p-2 rounded-lg hover:bg-red-500/15 hover:text-red-400 transition-colors"
                   title="Очистить чат"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -1037,7 +1037,7 @@ export default function JarvisPage() {
                   onClick={() => setShowSettings(!showSettings)}
                   className={cn(
                     "p-2 rounded-lg transition-colors",
-                    showSettings ? "bg-primary/20 text-primary" : "hover:bg-accent/20"
+                    showSettings ? "bg-primary/15 text-primary" : "hover:bg-primary/10"
                   )}
                   title="Настройки"
                 >
@@ -1047,17 +1047,17 @@ export default function JarvisPage() {
             </div>
 
             {alwaysListening && (
-              <div className="mt-3 p-2 rounded-lg bg-green-500/10 border border-green-500/20">
-                <div className="flex items-center gap-2 text-sm text-green-400">
+              <div className="mt-3 p-2 rounded-lg bg-accent/10 border border-accent/25">
+                <div className="flex items-center gap-2 text-sm text-accent">
                   <Radio className="w-4 h-4 animate-pulse" />
                   <span className="font-medium">Режим постоянного прослушивания активен</span>
                   {awaitingCommand && (
-                    <span className="ml-2 px-2 py-0.5 bg-green-500/20 rounded text-xs">
+                    <span className="ml-2 px-2 py-0.5 bg-accent/15 rounded-full text-xs">
                       Ожидаю команду...
                     </span>
                   )}
                   {pendingAction.type === 'message' && pendingAction.contact && (
-                    <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-xs">
+                    <span className="ml-2 px-2 py-0.5 bg-primary/15 text-primary rounded-full text-xs">
                       Сообщение для: {pendingAction.contact}
                     </span>
                   )}
@@ -1071,21 +1071,21 @@ export default function JarvisPage() {
             {aiStatus && (
               <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  <span className={cn('w-2 h-2 rounded-full', aiStatus.deepseek_available ? 'bg-green-500' : 'bg-red-500')} />
+                  <span className={cn('w-2 h-2 rounded-full', aiStatus.deepseek_available ? 'bg-accent' : 'bg-red-400')} />
                   DeepSeek
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={cn('w-2 h-2 rounded-full', aiStatus.huggingface_available ? 'bg-green-500' : 'bg-red-500')} />
+                  <span className={cn('w-2 h-2 rounded-full', aiStatus.huggingface_available ? 'bg-accent' : 'bg-red-400')} />
                   HuggingFace
                 </div>
                 <div className="ml-auto">
-                  Tokens: {aiStatus.tokens_used?.toLocaleString()} / {aiStatus.token_limit?.toLocaleString()}
+                  Токены: {aiStatus.tokens_used?.toLocaleString()} / {aiStatus.token_limit?.toLocaleString()}
                 </div>
               </div>
             )}
 
             {showSettings && (
-              <div className="mt-4 p-4 rounded-lg bg-card border border-border">
+              <div className="mt-4 p-4 rounded-xl glass">
                 <h3 className="font-semibold mb-4">Настройки J.A.R.V.I.S.</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -1115,7 +1115,7 @@ export default function JarvisPage() {
                       onClick={toggleAlwaysListening}
                       className={cn(
                         "w-12 h-6 rounded-full transition-colors relative",
-                        !alwaysListening ? "bg-muted" : "bg-green-500"
+                        !alwaysListening ? "bg-muted" : "bg-accent"
                       )}
                     >
                       <div className={cn(
@@ -1139,11 +1139,11 @@ export default function JarvisPage() {
             {showCapabilities && messages.length <= 1 && (
               <div className="animate-fade-in">
                 <div className="text-center mb-8">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center orb-glow">
+                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-brand flex items-center justify-center glow">
                     <Bot className="w-12 h-12 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2">At Your Service, Sir</h2>
-                  <p className="text-muted-foreground">Choose a capability or simply speak your request</p>
+                  <h2 className="text-2xl font-bold mb-2 gradient-brand-text">К вашим услугам, сэр</h2>
+                  <p className="text-muted-foreground">Выберите возможность или просто произнесите запрос</p>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
@@ -1151,9 +1151,9 @@ export default function JarvisPage() {
                     <button
                       key={cap.id}
                       onClick={() => handleSendMessage(cap.examples[0])}
-                      className="glass-cosmic rounded-xl p-4 text-left hover:border-primary/50 transition-all hover:scale-105"
+                      className="glass rounded-xl p-4 text-left hover:border-accent/50 hover:shadow-glow transition-all hover:scale-105"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center mb-3 text-primary">
+                      <div className="w-10 h-10 rounded-lg bg-accent/15 border border-accent/25 flex items-center justify-center mb-3 text-accent">
                         {cap.icon}
                       </div>
                       <h3 className="font-semibold mb-1">{cap.name}</h3>
@@ -1167,7 +1167,7 @@ export default function JarvisPage() {
                     <button
                       key={i}
                       onClick={() => handleSendMessage(prompt)}
-                      className="px-4 py-2 rounded-full bg-card border border-border hover:border-primary/50 text-sm transition-colors"
+                      className="px-4 py-2 rounded-full glass text-sm hover:border-primary/50 hover:bg-primary/10 transition-all"
                     >
                       {prompt}
                     </button>
@@ -1187,7 +1187,7 @@ export default function JarvisPage() {
                 <div className={cn(
                   'w-10 h-10 rounded-full flex items-center justify-center shrink-0',
                   message.type === 'jarvis' 
-                    ? 'bg-gradient-to-br from-primary to-accent' 
+                    ? 'bg-gradient-brand glow' 
                     : 'bg-card border border-border'
                 )}>
                   {message.type === 'jarvis' ? (
@@ -1199,8 +1199,8 @@ export default function JarvisPage() {
                 <div className={cn(
                   'max-w-[80%] rounded-2xl p-4',
                   message.type === 'jarvis' 
-                    ? 'glass-cosmic' 
-                    : 'bg-primary text-primary-foreground'
+                    ? 'glass' 
+                    : 'bg-gradient-brand text-primary-foreground shadow-soft'
                 )}>
                   {message.isLoading ? (
                     <div className="flex items-center gap-2">
@@ -1209,7 +1209,7 @@ export default function JarvisPage() {
                         <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
                         <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
-                      <span className="text-sm text-muted-foreground">Processing your request, Sir...</span>
+                      <span className="text-sm text-muted-foreground">Обрабатываю ваш запрос, сэр...</span>
                     </div>
                   ) : (
                     <>
@@ -1218,22 +1218,22 @@ export default function JarvisPage() {
                         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/30">
                           <button
                             onClick={() => copyMessage(message.content)}
-                            className="p-1.5 rounded hover:bg-accent/20 transition-colors"
-                            title="Copy"
+                            className="p-1.5 rounded hover:bg-primary/10 transition-colors"
+                            title="Копировать"
                           >
                             <Copy className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => regenerateResponse(message.id)}
-                            className="p-1.5 rounded hover:bg-accent/20 transition-colors"
-                            title="Regenerate"
+                            className="p-1.5 rounded hover:bg-primary/10 transition-colors"
+                            title="Перегенерировать"
                           >
                             <RefreshCw className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => speakText(message.content)}
-                            className="p-1.5 rounded hover:bg-accent/20 transition-colors"
-                            title="Read aloud"
+                            className="p-1.5 rounded hover:bg-primary/10 transition-colors"
+                            title="Прочитать вслух"
                           >
                             <Volume2 className="w-4 h-4" />
                           </button>
@@ -1252,7 +1252,7 @@ export default function JarvisPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-4 border-t border-border bg-card">
+          <div className="p-4 border-t border-border glass">
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleVoiceInput}
@@ -1260,9 +1260,9 @@ export default function JarvisPage() {
                   'p-3 rounded-full transition-all',
                   isListening 
                     ? 'bg-red-500 text-white animate-pulse' 
-                    : 'bg-card border border-border hover:border-primary/50'
+                    : 'glass hover:border-accent/50 hover:text-accent'
                 )}
-                title={isListening ? "Stop listening" : "Voice input"}
+                title={isListening ? "Остановить прослушивание" : "Голосовой ввод"}
               >
                 {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </button>
@@ -1272,18 +1272,16 @@ export default function JarvisPage() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Speak or type your request, Sir..."
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl
-                            focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-                            transition-all pr-12"
+                  placeholder="Произнесите или напишите запрос, сэр..."
+                  className="input-field !rounded-xl py-3 pr-12"
                 />
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={!inputMessage.trim()}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg
-                            bg-gradient-to-r from-primary to-accent text-white
+                            bg-gradient-brand text-primary-foreground
                             disabled:opacity-50 disabled:cursor-not-allowed
-                            hover:shadow-lg transition-all"
+                            hover:shadow-glow transition-all"
                 >
                   <Send className="w-5 h-5" />
                 </button>

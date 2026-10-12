@@ -43,10 +43,10 @@ const priorities = [
 ]
 
 const statusLabels: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  pending: { label: 'Ожидает', color: 'text-yellow-500', icon: Clock },
-  in_progress: { label: 'В работе', color: 'text-blue-500', icon: Clock },
-  resolved: { label: 'Решено', color: 'text-green-500', icon: CheckCircle },
-  rejected: { label: 'Отклонено', color: 'text-red-500', icon: XCircle },
+  pending: { label: 'Ожидает', color: 'text-yellow-400', icon: Clock },
+  in_progress: { label: 'В работе', color: 'text-primary', icon: Clock },
+  resolved: { label: 'Решено', color: 'text-accent', icon: CheckCircle },
+  rejected: { label: 'Отклонено', color: 'text-red-400', icon: XCircle },
   cancelled: { label: 'Отменено', color: 'text-muted-foreground', icon: XCircle },
 }
 
@@ -121,25 +121,25 @@ export default function ReportsPage() {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto p-4 md:p-6">
-        <h1 className="text-2xl font-bold mb-6">Обращения</h1>
+        <h1 className="text-2xl font-bold mb-6 gradient-brand-text">Обращения</h1>
         
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setActiveTab('new')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               activeTab === 'new' 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-card hover:bg-accent'
+                ? 'gradient-brand text-primary-foreground shadow-soft' 
+                : 'glass text-muted-foreground hover:bg-primary/10 hover:text-foreground'
             }`}
           >
             Новое обращение
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               activeTab === 'history' 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-card hover:bg-accent'
+                ? 'gradient-brand text-primary-foreground shadow-soft' 
+                : 'glass text-muted-foreground hover:bg-primary/10 hover:text-foreground'
             }`}
           >
             Мои обращения
@@ -148,7 +148,7 @@ export default function ReportsPage() {
 
         {message && (
           <div className={`p-4 rounded-lg mb-4 flex items-center gap-2 ${
-            message.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+            message.type === 'success' ? 'bg-accent/15 text-accent border border-accent/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'
           }`}>
             {message.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
             {message.text}
@@ -156,7 +156,7 @@ export default function ReportsPage() {
         )}
 
         {activeTab === 'new' ? (
-          <form onSubmit={handleSubmit} className="bg-card rounded-xl p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="glass rounded-xl p-6 space-y-4 shadow-soft">
             <div>
               <label className="block text-sm font-medium mb-2">Категория *</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -169,8 +169,8 @@ export default function ReportsPage() {
                       onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
                       className={`p-3 rounded-lg border text-left flex items-center gap-3 transition-colors ${
                         formData.category === cat.value
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/50'
+                          ? 'border-primary bg-primary/15 shadow-soft'
+                          : 'border-border bg-background/40 hover:border-primary/50 hover:bg-primary/5'
                       }`}
                     >
                       <Icon className="w-5 h-5 text-primary" />
@@ -188,7 +188,7 @@ export default function ReportsPage() {
                 value={formData.subject}
                 onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
                 placeholder="Кратко опишите суть обращения"
-                className="w-full px-4 py-2 bg-background rounded-lg border border-border focus:border-primary focus:outline-none"
+                className="input-field"
                 maxLength={200}
               />
             </div>
@@ -200,7 +200,7 @@ export default function ReportsPage() {
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Подробно опишите вашу проблему или предложение..."
                 rows={5}
-                className="w-full px-4 py-2 bg-background rounded-lg border border-border focus:border-primary focus:outline-none resize-none"
+                className="input-field resize-none"
               />
             </div>
 
@@ -214,8 +214,8 @@ export default function ReportsPage() {
                     onClick={() => setFormData(prev => ({ ...prev, priority: p.value }))}
                     className={`px-4 py-2 rounded-lg text-sm transition-colors ${
                       formData.priority === p.value
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background hover:bg-accent'
+                        ? 'gradient-brand text-primary-foreground shadow-soft'
+                        : 'bg-background/60 border border-border text-muted-foreground hover:bg-primary/10 hover:text-foreground'
                     }`}
                   >
                     {p.label}
@@ -227,7 +227,7 @@ export default function ReportsPage() {
             <button
               type="submit"
               disabled={submitting || !formData.category || !formData.subject}
-              className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 gradient-brand text-primary-foreground rounded-lg font-medium flex items-center justify-center gap-2 shadow-soft hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               <Send className="w-5 h-5" />
               {submitting ? 'Отправка...' : 'Отправить обращение'}
@@ -250,9 +250,9 @@ export default function ReportsPage() {
                 const isExpanded = expandedId === request.id
                 
                 return (
-                  <div key={request.id} className="bg-card rounded-xl overflow-hidden">
+                  <div key={request.id} className="glass rounded-xl overflow-hidden shadow-soft">
                     <div 
-                      className="p-4 flex items-center gap-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                      className="p-4 flex items-center gap-4 cursor-pointer hover:bg-primary/5 transition-colors"
                       onClick={() => setExpandedId(isExpanded ? null : request.id)}
                     >
                       <CategoryIcon className="w-5 h-5 text-primary flex-shrink-0" />
@@ -275,7 +275,7 @@ export default function ReportsPage() {
                           {request.description || 'Без описания'}
                         </p>
                         {request.admin_notes && (
-                          <div className="bg-primary/10 rounded-lg p-3 mt-3">
+                          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mt-3">
                             <p className="text-sm font-medium mb-1">Ответ администратора:</p>
                             <p className="text-sm">{request.admin_notes}</p>
                           </div>

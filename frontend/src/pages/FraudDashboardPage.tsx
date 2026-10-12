@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Shield, AlertTriangle, Ban, Eye, Search, Filter,
@@ -11,7 +11,9 @@ import { formatDistanceToNow } from 'date-fns';
 
 type Tab = 'overview' | 'alerts' | 'rules' | 'risk' | 'bans' | 'analyze';
 
-export default function FraudDashboardPage() {
+const queryClient = new QueryClient();
+
+function FraudDashboardContent() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [alertFilter, setAlertFilter] = useState({ status: '', type: '', severity: '' });
@@ -63,11 +65,11 @@ export default function FraudDashboardPage() {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-600 text-white';
-      case 'high': return 'bg-orange-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-black';
-      case 'low': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'critical': return 'bg-red-500/15 text-red-400 border border-red-500/30';
+      case 'high': return 'bg-orange-500/15 text-orange-400 border border-orange-500/30';
+      case 'medium': return 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30';
+      case 'low': return 'bg-accent/15 text-accent border border-accent/30';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -91,11 +93,11 @@ export default function FraudDashboardPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-nebula text-foreground p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <Shield className="w-8 h-8 text-red-400" />
-          <h1 className="text-3xl font-bold">Anti-Fraud Dashboard</h1>
+          <Shield className="w-8 h-8 text-primary" />
+          <h1 className="text-3xl font-bold gradient-brand-text">Антифрод-панель</h1>
         </div>
 
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -105,8 +107,8 @@ export default function FraudDashboardPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-red-600 text-white'
-                  : 'bg-card text-muted-foreground hover:bg-secondary'
+                  ? 'gradient-brand text-primary-foreground shadow-soft'
+                  : 'glass text-muted-foreground hover:bg-primary/10 hover:text-foreground'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -145,33 +147,33 @@ export default function FraudDashboardPage() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-card rounded-xl p-6">
+              <div className="glass rounded-xl p-6 shadow-soft">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-blue-400" />
+                  <Globe className="w-5 h-5 text-primary" />
                   Заблокированные IP
                 </h3>
-                <p className="text-4xl font-bold text-blue-400">{stats.blocked_ips}</p>
+                <p className="text-4xl font-bold text-primary">{stats.blocked_ips}</p>
               </div>
-              <div className="bg-card rounded-xl p-6">
+              <div className="glass rounded-xl p-6 shadow-soft">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Fingerprint className="w-5 h-5 text-green-400" />
+                  <Fingerprint className="w-5 h-5 text-accent" />
                   Забаненные устройства
                 </h3>
-                <p className="text-4xl font-bold text-green-400">{stats.banned_devices}</p>
+                <p className="text-4xl font-bold text-accent">{stats.banned_devices}</p>
               </div>
             </div>
 
-            <div className="bg-card rounded-xl p-6">
+            <div className="glass rounded-xl p-6 shadow-soft">
               <h3 className="text-lg font-bold mb-4">Последние алерты</h3>
               <div className="space-y-3">
                 {alertsData?.alerts?.slice(0, 5).map((alert: FraudAlert) => (
                   <div
                     key={alert.id}
-                    className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-background/40 border border-border rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       {getStatusIcon(alert.status)}
-                      <span className={`px-2 py-0.5 rounded text-xs ${getSeverityColor(alert.severity)}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${getSeverityColor(alert.severity)}`}>
                         {alert.severity}
                       </span>
                       <span className="text-sm">{alert.alert_type}</span>
@@ -192,7 +194,7 @@ export default function FraudDashboardPage() {
               <select
                 value={alertFilter.status}
                 onChange={e => setAlertFilter(f => ({ ...f, status: e.target.value }))}
-                className="px-3 py-2 bg-card rounded-lg"
+                className="input-field !w-auto px-3 py-2"
               >
                 <option value="">Все статусы</option>
                 <option value="pending">Ожидают</option>
@@ -203,7 +205,7 @@ export default function FraudDashboardPage() {
               <select
                 value={alertFilter.type}
                 onChange={e => setAlertFilter(f => ({ ...f, type: e.target.value }))}
-                className="px-3 py-2 bg-card rounded-lg"
+                className="input-field !w-auto px-3 py-2"
               >
                 <option value="">Все типы</option>
                 <option value="impersonation">Имперсонация</option>
@@ -214,7 +216,7 @@ export default function FraudDashboardPage() {
               <select
                 value={alertFilter.severity}
                 onChange={e => setAlertFilter(f => ({ ...f, severity: e.target.value }))}
-                className="px-3 py-2 bg-card rounded-lg"
+                className="input-field !w-auto px-3 py-2"
               >
                 <option value="">Все уровни</option>
                 <option value="critical">Критический</option>
@@ -230,13 +232,13 @@ export default function FraudDashboardPage() {
                   key={alert.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-card rounded-xl p-5 cursor-pointer hover:bg-muted"
+                  className="glass rounded-xl p-5 cursor-pointer hover:bg-primary/5 transition-colors shadow-soft"
                   onClick={() => setSelectedAlert(alert)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       {getStatusIcon(alert.status)}
-                      <span className={`px-2 py-0.5 rounded text-xs ${getSeverityColor(alert.severity)}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${getSeverityColor(alert.severity)}`}>
                         {alert.severity}
                       </span>
                       <span className="font-medium capitalize">{alert.alert_type}</span>
@@ -259,17 +261,17 @@ export default function FraudDashboardPage() {
         {activeTab === 'rules' && (
           <div className="space-y-4">
             {rules.map((rule: FraudRule) => (
-              <div key={rule.id} className="bg-card rounded-xl p-5">
+              <div key={rule.id} className="glass rounded-xl p-5 shadow-soft">
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="font-bold">{rule.name}</h3>
                     <p className="text-muted-foreground text-sm">{rule.description}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded text-xs ${getSeverityColor(rule.severity)}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${getSeverityColor(rule.severity)}`}>
                       {rule.severity}
                     </span>
-                    <span className={`px-2 py-0.5 rounded text-xs ${rule.is_active ? 'bg-green-600' : 'bg-muted'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${rule.is_active ? 'bg-accent/15 text-accent border border-accent/30' : 'bg-muted text-muted-foreground'}`}>
                       {rule.is_active ? 'Активно' : 'Неактивно'}
                     </span>
                   </div>
@@ -287,10 +289,10 @@ export default function FraudDashboardPage() {
         {activeTab === 'risk' && (
           <div className="space-y-4">
             {riskScores.map((score: UserRiskScore) => (
-              <div key={score.id} className="bg-card rounded-xl p-5">
+              <div key={score.id} className="glass rounded-xl p-5 shadow-soft">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-gradient-brand text-primary-foreground font-semibold flex items-center justify-center">
                       {score.user?.username?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <div>
@@ -320,7 +322,7 @@ export default function FraudDashboardPage() {
         {activeTab === 'bans' && (
           <div className="space-y-4">
             {bansData?.bans?.map((ban: ImpersonationBan) => (
-              <div key={ban.id} className="bg-card rounded-xl p-5">
+              <div key={ban.id} className="glass rounded-xl p-5 shadow-soft">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <AlertOctagon className="w-6 h-6 text-red-400" />
@@ -331,14 +333,14 @@ export default function FraudDashboardPage() {
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs bg-red-600 px-2 py-1 rounded">PERMABAN</span>
+                  <span className="text-xs bg-red-500/15 text-red-400 border border-red-500/30 px-2 py-1 rounded-full">PERMABAN</span>
                 </div>
-                <div className="bg-secondary/50 rounded-lg p-3 mb-3">
+                <div className="bg-background/40 border border-border rounded-lg p-3 mb-3">
                   <p className="text-sm text-foreground break-all">{ban.original_message}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {JSON.parse(ban.detected_keywords || '[]').map((kw: string, i: number) => (
-                    <span key={i} className="text-xs bg-red-600/20 text-red-400 px-2 py-1 rounded">
+                    <span key={i} className="text-xs bg-red-500/15 text-red-400 border border-red-500/25 px-2 py-1 rounded-full">
                       {kw}
                     </span>
                   ))}
@@ -350,47 +352,47 @@ export default function FraudDashboardPage() {
 
         {activeTab === 'analyze' && (
           <div className="space-y-6">
-            <div className="bg-card rounded-xl p-6">
+            <div className="glass rounded-xl p-6 shadow-soft">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-blue-400" />
+                <MessageSquare className="w-5 h-5 text-accent" />
                 Анализ контента
               </h3>
               <textarea
                 value={analyzeContent}
                 onChange={e => setAnalyzeContent(e.target.value)}
                 placeholder="Введите текст для анализа на мошенничество..."
-                className="w-full p-4 bg-secondary rounded-lg resize-none h-32 outline-none focus:ring-2 focus:ring-blue-500"
+                className="input-field resize-none h-32 p-4"
               />
               <button
                 onClick={() => analyzeMutation.mutate(analyzeContent)}
                 disabled={!analyzeContent || analyzeMutation.isPending}
-                className="mt-4 px-6 py-2 bg-blue-600 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="mt-4 px-6 py-2 gradient-brand rounded-lg font-medium text-primary-foreground shadow-soft hover:brightness-110 disabled:opacity-50 transition-all"
               >
                 Анализировать
               </button>
             </div>
 
             {analyzeMutation.data && (
-              <div className="bg-card rounded-xl p-6">
+              <div className="glass rounded-xl p-6 shadow-soft">
                 <h3 className="text-lg font-bold mb-4">Результаты анализа</h3>
                 <div className="space-y-4">
-                  <div className="p-4 bg-secondary/50 rounded-lg">
+                  <div className="p-4 bg-background/40 border border-border rounded-lg">
                     <p className="text-xs text-muted-foreground mb-1">Нормализованный текст:</p>
                     <p className="text-sm">{analyzeMutation.data.normalized}</p>
                   </div>
                   <div className={`p-4 rounded-lg ${
-                    analyzeMutation.data.is_fraud ? 'bg-red-600/20' : 'bg-green-600/20'
+                    analyzeMutation.data.is_fraud ? 'bg-red-500/15 border border-red-500/30' : 'bg-accent/15 border border-accent/30'
                   }`}>
                     <p className={`font-bold ${
-                      analyzeMutation.data.is_fraud ? 'text-red-400' : 'text-green-400'
+                      analyzeMutation.data.is_fraud ? 'text-red-400' : 'text-accent'
                     }`}>
                       {analyzeMutation.data.is_fraud ? 'ОБНАРУЖЕНО МОШЕННИЧЕСТВО' : 'Чисто'}
                     </p>
                   </div>
                   {analyzeMutation.data.results?.map((result: any, i: number) => (
-                    <div key={i} className="p-4 bg-secondary/50 rounded-lg">
+                    <div key={i} className="p-4 bg-background/40 border border-border rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className={`px-2 py-0.5 rounded text-xs ${getSeverityColor(result.severity)}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${getSeverityColor(result.severity)}`}>
                           {result.severity}
                         </span>
                         <span className="font-medium capitalize">{result.alert_type}</span>
@@ -399,7 +401,7 @@ export default function FraudDashboardPage() {
                       {result.matched_keywords?.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {result.matched_keywords.map((kw: string, j: number) => (
-                            <span key={j} className="text-xs bg-red-600/20 text-red-400 px-2 py-0.5 rounded">
+                            <span key={j} className="text-xs bg-red-500/15 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full">
                               {kw}
                             </span>
                           ))}
@@ -430,7 +432,7 @@ export default function FraudDashboardPage() {
 
 function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number; color: string }) {
   return (
-    <div className="bg-card rounded-xl p-5">
+    <div className="glass rounded-xl p-5 shadow-soft">
       <div className="flex items-center gap-3 mb-2">
         <Icon className={`w-5 h-5 ${color}`} />
         <span className="text-muted-foreground text-sm">{label}</span>
@@ -444,7 +446,7 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <p className="text-muted-foreground mb-1">{label}</p>
-      <div className="w-full bg-secondary rounded-full h-2">
+      <div className="w-full bg-secondary/60 rounded-full h-2">
         <div
           className={`h-2 rounded-full ${
             value >= 70 ? 'bg-red-500' : value >= 40 ? 'bg-yellow-500' : 'bg-green-500'
@@ -473,22 +475,22 @@ function AlertReviewModal({
   const [notes, setNotes] = useState('');
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-card rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="glass-strong rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar"
       >
         <h3 className="text-xl font-bold mb-4">Проверка алерта #{alert.id}</h3>
         
         <div className="space-y-4 mb-6">
-          <div className="p-4 bg-secondary/50 rounded-lg">
+          <div className="p-4 bg-background/40 border border-border rounded-lg">
             <p className="text-xs text-muted-foreground mb-1">Описание</p>
             <p className="text-sm">{alert.description}</p>
           </div>
           
           {alert.evidence && (
-            <div className="p-4 bg-secondary/50 rounded-lg">
+            <div className="p-4 bg-background/40 border border-border rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Доказательства</p>
               <pre className="text-xs overflow-x-auto">{alert.evidence}</pre>
             </div>
@@ -501,7 +503,7 @@ function AlertReviewModal({
             <select
               value={status}
               onChange={e => setStatus(e.target.value)}
-              className="w-full px-4 py-2 bg-secondary rounded-lg"
+              className="input-field"
             >
               <option value="reviewed">Проверен</option>
               <option value="actioned">Обработан</option>
@@ -514,7 +516,7 @@ function AlertReviewModal({
             <select
               value={action}
               onChange={e => setAction(e.target.value)}
-              className="w-full px-4 py-2 bg-secondary rounded-lg"
+              className="input-field"
             >
               <option value="none">Без действия</option>
               <option value="warn">Предупреждение</option>
@@ -529,7 +531,7 @@ function AlertReviewModal({
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              className="w-full px-4 py-2 bg-secondary rounded-lg resize-none h-20"
+              className="input-field resize-none h-20"
               placeholder="Опциональные заметки..."
             />
           </div>
@@ -538,19 +540,27 @@ function AlertReviewModal({
         <div className="flex gap-3 mt-6">
           <button
             onClick={onClose}
-            className="flex-1 py-2 bg-secondary rounded-lg hover:bg-muted"
+            className="flex-1 py-2 bg-secondary rounded-lg hover:bg-muted transition-colors"
           >
             Отмена
           </button>
           <button
             onClick={() => onReview(status, action, notes)}
             disabled={isLoading}
-            className="flex-1 py-2 bg-red-600 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50"
+            className="flex-1 py-2 gradient-brand rounded-lg font-medium text-primary-foreground shadow-soft hover:brightness-110 disabled:opacity-50 transition-all"
           >
             Сохранить
           </button>
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function FraudDashboardPage() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <FraudDashboardContent />
+    </QueryClientProvider>
   );
 }
