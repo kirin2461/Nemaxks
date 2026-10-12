@@ -97,8 +97,9 @@ func (vs *VKService) HandleCallback(data []byte) (string, error) {
 			return "", fmt.Errorf("failed to save VK message: %w", err)
 		}
 
-		log.Printf("VK message saved: user=%s, chat=%s, content=%s",
-			chatMsg.UserID, chatMsg.ChatID, chatMsg.Content)
+		// Security: содержимое сообщения в логи не пишем — только метаданные
+		log.Printf("VK message saved: user=%s, chat=%s, msg_id=%s, len=%d",
+			chatMsg.UserID, chatMsg.ChatID, chatMsg.SourceMessageID, len(chatMsg.Content))
 	}
 
 	return "ok", nil

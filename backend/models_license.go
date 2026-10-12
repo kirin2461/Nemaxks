@@ -4,6 +4,7 @@ import (
         "crypto/rand"
         "encoding/hex"
         "fmt"
+        "os"
         "strings"
         "time"
 
@@ -232,8 +233,15 @@ func CreateLicenseKey(licenseType LicenseType, createdBy uint) (*LicenseKey, err
         return key, nil
 }
 
-// TestLicenseKey - пробный ключ (однократная активация, 25 дней Premium)
+// TestLicenseKey - пробный ключ (однократная активация, 25 дней Premium).
+// SECURITY: публично известный ключ — в проде отключён. Активация/валидация
+// возможны только при env ALLOW_TEST_LICENSE_KEY=true (дефолт: false).
 const TestLicenseKey = "NEMKS-TEST0-TEST0-TEST0"
+
+// IsTestLicenseKeyAllowed сообщает, разрешён ли тестовый ключ в этом окружении.
+func IsTestLicenseKeyAllowed() bool {
+        return strings.EqualFold(strings.TrimSpace(os.Getenv("ALLOW_TEST_LICENSE_KEY")), "true")
+}
 
 // Хранение использованных тестовых ключей
 var testKeyUsed = make(map[string]bool)
@@ -241,6 +249,9 @@ var testKeyUsed = make(map[string]bool)
 func ActivateLicense(userID uint, key string) (*UserLicense, error) {
         // Пробный ключ - однократная активация для каждого пользователя
         if key == TestLicenseKey {
+                if !IsTestLicenseKeyAllowed() {
+                        return nil, fmt.Errorf("invalid or already used license key")
+                }
                 now := time.Now()
                 
                 // Проверяем, использовал ли пользователь тестовый ключ ранее

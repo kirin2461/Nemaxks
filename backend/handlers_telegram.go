@@ -452,6 +452,17 @@ func handleTelegramStatus(chatID int64, telegramID int64) {
 }
 
 func getTelegramWebhookHandler(c *gin.Context) {
+        // Security: если задан TELEGRAM_WEBHOOK_SECRET, проверяем заголовок
+        // X-Telegram-Bot-Api-Secret-Token (Telegram шлёт его при setWebhook
+        // с secret_token). Без секрета endpoint принимает запросы от кого угодно.
+        if secret := os.Getenv("TELEGRAM_WEBHOOK_SECRET"); secret != "" {
+                if c.GetHeader("X-Telegram-Bot-Api-Secret-Token") != secret {
+                        log.Printf("Telegram webhook rejected: invalid secret token from %s", c.ClientIP())
+                        c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+                        return
+                }
+        }
+
         var update struct {
                 Message struct {
                         From struct {
@@ -551,6 +562,16 @@ func setupTelegramWebhookHandler(c *gin.Context) {
         apiURL := "https://api.telegram.org/bot" + botToken + "/setWebhook"
         payload := map[string]interface{}{
                 "url": webhookURL,
+        }
+
+        // SECURITY: задайте env TELEGRAM_WEBHOOK_SECRET — он передаётся в
+        // setWebhook (secret_token) и проверяется на каждом webhook-запросе
+        // (заголовок X-Telegram-Bot-Api-Secret-Token), иначе любой, кто знает
+        // путь /api/1470, может слать поддельные команды боту.
+        if secret := os.Getenv("TELEGRAM_WEBHOOK_SECRET"); secret != "" {
+                payload["secret_token"] = secret
+        } else {
+                log.Println("WARNING: TELEGRAM_WEBHOOK_SECRET not set — webhook endpoint is unauthenticated")
         }
 
         jsonPayload, _ := json.Marshal(payload)

@@ -89,8 +89,13 @@ func validateLicenseKeyHandler(c *gin.Context) {
                 return
         }
         
-        // Пробный ключ - 25 дней Premium
+        // Пробный ключ - 25 дней Premium (только если явно разрешён env
+        // ALLOW_TEST_LICENSE_KEY=true; в проде отклоняется как обычный невалидный ключ)
         if req.Key == TestLicenseKey {
+                if !IsTestLicenseKeyAllowed() {
+                        c.JSON(http.StatusNotFound, gin.H{"valid": false, "error": "License key not found"})
+                        return
+                }
                 c.JSON(http.StatusOK, gin.H{
                         "valid":         true,
                         "type":          "PREMIUM",

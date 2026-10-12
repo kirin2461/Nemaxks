@@ -167,9 +167,15 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
                 c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
                 c.Header("Permissions-Policy", "geolocation=(), microphone=(self), camera=(self)")
 
+                // CSP: script-src максимально строгий — без 'unsafe-inline' и
+                // 'unsafe-eval'. Проверено по frontend/index.html и сборке Vite:
+                // инлайн-<script> нет, eval/new Function во frontend/src нет,
+                // cdn.jsdelivr.net не используется. 'unsafe-inline' оставлен
+                // только для style-src: React-библиотеки часто инлайнят стили,
+                // ужесточение style-src может сломать UI (риск принят осознанно).
                 cspDirectives := []string{
                         "default-src 'self'",
-                        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
+                        "script-src 'self'",
                         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                         "font-src 'self' https://fonts.gstatic.com",
                         "img-src 'self' data: https: blob:",

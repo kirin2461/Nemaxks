@@ -250,11 +250,28 @@ func sseEventsHandler(c *gin.Context) {
                 if token != "" {
                         claims := jwt.MapClaims{}
                         parsedToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+                                // Security: принимаем только HMAC-подпись (защита от alg=none/alg confusion)
+                                if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+                                        return nil, jwt.ErrSignatureInvalid
+                                }
                                 return getJWTSecret(), nil
                         })
                         if err == nil && parsedToken.Valid {
-                                if uid, ok := claims["user_id"].(float64); ok {
-                                        userID = fmt.Sprintf("%d", int(uid))
+                                // Отозванные токены/сессии не принимаем
+                                revoked := false
+                                if jti, ok := claims["jti"].(string); ok && jti != "" && isTokenBlacklisted(jti) {
+                                        revoked = true
+                                }
+                                if sid, ok := claims["sid"].(string); ok && sid != "" && isSessionBlacklisted(sid) {
+                                        revoked = true
+                                }
+                                if !revoked {
+                                        // Поддерживаем оба claim: "user_id" (legacy) и "uid" (enhanced)
+                                        if uid, ok := claims["user_id"].(float64); ok {
+                                                userID = fmt.Sprintf("%d", int(uid))
+                                        } else if uid, ok := claims["uid"].(float64); ok {
+                                                userID = fmt.Sprintf("%d", int(uid))
+                                        }
                                 }
                         }
                 }
@@ -264,10 +281,13 @@ func sseEventsHandler(c *gin.Context) {
                 return
         }
 
+        // CORS: только origins из allowlist (см. isOriginAllowed в main.go),
+        // никакого отражения произвольного Origin.
         origin := c.GetHeader("Origin")
-        if origin != "" {
+        if origin != "" && isOriginAllowed(origin) {
                 c.Header("Access-Control-Allow-Origin", origin)
                 c.Header("Access-Control-Allow-Credentials", "true")
+                c.Header("Vary", "Origin")
         }
         c.Header("Content-Type", "text/event-stream")
         c.Header("Cache-Control", "no-cache")

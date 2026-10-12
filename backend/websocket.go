@@ -156,6 +156,37 @@ func (vr *VoiceRoster) RemoveUser(userID string) {
         }
 }
 
+// canJoinVoiceChannel проверяет членство и права пользователя на голосовой канал
+// (переиспользует hasChannelAccess из handlers_channels.go и
+// checkChannelVoicePermission из handlers_livekit.go).
+func canJoinVoiceChannel(userIDStr, channelIDStr string) bool {
+        uid, err := strconv.ParseUint(userIDStr, 10, 32)
+        if err != nil {
+                return false
+        }
+        chanID, err := strconv.ParseUint(channelIDStr, 10, 32)
+        if err != nil {
+                return false
+        }
+
+        var channel Channel
+        if db.First(&channel, chanID).Error != nil {
+                return false
+        }
+
+        // Членство/доступ к каналу (приватность, роли гильдии, membership)
+        if !hasChannelAccess(uint(uid), channel) {
+                return false
+        }
+
+        // Голосовые права (per-user/per-role allow/deny)
+        if !checkChannelVoicePermission(channel.ID, uint(uid), channel.GuildID) {
+                return false
+        }
+
+        return true
+}
+
 func getStringFromMap(m map[string]interface{}, key string) string {
         if v, ok := m[key]; ok {
                 switch val := v.(type) {
@@ -464,6 +495,23 @@ func (c *WSClient) readPump() {
                                 isMuted, _ := msg["is_muted"].(bool)
                                 isDeafened, _ := msg["is_deafened"].(bool)
 
+                                // Security: проверяем доступ к каналу перед входом в голосовой
+                                // roster (ранее любой аутентифицированный пользователь мог
+                                // войти в чужой/приватный голосовой канал).
+                                if !canJoinVoiceChannel(c.UserID, channelID) {
+                                        log.Printf("Voice join REJECTED: user %s has no access to channel %s", c.UserID, channelID)
+                                        select {
+                                        case c.Send <- map[string]interface{}{
+                                                "type":       "voice-error",
+                                                "channel_id": channelID,
+                                                "error":      "access_denied",
+                                                "message":    "You don't have access to this voice channel",
+                                        }:
+                                        default:
+                                        }
+                                        continue
+                                }
+
                                 voiceRoster.Join(channelID, c.UserID, username, avatar, isMuted, isDeafened)
                                 log.Printf("Voice join: user %s joined channel %s", c.UserID, channelID)
                                 hub.broadcast <- msg
@@ -561,6 +609,18 @@ func handleWSConnection(c *gin.Context) {
                 return
         }
 
+        // Отозванные токены/сессии (logout/revoke) не принимаем
+        if jti, ok := (*claims)["jti"].(string); ok && jti != "" && isTokenBlacklisted(jti) {
+                log.Println("WebSocket connection rejected: token revoked")
+                c.AbortWithStatus(401)
+                return
+        }
+        if sid, ok := (*claims)["sid"].(string); ok && sid != "" && isSessionBlacklisted(sid) {
+                log.Println("WebSocket connection rejected: session revoked")
+                c.AbortWithStatus(401)
+                return
+        }
+
         uid, ok := (*claims)["user_id"].(float64)
         if !ok {
                 // Fallback to "uid" claim (used by enhanced JWT)
@@ -626,6 +686,18 @@ func handleWSTunnelConnection(c *gin.Context) {
         claims, ok := token.Claims.(*jwt.MapClaims)
         if !ok {
                 log.Println("WSTunnel connection rejected: invalid claims")
+                c.AbortWithStatus(401)
+                return
+        }
+
+        // Отозванные токены/сессии (logout/revoke) не принимаем
+        if jti, ok := (*claims)["jti"].(string); ok && jti != "" && isTokenBlacklisted(jti) {
+                log.Println("WSTunnel connection rejected: token revoked")
+                c.AbortWithStatus(401)
+                return
+        }
+        if sid, ok := (*claims)["sid"].(string); ok && sid != "" && isSessionBlacklisted(sid) {
+                log.Println("WSTunnel connection rejected: session revoked")
                 c.AbortWithStatus(401)
                 return
         }

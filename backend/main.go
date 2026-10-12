@@ -102,6 +102,9 @@ func main() {
         r := gin.New()
         r.Use(gin.Recovery())
         configureTrustedProxies(r)
+
+        // Fail-fast: в release без JWT_SECRET не стартуем (см. getJWTSecret)
+        getJWTSecret()
         
         // Health check endpoint - must respond before full init
         r.GET("/health", func(c *gin.Context) {

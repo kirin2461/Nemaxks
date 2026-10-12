@@ -475,7 +475,9 @@ func getUserSettingsHandler(c *gin.Context) {
                 db.Create(&settings)
         }
 
-        c.JSON(http.StatusOK, settings)
+        // Security: AI-ключи (OpenAI/DeepSeek/HuggingFace) отдаём только в
+        // замаскированном виде (последние 4 символа), никогда целиком.
+        c.JSON(http.StatusOK, settings.MaskedCopy())
 }
 
 func updateUserSettingsHandler(c *gin.Context) {
@@ -514,6 +516,21 @@ func updateUserSettingsHandler(c *gin.Context) {
                         MessagePrivacy:       "everyone",
                 }
                 db.Create(&settings)
+        }
+
+        // Security: AI-ключи не затираем маской или пустым значением
+        // (клиент получает ключи замаскированными и шлёт их обратно как есть).
+        // Явный null в JSON = очистить ключ.
+        for _, keyField := range []string{"openai_key", "deepseek_key", "huggingface_key"} {
+                if val, present := req[keyField]; present {
+                        if val == nil {
+                                req[keyField] = "" // явная очистка ключа
+                                continue
+                        }
+                        if str, isString := val.(string); isString && IsMaskedAPIKey(str) {
+                                delete(req, keyField)
+                        }
+                }
         }
 
         db.Model(&settings).Updates(req)

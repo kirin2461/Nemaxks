@@ -153,12 +153,15 @@ func contains(s, substr string) bool {
         return strings.Contains(s, substr)
 }
 
+// callHuggingFace использует системный ключ из env HUGGINGFACE_API_KEY.
 func callHuggingFace(messages []ChatMessage) (*ChatCompletionResponse, error) {
-        return callHuggingFaceModel(messages, "mistralai/Mistral-7B-Instruct-v0.3")
+        return callHuggingFaceModel(messages, "mistralai/Mistral-7B-Instruct-v0.3", os.Getenv("HUGGINGFACE_API_KEY"))
 }
 
-func callHuggingFaceModel(messages []ChatMessage, modelID string) (*ChatCompletionResponse, error) {
-        apiKey := os.Getenv("HUGGINGFACE_API_KEY")
+// callHuggingFaceModel вызывает HF Inference API с явно переданным apiKey.
+// Ключ передаётся параметром (а не через os.Setenv) — глобальная мутация env
+// из хендлера давала гонку и протекание пользовательского ключа другим запросам.
+func callHuggingFaceModel(messages []ChatMessage, modelID string, apiKey string) (*ChatCompletionResponse, error) {
         if apiKey == "" {
                 return nil, nil
         }
@@ -346,12 +349,9 @@ userIDVal, ok := c.Get("user_id")
         }
 
         if userSettings.HuggingFaceKey != "" {
-                // Temporarily override env for this call
-                originalKey := os.Getenv("HUGGINGFACE_API_KEY")
-                os.Setenv("HUGGINGFACE_API_KEY", userSettings.HuggingFaceKey)
-                response, err = callHuggingFace(messages)
-                os.Setenv("HUGGINGFACE_API_KEY", originalKey)
-                
+                // Пользовательский ключ передаём явно, без мутации глобального env
+                response, err = callHuggingFaceModel(messages, "mistralai/Mistral-7B-Instruct-v0.3", userSettings.HuggingFaceKey)
+
                 if err == nil && response != nil {
                         provider = "huggingface (user key)"
                         model = "mistral-7b"
@@ -360,13 +360,14 @@ userIDVal, ok := c.Get("user_id")
 
         // Fallback to system key
         if response == nil && os.Getenv("HUGGINGFACE_API_KEY") != "" {
+                systemKey := os.Getenv("HUGGINGFACE_API_KEY")
                 // Try Qwen 2.5 Instruct first as it's superior for general tasks and multilingual
                 model = "Qwen/Qwen2.5-72B-Instruct"
-                response, err = callHuggingFaceModel(messages, model)
+                response, err = callHuggingFaceModel(messages, model, systemKey)
                 if err != nil {
                         log.Printf("Qwen 2.5 API error: %v, falling back to Mistral", err)
                         model = "mistralai/Mistral-7B-Instruct-v0.3"
-                        response, err = callHuggingFaceModel(messages, model)
+                        response, err = callHuggingFaceModel(messages, model, systemKey)
                 }
                 
                 if err != nil {

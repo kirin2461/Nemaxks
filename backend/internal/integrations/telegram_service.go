@@ -120,8 +120,9 @@ func (ts *TelegramService) HandleWebhook(data []byte) error {
 		return fmt.Errorf("failed to save telegram message: %w", err)
 	}
 
-	log.Printf("Telegram message saved: user=%s, chat=%s, content=%s",
-		chatMsg.UserID, chatMsg.ChatID, chatMsg.Content)
+	// Security: содержимое сообщения в логи не пишем — только метаданные
+	log.Printf("Telegram message saved: user=%s, chat=%s, msg_id=%s, len=%d",
+		chatMsg.UserID, chatMsg.ChatID, chatMsg.SourceMessageID, len(chatMsg.Content))
 
 	return nil
 }

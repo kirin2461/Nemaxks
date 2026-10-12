@@ -1,6 +1,7 @@
 package main
 
 import (
+        "strings"
         "time"
 
         "github.com/lib/pq"
@@ -475,6 +476,36 @@ type GuildMemberRole struct {
         GuildID uint `gorm:"index" json:"guild_id"`
         UserID  uint `gorm:"index" json:"user_id"`
         RoleID  uint `gorm:"index" json:"role_id"`
+}
+
+// MaskAPIKey маскирует API-ключ для отдачи в JSON: видны только первые 3
+// и последние 4 символа (например "sk-...1234"). Пустой ключ остаётся пустым.
+func MaskAPIKey(key string) string {
+        if key == "" {
+                return ""
+        }
+        if len(key) <= 7 {
+                return "****"
+        }
+        return key[:3] + "..." + key[len(key)-4:]
+}
+
+// IsMaskedAPIKey определяет, является ли значение маской (а не новым ключом).
+// Маски/пустые значения при сохранении не должны затирать реальный ключ.
+func IsMaskedAPIKey(value string) bool {
+        return value == "" || strings.Contains(value, "...") || strings.Contains(value, "****")
+}
+
+// MaskedCopy возвращает копию настроек с замаскированными AI-ключами для JSON.
+// TODO(security): ключи хранятся в БД в plaintext — готового AES-хелпера
+// at-rest в проекте нет (encryption.go — это E2E для сообщений). При
+// появлении общего шифрования at-rest шифровать OpenAIKey/DeepSeekKey/HuggingFaceKey.
+func (s *UserSettings) MaskedCopy() UserSettings {
+        masked := *s
+        masked.OpenAIKey = MaskAPIKey(s.OpenAIKey)
+        masked.DeepSeekKey = MaskAPIKey(s.DeepSeekKey)
+        masked.HuggingFaceKey = MaskAPIKey(s.HuggingFaceKey)
+        return masked
 }
 
 // User Settings Extended
