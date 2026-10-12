@@ -153,8 +153,12 @@ Unlike end-to-end encrypted platforms, Nemaks intentionally enables server-side 
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/kirin2461/654911.git
+# jarvis/ — git submodule, поэтому нужен --recurse-submodules
+git clone --recurse-submodules https://github.com/kirin2461/654911.git
 cd 654911
+
+# Если уже склонировали без submodules:
+git submodule update --init --recursive
 ```
 
 2. **Configure environment**
@@ -212,21 +216,50 @@ The application will be available at:
 For a complete containerized setup:
 
 ```bash
-docker-compose up -d
+cp .env.example .env
+# Обязательно задайте POSTGRES_PASSWORD, REDIS_PASSWORD, JWT_SECRET в .env
+docker compose up -d --build
 ```
 
 This will start:
-- PostgreSQL database (port 5432)
-- Redis cache (port 6379)
-- Rust audit service (port 50051)
-- Rust search service (port 50052)
+- PostgreSQL database (port 5432, пароль обязателен — `${POSTGRES_PASSWORD:?required}`)
+- Redis cache (port 6379, `--requirepass ${REDIS_PASSWORD}`)
+- LiveKit voice/video server (ports 7880/7881/7882, конфиг — `livekit.yaml`)
+- Go backend API (port 8000)
+- Frontend production build за nginx (port 5173)
 
-To include the Go backend in Docker:
+Development frontend (vite dev server с hot reload, порт 5174):
 
 ```bash
-# Uncomment the backend service in docker-compose.yml
-docker-compose up -d
+docker compose --profile dev up -d
 ```
+
+> **Rust services (audit/search) НЕ входят в корневой docker-compose.yml.**
+> Они собираются отдельно: `docker compose -f rust-services/docker-compose.yml build`
+> (build context — корень репозитория, нужен каталог `proto/`).
+> Статус — experimental, см. ниже.
+
+### gRPC (experimental)
+
+gRPC-транспорт (`envoy.yaml`, `backend/grpc_server.go`, `backend/grpc_clients.go`,
+`backend/proto/`, `rust-services/`) в данный момент **не активен**:
+gRPC-сервер нигде не запускается, `backend/proto/*.pb.go` — рукописные
+заглушки. Вся функциональность доступна по HTTP/WebSocket API Go-бэкенда.
+Файлы оставлены как заготовка на будущее.
+
+### Скрипты запуска (legacy) и Makefile
+
+Рекомендуемый способ — Makefile (`make build`, `make test`, `make docker-up`,
+`make docker-down`, `make help`). Legacy-скрипты в корне сохранены для
+совместимости:
+
+| Скрипт | Назначение |
+|---|---|
+| `start.sh` / `start.bat` | Запуск backend + frontend для локальной разработки |
+| `stop.sh` / `stop.bat` | Остановка запущенных процессов |
+| `quick-start.bat` | Быстрый старт (Windows) |
+| `start-backend.bat` / `RUN.bat` / `install-backend.bat` | Запуск/установка только backend (Windows) |
+| `validate.sh` / `validate.bat` | Валидация изменений (проверки сборки) |
 
 ### Manual Setup
 
