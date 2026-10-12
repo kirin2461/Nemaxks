@@ -66,13 +66,21 @@ jobs:
             echo "No test files found, skipping tests"
           fi
 
+      # Компиляция ВСЕХ пакетов (включая proto/ и internal/ без тестов)
+      - name: Compile all packages
+        working-directory: ./backend
+        run: go build ./...
+
+      # Тесты существуют только в корневом пакете backend — запускаем точечно.
+      # Вариант с ./... и -coverprofile требует слияния профилей (covdata)
+      # для пакетов без тестов и падал в CI с exit 1 при зелёных тестах.
       - name: Run tests
         if: steps.check_tests.outputs.tests_exist == 'true'
         working-directory: ./backend
         env:
           DATABASE_URL: postgres://test:test@localhost:5432/nemaxks_test?sslmode=disable
           JWT_SECRET: test-secret-key-for-ci
-        run: go test -v -race -coverprofile=coverage.out ./...
+        run: go test -v -race -coverprofile=coverage.out .
 
       - name: Build check
         working-directory: ./backend
@@ -99,6 +107,21 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      # Диагностика окружения — попадает в публичный step summary
+      - name: Diagnose toolchain
+        working-directory: ./frontend
+        run: |
+          echo "### Frontend toolchain" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          node --version >> "$GITHUB_STEP_SUMMARY" 2>&1
+          npm --version >> "$GITHUB_STEP_SUMMARY" 2>&1
+          npm config get omit >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          echo "NODE_ENV=$NODE_ENV" >> "$GITHUB_STEP_SUMMARY"
+          npm ls typescript vitest @types/node >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          ls node_modules/.bin/tsc node_modules/.bin/vite >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          ./node_modules/.bin/tsc --version >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
       # Advisory: eslint запускается, но пока в кодовой базе есть
       # legacy-ошибки линта — не блокируем CI (см. отчёт lint).
       - name: Run ESLint
@@ -115,9 +138,14 @@ jobs:
 
       - name: Build
         working-directory: ./frontend
-        run: npm run build
         env:
           CI: false
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee /tmp/fe-build.log || {
+            tail -25 /tmp/fe-build.log | while read -r l; do echo "::error::$l"; done
+            exit 1
+          }
 
   # Security scanning (advisory: сканер уязвимостей не блокирует pipeline,
   # результаты разбираются вручную)
