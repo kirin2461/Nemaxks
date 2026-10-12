@@ -59,17 +59,17 @@ export function QRCodeModal({
         </div>
 
         {description && (
-          <p className="text-gray-400 text-sm">{description}</p>
+          <p className="text-muted-foreground text-sm">{description}</p>
         )}
 
-        <div className="p-3 bg-white/5 rounded-lg">
-          <p className="text-white text-sm font-mono break-all">{value}</p>
+        <div className="p-3 bg-muted/60 rounded-lg">
+          <p className="text-foreground text-sm font-mono break-all">{value}</p>
         </div>
 
         <div className="flex gap-3">
           <button
             onClick={handleCopy}
-            className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors flex items-center justify-center gap-2"
           >
             {copied ? (
               <>

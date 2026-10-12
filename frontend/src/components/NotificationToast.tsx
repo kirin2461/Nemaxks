@@ -89,7 +89,7 @@ function NotificationToast({ notification, onDismiss }: NotificationToastProps) 
                 e.stopPropagation()
                 handleDismiss()
               }}
-              className="p-1 rounded-full hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="w-4 h-4" />
             </button>

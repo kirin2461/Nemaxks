@@ -95,7 +95,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           <Upload size={32} className="text-blue-500" />
         </div>
         <p className="text-lg font-semibold text-gray-700">Drag files here or click to upload</p>
-        <p className="text-sm text-gray-500 mt-2">Maximum file size: {maxSize}MB</p>
+        <p className="text-sm text-muted-foreground mt-2">Maximum file size: {maxSize}MB</p>
       </div>
 
       {/* File List */}
@@ -107,7 +107,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
               <FileIcon size={20} className="text-blue-500 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-800 truncate">{uploadFile.file.name}</p>
-                <p className="text-xs text-gray-500">{formatFileSize(uploadFile.file.size)}</p>
+                <p className="text-xs text-muted-foreground">{formatFileSize(uploadFile.file.size)}</p>
                 {uploadFile.status === 'uploading' && (
                   <div className="mt-1 bg-gray-200 rounded-full h-1.5 overflow-hidden">
                     <div

@@ -748,7 +748,7 @@ export default function MessagesPage() {
 
   return (
     <Layout>
-      <div className="h-full lg:h-screen flex flex-col lg:flex-row">
+      <div className="h-full flex flex-col lg:flex-row">
         {/* Conversations list */}
         <div className={`${selectedUser ? 'hidden lg:flex' : 'flex'} w-full lg:w-80 bg-card border-r border-border flex-col`}>
           {/* Search and New Message */}
@@ -764,7 +764,7 @@ export default function MessagesPage() {
               </button>
               <button
                 onClick={() => setShowCreateGroup(true)}
-                className="p-2 hover:bg-[#35373c] rounded-lg transition-colors"
+                className="p-2 hover:bg-accent rounded-lg transition-colors"
                 title="Создать группу"
               >
                 <Users className="w-5 h-5" />
@@ -847,7 +847,7 @@ export default function MessagesPage() {
                       e.stopPropagation()
                       conversationContextMenu.showContextMenu(e as any, getConversationContextMenuItems(conv.user))
                     }}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent/20 rounded transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 p-1 hover:bg-accent/20 rounded transition-opacity"
                   >
                     <MoreVertical className="w-4 h-4" />
                   </button>
@@ -1105,7 +1105,7 @@ export default function MessagesPage() {
                           {message.reply_to_id && (() => {
                             const repliedMessage = message.reply_to || messages.find(m => parseInt(m.id) === message.reply_to_id)
                             return (
-                              <div className={`mb-2 p-2 rounded border-l-2 ${isSent ? 'bg-white/10 border-white/30' : 'bg-muted border-primary/30'}`}>
+                              <div className={`mb-2 p-2 rounded border-l-2 ${isSent ? 'bg-muted border-white/30' : 'bg-muted border-primary/30'}`}>
                                 <p className={`text-xs font-medium ${isSent ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                                   {repliedMessage ? (String(repliedMessage.sender_id) === String(user?.id) ? 'You' : selectedUser?.username) : 'Message'}
                                 </p>
@@ -1151,7 +1151,7 @@ export default function MessagesPage() {
                               <span className="text-xs">{formatRecordingTime(message.voice_duration || 0)}</span>
                             </div>
                           ) : (
-                            <p className="whitespace-pre-wrap">{message.content}</p>
+                            <p className="whitespace-pre-wrap break-words">{message.content}</p>
                           )}
 
                           <div className="flex items-center gap-1 mt-1">

@@ -579,7 +579,7 @@ export default function FeedPage() {
 
   return (
     <Layout>
-      <div className="h-full lg:h-screen flex flex-col lg:flex-row overflow-hidden bg-nebula">
+      <div className="h-full flex flex-col lg:flex-row overflow-hidden bg-nebula">
         {/* Mobile Filter Tabs */}
         <div className="lg:hidden flex flex-col gap-2 p-3 border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
           <div className="flex overflow-x-auto gap-2">

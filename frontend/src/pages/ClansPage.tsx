@@ -52,14 +52,14 @@ export default function ClansPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ export default function ClansPage() {
                 key={clan.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gray-800 rounded-xl p-6 cursor-pointer hover:bg-gray-750 transition-colors"
+                className="bg-card rounded-xl p-6 cursor-pointer hover:bg-muted transition-colors"
                 onClick={() => setSelectedClan(clan.id)}
                 style={{ borderLeft: `4px solid ${clan.color}` }}
               >
@@ -103,8 +103,8 @@ export default function ClansPage() {
                           <Lock className="w-4 h-4 text-yellow-400" />
                         )}
                       </div>
-                      <p className="text-gray-400 text-sm">{clan.description || 'No description'}</p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                      <p className="text-muted-foreground text-sm">{clan.description || 'No description'}</p>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Crown className="w-4 h-4 text-yellow-400" />
                           {clan.leader?.username || 'Unknown'}
@@ -113,7 +113,7 @@ export default function ClansPage() {
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
                 </div>
 
                 {clan.is_public && (
@@ -132,38 +132,38 @@ export default function ClansPage() {
             ))}
 
             {clans.length === 0 && (
-              <div className="bg-gray-800 rounded-xl p-12 text-center">
-                <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <div className="bg-card rounded-xl p-12 text-center">
+                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-bold mb-2">No clans yet</h3>
-                <p className="text-gray-400">Be the first to create a clan!</p>
+                <p className="text-muted-foreground">Be the first to create a clan!</p>
               </div>
             )}
           </div>
 
           <div>
             {selectedClan ? (
-              <div className="bg-gray-800 rounded-xl p-6 sticky top-6">
+              <div className="bg-card rounded-xl p-6 sticky top-6">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <Target className="w-5 h-5 text-green-400" />
                   Clan Challenges
                 </h3>
                 <div className="space-y-3">
                   {challenges.map((challenge: ClanChallenge) => (
-                    <div key={challenge.id} className="bg-gray-700/50 rounded-lg p-4">
+                    <div key={challenge.id} className="bg-secondary/50 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium">{challenge.name}</span>
                         {challenge.is_completed && (
                           <span className="text-green-400 text-xs">Completed</span>
                         )}
                       </div>
-                      <p className="text-gray-400 text-sm mb-2">{challenge.description}</p>
-                      <div className="w-full bg-gray-600 rounded-full h-2 mb-2">
+                      <p className="text-muted-foreground text-sm mb-2">{challenge.description}</p>
+                      <div className="w-full bg-muted rounded-full h-2 mb-2">
                         <div
                           className="bg-green-500 h-2 rounded-full"
                           style={{ width: `${(challenge.progress / challenge.goal) * 100}%` }}
                         />
                       </div>
-                      <div className="flex justify-between text-xs text-gray-500">
+                      <div className="flex justify-between text-xs text-muted-foreground">
                         <span>
                           {challenge.progress}/{challenge.goal}
                         </span>
@@ -172,14 +172,14 @@ export default function ClansPage() {
                     </div>
                   ))}
                   {challenges.length === 0 && (
-                    <p className="text-gray-400 text-center py-4">No active challenges</p>
+                    <p className="text-muted-foreground text-center py-4">No active challenges</p>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-800 rounded-xl p-8 text-center sticky top-6">
-                <Target className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">Select a clan to view challenges</p>
+              <div className="bg-card rounded-xl p-8 text-center sticky top-6">
+                <Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Select a clan to view challenges</p>
               </div>
             )}
           </div>
@@ -190,30 +190,30 @@ export default function ClansPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-gray-800 rounded-xl p-6 w-full max-w-md m-4"
+              className="bg-card rounded-xl p-6 w-full max-w-md m-4"
             >
               <h3 className="text-xl font-bold mb-4">Create Clan</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Clan Name</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Clan Name</label>
                   <input
                     type="text"
                     value={newClanName}
                     onChange={e => setNewClanName(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Description</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Description</label>
                   <textarea
                     value={newClanDesc}
                     onChange={e => setNewClanDesc(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                     rows={3}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Color</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Color</label>
                   <input
                     type="color"
                     value={newClanColor}
@@ -233,7 +233,7 @@ export default function ClansPage() {
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setShowCreateModal(false)}
-                    className="flex-1 py-2 bg-gray-700 rounded-lg hover:bg-gray-600"
+                    className="flex-1 py-2 bg-secondary rounded-lg hover:bg-muted"
                   >
                     Cancel
                   </button>

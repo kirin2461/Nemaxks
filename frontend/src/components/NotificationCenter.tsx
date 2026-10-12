@@ -122,7 +122,7 @@ export function NotificationCenter() {
                             e.stopPropagation()
                             clearNotification(notification.id)
                           }}
-                          className="p-1 rounded hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1 rounded hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>

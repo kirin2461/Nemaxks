@@ -74,7 +74,7 @@ function Toast({ id, type, title, message, duration = 5000, action, onClose }: T
       <div className="flex-1 min-w-0">
         <p className="text-white font-medium">{title}</p>
         {message && (
-          <p className="text-gray-300 text-sm mt-1 line-clamp-2">{message}</p>
+          <p className="text-foreground text-sm mt-1 line-clamp-2">{message}</p>
         )}
         {action && (
           <button
@@ -88,7 +88,7 @@ function Toast({ id, type, title, message, duration = 5000, action, onClose }: T
 
       <button
         onClick={handleClose}
-        className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
       >
         <X className="w-4 h-4" />
       </button>

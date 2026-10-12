@@ -110,7 +110,7 @@ export default function CreatePollModal({
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-gray-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-purple-500/20 max-h-[90vh] overflow-y-auto"
+          className="bg-card rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-purple-500/20 max-h-[90vh] overflow-y-auto"
           onClick={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-6">
@@ -118,15 +118,15 @@ export default function CreatePollModal({
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-foreground">
                 {language === 'ru' ? 'Создать опрос' : 'Create Poll'}
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-secondary transition-colors"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <X className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
 
@@ -138,7 +138,7 @@ export default function CreatePollModal({
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
+              <label className="block text-sm text-muted-foreground mb-2">
                 {language === 'ru' ? 'Вопрос' : 'Question'} *
               </label>
               <input
@@ -147,12 +147,12 @@ export default function CreatePollModal({
                 onChange={e => setQuestion(e.target.value)}
                 placeholder={language === 'ru' ? 'О чём спросить?' : 'What do you want to ask?'}
                 maxLength={200}
-                className="w-full px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
+              <label className="block text-sm text-muted-foreground mb-2">
                 {language === 'ru' ? 'Описание (опционально)' : 'Description (optional)'}
               </label>
               <textarea
@@ -161,12 +161,12 @@ export default function CreatePollModal({
                 placeholder={language === 'ru' ? 'Дополнительная информация...' : 'Additional context...'}
                 maxLength={500}
                 rows={2}
-                className="w-full px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none resize-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
+              <label className="block text-sm text-muted-foreground mb-2">
                 {language === 'ru' ? 'Варианты ответа' : 'Answer options'} *
               </label>
               <div className="space-y-2">
@@ -178,12 +178,12 @@ export default function CreatePollModal({
                       onChange={e => updateOption(index, e.target.value)}
                       placeholder={`${language === 'ru' ? 'Вариант' : 'Option'} ${index + 1}`}
                       maxLength={100}
-                      className="flex-1 px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-purple-500 outline-none"
+                      className="flex-1 px-4 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 outline-none"
                     />
                     {options.length > 2 && (
                       <button
                         onClick={() => removeOption(index)}
-                        className="p-2 rounded-lg bg-gray-700 hover:bg-red-600/50 text-gray-400 hover:text-red-400 transition-colors"
+                        className="p-2 rounded-lg bg-secondary hover:bg-red-600/50 text-muted-foreground hover:text-red-400 transition-colors"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -195,7 +195,7 @@ export default function CreatePollModal({
               {options.length < 10 && (
                 <button
                   onClick={addOption}
-                  className="mt-2 w-full px-4 py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-purple-500 hover:text-purple-400 transition-colors flex items-center justify-center gap-2"
+                  className="mt-2 w-full px-4 py-2 rounded-lg border border-dashed border-border text-muted-foreground hover:border-purple-500 hover:text-purple-400 transition-colors flex items-center justify-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   {language === 'ru' ? 'Добавить вариант' : 'Add option'}
@@ -204,14 +204,14 @@ export default function CreatePollModal({
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
+              <label className="block text-sm text-muted-foreground mb-2">
                 <Clock className="w-4 h-4 inline-block mr-1" />
                 {language === 'ru' ? 'Длительность' : 'Duration'}
               </label>
               <select
                 value={duration}
                 onChange={e => setDuration(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 text-white focus:border-purple-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:border-purple-500 outline-none"
               >
                 {DURATION_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>
@@ -227,9 +227,9 @@ export default function CreatePollModal({
                   type="checkbox"
                   checked={multiChoice}
                   onChange={e => setMultiChoice(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                  className="w-5 h-5 rounded border-border bg-secondary text-purple-600 focus:ring-purple-500"
                 />
-                <span className="text-sm text-gray-300">
+                <span className="text-sm text-foreground">
                   {language === 'ru' ? 'Множественный выбор' : 'Multiple choice'}
                 </span>
               </label>
@@ -239,9 +239,9 @@ export default function CreatePollModal({
                   type="checkbox"
                   checked={anonymous}
                   onChange={e => setAnonymous(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                  className="w-5 h-5 rounded border-border bg-secondary text-purple-600 focus:ring-purple-500"
                 />
-                <span className="text-sm text-gray-300">
+                <span className="text-sm text-foreground">
                   {language === 'ru' ? 'Анонимный опрос' : 'Anonymous poll'}
                 </span>
               </label>
@@ -251,7 +251,7 @@ export default function CreatePollModal({
           <div className="flex gap-3 mt-6">
             <button
               onClick={onClose}
-              className="px-4 py-3 rounded-xl bg-gray-700 text-gray-300 font-semibold hover:bg-gray-600 transition-colors"
+              className="px-4 py-3 rounded-xl bg-secondary text-foreground font-semibold hover:bg-muted transition-colors"
             >
               {language === 'ru' ? 'Отмена' : 'Cancel'}
             </button>

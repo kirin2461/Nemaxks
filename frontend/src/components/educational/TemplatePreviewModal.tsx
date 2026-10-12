@@ -25,7 +25,7 @@ interface TemplatePreviewModalProps {
 }
 
 const planConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  free: { label: "Бесплатно", color: "text-gray-400", icon: <Zap size={16} /> },
+  free: { label: "Бесплатно", color: "text-muted-foreground", icon: <Zap size={16} /> },
   edu_basic: { label: "Базовый план", color: "text-blue-400", icon: <Star size={16} /> },
   edu_pro: { label: "Про план", color: "text-purple-400", icon: <Crown size={16} /> },
 };
@@ -75,9 +75,9 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl md:max-h-[85vh] bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col"
+            className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl md:max-h-[85vh] bg-background border border-border rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col"
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-800">
+            <div className="flex items-center justify-between p-6 border-b border-border">
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-xl ${
                   template.tool_type === "notebook" ? "bg-blue-600/20 text-blue-400" :
@@ -87,14 +87,14 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
                   {toolTypeIcons[template.tool_type]}
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">{template.name}</h2>
-                  <p className="text-sm text-gray-400">{toolTypeLabels[template.tool_type]}</p>
+                  <h2 className="text-xl font-bold text-foreground">{template.name}</h2>
+                  <p className="text-sm text-muted-foreground">{toolTypeLabels[template.tool_type]}</p>
                 </div>
               </div>
               
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                className="p-2 rounded-lg hover:bg-card text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X size={20} />
               </button>
@@ -102,8 +102,8 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div>
-                <h3 className="text-sm font-medium text-gray-400 mb-2">Описание</h3>
-                <p className="text-white">{template.description}</p>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Описание</h3>
+                <p className="text-foreground">{template.description}</p>
               </div>
 
               <div className="flex items-center gap-4">
@@ -111,19 +111,19 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
                   {plan.icon}
                   <span className="font-medium">{plan.label}</span>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   {template.usage_count.toLocaleString()} использований
                 </div>
               </div>
 
               {features.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-400 mb-3">Возможности</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Возможности</h3>
                   <div className="grid grid-cols-2 gap-2">
                     {features.map((feature, i) => (
-                      <div key={i} className="flex items-center gap-2 p-3 bg-gray-800/50 rounded-lg">
+                      <div key={i} className="flex items-center gap-2 p-3 bg-card/50 rounded-lg">
                         <CheckCircle size={16} className="text-green-500 flex-shrink-0" />
-                        <span className="text-sm text-white capitalize">{feature.replace(/_/g, " ")}</span>
+                        <span className="text-sm text-foreground capitalize">{feature.replace(/_/g, " ")}</span>
                       </div>
                     ))}
                   </div>
@@ -132,10 +132,10 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
 
               {sections.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-400 mb-3">Разделы</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Разделы</h3>
                   <div className="flex flex-wrap gap-2">
                     {sections.map((section, i) => (
-                      <span key={i} className="px-3 py-1.5 bg-gray-800/50 rounded-lg text-sm text-white capitalize">
+                      <span key={i} className="px-3 py-1.5 bg-card/50 rounded-lg text-sm text-foreground capitalize">
                         {section.replace(/_/g, " ")}
                       </span>
                     ))}
@@ -144,18 +144,18 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
               )}
 
               <div className="p-4 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/20 rounded-xl">
-                <h4 className="font-medium text-white mb-2">Как использовать</h4>
-                <p className="text-sm text-gray-400">
+                <h4 className="font-medium text-foreground mb-2">Как использовать</h4>
+                <p className="text-sm text-muted-foreground">
                   Нажмите "Открыть шаблон", чтобы создать новый документ на основе этого шаблона. 
                   Все настройки и инструменты будут готовы к использованию.
                 </p>
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-800 flex gap-3">
+            <div className="p-6 border-t border-border flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-medium transition-colors"
+                className="flex-1 px-4 py-3 bg-card hover:bg-secondary text-foreground rounded-xl font-medium transition-colors"
               >
                 Закрыть
               </button>

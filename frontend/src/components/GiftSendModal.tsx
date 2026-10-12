@@ -73,7 +73,7 @@ export function GiftSendModal({
             <Gift className="w-10 h-10 text-white" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Подарок отправлен!</h2>
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             {recipientName} получит ваш подарок
           </p>
           <button
@@ -90,7 +90,7 @@ export function GiftSendModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Отправить подарок" size="lg">
       <div className="space-y-4">
-        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div className="flex items-center gap-3 p-3 bg-muted/60 rounded-lg">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
             {recipientAvatar ? (
               <img src={recipientAvatar} alt="" className="w-full h-full object-cover" />
@@ -100,12 +100,12 @@ export function GiftSendModal({
           </div>
           <div>
             <p className="text-white font-medium">{recipientName}</p>
-            <p className="text-gray-400 text-sm">Получатель подарка</p>
+            <p className="text-muted-foreground text-sm">Получатель подарка</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-          <span className="text-gray-400">Ваш баланс:</span>
+        <div className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
+          <span className="text-muted-foreground">Ваш баланс:</span>
           <div className="flex gap-4">
             <span className="text-yellow-400 font-bold">{userBalance.coins} 🪙</span>
             <span className="text-purple-400 font-bold">{userBalance.gems} 💎</span>
@@ -113,7 +113,7 @@ export function GiftSendModal({
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-2">Выберите подарок</label>
+          <label className="block text-sm text-muted-foreground mb-2">Выберите подарок</label>
           <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
             {gifts.map(gift => {
               const affordable = gift.currency === 'coins'
@@ -129,8 +129,8 @@ export function GiftSendModal({
                     selectedGift === gift.id
                       ? 'border-purple-500 bg-purple-500/20 ring-2 ring-purple-500/30'
                       : affordable
-                      ? 'border-white/10 bg-white/5 hover:bg-white/10'
-                      : 'border-white/5 bg-white/5 opacity-50 cursor-not-allowed'
+                      ? 'border-border bg-muted/60 hover:bg-muted'
+                      : 'border-white/5 bg-muted/60 opacity-50 cursor-not-allowed'
                   }`}
                 >
                   <div className="text-3xl mb-1">{gift.icon}</div>
@@ -150,13 +150,13 @@ export function GiftSendModal({
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-2">Добавить сообщение (необязательно)</label>
+          <label className="block text-sm text-muted-foreground mb-2">Добавить сообщение (необязательно)</label>
           <textarea
             value={message}
             onChange={e => setMessage(e.target.value)}
             maxLength={200}
             rows={2}
-            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none transition-colors resize-none"
+            className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors resize-none"
             placeholder="Напишите что-нибудь приятное..."
           />
         </div>
@@ -171,7 +171,7 @@ export function GiftSendModal({
           <button
             onClick={handleClose}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
           >
             Отмена
           </button>

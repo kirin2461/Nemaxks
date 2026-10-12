@@ -91,3 +91,26 @@ export function throttle<T extends (...args: any[]) => any>(
     }
   }
 }
+
+// Body scroll lock with reference counting (supports nested modals).
+let scrollLockCount = 0
+let savedBodyOverflow: string | null = null
+
+export function lockBodyScroll(): void {
+  if (typeof document === 'undefined') return
+  if (scrollLockCount === 0) {
+    savedBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+  }
+  scrollLockCount++
+}
+
+export function unlockBodyScroll(): void {
+  if (typeof document === 'undefined') return
+  if (scrollLockCount <= 0) return
+  scrollLockCount--
+  if (scrollLockCount === 0) {
+    document.body.style.overflow = savedBodyOverflow ?? ''
+    savedBodyOverflow = null
+  }
+}

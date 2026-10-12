@@ -97,12 +97,12 @@ export function NotificationsPage() {
   const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#16213e] p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Bell className="w-8 h-8 text-purple-400" />
-            <h1 className="text-2xl font-bold text-white">Уведомления</h1>
+            <h1 className="text-2xl font-bold text-foreground">Уведомления</h1>
             {unreadCount > 0 && (
               <span className="px-2 py-0.5 bg-purple-500 rounded-full text-white text-sm font-bold">
                 {unreadCount}
@@ -113,7 +113,7 @@ export function NotificationsPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => loadNotifications(1)}
-              className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Обновить"
             >
               <RefreshCw className="w-5 h-5" />
@@ -121,7 +121,7 @@ export function NotificationsPage() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2 rounded-lg transition-colors ${
-                showFilters ? 'bg-purple-500/20 text-purple-400' : 'hover:bg-white/10 text-gray-400 hover:text-white'
+                showFilters ? 'bg-purple-500/20 text-purple-400' : 'hover:bg-muted text-muted-foreground hover:text-foreground'
               }`}
               title="Фильтры"
             >
@@ -129,7 +129,7 @@ export function NotificationsPage() {
             </button>
             <button
               onClick={() => navigate('/notifications/settings')}
-              className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Настройки"
             >
               <Settings className="w-5 h-5" />
@@ -138,12 +138,12 @@ export function NotificationsPage() {
         </div>
 
         {showFilters && (
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-4 mb-4 animate-in slide-in-from-top-2">
+          <div className="bg-card border border-border rounded-xl p-4 mb-4 animate-in slide-in-from-top-2">
             <div className="flex flex-wrap gap-2 mb-4">
               <button
                 onClick={() => setSelectedType('')}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                  !selectedType ? 'bg-purple-500 text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                  !selectedType ? 'bg-purple-500 text-white' : 'bg-muted/60 text-foreground hover:bg-muted'
                 }`}
               >
                 Все
@@ -153,7 +153,7 @@ export function NotificationsPage() {
                   key={type}
                   onClick={() => setSelectedType(type)}
                   className={`px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1 ${
-                    selectedType === type ? 'bg-purple-500 text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                    selectedType === type ? 'bg-purple-500 text-white' : 'bg-muted/60 text-foreground hover:bg-muted'
                   }`}
                 >
                   <span>{info.icon}</span>
@@ -169,7 +169,7 @@ export function NotificationsPage() {
                 onChange={e => setUnreadOnly(e.target.checked)}
                 className="w-4 h-4 rounded border-gray-500 bg-transparent text-purple-500 focus:ring-purple-500"
               />
-              <span className="text-gray-300 text-sm">Только непрочитанные</span>
+              <span className="text-foreground text-sm">Только непрочитанные</span>
             </label>
           </div>
         )}
@@ -185,15 +185,15 @@ export function NotificationsPage() {
                   className={`p-3 rounded-xl border transition-all ${
                     selectedType === group.type
                       ? 'bg-purple-500/20 border-purple-500'
-                      : 'bg-[#1a1a2e] border-white/10 hover:border-white/20'
+                      : 'bg-card border-border hover:border-white/20'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xl">{info.icon}</span>
-                    <span className="text-white font-medium">{info.label}</span>
+                    <span className="text-foreground font-medium">{info.label}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-400">{group.count} всего</span>
+                    <span className="text-muted-foreground">{group.count} всего</span>
                     {group.unread > 0 && (
                       <span className="text-purple-400">{group.unread} новых</span>
                     )}
@@ -205,7 +205,7 @@ export function NotificationsPage() {
         )}
 
         <div className="flex items-center justify-between mb-4">
-          <p className="text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             {notifications.length} уведомлений
           </p>
           <div className="flex gap-2">
@@ -236,10 +236,10 @@ export function NotificationsPage() {
               <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="text-center py-12 bg-[#1a1a2e] border border-white/10 rounded-xl">
-              <Bell className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-              <p className="text-gray-400 text-lg">Нет уведомлений</p>
-              <p className="text-gray-500 text-sm mt-1">
+            <div className="text-center py-12 bg-card border border-border rounded-xl">
+              <Bell className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground text-lg">Нет уведомлений</p>
+              <p className="text-muted-foreground text-sm mt-1">
                 {unreadOnly ? 'Все уведомления прочитаны' : 'Здесь будут появляться ваши уведомления'}
               </p>
             </div>
@@ -251,8 +251,8 @@ export function NotificationsPage() {
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`flex items-start gap-4 p-4 bg-[#1a1a2e] border rounded-xl transition-all cursor-pointer hover:border-white/20 ${
-                      !notification.is_read ? 'border-purple-500/50 bg-purple-500/5' : 'border-white/10'
+                    className={`flex items-start gap-4 p-4 bg-card border rounded-xl transition-all cursor-pointer hover:border-white/20 ${
+                      !notification.is_read ? 'border-purple-500/50 bg-purple-500/5' : 'border-border'
                     }`}
                   >
                     <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
@@ -270,10 +270,10 @@ export function NotificationsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <p className={`font-medium ${notification.is_read ? 'text-gray-300' : 'text-white'}`}>
+                          <p className={`font-medium ${notification.is_read ? 'text-foreground' : 'text-foreground'}`}>
                             {notification.title}
                           </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {info.label} • {formatNotificationTime(notification.created_at)}
                           </p>
                         </div>
@@ -282,7 +282,7 @@ export function NotificationsPage() {
                         )}
                       </div>
                       {notification.content && (
-                        <p className="text-gray-400 text-sm mt-2 line-clamp-2">
+                        <p className="text-muted-foreground text-sm mt-2 line-clamp-2">
                           {notification.content}
                         </p>
                       )}
@@ -295,7 +295,7 @@ export function NotificationsPage() {
                             e.stopPropagation()
                             handleMarkAsRead(notification.id)
                           }}
-                          className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-green-400 transition-colors"
+                          className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-green-400 transition-colors"
                           title="Прочитано"
                         >
                           <Check className="w-5 h-5" />
@@ -306,7 +306,7 @@ export function NotificationsPage() {
                           e.stopPropagation()
                           handleDelete(notification.id)
                         }}
-                        className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-red-400 transition-colors"
+                        className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-red-400 transition-colors"
                         title="Удалить"
                       >
                         <Trash2 className="w-5 h-5" />
@@ -320,7 +320,7 @@ export function NotificationsPage() {
                 <button
                   onClick={() => loadNotifications(page + 1)}
                   disabled={loading}
-                  className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-gray-300 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-muted/60 hover:bg-muted rounded-xl text-foreground transition-colors flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />

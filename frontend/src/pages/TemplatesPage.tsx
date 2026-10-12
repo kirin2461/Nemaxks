@@ -195,10 +195,10 @@ export function TemplatesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
-          <p className="text-gray-400">{t("common.loading")}</p>
+          <p className="text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -216,8 +216,8 @@ export function TemplatesPage() {
             <Crown className="text-purple-400" size={24} />
           </div>
           <div>
-            <p className="text-white font-medium">{t("templates.unlockWith")} {t("common.premium")}</p>
-            <p className="text-gray-400 text-sm">{freeTemplatesCount} {t("templates.access.free")}</p>
+            <p className="text-foreground font-medium">{t("templates.unlockWith")} {t("common.premium")}</p>
+            <p className="text-muted-foreground text-sm">{freeTemplatesCount} {t("templates.access.free")}</p>
           </div>
         </div>
         <button
@@ -233,20 +233,20 @@ export function TemplatesPage() {
   /* Previously blocked non-premium users entirely - now showing all templates with access control
   if (!hasPremium) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-white p-6">
+      <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-2xl mx-auto text-center py-20">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gradient-to-b from-gray-800/50 to-gray-900/50 border border-gray-700 rounded-3xl p-12"
+            className="bg-gradient-to-b from-card/50 to-background/50 border border-border rounded-3xl p-12"
           >
             <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-purple-600/30">
-              <Lock size={48} className="text-white" />
+              <Lock size={48} className="text-muted-foreground" />
             </div>
             <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Премиум функция
             </h1>
-            <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
+            <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
               Образовательные шаблоны доступны только для премиум пользователей. 
               Оформите подписку, чтобы получить доступ к тетрадям, доскам и редакторам.
             </p>
@@ -254,15 +254,15 @@ export function TemplatesPage() {
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="p-4 bg-blue-600/10 rounded-xl border border-blue-600/20">
                 <BookOpen className="text-blue-400 mx-auto mb-2" size={28} />
-                <p className="text-sm text-gray-300">11 тетрадей</p>
+                <p className="text-sm text-foreground">11 тетрадей</p>
               </div>
               <div className="p-4 bg-green-600/10 rounded-xl border border-green-600/20">
                 <PenTool className="text-green-400 mx-auto mb-2" size={28} />
-                <p className="text-sm text-gray-300">12 досок</p>
+                <p className="text-sm text-foreground">12 досок</p>
               </div>
               <div className="p-4 bg-orange-600/10 rounded-xl border border-orange-600/20">
                 <Code className="text-orange-400 mx-auto mb-2" size={28} />
-                <p className="text-sm text-gray-300">10 редакторов</p>
+                <p className="text-sm text-foreground">10 редакторов</p>
               </div>
             </div>
             
@@ -281,7 +281,7 @@ export function TemplatesPage() {
   */
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -295,7 +295,7 @@ export function TemplatesPage() {
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3">
             {t("templates.title")}
           </h1>
-          <p className="text-gray-400 max-w-xl mx-auto text-lg">
+          <p className="text-muted-foreground max-w-xl mx-auto text-lg">
             {t("templates.subtitle")}
           </p>
         </motion.div>
@@ -317,13 +317,13 @@ export function TemplatesPage() {
                     tab.color === "orange" ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30" :
                     tab.color === "purple" ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30" :
                     "bg-cyan-600 text-white shadow-lg shadow-cyan-600/30"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 hover:text-white"
+                  : "bg-card/50 text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
               }`}
             >
               {tab.icon}
               {tab.label}
               <span className={`text-xs px-2 py-0.5 rounded-full ${
-                activeTab === tab.id ? "bg-white/20" : "bg-gray-700"
+                activeTab === tab.id ? "bg-white/20" : "bg-secondary"
               }`}>
                 {templateCounts[tab.id]}
               </span>
@@ -333,13 +333,13 @@ export function TemplatesPage() {
 
         <div className="flex flex-col lg:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
             <input
               type="text"
               placeholder={t("templates.search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-gray-800/50 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+              className="w-full pl-12 pr-4 py-3.5 bg-card/50 border border-border rounded-xl focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
             />
           </div>
         </div>
@@ -389,11 +389,11 @@ export function TemplatesPage() {
 
               {filteredTemplates.length === 0 && (
                 <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search size={28} className="text-gray-500" />
+                  <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search size={28} className="text-muted-foreground" />
                   </div>
-                  <p className="text-gray-400 text-lg">Шаблоны не найдены</p>
-                  <p className="text-gray-500 text-sm mt-1">Попробуйте изменить фильтры или поисковый запрос</p>
+                  <p className="text-muted-foreground text-lg">Шаблоны не найдены</p>
+                  <p className="text-muted-foreground text-sm mt-1">Попробуйте изменить фильтры или поисковый запрос</p>
                 </div>
               )}
             </motion.div>
@@ -416,7 +416,7 @@ export function TemplatesPage() {
                   <GuildTemplateCard key={template.id} template={template} />
                 ))}
               {guildTemplates.length === 0 && (
-                <div className="col-span-full text-center py-16 text-gray-400">
+                <div className="col-span-full text-center py-16 text-muted-foreground">
                   Шаблоны серверов не найдены
                 </div>
               )}
@@ -440,7 +440,7 @@ export function TemplatesPage() {
                   <ChannelTemplateCard key={template.id} template={template} />
                 ))}
               {channelTemplates.length === 0 && (
-                <div className="col-span-full text-center py-16 text-gray-400">
+                <div className="col-span-full text-center py-16 text-muted-foreground">
                   Шаблоны каналов не найдены
                 </div>
               )}
@@ -462,7 +462,7 @@ export function TemplatesPage() {
 
 function GuildTemplateCard({ template }: { template: GuildTemplate }) {
   const planBadges: Record<string, { label: string; color: string }> = {
-    free: { label: "Бесплатно", color: "bg-gray-600" },
+    free: { label: "Бесплатно", color: "bg-muted" },
     edu_basic: { label: "Базовый", color: "bg-blue-600" },
     edu_pro: { label: "Про", color: "bg-purple-600" },
   };
@@ -484,7 +484,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-5 hover:border-purple-500/50 transition-all"
+      className="bg-card/40 border border-border/50 rounded-2xl p-5 hover:border-purple-500/50 transition-all"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -492,8 +492,8 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
             {categoryIcons[template.category] || <Building size={20} />}
           </div>
           <div>
-            <h3 className="font-semibold text-white">{template.name}</h3>
-            <p className="text-xs text-gray-400">{template.usage_count} использований</p>
+            <h3 className="font-semibold text-foreground">{template.name}</h3>
+            <p className="text-xs text-muted-foreground">{template.usage_count} использований</p>
           </div>
         </div>
         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color} text-white`}>
@@ -501,19 +501,19 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
         </span>
       </div>
 
-      <p className="text-sm text-gray-400 mb-4">{template.description}</p>
+      <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
 
       {channels.length > 0 && (
         <div className="mb-4">
-          <p className="text-xs text-gray-500 mb-2">Каналы ({channels.length}):</p>
+          <p className="text-xs text-muted-foreground mb-2">Каналы ({channels.length}):</p>
           <div className="flex flex-wrap gap-1.5">
             {channels.slice(0, 5).map((ch, i) => (
-              <span key={i} className="px-2 py-1 bg-gray-700/50 rounded text-xs text-gray-300">
+              <span key={i} className="px-2 py-1 bg-secondary/50 rounded text-xs text-foreground">
                 #{ch.name}
               </span>
             ))}
             {channels.length > 5 && (
-              <span className="px-2 py-1 text-xs text-gray-500">+{channels.length - 5}</span>
+              <span className="px-2 py-1 text-xs text-muted-foreground">+{channels.length - 5}</span>
             )}
           </div>
         </div>
@@ -529,7 +529,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
 
 function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
   const planBadges: Record<string, { label: string; color: string }> = {
-    free: { label: "Бесплатно", color: "bg-gray-600" },
+    free: { label: "Бесплатно", color: "bg-muted" },
     edu_basic: { label: "Базовый", color: "bg-blue-600" },
     edu_pro: { label: "Про", color: "bg-purple-600" },
   };
@@ -547,7 +547,7 @@ function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-5 hover:border-cyan-500/50 transition-all"
+      className="bg-card/40 border border-border/50 rounded-2xl p-5 hover:border-cyan-500/50 transition-all"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -555,8 +555,8 @@ function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
             {typeIcons[template.type] || <MessageCircle size={20} />}
           </div>
           <div>
-            <h3 className="font-semibold text-white">{template.name}</h3>
-            <p className="text-xs text-gray-400">{template.type} · {template.usage_count} использований</p>
+            <h3 className="font-semibold text-foreground">{template.name}</h3>
+            <p className="text-xs text-muted-foreground">{template.type} · {template.usage_count} использований</p>
           </div>
         </div>
         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color} text-white`}>
@@ -564,7 +564,7 @@ function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
         </span>
       </div>
 
-      <p className="text-sm text-gray-400 mb-4">{template.description}</p>
+      <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
 
       <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-medium transition-colors">
         Добавить канал

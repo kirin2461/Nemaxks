@@ -78,12 +78,12 @@ export default function ChallengesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Target className="w-8 h-8 text-orange-400" />
-            <h1 className="text-3xl font-bold text-white">Задания</h1>
+            <h1 className="text-3xl font-bold text-foreground">Задания</h1>
           </div>
           
           {currency && (
@@ -105,12 +105,12 @@ export default function ChallengesPage() {
             <div className="flex items-center gap-3 mb-4">
               <Flame className="w-8 h-8 text-orange-400" />
               <div>
-                <h3 className="text-xl font-bold text-white">Серия входов</h3>
+                <h3 className="text-xl font-bold text-foreground">Серия входов</h3>
                 <p className="text-orange-300">{streak?.login_streak || 0} дней подряд</p>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-muted-foreground">
                 Рекорд: {streak?.max_login_streak || 0} дней
               </div>
               <button
@@ -143,12 +143,12 @@ export default function ChallengesPage() {
                 🎰
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Колесо удачи</h3>
+                <h3 className="text-xl font-bold text-foreground">Колесо удачи</h3>
                 <p className="text-purple-300">Испытай удачу!</p>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-400 flex items-center gap-1">
+              <div className="text-sm text-muted-foreground flex items-center gap-1">
                 Стоимость: <Coins className="w-4 h-4 text-yellow-400" /> 25
               </div>
               <button
@@ -179,7 +179,7 @@ export default function ChallengesPage() {
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeTab === tab.id
                   ? 'bg-orange-500 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  : 'bg-card text-muted-foreground hover:bg-secondary'
               }`}
             >
               {tab.icon}
@@ -194,8 +194,8 @@ export default function ChallengesPage() {
               key={challenge.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`bg-gray-800/50 rounded-xl p-4 border ${
-                challenge.is_completed ? 'border-green-500/50' : 'border-gray-700'
+              className={`bg-card/50 rounded-xl p-4 border ${
+                challenge.is_completed ? 'border-green-500/50' : 'border-border'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -204,17 +204,17 @@ export default function ChallengesPage() {
                     {challenge.is_completed ? (
                       <Check className="w-5 h-5 text-green-400" />
                     ) : (
-                      <Clock className="w-5 h-5 text-gray-400" />
+                      <Clock className="w-5 h-5 text-muted-foreground" />
                     )}
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-foreground">
                       {challenge.name_ru || challenge.name}
                     </h3>
                   </div>
-                  <p className="text-gray-400 text-sm mb-3">
+                  <p className="text-muted-foreground text-sm mb-3">
                     {challenge.description_ru || challenge.description}
                   </p>
                   
-                  <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                  <div className="w-full bg-secondary rounded-full h-2 mb-2">
                     <div
                       className={`h-2 rounded-full transition-all ${
                         challenge.is_completed ? 'bg-green-500' : 'bg-orange-500'
@@ -222,7 +222,7 @@ export default function ChallengesPage() {
                       style={{ width: `${Math.min(100, ((challenge.progress || 0) / challenge.target) * 100)}%` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {challenge.progress || 0} / {challenge.target}
                   </p>
                 </div>
@@ -255,8 +255,8 @@ export default function ChallengesPage() {
 
         {challenges.length === 0 && (
           <div className="text-center py-16">
-            <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">Нет доступных заданий</p>
+            <Target className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">Нет доступных заданий</p>
           </div>
         )}
       </div>

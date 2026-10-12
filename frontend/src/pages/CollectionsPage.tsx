@@ -61,14 +61,14 @@ export default function CollectionsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -91,7 +91,7 @@ export default function CollectionsPage() {
                 key={collection.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className={`bg-gray-800 rounded-xl p-5 cursor-pointer hover:bg-gray-750 transition-colors ${
+                className={`bg-card rounded-xl p-5 cursor-pointer hover:bg-muted transition-colors ${
                   selectedCollection === collection.id ? 'ring-2 ring-amber-500' : ''
                 }`}
                 onClick={() => setSelectedCollection(collection.id)}
@@ -101,7 +101,7 @@ export default function CollectionsPage() {
                     <span className="text-2xl">{collection.icon_emoji}</span>
                     <div>
                       <h3 className="font-bold">{collection.name}</h3>
-                      <p className="text-gray-400 text-sm">{collection.item_count} items</p>
+                      <p className="text-muted-foreground text-sm">{collection.item_count} items</p>
                     </div>
                   </div>
                   {collection.is_private ? (
@@ -111,23 +111,23 @@ export default function CollectionsPage() {
                   )}
                 </div>
                 {collection.description && (
-                  <p className="text-gray-400 text-sm line-clamp-2">{collection.description}</p>
+                  <p className="text-muted-foreground text-sm line-clamp-2">{collection.description}</p>
                 )}
               </motion.div>
             ))}
 
             {collections.length === 0 && (
-              <div className="col-span-2 bg-gray-800 rounded-xl p-12 text-center">
-                <Folder className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <div className="col-span-2 bg-card rounded-xl p-12 text-center">
+                <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-bold mb-2">No collections yet</h3>
-                <p className="text-gray-400">Create your first collection to save content</p>
+                <p className="text-muted-foreground">Create your first collection to save content</p>
               </div>
             )}
           </div>
 
           <div>
             {selectedCollection && collectionData ? (
-              <div className="bg-gray-800 rounded-xl p-6 sticky top-6">
+              <div className="bg-card rounded-xl p-6 sticky top-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{collectionData.collection.icon_emoji}</span>
@@ -145,14 +145,14 @@ export default function CollectionsPage() {
                   {collectionData.items.map((item: CollectionItem) => (
                     <div
                       key={item.id}
-                      className="bg-gray-700/50 rounded-lg p-3 flex items-start justify-between"
+                      className="bg-secondary/50 rounded-lg p-3 flex items-start justify-between"
                     >
                       <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-gray-400" />
+                        <FileText className="w-4 h-4 text-muted-foreground" />
                         <div>
                           <p className="text-sm capitalize">{item.content_type}</p>
                           {item.note && (
-                            <p className="text-xs text-gray-400">{item.note}</p>
+                            <p className="text-xs text-muted-foreground">{item.note}</p>
                           )}
                         </div>
                       </div>
@@ -163,21 +163,21 @@ export default function CollectionsPage() {
                             itemId: item.id,
                           })
                         }
-                        className="text-gray-400 hover:text-red-400"
+                        className="text-muted-foreground hover:text-red-400"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
                   {collectionData.items.length === 0 && (
-                    <p className="text-gray-400 text-center py-4">No items in collection</p>
+                    <p className="text-muted-foreground text-center py-4">No items in collection</p>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-800 rounded-xl p-8 text-center sticky top-6">
-                <Folder className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">Select a collection to view items</p>
+              <div className="bg-card rounded-xl p-8 text-center sticky top-6">
+                <Folder className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Select a collection to view items</p>
               </div>
             )}
           </div>
@@ -188,37 +188,37 @@ export default function CollectionsPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-gray-800 rounded-xl p-6 w-full max-w-md m-4"
+              className="bg-card rounded-xl p-6 w-full max-w-md m-4"
             >
               <h3 className="text-xl font-bold mb-4">Create Collection</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Name</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Name</label>
                   <input
                     type="text"
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Description</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Description</label>
                   <textarea
                     value={newDesc}
                     onChange={e => setNewDesc(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-amber-500 resize-none"
                     rows={2}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Icon</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Icon</label>
                   <div className="flex gap-2 flex-wrap">
                     {emojiOptions.map(emoji => (
                       <button
                         key={emoji}
                         onClick={() => setNewEmoji(emoji)}
                         className={`w-10 h-10 rounded-lg text-xl ${
-                          newEmoji === emoji ? 'bg-amber-600' : 'bg-gray-700 hover:bg-gray-600'
+                          newEmoji === emoji ? 'bg-amber-600' : 'bg-secondary hover:bg-muted'
                         }`}
                       >
                         {emoji}
@@ -238,7 +238,7 @@ export default function CollectionsPage() {
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setShowCreateModal(false)}
-                    className="flex-1 py-2 bg-gray-700 rounded-lg hover:bg-gray-600"
+                    className="flex-1 py-2 bg-secondary rounded-lg hover:bg-muted"
                   >
                     Cancel
                   </button>

@@ -4,7 +4,7 @@ import { User, Palette, Frame, Image, Award, Settings, Check, Eye, EyeOff } from
 import { motion } from 'framer-motion';
 
 const rarityColors: Record<string, string> = {
-  common: 'text-gray-400',
+  common: 'text-muted-foreground',
   uncommon: 'text-green-400',
   rare: 'text-blue-400',
   epic: 'text-purple-400',
@@ -104,11 +104,11 @@ export default function ProfileCustomizationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <User className="w-8 h-8 text-purple-400" />
-          <h1 className="text-3xl font-bold text-white">Кастомизация профиля</h1>
+          <h1 className="text-3xl font-bold text-foreground">Кастомизация профиля</h1>
         </div>
 
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -119,7 +119,7 @@ export default function ProfileCustomizationPage() {
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-purple-500 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  : 'bg-card text-muted-foreground hover:bg-secondary'
               }`}
             >
               {tab.icon}
@@ -135,19 +135,19 @@ export default function ProfileCustomizationPage() {
                 key={inv.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className={`bg-gray-800/50 rounded-xl p-4 border cursor-pointer transition-all ${
-                  isEquipped(inv.item_id) ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-gray-700 hover:border-gray-600'
+                className={`bg-card/50 rounded-xl p-4 border cursor-pointer transition-all ${
+                  isEquipped(inv.item_id) ? 'border-purple-500 ring-2 ring-purple-500/50' : 'border-border hover:border-border'
                 }`}
                 onClick={() => !isEquipped(inv.item_id) && handleEquip(inv.item_id)}
               >
-                <div className="h-20 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg mb-3 flex items-center justify-center">
-                  {activeTab === 'themes' && <Palette className="w-8 h-8 text-gray-500" />}
-                  {activeTab === 'frames' && <Frame className="w-8 h-8 text-gray-500" />}
-                  {activeTab === 'banners' && <Image className="w-8 h-8 text-gray-500" />}
+                <div className="h-20 bg-gradient-to-br from-secondary to-muted rounded-lg mb-3 flex items-center justify-center">
+                  {activeTab === 'themes' && <Palette className="w-8 h-8 text-muted-foreground" />}
+                  {activeTab === 'frames' && <Frame className="w-8 h-8 text-muted-foreground" />}
+                  {activeTab === 'banners' && <Image className="w-8 h-8 text-muted-foreground" />}
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-white text-sm">{inv.item.name_ru || inv.item.name}</p>
+                    <p className="font-medium text-foreground text-sm">{inv.item.name_ru || inv.item.name}</p>
                     <p className={`text-xs capitalize ${rarityColors[inv.item.rarity]}`}>{inv.item.rarity}</p>
                   </div>
                   {isEquipped(inv.item_id) && (
@@ -158,7 +158,7 @@ export default function ProfileCustomizationPage() {
             ))}
             {getItemsByType(activeTab === 'themes' ? 'theme' : activeTab === 'frames' ? 'frame' : 'banner').length === 0 && (
               <div className="col-span-full text-center py-12">
-                <p className="text-gray-400">Нет предметов. Посетите магазин!</p>
+                <p className="text-muted-foreground">Нет предметов. Посетите магазин!</p>
               </div>
             )}
           </div>
@@ -171,17 +171,17 @@ export default function ProfileCustomizationPage() {
                 key={badge.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className={`bg-gray-800/50 rounded-xl p-4 border text-center ${
-                  hasBadge(badge.id) ? 'border-purple-500' : 'border-gray-700 opacity-50'
+                className={`bg-card/50 rounded-xl p-4 border text-center ${
+                  hasBadge(badge.id) ? 'border-purple-500' : 'border-border opacity-50'
                 }`}
               >
                 <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center text-2xl ${
-                  hasBadge(badge.id) ? 'bg-purple-500/20' : 'bg-gray-700'
+                  hasBadge(badge.id) ? 'bg-purple-500/20' : 'bg-secondary'
                 }`}>
-                  <Award className={`w-6 h-6 ${hasBadge(badge.id) ? rarityColors[badge.rarity] : 'text-gray-500'}`} />
+                  <Award className={`w-6 h-6 ${hasBadge(badge.id) ? rarityColors[badge.rarity] : 'text-muted-foreground'}`} />
                 </div>
-                <p className="font-medium text-white text-sm">{badge.name_ru || badge.name}</p>
-                <p className="text-xs text-gray-400 mt-1">{badge.description_ru || badge.description}</p>
+                <p className="font-medium text-foreground text-sm">{badge.name_ru || badge.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">{badge.description_ru || badge.description}</p>
                 <p className={`text-xs mt-2 capitalize ${rarityColors[badge.rarity]}`}>{badge.rarity}</p>
               </motion.div>
             ))}
@@ -189,20 +189,20 @@ export default function ProfileCustomizationPage() {
         )}
 
         {activeTab === 'settings' && (
-          <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700 space-y-6">
+          <div className="bg-card/50 rounded-xl p-6 border border-border space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">О себе</label>
+              <label className="block text-sm font-medium text-foreground mb-2">О себе</label>
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white resize-none"
+                className="w-full bg-secondary border border-border rounded-lg p-3 text-foreground resize-none"
                 rows={3}
                 placeholder="Расскажите о себе..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Цвет профиля</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Цвет профиля</label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
@@ -210,22 +210,22 @@ export default function ProfileCustomizationPage() {
                   onChange={(e) => setProfileColor(e.target.value)}
                   className="w-12 h-12 rounded-lg border-0 cursor-pointer"
                 />
-                <span className="text-gray-400">{profileColor}</span>
+                <span className="text-muted-foreground">{profileColor}</span>
               </div>
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-300">Видимость</h4>
+              <h4 className="text-sm font-medium text-foreground">Видимость</h4>
               
-              <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-2">
-                  {profile?.show_level ? <Eye className="w-4 h-4 text-gray-400" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
-                  <span className="text-white">Показывать уровень</span>
+                  {profile?.show_level ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                  <span className="text-foreground">Показывать уровень</span>
                 </div>
                 <button
                   onClick={() => handleToggle('show_level')}
                   className={`w-12 h-6 rounded-full transition-all ${
-                    profile?.show_level ? 'bg-purple-500' : 'bg-gray-600'
+                    profile?.show_level ? 'bg-purple-500' : 'bg-muted'
                   }`}
                 >
                   <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -234,15 +234,15 @@ export default function ProfileCustomizationPage() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-2">
-                  {profile?.show_achievements ? <Eye className="w-4 h-4 text-gray-400" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
-                  <span className="text-white">Показывать достижения</span>
+                  {profile?.show_achievements ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                  <span className="text-foreground">Показывать достижения</span>
                 </div>
                 <button
                   onClick={() => handleToggle('show_achievements')}
                   className={`w-12 h-6 rounded-full transition-all ${
-                    profile?.show_achievements ? 'bg-purple-500' : 'bg-gray-600'
+                    profile?.show_achievements ? 'bg-purple-500' : 'bg-muted'
                   }`}
                 >
                   <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -251,15 +251,15 @@ export default function ProfileCustomizationPage() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-2">
-                  {profile?.show_activity ? <Eye className="w-4 h-4 text-gray-400" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
-                  <span className="text-white">Показывать активность</span>
+                  {profile?.show_activity ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                  <span className="text-foreground">Показывать активность</span>
                 </div>
                 <button
                   onClick={() => handleToggle('show_activity')}
                   className={`w-12 h-6 rounded-full transition-all ${
-                    profile?.show_activity ? 'bg-purple-500' : 'bg-gray-600'
+                    profile?.show_activity ? 'bg-purple-500' : 'bg-muted'
                   }`}
                 >
                   <div className={`w-5 h-5 bg-white rounded-full transition-transform ${

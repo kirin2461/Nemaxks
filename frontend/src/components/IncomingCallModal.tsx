@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { Phone, PhoneOff, User } from 'lucide-react'
 import { Avatar } from './Avatar'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/utils'
 
 interface IncomingCallModalProps {
   caller: {
@@ -13,8 +15,13 @@ interface IncomingCallModalProps {
 }
 
 export function IncomingCallModal({ caller, channelId, onAccept, onReject }: IncomingCallModalProps) {
+  useEffect(() => {
+    lockBodyScroll()
+    return () => unlockBodyScroll()
+  }, [])
+
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
       <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-sm w-full p-8 animate-fade-in text-center">
         <div className="relative mb-6">
           <div className="w-24 h-24 mx-auto rounded-full overflow-hidden ring-4 ring-primary/50 animate-pulse">

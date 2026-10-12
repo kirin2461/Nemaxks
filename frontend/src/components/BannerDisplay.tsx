@@ -60,7 +60,7 @@ export function BannerDisplay() {
           </div>
           <button
             onClick={() => handleDismiss(banner.id)}
-            className="flex-shrink-0 p-1 rounded hover:bg-white/10 transition-colors"
+            className="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

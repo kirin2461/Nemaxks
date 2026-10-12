@@ -113,28 +113,28 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-1">Отображаемое имя</label>
+          <label className="block text-sm text-muted-foreground mb-1">Отображаемое имя</label>
           <input
             type="text"
             value={displayName}
             onChange={e => setDisplayName(e.target.value)}
             maxLength={32}
-            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none transition-colors"
+            className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors"
             placeholder="Ваше имя"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-1">О себе</label>
+          <label className="block text-sm text-muted-foreground mb-1">О себе</label>
           <textarea
             value={bio}
             onChange={e => setBio(e.target.value)}
             maxLength={200}
             rows={3}
-            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none transition-colors resize-none"
+            className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors resize-none"
             placeholder="Расскажите о себе..."
           />
-          <p className="text-xs text-gray-500 mt-1">{bio.length}/200</p>
+          <p className="text-xs text-muted-foreground mt-1">{bio.length}/200</p>
         </div>
 
         {error && (
@@ -154,7 +154,7 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
           >
             Отмена
           </button>

@@ -190,7 +190,7 @@ export default function PremiumCheckoutPage() {
       <Layout>
         <div className="min-h-screen flex flex-col items-center justify-center gap-4">
           <AlertCircle className="w-12 h-12 text-red-500" />
-          <p className="text-gray-400">{error}</p>
+          <p className="text-muted-foreground">{error}</p>
           <button 
             onClick={() => setLocation("/premium")}
             className="text-purple-400 hover:text-purple-300"
@@ -207,25 +207,25 @@ export default function PremiumCheckoutPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 p-6">
+      <div className="min-h-screen bg-background p-6">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => setLocation("/premium")}
-            className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
           >
             <ArrowLeft size={20} />
             Назад к планам
           </button>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
+            <div className="bg-card/50 border border-border rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl">
                   <Crown className="text-white" size={24} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">{plan?.name}</h2>
-                  <p className="text-gray-400 text-sm">{plan?.description}</p>
+                  <h2 className="text-xl font-bold text-foreground">{plan?.name}</h2>
+                  <p className="text-muted-foreground text-sm">{plan?.description}</p>
                 </div>
               </div>
 
@@ -235,17 +235,17 @@ export default function PremiumCheckoutPage() {
                     <div className="p-1 bg-green-500/20 rounded-full">
                       <Check size={14} className="text-green-400" />
                     </div>
-                    <span className="text-gray-300 text-sm">{feature}</span>
+                    <span className="text-foreground text-sm">{feature}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t border-gray-700 pt-4">
-                <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
                   <Clock size={16} />
                   <span>Ежемесячная подписка</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Shield size={16} />
                   <span>Автопродление можно отключить</span>
                 </div>
@@ -253,11 +253,11 @@ export default function PremiumCheckoutPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Промокод</h3>
+              <div className="bg-card/50 border border-border rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Промокод</h3>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input
                       type="text"
                       value={promoCode}
@@ -266,13 +266,13 @@ export default function PremiumCheckoutPage() {
                         setPromoValidation(null);
                       }}
                       placeholder="Введите промокод"
-                      className="w-full bg-gray-900 border border-gray-700 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
+                      className="w-full bg-background border border-border rounded-xl py-3 pl-10 pr-4 text-foreground placeholder-muted-foreground focus:border-purple-500 focus:outline-none"
                     />
                   </div>
                   <button
                     onClick={validatePromoCode}
                     disabled={validatingPromo || !promoCode.trim()}
-                    className="px-4 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-xl font-medium transition-colors"
+                    className="px-4 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-secondary disabled:text-muted-foreground rounded-xl font-medium transition-colors"
                   >
                     {validatingPromo ? <Loader2 className="w-5 h-5 animate-spin" /> : "Применить"}
                   </button>
@@ -290,14 +290,14 @@ export default function PremiumCheckoutPage() {
                 )}
               </div>
 
-              <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Способ оплаты</h3>
+              <div className="bg-card/50 border border-border rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Способ оплаты</h3>
                 <div className="space-y-3">
                   <label 
                     className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
                       paymentMethod === "card" 
                         ? "border-purple-500 bg-purple-500/10" 
-                        : "border-gray-700 hover:border-gray-600"
+                        : "border-border hover:border-border"
                     }`}
                   >
                     <input
@@ -307,10 +307,10 @@ export default function PremiumCheckoutPage() {
                       onChange={() => setPaymentMethod("card")}
                       className="sr-only"
                     />
-                    <CreditCard className={paymentMethod === "card" ? "text-purple-400" : "text-gray-500"} size={24} />
+                    <CreditCard className={paymentMethod === "card" ? "text-purple-400" : "text-muted-foreground"} size={24} />
                     <div>
-                      <p className="text-white font-medium">Банковская карта</p>
-                      <p className="text-gray-400 text-sm">Visa, Mastercard, МИР</p>
+                      <p className="text-foreground font-medium">Банковская карта</p>
+                      <p className="text-muted-foreground text-sm">Visa, Mastercard, МИР</p>
                     </div>
                   </label>
                   
@@ -318,7 +318,7 @@ export default function PremiumCheckoutPage() {
                     className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
                       paymentMethod === "sbp" 
                         ? "border-purple-500 bg-purple-500/10" 
-                        : "border-gray-700 hover:border-gray-600"
+                        : "border-border hover:border-border"
                     }`}
                   >
                     <input
@@ -328,19 +328,19 @@ export default function PremiumCheckoutPage() {
                       onChange={() => setPaymentMethod("sbp")}
                       className="sr-only"
                     />
-                    <Wallet className={paymentMethod === "sbp" ? "text-purple-400" : "text-gray-500"} size={24} />
+                    <Wallet className={paymentMethod === "sbp" ? "text-purple-400" : "text-muted-foreground"} size={24} />
                     <div>
-                      <p className="text-white font-medium">СБП</p>
-                      <p className="text-gray-400 text-sm">Система быстрых платежей</p>
+                      <p className="text-foreground font-medium">СБП</p>
+                      <p className="text-muted-foreground text-sm">Система быстрых платежей</p>
                     </div>
                   </label>
                 </div>
               </div>
 
-              <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
+              <div className="bg-card/50 border border-border rounded-2xl p-6">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-400">Стоимость плана</span>
-                  <span className="text-white">{plan?.base_price_rub} ₽</span>
+                  <span className="text-muted-foreground">Стоимость плана</span>
+                  <span className="text-foreground">{plan?.base_price_rub} ₽</span>
                 </div>
                 {promoValidation?.valid && (
                   <div className="flex justify-between items-center mb-2 text-green-400">
@@ -348,9 +348,9 @@ export default function PremiumCheckoutPage() {
                     <span>-{plan!.base_price_rub - finalPrice} ₽</span>
                   </div>
                 )}
-                <div className="border-t border-gray-700 pt-3 mt-3">
+                <div className="border-t border-border pt-3 mt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-white font-semibold text-lg">Итого</span>
+                    <span className="text-foreground font-semibold text-lg">Итого</span>
                     <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
                       {finalPrice} ₽
                     </span>
@@ -382,7 +382,7 @@ export default function PremiumCheckoutPage() {
                 )}
               </button>
 
-              <p className="text-center text-gray-500 text-sm">
+              <p className="text-center text-muted-foreground text-sm">
                 Нажимая кнопку, вы соглашаетесь с условиями подписки
               </p>
             </div>

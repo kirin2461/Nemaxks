@@ -52,7 +52,7 @@ export default function MiniGamesPage() {
       case 'easy': return 'text-green-400 bg-green-400/10';
       case 'medium': return 'text-yellow-400 bg-yellow-400/10';
       case 'hard': return 'text-red-400 bg-red-400/10';
-      default: return 'text-gray-400 bg-gray-400/10';
+      default: return 'text-muted-foreground bg-gray-400/10';
     }
   };
 
@@ -99,7 +99,7 @@ export default function MiniGamesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
       </div>
     );
@@ -110,7 +110,7 @@ export default function MiniGamesPage() {
     const options = question ? JSON.parse(question.options) : [];
 
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-6">
+      <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
@@ -122,15 +122,15 @@ export default function MiniGamesPage() {
                 <Coins className="w-5 h-5" />
                 <span>{score}</span>
               </div>
-              <span className="text-gray-400">
+              <span className="text-muted-foreground">
                 {currentQuestion + 1}/{activeGame.questions?.length || 0}
               </span>
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-xl p-8">
+          <div className="bg-card rounded-xl p-8">
             <div className="mb-4">
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-secondary rounded-full h-2">
                 <div
                   className="bg-purple-600 h-2 rounded-full transition-all"
                   style={{
@@ -168,7 +168,7 @@ export default function MiniGamesPage() {
                             ? 'bg-red-600/20 border-2 border-red-500'
                             : isSelected
                             ? 'bg-purple-600/20 border-2 border-purple-500'
-                            : 'bg-gray-700 hover:bg-gray-600 border-2 border-transparent'
+                            : 'bg-secondary hover:bg-muted border-2 border-transparent'
                         }`}
                       >
                         <span>{option}</span>
@@ -184,7 +184,7 @@ export default function MiniGamesPage() {
 
           <button
             onClick={exitGame}
-            className="mt-6 text-gray-400 hover:text-white transition-colors"
+            className="mt-6 text-muted-foreground hover:text-foreground transition-colors"
           >
             Exit Game
           </button>
@@ -195,23 +195,23 @@ export default function MiniGamesPage() {
 
   if (gameComplete && completeMutation.data) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground p-6 flex items-center justify-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-gray-800 rounded-xl p-8 text-center max-w-md"
+          className="bg-card rounded-xl p-8 text-center max-w-md"
         >
           <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Game Complete!</h2>
-          <p className="text-gray-400 mb-6">Great job playing!</p>
+          <p className="text-muted-foreground mb-6">Great job playing!</p>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-gray-700 rounded-lg p-4">
-              <p className="text-sm text-gray-400">Score</p>
+            <div className="bg-secondary rounded-lg p-4">
+              <p className="text-sm text-muted-foreground">Score</p>
               <p className="text-2xl font-bold text-purple-400">{score}</p>
             </div>
-            <div className="bg-gray-700 rounded-lg p-4">
-              <p className="text-sm text-gray-400">Coins Earned</p>
+            <div className="bg-secondary rounded-lg p-4">
+              <p className="text-sm text-muted-foreground">Coins Earned</p>
               <p className="text-2xl font-bold text-yellow-400">+{completeMutation.data.coins_earned}</p>
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function MiniGamesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Gamepad2 className="w-8 h-8 text-purple-400" />
@@ -248,7 +248,7 @@ export default function MiniGamesPage() {
                 key={game.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gray-800 rounded-xl p-6 hover:bg-gray-750 transition-colors"
+                className="bg-card rounded-xl p-6 hover:bg-muted transition-colors"
               >
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-purple-600/20 rounded-xl">
@@ -261,7 +261,7 @@ export default function MiniGamesPage() {
                         {game.difficulty}
                       </span>
                     </div>
-                    <p className="text-gray-400 text-sm mb-4">{game.description}</p>
+                    <p className="text-muted-foreground text-sm mb-4">{game.description}</p>
 
                     <div className="flex items-center gap-4 text-sm mb-4">
                       <div className="flex items-center gap-1 text-yellow-400">
@@ -272,7 +272,7 @@ export default function MiniGamesPage() {
                         <Star className="w-4 h-4" />
                         <span>+{game.xp_reward} XP</span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-400">
+                      <div className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="w-4 h-4" />
                         <span>{game.cooldown_min}m cooldown</span>
                       </div>
@@ -293,9 +293,9 @@ export default function MiniGamesPage() {
         </div>
 
         {games.length === 0 && (
-          <div className="bg-gray-800 rounded-xl p-8 text-center">
-            <Gamepad2 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">No games available yet</p>
+          <div className="bg-card rounded-xl p-8 text-center">
+            <Gamepad2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No games available yet</p>
           </div>
         )}
       </div>

@@ -40,9 +40,9 @@ export function BlockUserModal({
           <Ban className="w-8 h-8 text-red-400" />
         </div>
 
-        <h2 className="text-xl font-bold text-white mb-2">Заблокировать пользователя?</h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">Заблокировать пользователя?</h2>
         
-        <div className="flex items-center justify-center gap-3 my-4 p-3 bg-white/5 rounded-lg">
+        <div className="flex items-center justify-center gap-3 my-4 p-3 bg-muted/60 rounded-lg">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
             {avatar ? (
               <img src={avatar} alt="" className="w-full h-full object-cover" />
@@ -50,7 +50,7 @@ export function BlockUserModal({
               <User className="w-5 h-5 text-white" />
             )}
           </div>
-          <span className="text-white font-medium">@{username}</span>
+          <span className="text-foreground font-medium">@{username}</span>
         </div>
 
         <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg mb-4 text-left">
@@ -72,7 +72,7 @@ export function BlockUserModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
           >
             Отмена
           </button>

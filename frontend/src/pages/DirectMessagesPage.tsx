@@ -181,44 +181,44 @@ const DirectMessagesPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-xl text-gray-400">{t('messages.loading')}</div>
+        <div className="text-xl text-muted-foreground">{t('messages.loading')}</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 pb-20 lg:pb-0">
-      <div className="sticky top-0 z-10 shrink-0 flex items-center gap-3 px-3 py-3 border-b border-gray-700 bg-gray-900/95 backdrop-blur-md">
+    <div className="flex flex-col h-full bg-background">
+      <div className="sticky top-0 z-10 shrink-0 flex items-center gap-3 px-3 py-3 border-b border-border bg-background/95 backdrop-blur-md">
         <button
           onClick={() => navigate('/friends')}
-          className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+          className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <Avatar size="sm" userId={userId} alt={`User ${userId}`} />
         <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-white text-sm truncate">User {userId}</h2>
-          <span className="text-xs text-gray-400">{t('messages.directMessage') || 'Личное сообщение'}</span>
+          <h2 className="font-semibold text-foreground text-sm truncate">User {userId}</h2>
+          <span className="text-xs text-muted-foreground">{t('messages.directMessage') || 'Личное сообщение'}</span>
         </div>
         <div className="flex items-center gap-1">
-          <button className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors">
+          <button className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
             <Phone className="w-5 h-5" />
           </button>
-          <button className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors">
+          <button className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
             <Video className="w-5 h-5" />
           </button>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-400">
+          <div className="flex items-center justify-center h-full text-muted-foreground">
             <p>{t('messages.noMessages')}</p>
           </div>
         ) : (
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 animate-fadeIn ${
+              className={`flex gap-3 animate-fade-in ${
                 message.sender_id === currentUser?.id
                   ? "justify-end"
                   : "justify-start"
@@ -229,7 +229,7 @@ const DirectMessagesPage: React.FC = () => {
                 className={`max-w-[75%] px-4 py-2 rounded-lg ${
                   message.sender_id === currentUser?.id
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-700 text-gray-100"
+                    : "bg-secondary text-foreground"
                 }`}
               >
                 {editingId === message.id ? (
@@ -249,7 +249,7 @@ const DirectMessagesPage: React.FC = () => {
                       autoFocus
                     />
                     <button onClick={() => { handleEditMessage(message.id, editContent); setEditingId(null) }} className="text-xs text-green-400 hover:text-green-300 shrink-0">✓</button>
-                    <button onClick={() => setEditingId(null)} className="text-xs text-gray-400 hover:text-gray-300 shrink-0">✕</button>
+                    <button onClick={() => setEditingId(null)} className="text-xs text-muted-foreground hover:text-foreground shrink-0">✕</button>
                   </div>
                 ) : (
                   <p className="break-words">{message.content}</p>
@@ -262,7 +262,7 @@ const DirectMessagesPage: React.FC = () => {
                 <div className="flex gap-2 items-center">
                   <button
                     onClick={() => { setEditingId(message.id); setEditContent(message.content) }}
-                    className="text-xs sm:text-sm text-gray-400 hover:text-gray-200 p-1"
+                    className="text-xs sm:text-sm text-muted-foreground hover:text-foreground p-1"
                   >
                     {t('messages.edit')}
                   </button>
@@ -278,7 +278,7 @@ const DirectMessagesPage: React.FC = () => {
           ))
         )}
         {typing && (
-          <div className="flex gap-3 text-gray-400 text-sm">
+          <div className="flex gap-3 text-muted-foreground text-sm">
             <div className="flex gap-1">
               <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
               <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
@@ -292,7 +292,7 @@ const DirectMessagesPage: React.FC = () => {
 
       <form
         onSubmit={handleSendMessage}
-        className="border-t border-gray-700 p-3 md:p-4 shrink-0 sticky bottom-0 bg-gray-900 z-10"
+        className="border-t border-border p-3 md:p-4 shrink-0 sticky bottom-16 lg:bottom-0 bg-background z-10"
       >
         <div className="flex gap-2">
           <input
@@ -300,12 +300,12 @@ const DirectMessagesPage: React.FC = () => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder={t('messages.placeholder')}
-            className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+            className="flex-1 bg-card text-card-foreground px-4 py-2 rounded-lg border border-border focus:border-blue-500 focus:outline-none"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition-colors"
           >
             {t('messages.send')}
           </button>

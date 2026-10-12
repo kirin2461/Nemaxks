@@ -48,11 +48,11 @@ export function LeaveGuildModal({
           <LogOut className="w-8 h-8 text-red-400" />
         </div>
 
-        <h2 className="text-xl font-bold text-white mb-2">
+        <h2 className="text-xl font-bold text-foreground mb-2">
           {isOwner ? 'Удалить гильдию?' : 'Покинуть гильдию?'}
         </h2>
 
-        <div className="flex items-center justify-center gap-3 my-4 p-3 bg-white/5 rounded-lg">
+        <div className="flex items-center justify-center gap-3 my-4 p-3 bg-muted/60 rounded-lg">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
             {guildIcon ? (
               <img src={guildIcon} alt="" className="w-full h-full object-cover" />
@@ -60,7 +60,7 @@ export function LeaveGuildModal({
               <Users className="w-5 h-5 text-white" />
             )}
           </div>
-          <span className="text-white font-medium">{guildName}</span>
+          <span className="text-foreground font-medium">{guildName}</span>
         </div>
 
         {isOwner ? (
@@ -87,7 +87,7 @@ export function LeaveGuildModal({
             />
           </div>
         ) : (
-          <p className="text-gray-400 text-sm mb-4">
+          <p className="text-muted-foreground text-sm mb-4">
             Вы больше не сможете видеть каналы и сообщения этой гильдии.
             Вы сможете присоединиться снова по приглашению.
           </p>
@@ -97,7 +97,7 @@ export function LeaveGuildModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
           >
             Отмена
           </button>

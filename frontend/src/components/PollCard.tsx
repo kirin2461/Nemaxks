@@ -57,7 +57,7 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-5 border border-purple-500/20"
+      className="bg-card/50 backdrop-blur-sm rounded-xl p-5 border border-purple-500/20"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -67,13 +67,13 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
           <div>
             <h3 className="font-semibold text-white">{poll.question}</h3>
             {poll.description && (
-              <p className="text-sm text-gray-400 mt-1">{poll.description}</p>
+              <p className="text-sm text-muted-foreground mt-1">{poll.description}</p>
             )}
           </div>
         </div>
         
         {poll.anonymous && (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Lock className="w-3 h-3" />
             {language === 'ru' ? 'Анонимно' : 'Anonymous'}
           </div>
@@ -93,7 +93,7 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
               className={`relative rounded-lg p-3 transition-all cursor-pointer overflow-hidden ${
                 isSelected
                   ? 'bg-purple-600/30 border-2 border-purple-500'
-                  : 'bg-gray-700/50 border-2 border-transparent hover:border-gray-600'
+                  : 'bg-secondary/50 border-2 border-transparent hover:border-border'
               } ${(poll.is_closed || isExpired) ? 'cursor-default' : ''}`}
             >
               {showResults && (
@@ -116,7 +116,7 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
                 </div>
                 
                 {showResults && (
-                  <span className="text-sm text-gray-400">
+                  <span className="text-sm text-muted-foreground">
                     {percentage}% ({option.votes_count})
                   </span>
                 )}
@@ -127,7 +127,7 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 text-sm text-gray-400">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Users className="w-4 h-4" />
             <span>{poll.votes_count} {language === 'ru' ? 'голосов' : 'votes'}</span>
@@ -148,7 +148,7 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
           )}
           
           {poll.multi_choice && (
-            <span className="text-xs bg-gray-700 px-2 py-0.5 rounded">
+            <span className="text-xs bg-secondary px-2 py-0.5 rounded">
               {language === 'ru' ? 'Множественный выбор' : 'Multiple choice'}
             </span>
           )}

@@ -43,7 +43,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
           <div className="relative w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-4 border-yellow-300 shadow-2xl">
             <div className="text-center">
               <p className="text-yellow-100 text-sm font-medium">УРОВЕНЬ</p>
-              <p className="text-5xl font-black text-white drop-shadow-lg">{newLevel}</p>
+              <p className="text-5xl font-black text-foreground drop-shadow-lg">{newLevel}</p>
             </div>
           </div>
           <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-yellow-300 animate-bounce" />
@@ -53,18 +53,18 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
         <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
           УРОВЕНЬ ПОВЫШЕН!
         </h2>
-        <p className="text-gray-400 mb-6">
+        <p className="text-muted-foreground mb-6">
           Поздравляем! Вы достигли {newLevel} уровня
         </p>
 
         {rewards.length > 0 && (
           <div className={`transition-all duration-500 ${showRewards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <p className="text-sm text-gray-400 mb-3">Ваши награды:</p>
+            <p className="text-sm text-muted-foreground mb-3">Ваши награды:</p>
             <div className="space-y-2">
               {rewards.map((reward, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10"
+                  className="flex items-center justify-between p-3 bg-muted/60 rounded-lg border border-border"
                   style={{ 
                     animationDelay: `${index * 100}ms`,
                     animation: showRewards ? 'slideIn 0.3s ease forwards' : 'none'
@@ -72,11 +72,11 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
                 >
                   <div className="flex items-center gap-3">
                     {getRewardIcon(reward.type)}
-                    <span className="text-white">
+                    <span className="text-foreground">
                       {reward.name || (reward.type === 'coins' ? 'Монеты' : reward.type === 'gems' ? 'Кристаллы' : 'XP')}
                     </span>
                   </div>
-                  <span className="text-lg font-bold text-white">+{reward.amount}</span>
+                  <span className="text-lg font-bold text-foreground">+{reward.amount}</span>
                 </div>
               ))}
             </div>

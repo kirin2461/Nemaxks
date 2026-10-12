@@ -413,7 +413,7 @@ export default function AuthPage() {
             </div>
 
             {!isLogin && (
-              <div className="flex items-start gap-3 p-3 bg-white/5 border border-white/10 rounded-lg">
+              <div className="flex items-start gap-3 p-3 bg-muted/60 border border-border rounded-lg">
                 <input
                   id="agree-terms"
                   type="checkbox"
@@ -421,7 +421,7 @@ export default function AuthPage() {
                   onChange={(e) => setAgreeToTerms(e.target.checked)}
                   className="w-5 h-5 mt-0.5 rounded border-border bg-background text-primary focus:ring-primary cursor-pointer"
                 />
-                <label htmlFor="agree-terms" className="text-sm text-gray-300 cursor-pointer leading-relaxed">
+                <label htmlFor="agree-terms" className="text-sm text-foreground cursor-pointer leading-relaxed">
                   {t.agreeTerms}{' '}
                   <Link href="/terms" className="text-primary hover:underline">
                     {t.termsOfUse}

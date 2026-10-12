@@ -70,7 +70,7 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const planConfig: Record<string, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
-  free: { label: "Бесплатно", color: "text-gray-300", bgColor: "bg-gray-700", icon: <Zap size={14} /> },
+  free: { label: "Бесплатно", color: "text-foreground", bgColor: "bg-secondary", icon: <Zap size={14} /> },
   edu_basic: { label: "Базовый", color: "text-blue-300", bgColor: "bg-blue-600/80", icon: <Star size={14} /> },
   edu_pro: { label: "Про", color: "text-purple-300", bgColor: "bg-purple-600/80", icon: <Crown size={14} /> },
 };
@@ -118,7 +118,7 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
     >
-      <div className={`relative overflow-hidden rounded-2xl border border-gray-700/50 bg-gray-800/40 backdrop-blur-sm transition-all duration-300 ${isHovered ? "border-gray-600 shadow-xl shadow-black/20" : ""}`}>
+      <div className={`relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm transition-all duration-300 ${isHovered ? "border-border shadow-xl shadow-black/20" : ""}`}>
         <div className={`absolute inset-0 bg-gradient-to-br ${typeConfig.gradient} ${typeConfig.hoverGradient} transition-all duration-300`} />
         
         <div className="relative p-5">
@@ -132,27 +132,27 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
             </div>
           </div>
 
-          <h3 className="text-lg font-semibold text-white mb-1.5">{template.name}</h3>
-          <p className="text-sm text-gray-400 mb-4 line-clamp-2">{template.description}</p>
+          <h3 className="text-lg font-semibold text-foreground mb-1.5">{template.name}</h3>
+          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{template.description}</p>
 
           {features.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-4">
               {features.slice(0, 4).map((feature, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-xs text-gray-300"
+                  className="px-2 py-0.5 bg-muted/60 border border-border rounded text-xs text-foreground"
                 >
                   {feature}
                 </span>
               ))}
               {features.length > 4 && (
-                <span className="px-2 py-0.5 text-xs text-gray-500">+{features.length - 4}</span>
+                <span className="px-2 py-0.5 text-xs text-muted-foreground">+{features.length - 4}</span>
               )}
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center justify-between pt-3 border-t border-border/50">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Download size={14} />
               <span>{template.usage_count.toLocaleString()} использований</span>
             </div>
@@ -161,7 +161,7 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
               {onPreview && (
                 <button
                   onClick={() => onPreview(template)}
-                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Eye size={16} />
                 </button>
@@ -183,7 +183,7 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
                 </button>
               ) : (
                 <button
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-700/50 text-gray-400 cursor-not-allowed"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary/50 text-muted-foreground cursor-not-allowed"
                   disabled
                 >
                   <Lock size={14} />
@@ -200,21 +200,21 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
 
 export function TemplateCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-gray-700/50 bg-gray-800/40 p-5 animate-pulse">
+    <div className="rounded-2xl border border-border/50 bg-card/40 p-5 animate-pulse">
       <div className="flex items-start justify-between mb-4">
-        <div className="w-12 h-12 rounded-xl bg-gray-700" />
-        <div className="w-20 h-6 rounded-full bg-gray-700" />
+        <div className="w-12 h-12 rounded-xl bg-secondary" />
+        <div className="w-20 h-6 rounded-full bg-secondary" />
       </div>
-      <div className="h-5 bg-gray-700 rounded w-3/4 mb-2" />
-      <div className="h-4 bg-gray-700 rounded w-full mb-1" />
-      <div className="h-4 bg-gray-700 rounded w-2/3 mb-4" />
+      <div className="h-5 bg-secondary rounded w-3/4 mb-2" />
+      <div className="h-4 bg-secondary rounded w-full mb-1" />
+      <div className="h-4 bg-secondary rounded w-2/3 mb-4" />
       <div className="flex gap-2 mb-4">
-        <div className="h-5 w-16 bg-gray-700 rounded" />
-        <div className="h-5 w-16 bg-gray-700 rounded" />
+        <div className="h-5 w-16 bg-secondary rounded" />
+        <div className="h-5 w-16 bg-secondary rounded" />
       </div>
-      <div className="flex justify-between pt-3 border-t border-gray-700/50">
-        <div className="h-4 w-24 bg-gray-700 rounded" />
-        <div className="h-8 w-24 bg-gray-700 rounded-lg" />
+      <div className="flex justify-between pt-3 border-t border-border/50">
+        <div className="h-4 w-24 bg-secondary rounded" />
+        <div className="h-8 w-24 bg-secondary rounded-lg" />
       </div>
     </div>
   );
@@ -241,7 +241,7 @@ export function FeaturedTemplateCard({ template, onApply, userPlan = "free", has
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="relative overflow-hidden rounded-3xl border border-gray-700/50 bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm"
+      className="relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-sm"
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${typeConfig.gradient} opacity-50`} />
       <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-medium">
@@ -250,17 +250,17 @@ export function FeaturedTemplateCard({ template, onApply, userPlan = "free", has
       </div>
       
       <div className="relative p-8">
-        <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${typeConfig.gradient} border border-white/10 ${typeConfig.accent} mb-6`}>
+        <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${typeConfig.gradient} border border-border ${typeConfig.accent} mb-6`}>
           {icon}
         </div>
         
-        <h3 className="text-2xl font-bold text-white mb-2">{template.name}</h3>
-        <p className="text-gray-400 mb-6 max-w-md">{template.description}</p>
+        <h3 className="text-2xl font-bold text-foreground mb-2">{template.name}</h3>
+        <p className="text-muted-foreground mb-6 max-w-md">{template.description}</p>
         
         {isLocked ? (
           <button
             disabled
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gray-700 text-gray-400 rounded-xl font-medium cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-muted-foreground rounded-xl font-medium cursor-not-allowed"
           >
             <Lock size={18} />
             Требуется {template.required_plan === "edu_pro" ? "Pro" : "Basic"} план
@@ -268,7 +268,7 @@ export function FeaturedTemplateCard({ template, onApply, userPlan = "free", has
         ) : (
           <button
             onClick={() => onApply?.(template)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-xl font-medium hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
           >
             <Play size={18} />
             Начать работу

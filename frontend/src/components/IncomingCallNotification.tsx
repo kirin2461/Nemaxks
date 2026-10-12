@@ -39,16 +39,16 @@ export const IncomingCallNotification: React.FC = () => {
         animating ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
       }`}
     >
-      <div className="bg-white rounded-lg shadow-2xl p-6 w-80 border-l-4 border-blue-500">
+      <div className="bg-card text-card-foreground rounded-lg shadow-2xl p-6 w-80 border-l-4 border-blue-500">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Incoming Call</h3>
+          <h3 className="text-lg font-bold text-foreground">Incoming Call</h3>
           <div className="flex gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           </div>
         </div>
         <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-1">From:</p>
-          <p className="text-base font-semibold text-gray-900">
+          <p className="text-sm text-muted-foreground mb-1">From:</p>
+          <p className="text-base font-semibold text-foreground">
             {caller ? caller.username : 'Unknown User'}
           </p>
         </div>

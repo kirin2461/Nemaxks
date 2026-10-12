@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/utils'
 
 interface ModalProps {
   isOpen: boolean
@@ -27,13 +28,12 @@ export function Modal({
   }, [onClose])
 
   useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
-    }
+    if (!isOpen) return
+    document.addEventListener('keydown', handleEscape)
+    lockBodyScroll()
     return () => {
       document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
+      unlockBodyScroll()
     }
   }, [isOpen, handleEscape])
 
@@ -53,14 +53,14 @@ export function Modal({
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={closeOnOverlayClick ? onClose : undefined}
       />
-      <div className={`relative w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col bg-[#1a1a2e] rounded-xl shadow-2xl border border-white/10 animate-in fade-in zoom-in-95 duration-200 ${className}`}>
+      <div className={`relative w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col bg-card text-card-foreground rounded-xl shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200 ${className}`}>
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-3 md:p-4 border-b border-white/10 shrink-0">
-            {title && <h2 className="text-base md:text-lg font-semibold text-white">{title}</h2>}
+          <div className="flex items-center justify-between p-3 md:p-4 border-b border-border shrink-0">
+            {title && <h2 className="text-base md:text-lg font-semibold text-foreground">{title}</h2>}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white touch-target"
+                className="p-1.5 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground touch-target"
               >
                 <X size={20} />
               </button>

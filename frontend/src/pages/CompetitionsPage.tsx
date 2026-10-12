@@ -43,11 +43,11 @@ export default function CompetitionsPage() {
       case 1:
         return <Crown className="w-6 h-6 text-yellow-400" />;
       case 2:
-        return <Medal className="w-6 h-6 text-gray-400" />;
+        return <Medal className="w-6 h-6 text-muted-foreground" />;
       case 3:
         return <Award className="w-6 h-6 text-amber-600" />;
       default:
-        return <span className="w-6 h-6 flex items-center justify-center text-gray-400 font-bold">{rank}</span>;
+        return <span className="w-6 h-6 flex items-center justify-center text-muted-foreground font-bold">{rank}</span>;
     }
   };
 
@@ -66,11 +66,11 @@ export default function CompetitionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Trophy className="w-8 h-8 text-yellow-400" />
-          <h1 className="text-3xl font-bold text-white">Соревнования гильдий</h1>
+          <h1 className="text-3xl font-bold text-foreground">Соревнования гильдий</h1>
         </div>
 
         <div className="flex gap-2 mb-6">
@@ -81,7 +81,7 @@ export default function CompetitionsPage() {
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 activeTab === tab.id
                   ? 'bg-yellow-500 text-black'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  : 'bg-card text-muted-foreground hover:bg-secondary'
               }`}
             >
               {tab.label}
@@ -97,25 +97,25 @@ export default function CompetitionsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={() => loadCompetitionDetails(comp)}
-                className={`bg-gray-800/50 rounded-xl p-5 border cursor-pointer transition-all hover:border-yellow-500/50 ${
-                  selectedCompetition?.id === comp.id ? 'border-yellow-500' : 'border-gray-700'
+                className={`bg-card/50 rounded-xl p-5 border cursor-pointer transition-all hover:border-yellow-500/50 ${
+                  selectedCompetition?.id === comp.id ? 'border-yellow-500' : 'border-border'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-lg font-bold text-white">{comp.name_ru || comp.name}</h3>
-                    <p className="text-sm text-gray-400">{comp.description_ru || comp.description}</p>
+                    <h3 className="text-lg font-bold text-foreground">{comp.name_ru || comp.name}</h3>
+                    <p className="text-sm text-muted-foreground">{comp.description_ru || comp.description}</p>
                   </div>
                   <div className={`px-3 py-1 rounded-full text-xs font-medium ${
                     activeTab === 'active' ? 'bg-green-500/20 text-green-400' :
                     activeTab === 'upcoming' ? 'bg-blue-500/20 text-blue-400' :
-                    'bg-gray-500/20 text-gray-400'
+                    'bg-gray-500/20 text-muted-foreground'
                   }`}>
                     {activeTab === 'active' ? 'Активно' : activeTab === 'upcoming' ? 'Скоро' : 'Завершено'}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-sm text-gray-400">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     {activeTab === 'active' ? (
@@ -136,8 +136,8 @@ export default function CompetitionsPage() {
 
             {competitions.length === 0 && (
               <div className="text-center py-12">
-                <Trophy className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">Нет соревнований</p>
+                <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Нет соревнований</p>
               </div>
             )}
           </div>
@@ -146,9 +146,9 @@ export default function CompetitionsPage() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gray-800/50 rounded-xl p-6 border border-gray-700"
+              className="bg-card/50 rounded-xl p-6 border border-border"
             >
-              <h3 className="text-xl font-bold text-white mb-4">
+              <h3 className="text-xl font-bold text-foreground mb-4">
                 Таблица лидеров
               </h3>
 
@@ -158,31 +158,31 @@ export default function CompetitionsPage() {
                     <div
                       key={entry.id}
                       className={`flex items-center gap-4 p-3 rounded-lg ${
-                        index < 3 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent' : 'bg-gray-700/30'
+                        index < 3 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent' : 'bg-secondary/30'
                       }`}
                     >
                       {getRankIcon(entry.rank)}
                       <div className="flex-1">
-                        <p className="font-medium text-white">{entry.guild?.name || `Guild #${entry.guild_id}`}</p>
+                        <p className="font-medium text-foreground">{entry.guild?.name || `Guild #${entry.guild_id}`}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-yellow-400">{entry.score.toLocaleString()}</p>
-                        <p className="text-xs text-gray-400">очков</p>
+                        <p className="text-xs text-muted-foreground">очков</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Users className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">Пока нет участников</p>
+                  <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">Пока нет участников</p>
                 </div>
               )}
 
               {selectedCompetition.prizes && (
                 <div className="mt-6 p-4 bg-gradient-to-r from-yellow-500/10 to-purple-500/10 rounded-lg border border-yellow-500/20">
                   <h4 className="text-sm font-semibold text-yellow-400 mb-2">Призы</h4>
-                  <div className="text-sm text-gray-300">
+                  <div className="text-sm text-foreground">
                     {(() => {
                       try {
                         const prizes = JSON.parse(selectedCompetition.prizes);

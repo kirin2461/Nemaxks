@@ -384,7 +384,7 @@ export default function VideoPage() {
                             <div className="absolute bottom-full right-0 mb-2 bg-black/90 rounded-lg overflow-hidden min-w-[120px]">
                               <button
                                 onClick={() => { setSelectedQuality('720p'); setShowQualityMenu(false) }}
-                                className="w-full px-4 py-2 text-sm text-white hover:bg-white/10 flex items-center justify-between"
+                                className="w-full px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center justify-between"
                               >
                                 <span>720p</span>
                                 {selectedQuality === '720p' && <Check className="w-4 h-4 text-primary" />}
@@ -400,7 +400,7 @@ export default function VideoPage() {
                                 className={cn(
                                   "w-full px-4 py-2 text-sm flex items-center justify-between",
                                   isPremium 
-                                    ? "text-white hover:bg-white/10" 
+                                    ? "text-foreground hover:bg-muted" 
                                     : "text-white/50 cursor-not-allowed"
                                 )}
                               >
@@ -411,7 +411,7 @@ export default function VideoPage() {
                                 {selectedQuality === '1080p' && <Check className="w-4 h-4 text-primary" />}
                               </button>
                               {!isPremium && (
-                                <div className="px-4 py-2 text-xs text-amber-400 border-t border-white/10 flex items-center gap-1">
+                                <div className="px-4 py-2 text-xs text-amber-400 border-t border-border flex items-center gap-1">
                                   <Crown className="w-3 h-3" />
                                   <span>Premium для 1080p</span>
                                 </div>
@@ -463,7 +463,7 @@ export default function VideoPage() {
                         onClick={handleLike}
                         className={cn(
                           "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
-                          isLiked ? "bg-primary text-white" : "bg-secondary hover:bg-secondary/80"
+                          isLiked ? "bg-primary text-foreground" : "bg-secondary hover:bg-secondary/80"
                         )}
                       >
                         <ThumbsUp className="w-5 h-5" />
@@ -477,7 +477,7 @@ export default function VideoPage() {
                         onClick={handleBookmark}
                         className={cn(
                           "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
-                          isBookmarked ? "bg-primary text-white" : "bg-secondary hover:bg-secondary/80"
+                          isBookmarked ? "bg-primary text-foreground" : "bg-secondary hover:bg-secondary/80"
                         )}
                       >
                         <Bookmark className="w-5 h-5" />

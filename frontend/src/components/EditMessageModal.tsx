@@ -78,10 +78,10 @@ export function EditMessageModal({
             onKeyDown={handleKeyDown}
             maxLength={2000}
             rows={4}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none transition-colors resize-none"
+            className="w-full px-4 py-3 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors resize-none"
             placeholder="Введите сообщение..."
           />
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <div className="flex justify-between text-xs text-muted-foreground mt-1">
             <span>Enter - сохранить, Shift+Enter - новая строка</span>
             <span>{content.length}/2000</span>
           </div>
@@ -97,7 +97,7 @@ export function EditMessageModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
           >
             Отмена
           </button>

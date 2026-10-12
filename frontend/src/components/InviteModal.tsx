@@ -73,7 +73,7 @@ export function InviteModal({ guildId, guildName, onClose }: InviteModalProps) {
             <button
               onClick={() => setShowQR(true)}
               className={`flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                showQR ? 'bg-primary text-white' : 'bg-muted hover:bg-muted/80'
+                showQR ? 'bg-primary text-foreground' : 'bg-muted hover:bg-muted/80'
               }`}
             >
               <QrCode className="w-4 h-4" />
@@ -82,7 +82,7 @@ export function InviteModal({ guildId, guildName, onClose }: InviteModalProps) {
             <button
               onClick={() => setShowQR(false)}
               className={`flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                !showQR ? 'bg-primary text-white' : 'bg-muted hover:bg-muted/80'
+                !showQR ? 'bg-primary text-foreground' : 'bg-muted hover:bg-muted/80'
               }`}
             >
               <Link className="w-4 h-4" />

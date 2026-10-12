@@ -166,7 +166,7 @@ export function MediaUpload({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+          className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           title="Attach image or video"
         >
           <Upload className="w-5 h-5" />
@@ -174,7 +174,7 @@ export function MediaUpload({
       )}
 
       {isCompressing && (
-        <div className="flex items-center gap-2 text-sm text-gray-400">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span>Compressing...</span>
         </div>
@@ -182,7 +182,7 @@ export function MediaUpload({
 
       {selectedMedia && !isCompressing && (
         <div className="relative inline-block">
-          <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black/20">
+          <div className="relative rounded-lg overflow-hidden border border-border bg-black/20">
             {selectedMedia.type === 'image' ? (
               <img
                 src={selectedMedia.preview}
@@ -214,7 +214,7 @@ export function MediaUpload({
               {compressionStats && (
                 <span className="text-green-400">
                   {formatFileSize(compressionStats.compressed)}
-                  <span className="text-gray-400 line-through ml-1">
+                  <span className="text-muted-foreground line-through ml-1">
                     {formatFileSize(compressionStats.original)}
                   </span>
                 </span>

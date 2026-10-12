@@ -48,14 +48,14 @@ export default function MentorshipPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <GraduationCap className="w-8 h-8 text-emerald-400" />
@@ -82,7 +82,7 @@ export default function MentorshipPage() {
             </div>
 
             <div className="space-y-3">
-              <h3 className="font-medium text-gray-300 flex items-center gap-2">
+              <h3 className="font-medium text-foreground flex items-center gap-2">
                 <Target className="w-4 h-4" />
                 Current Tasks
               </h3>
@@ -90,7 +90,7 @@ export default function MentorshipPage() {
                 <div
                   key={task.id}
                   className={`p-4 rounded-lg ${
-                    task.is_completed ? 'bg-emerald-600/20' : 'bg-gray-800'
+                    task.is_completed ? 'bg-emerald-600/20' : 'bg-card'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -98,11 +98,11 @@ export default function MentorshipPage() {
                     {task.is_completed ? (
                       <CheckCircle className="w-5 h-5 text-emerald-400" />
                     ) : (
-                      <Clock className="w-5 h-5 text-gray-400" />
+                      <Clock className="w-5 h-5 text-muted-foreground" />
                     )}
                   </div>
-                  <p className="text-sm text-gray-400">{task.description}</p>
-                  <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                  <p className="text-sm text-muted-foreground">{task.description}</p>
+                  <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
                     <span>+{task.mentor_xp} mentor XP</span>
                     <span>+{task.mentee_coins} mentee coins</span>
                   </div>
@@ -111,9 +111,9 @@ export default function MentorshipPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-gray-800 rounded-xl p-6 mb-8">
+          <div className="bg-card rounded-xl p-6 mb-8">
             <h2 className="text-xl font-bold mb-2">Find a Mentor</h2>
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               Connect with experienced users who can help guide your journey on Nemaks.
             </p>
           </div>
@@ -130,7 +130,7 @@ export default function MentorshipPage() {
               key={mentor.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gray-800 rounded-xl p-5"
+              className="bg-card rounded-xl p-5"
             >
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-full bg-emerald-600/20 flex items-center justify-center">
@@ -143,7 +143,7 @@ export default function MentorshipPage() {
                       Level {mentor.level}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-sm text-gray-400 mb-3">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
                     <Star className="w-4 h-4 text-yellow-400" />
                     <span>{mentor.mentee_count || 0} mentees</span>
                   </div>
@@ -161,10 +161,10 @@ export default function MentorshipPage() {
         </div>
 
         {mentors.length === 0 && (
-          <div className="bg-gray-800 rounded-xl p-12 text-center">
-            <GraduationCap className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <div className="bg-card rounded-xl p-12 text-center">
+            <GraduationCap className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-bold mb-2">No mentors available</h3>
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               Become a mentor by reaching level 10!
             </p>
           </div>
