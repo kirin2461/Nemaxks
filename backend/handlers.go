@@ -3,12 +3,14 @@ package main
 import (
         "crypto/rand"
         "encoding/hex"
+        "fmt"
         "log"
         "net/http"
         "os"
         "strconv"
         "strings"
         "time"
+        "unicode"
 
         "github.com/gin-gonic/gin"
         "github.com/golang-jwt/jwt/v5"
@@ -20,11 +22,21 @@ import (
 // jwtSecretCache caches the generated JWT secret for the session
 var jwtSecretCache []byte
 
-// getJWTSecret returns the JWT secret from environment or generates a secure random one
+// getJWTSecret returns the JWT secret from environment.
+// В release-режиме (см. isReleaseMode) отсутствие JWT_SECRET фатально:
+// случайный секрет на каждый рестарт делает невозможным контроль сессий
+// и молча инвалидирует все токены. В debug/test генерируется случайный
+// секрет на сессию процесса (только для локальной разработки).
 func getJWTSecret() []byte {
         secret := os.Getenv("JWT_SECRET")
         if secret != "" {
                 return []byte(secret)
+        }
+
+        if isReleaseMode() {
+                log.Fatal("CRITICAL: JWT_SECRET is not set in release mode. " +
+                        "Refusing to start with an ephemeral random secret. " +
+                        "Set JWT_SECRET env var, or run with GIN_MODE=debug for local development.")
         }
 
         // Use cached secret if already generated this session
@@ -32,15 +44,14 @@ func getJWTSecret() []byte {
                 return jwtSecretCache
         }
 
-        // Generate a secure random secret for this session
+        // Generate a secure random secret for this session (dev only)
         randomBytes := make([]byte, 32) // 256 bits
         if _, err := rand.Read(randomBytes); err != nil {
                 // Critical failure - cannot continue without secure secret
                 log.Fatalf("CRITICAL: Failed to generate secure JWT secret: %v. Cannot start server securely.", err)
         }
         jwtSecretCache = []byte(hex.EncodeToString(randomBytes))
-        log.Println("WARNING: JWT_SECRET not set. Generated random secret for this session.")
-        log.Println("NOTE: Users will need to re-login after server restart. Set JWT_SECRET for persistent sessions.")
+        log.Println("WARNING: JWT_SECRET not set. Generated random secret for this session (dev mode only).")
 
         return jwtSecretCache
 }
@@ -215,10 +226,16 @@ func registerHandler(c *gin.Context) {
         var req struct {
                 Username string  `json:"username" binding:"required"`
                 Email    *string `json:"email"`
-                Password string  `json:"password" binding:"required,min=6"`
+                Password string  `json:"password" binding:"required"`
         }
         if err := c.ShouldBindJSON(&req); err != nil {
                 log.Printf("Register bind error: %v", err)
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        // Password policy: минимум 8 символов, хотя бы одна буква и одна цифра
+        if err := validatePasswordPolicy(req.Password); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
                 return
         }
@@ -381,7 +398,45 @@ func loginHandler(c *gin.Context) {
         })
 }
 
+// validatePasswordPolicy: минимум 8 символов, хотя бы одна буква и одна цифра.
+func validatePasswordPolicy(password string) error {
+        if len(password) < 8 {
+                return fmt.Errorf("password must be at least 8 characters long")
+        }
+        var hasLetter, hasDigit bool
+        for _, r := range password {
+                switch {
+                case unicode.IsLetter(r):
+                        hasLetter = true
+                case unicode.IsDigit(r):
+                        hasDigit = true
+                }
+        }
+        if !hasLetter || !hasDigit {
+                return fmt.Errorf("password must contain at least one letter and one digit")
+        }
+        return nil
+}
+
 func logoutHandler(c *gin.Context) {
+        // Реальный отзыв токена: заносим access-token (jti) и сессию (sid) в
+        // blacklist, деактивируем сессию и отзываем refresh-токены в БД.
+        if tokenID, ok := c.Get("token_id"); ok {
+                if tid, ok := tokenID.(string); ok && tid != "" {
+                        blacklistToken(tid, accessTokenExpiry)
+                }
+        }
+
+        if sidRaw, ok := c.Get("session_id"); ok {
+                if sid, ok := sidRaw.(string); ok && sid != "" {
+                        blacklistSession(sid, accessTokenExpiry)
+                        now := time.Now()
+                        db.Model(&UserSession{}).Where("session_id = ?", sid).Update("is_active", false)
+                        db.Model(&RefreshToken{}).Where("session_id = ? AND revoked = ?", sid, false).
+                                Updates(map[string]interface{}{"revoked": true, "revoked_at": now})
+                }
+        }
+
         c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 }
 
@@ -446,42 +501,12 @@ func updateMeHandler(c *gin.Context) {
         c.JSON(http.StatusOK, user.ToPublic())
 }
 
+// authMiddleware — защита всех закрытых роутов. Делегирует
+// enhancedAuthMiddleware (jwt_enhanced.go): проверяет тип токена (access),
+// blacklist по jti/sid и активность сессии — это делает работающими
+// logout/revoke. Раньше токены после logout оставались валидными до exp.
 func authMiddleware() gin.HandlerFunc {
-        return func(c *gin.Context) {
-                authHeader := c.GetHeader("Authorization")
-                if authHeader == "" {
-                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-                        return
-                }
-
-                tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-                token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-                        // Validate signing method
-                        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                                return nil, jwt.ErrSignatureInvalid
-                        }
-                        return getJWTSecret(), nil
-                })
-
-                if err != nil || !token.Valid {
-                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-                        return
-                }
-
-                claims, ok := token.Claims.(jwt.MapClaims)
-                if !ok {
-                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
-                        return
-                }
-
-                // Support both "user_id" and "uid" claims
-                if uid, ok := claims["user_id"]; ok {
-                        c.Set("user_id", uid)
-                } else if uid, ok := claims["uid"]; ok {
-                        c.Set("user_id", uid)
-                }
-                c.Next()
-        }
+        return enhancedAuthMiddleware()
 }
 
 // optionalAuthMiddleware extracts user_id if token is present but doesn't require it
@@ -503,11 +528,21 @@ func optionalAuthMiddleware() gin.HandlerFunc {
 
                 if err == nil && token.Valid {
                         if claims, ok := token.Claims.(jwt.MapClaims); ok {
-                                // Support both "user_id" and "uid" claims
-                                if uid, ok := claims["user_id"]; ok {
-                                        c.Set("user_id", uid)
-                                } else if uid, ok := claims["uid"]; ok {
-                                        c.Set("user_id", uid)
+                                // Не принимаем отозванные токены/сессии (logout/revoke)
+                                revoked := false
+                                if jti, ok := claims["jti"].(string); ok && jti != "" && isTokenBlacklisted(jti) {
+                                        revoked = true
+                                }
+                                if sid, ok := claims["sid"].(string); ok && sid != "" && isSessionBlacklisted(sid) {
+                                        revoked = true
+                                }
+                                if !revoked {
+                                        // Support both "user_id" and "uid" claims
+                                        if uid, ok := claims["user_id"]; ok {
+                                                c.Set("user_id", uid)
+                                        } else if uid, ok := claims["uid"]; ok {
+                                                c.Set("user_id", uid)
+                                        }
                                 }
                         }
                 }

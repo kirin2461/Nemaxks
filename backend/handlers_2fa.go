@@ -7,13 +7,77 @@ import (
         "encoding/base64"
         "image/png"
         "net/http"
+        "strconv"
         "strings"
+        "sync"
         "time"
 
         "github.com/gin-gonic/gin"
         "github.com/pquerna/otp/totp"
         "golang.org/x/crypto/bcrypt"
 )
+
+// Per-user счётчик неудачных TOTP-попыток (защита от брутфорса 2FA-кода,
+// независимо от IP). После max2FAFailedAttempts подряд двухфакторная
+// сессия инвалидируется: дальнейшие попытки отклоняются на
+// lockout2FADuration, пользователь обязан пройти логин заново.
+const (
+        max2FAFailedAttempts = 5
+        lockout2FADuration   = 15 * time.Minute
+)
+
+type twoFAAttemptInfo struct {
+        FailedCount int
+        LockedUntil time.Time
+}
+
+var (
+        twoFAFailedAttempts = make(map[uint]*twoFAAttemptInfo)
+        twoFAAttemptsMu     sync.Mutex
+)
+
+// is2FAVerifyLocked проверяет, заблокирована ли 2FA-проверка для пользователя.
+func is2FAVerifyLocked(userID uint) (bool, time.Duration) {
+        twoFAAttemptsMu.Lock()
+        defer twoFAAttemptsMu.Unlock()
+
+        info, exists := twoFAFailedAttempts[userID]
+        if !exists {
+                return false, 0
+        }
+        if time.Now().Before(info.LockedUntil) {
+                return true, time.Until(info.LockedUntil)
+        }
+        // Окно блокировки истекло — сбрасываем счётчик
+        delete(twoFAFailedAttempts, userID)
+        return false, 0
+}
+
+// recordFailed2FA фиксирует неудачную попытку; возвращает true, если
+// пользователь только что заблокирован (достигнут лимит подряд).
+func recordFailed2FA(userID uint) bool {
+        twoFAAttemptsMu.Lock()
+        defer twoFAAttemptsMu.Unlock()
+
+        info, exists := twoFAFailedAttempts[userID]
+        if !exists {
+                info = &twoFAAttemptInfo{}
+                twoFAFailedAttempts[userID] = info
+        }
+        info.FailedCount++
+        if info.FailedCount >= max2FAFailedAttempts {
+                info.LockedUntil = time.Now().Add(lockout2FADuration)
+                info.FailedCount = 0
+                return true
+        }
+        return false
+}
+
+func clearFailed2FA(userID uint) {
+        twoFAAttemptsMu.Lock()
+        defer twoFAAttemptsMu.Unlock()
+        delete(twoFAFailedAttempts, userID)
+}
 
 type TwoFactorAuth struct {
         ID              uint       `json:"id" gorm:"primaryKey"`
@@ -335,13 +399,44 @@ func verify2FALoginHandler(c *gin.Context) {
                 return
         }
 
+        // Security: endpoint предназначен только для завершения логина при
+        // включённой 2FA. Без этого условия validate2FACode возвращал true для
+        // пользователей без 2FA — зная user_id, можно было получить токены
+        // без пароля (обход аутентификации).
+        if !is2FAEnabled(req.UserID) {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "2FA is not enabled for this user"})
+                return
+        }
+
+        // Per-user lockout после 5 неудачных попыток подряд
+        if locked, retryAfter := is2FAVerifyLocked(req.UserID); locked {
+                c.Header("Retry-After", strconv.Itoa(int(retryAfter.Seconds())))
+                c.JSON(http.StatusTooManyRequests, gin.H{
+                        "error":   "Too many failed 2FA attempts. Please log in again later.",
+                        "locked":  true,
+                        "relogin": true,
+                })
+                return
+        }
+
         if !validate2FACode(req.UserID, req.Code) {
                 RecordFailedLogin(c.ClientIP())
+                if justLocked := recordFailed2FA(req.UserID); justLocked {
+                        // Инвалидируем двухфакторную сессию: требуем полный
+                        // повторный логин (пароль + новый TOTP)
+                        c.JSON(http.StatusTooManyRequests, gin.H{
+                                "error":   "Too many failed 2FA attempts. Please log in again.",
+                                "locked":  true,
+                                "relogin": true,
+                        })
+                        return
+                }
                 c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid 2FA code"})
                 return
         }
 
         ClearFailedLogins(c.ClientIP())
+        clearFailed2FA(req.UserID)
 
         var user User
         if err := db.First(&user, req.UserID).Error; err != nil {

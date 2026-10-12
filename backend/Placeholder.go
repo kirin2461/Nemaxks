@@ -1,7 +1,12 @@
 package main
 
 import (
+        "encoding/base64"
+        "encoding/json"
+        "fmt"
+        "io"
         "log"
+        "net"
         "net/http"
         "os"
         "sort"
@@ -1283,7 +1288,123 @@ func getPremiumTransactionsHandler(c *gin.Context) {
         c.JSON(http.StatusOK, result)
 }
 
+// yookassaWebhookCIDRs — официальные подсети, с которых ЮKassa отправляет
+// webhook-уведомления. Источник: документация ЮKassa, раздел «Уведомления» /
+// «IP-адреса для уведомлений»: https://yookassa.ru/developers/using-api/webhooks
+// (185.71.76.0/27, 185.71.77.0/27, 77.75.153.0/25, 77.75.154.128/25,
+// 77.75.156.11, 77.75.156.35, 2a02:5180::/32).
+var yookassaWebhookCIDRs = []string{
+        "185.71.76.0/27",
+        "185.71.77.0/27",
+        "77.75.153.0/25",
+        "77.75.154.128/25",
+        "77.75.156.11/32",
+        "77.75.156.35/32",
+        "2a02:5180::/32",
+}
+
+var yookassaWebhookNets []*net.IPNet
+
+func init() {
+        for _, cidr := range yookassaWebhookCIDRs {
+                if _, n, err := net.ParseCIDR(cidr); err == nil {
+                        yookassaWebhookNets = append(yookassaWebhookNets, n)
+                }
+        }
+}
+
+// yookassaWebhookIPAllowed проверяет, что webhook пришёл с IP ЮKassa.
+// Проверка включена по умолчанию и отключается env YOOKASSA_WEBHOOK_IP_CHECK=false
+// (например, для тестовых стендов). Основная защита — перепроверка платежа
+// через API, IP-allowlist является дополнительным слоем.
+func yookassaWebhookIPAllowed(ip string) bool {
+        switch strings.ToLower(strings.TrimSpace(os.Getenv("YOOKASSA_WEBHOOK_IP_CHECK"))) {
+        case "false", "0", "off", "no":
+                return true
+        }
+        parsed := net.ParseIP(strings.TrimSpace(ip))
+        if parsed == nil {
+                return false
+        }
+        for _, n := range yookassaWebhookNets {
+                if n.Contains(parsed) {
+                        return true
+                }
+        }
+        return false
+}
+
+// yookassaPaymentVerification — ответ GET /v3/payments/{id} ЮKassa,
+// используется для независимой перепроверки webhook-уведомлений.
+type yookassaPaymentVerification struct {
+        ID     string `json:"id"`
+        Status string `json:"status"`
+        Paid   bool   `json:"paid"`
+        Amount struct {
+                Value    string `json:"value"`
+                Currency string `json:"currency"`
+        } `json:"amount"`
+        Metadata struct {
+                TransactionID string `json:"transaction_id"`
+        } `json:"metadata"`
+        PaymentMethod struct {
+                Type  string `json:"type"`
+                ID    string `json:"id"`
+                Saved bool   `json:"saved"`
+        } `json:"payment_method"`
+}
+
+// fetchYooKassaPayment запрашивает актуальное состояние платежа напрямую у ЮKassa
+// (basic-auth YOOKASSA_SHOP_ID:YOOKASSA_SECRET_KEY). Это защищает от поддельных
+// webhook'ов: доверяем только данным, полученным от api.yookassa.ru.
+func fetchYooKassaPayment(paymentID string) (*yookassaPaymentVerification, error) {
+        shopID := os.Getenv("YOOKASSA_SHOP_ID")
+        secretKey := os.Getenv("YOOKASSA_SECRET_KEY")
+        if shopID == "" || secretKey == "" {
+                return nil, fmt.Errorf("yookassa credentials not configured")
+        }
+        // Защита от SSRF/инъекции в path: payment ID ЮKassa — UUID-like, отбрасываем всё лишнее
+        for _, ch := range paymentID {
+                if !(ch >= 'a' && ch <= 'z' || ch >= '0' && ch <= '9' || ch == '-') {
+                        return nil, fmt.Errorf("invalid payment id format")
+                }
+        }
+
+        req, err := http.NewRequest("GET", "https://api.yookassa.ru/v3/payments/"+paymentID, nil)
+        if err != nil {
+                return nil, err
+        }
+        auth := base64.StdEncoding.EncodeToString([]byte(shopID + ":" + secretKey))
+        req.Header.Set("Authorization", "Basic "+auth)
+
+        client := &http.Client{Timeout: 15 * time.Second}
+        resp, err := client.Do(req)
+        if err != nil {
+                return nil, fmt.Errorf("yookassa api request failed: %w", err)
+        }
+        defer resp.Body.Close()
+
+        body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+        if resp.StatusCode != http.StatusOK {
+                return nil, fmt.Errorf("yookassa api returned status %d", resp.StatusCode)
+        }
+
+        var payment yookassaPaymentVerification
+        if err := json.Unmarshal(body, &payment); err != nil {
+                return nil, fmt.Errorf("failed to parse yookassa payment: %w", err)
+        }
+        return &payment, nil
+}
+
 func yookassaWebhookHandler(c *gin.Context) {
+        // Дополнительный слой защиты: IP-allowlist ЮKassa (feature-flag
+        // YOOKASSA_WEBHOOK_IP_CHECK, по умолчанию включён).
+        if !yookassaWebhookIPAllowed(c.ClientIP()) {
+                log.Printf("[Billing] Webhook rejected: IP %s is not in YooKassa allowlist", c.ClientIP())
+                c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+                return
+        }
+
         var payload struct {
                 Type   string `json:"type"`
                 Event  string `json:"event"`
@@ -1300,12 +1421,12 @@ func yookassaWebhookHandler(c *gin.Context) {
                         } `json:"payment_method"`
                 } `json:"object"`
         }
-        
+
         if err := c.BindJSON(&payload); err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
                 return
         }
-        
+
         if payload.Object.Status == "succeeded" {
                 transactionID, err := strconv.ParseUint(payload.Object.Metadata.TransactionID, 10, 32)
                 if err != nil {
@@ -1313,19 +1434,59 @@ func yookassaWebhookHandler(c *gin.Context) {
                         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid transaction ID"})
                         return
                 }
-                
+
                 var transaction PremiumTransaction
                 if db.First(&transaction, transactionID).RowsAffected == 0 {
                         log.Printf("Transaction not found: %d", transactionID)
                         c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
                         return
                 }
-                
+
                 if transaction.Status == "succeeded" {
                         c.JSON(http.StatusOK, gin.H{"status": "already_processed"})
                         return
                 }
-                
+
+                // КРИТИЧНО: не доверяем телу webhook. Перепроверяем платёж
+                // напрямую через API ЮKassa и активируем подписку только после
+                // успешной сверки всех полей с данными в БД.
+                verified, err := fetchYooKassaPayment(payload.Object.ID)
+                if err != nil {
+                        // Временная ошибка/не настроено — отвечаем 503, чтобы
+                        // ЮKassa повторила уведомление позже. Ничего не активируем.
+                        log.Printf("[Billing] Webhook verification unavailable for payment %s: %v", payload.Object.ID, err)
+                        c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Payment verification unavailable"})
+                        return
+                }
+
+                if verified.Status != "succeeded" || !verified.Paid {
+                        log.Printf("[Billing] Webhook rejected: payment %s real status is %q (paid=%v)", payload.Object.ID, verified.Status, verified.Paid)
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Payment is not succeeded"})
+                        return
+                }
+
+                // Сверка transaction_id из metadata с транзакцией в БД
+                if verified.Metadata.TransactionID != strconv.FormatUint(transactionID, 10) {
+                        log.Printf("[Billing] Webhook rejected: payment %s metadata transaction_id=%q does not match %d", payload.Object.ID, verified.Metadata.TransactionID, transactionID)
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Payment metadata mismatch"})
+                        return
+                }
+
+                // Если платёж уже привязан к транзакции — ID обязан совпадать
+                if transaction.ProviderPaymentID != "" && transaction.ProviderPaymentID != payload.Object.ID {
+                        log.Printf("[Billing] Webhook rejected: transaction %d is bound to payment %s, got %s", transaction.ID, transaction.ProviderPaymentID, payload.Object.ID)
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Payment ID mismatch"})
+                        return
+                }
+
+                // Сверка суммы платежа с суммой транзакции
+                verifiedAmount, err := strconv.ParseFloat(verified.Amount.Value, 64)
+                if err != nil || verifiedAmount < transaction.AmountRub-0.01 || verifiedAmount > transaction.AmountRub+0.01 {
+                        log.Printf("[Billing] Webhook rejected: payment %s amount %q does not match transaction %d amount %.2f", payload.Object.ID, verified.Amount.Value, transaction.ID, transaction.AmountRub)
+                        c.JSON(http.StatusBadRequest, gin.H{"error": "Payment amount mismatch"})
+                        return
+                }
+
                 now := time.Now()
                 transaction.Status = "succeeded"
                 transaction.CompletedAt = &now
@@ -1342,9 +1503,11 @@ func yookassaWebhookHandler(c *gin.Context) {
                         periodEnd = now.AddDate(1, 0, 0)
                 }
                 
+                // Данные о способе оплаты берём из верифицированного ответа API,
+                // а не из тела webhook
                 paymentMethodID := ""
-                if payload.Object.PaymentMethod.Saved && payload.Object.PaymentMethod.ID != "" {
-                        paymentMethodID = payload.Object.PaymentMethod.ID
+                if verified.PaymentMethod.Saved && verified.PaymentMethod.ID != "" {
+                        paymentMethodID = verified.PaymentMethod.ID
                         log.Printf("[Billing] Saved payment method %s for user %d", paymentMethodID, transaction.UserID)
                 }
                 

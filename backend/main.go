@@ -18,6 +18,78 @@ import (
 var db *gorm.DB
 var serverReady = false
 
+// isReleaseMode сообщает, работает ли сервер в «боевом» режиме.
+// Бинарь всегда запускает gin в ReleaseMode (см. ниже), поэтому режим
+// определяется по env GIN_MODE: "debug"/"test" = разработка, всё остальное
+// (включая "release" и пустое значение) = release с fail-fast проверками.
+func isReleaseMode() bool {
+        mode := strings.ToLower(strings.TrimSpace(os.Getenv("GIN_MODE")))
+        return mode != "debug" && mode != "test"
+}
+
+// configureTrustedProxies ограничивает список доверенных прокси.
+// Раньше стояло SetTrustedProxies(nil) = «доверять всем», что позволяло
+// подделывать X-Forwarded-For и обходить rate-limit/lockout по IP.
+// Дефолт: только loopback. Свои ingress-прокси задавайте через env
+// TRUSTED_PROXIES="10.0.0.0/8,192.168.0.0/16" (IP или CIDR через запятую).
+func configureTrustedProxies(r *gin.Engine) {
+        proxies := []string{"127.0.0.1", "::1"}
+        if env := strings.TrimSpace(os.Getenv("TRUSTED_PROXIES")); env != "" {
+                proxies = nil
+                for _, p := range strings.Split(env, ",") {
+                        if p = strings.TrimSpace(p); p != "" {
+                                proxies = append(proxies, p)
+                        }
+                }
+        }
+        if err := r.SetTrustedProxies(proxies); err != nil {
+                log.Fatalf("Invalid TRUSTED_PROXIES value: %v", err)
+        }
+        log.Printf("Trusted proxies restricted to: %v", proxies)
+}
+
+// allowedOriginsFromEnv читает allowlist CORS-ориджинов из env
+// (CORS_ALLOWED_ORIGINS, либо ALLOWED_ORIGINS как алиас).
+func allowedOriginsFromEnv() []string {
+        raw := os.Getenv("CORS_ALLOWED_ORIGINS")
+        if raw == "" {
+                raw = os.Getenv("ALLOWED_ORIGINS")
+        }
+        var origins []string
+        for _, o := range strings.Split(raw, ",") {
+                if o = strings.TrimSpace(o); o != "" {
+                        origins = append(origins, o)
+                }
+        }
+        return origins
+}
+
+// defaultDevOriginAllowed — dev-fallback для CORS/WS/SSE: Replit-домены и localhost.
+// Используется только когда allowlist из env не задан (и не release-режим для CORS).
+func defaultDevOriginAllowed(origin string) bool {
+        return strings.Contains(origin, ".replit.dev") ||
+                strings.Contains(origin, ".replit.app") ||
+                strings.Contains(origin, ".repl.co") ||
+                strings.HasPrefix(origin, "http://localhost") ||
+                strings.HasPrefix(origin, "https://localhost") ||
+                strings.HasPrefix(origin, "http://127.0.0.1") ||
+                strings.HasPrefix(origin, "https://127.0.0.1")
+}
+
+// isOriginAllowed — общая проверка Origin по allowlist (env) с dev-fallback.
+// Переиспользуется CORS-мидлварью и SSE-хендлером.
+func isOriginAllowed(origin string) bool {
+        if origins := allowedOriginsFromEnv(); len(origins) > 0 {
+                for _, allowed := range origins {
+                        if allowed == origin {
+                                return true
+                        }
+                }
+                return false
+        }
+        return defaultDevOriginAllowed(origin)
+}
+
 func main() {
         // Get port immediately - server must start fast for autoscale
         port := os.Getenv("PORT")
@@ -29,7 +101,7 @@ func main() {
         gin.SetMode(gin.ReleaseMode)
         r := gin.New()
         r.Use(gin.Recovery())
-        r.SetTrustedProxies(nil)
+        configureTrustedProxies(r)
         
         // Health check endpoint - must respond before full init
         r.GET("/health", func(c *gin.Context) {
@@ -164,7 +236,6 @@ func main() {
         
         serverReady = true
         log.Println("All services initialized, server ready!")
-        r.SetTrustedProxies(nil) // Trust all proxies for Replit reverse proxy
 
         // Configure CORS with proper origin restrictions
         corsConfig := cors.Config{
@@ -176,42 +247,18 @@ func main() {
         }
 
         // Get allowed origins from environment or use defaults for development
-        allowedOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")
-        if allowedOrigins != "" {
-                corsConfig.AllowOrigins = strings.Split(allowedOrigins, ",")
+        if origins := allowedOriginsFromEnv(); len(origins) > 0 {
+                corsConfig.AllowOrigins = origins
                 log.Printf("CORS: Restricting to origins: %v", corsConfig.AllowOrigins)
+        } else if isReleaseMode() {
+                // Fail-fast: в release без явного allowlist CORS запуск запрещён,
+                // иначе широкий дефолт открывает API с credentials всем подряд.
+                log.Fatal("CORS: CORS_ALLOWED_ORIGINS (или ALLOWED_ORIGINS) не заданы в release-режиме. " +
+                        "Укажите список доменов через запятую или запустите с GIN_MODE=debug для разработки.")
         } else {
-                // In development/Replit, allow the Replit domain and localhost
-                replitDomain := os.Getenv("REPL_SLUG")
-                replitOwner := os.Getenv("REPL_OWNER")
-                if replitDomain != "" && replitOwner != "" {
-                        corsConfig.AllowOrigins = []string{
-                                "https://" + replitDomain + "." + replitOwner + ".repl.co",
-                                "https://*.replit.dev",
-                                "http://localhost:5000",
-                                "http://127.0.0.1:5000",
-                        }
-                        corsConfig.AllowOriginFunc = func(origin string) bool {
-                                // Allow Replit preview domains and production
-                                return strings.Contains(origin, ".replit.dev") ||
-                                        strings.Contains(origin, ".replit.app") ||
-                                        strings.Contains(origin, ".repl.co") ||
-                                        strings.HasPrefix(origin, "http://localhost") ||
-                                        strings.HasPrefix(origin, "http://127.0.0.1")
-                        }
-                        log.Println("CORS: Using Replit-compatible origins with dynamic matching")
-                } else {
-                        // In production or non-Replit environments without REPL_SLUG
-                        // Allow Replit domains for autoscale deployment
-                        corsConfig.AllowOriginFunc = func(origin string) bool {
-                                return strings.Contains(origin, ".replit.dev") ||
-                                        strings.Contains(origin, ".replit.app") ||
-                                        strings.Contains(origin, ".repl.co") ||
-                                        strings.HasPrefix(origin, "http://localhost") ||
-                                        strings.HasPrefix(origin, "http://127.0.0.1")
-                        }
-                        log.Println("CORS: Production mode - allowing all Replit domains")
-                }
+                // Только для разработки: Replit/localhost fallback
+                corsConfig.AllowOriginFunc = defaultDevOriginAllowed
+                log.Println("CORS: dev mode - allowing Replit/localhost origins (set CORS_ALLOWED_ORIGINS for production)")
         }
 
         r.Use(cors.New(corsConfig))
@@ -238,7 +285,8 @@ func main() {
         r.POST("/api/auth/2fa/disable", authMiddleware(), disable2FAHandler)
         r.GET("/api/auth/2fa/status", authMiddleware(), get2FAStatusHandler)
         r.POST("/api/auth/2fa/recovery-codes", authMiddleware(), regenerateRecoveryCodesHandler)
-        r.POST("/api/auth/2fa/verify", verify2FALoginHandler)
+        // 2FA verify защищаем так же, как login: rate-limit + lockout от брутфорса TOTP
+        r.POST("/api/auth/2fa/verify", AuthRateLimitMiddleware(), AccountLockoutMiddleware(), verify2FALoginHandler)
 
         // Token Management (Refresh tokens, sessions)
         r.POST("/api/auth/refresh", refreshTokenHandler)
@@ -363,12 +411,12 @@ func main() {
         r.DELETE("/api/group-dm/:group_id/participants/:user_id", authMiddleware(), removeGroupDMParticipantHandler)
         r.PUT("/api/group-dm/:group_id", authMiddleware(), updateGroupDMHandler)
 
-        // Jarvis AI routes
-        r.POST("/api/jarvis/chat/ollama", HandleJarvisChat) // Simplified mapping for now
-        r.POST("/api/jarvis/chat/deepseek", HandleJarvisChat)
-        r.POST("/api/jarvis/chat/auto", HandleJarvisChat)
-        r.POST("/api/jarvis/chat", HandleJarvisChat)
-        r.GET("/api/jarvis/status", HandleJarvisStatus)
+        // Jarvis AI routes (auth обязателен: хендлеры используют user_id из контекста)
+        r.POST("/api/jarvis/chat/ollama", authMiddleware(), HandleJarvisChat) // Simplified mapping for now
+        r.POST("/api/jarvis/chat/deepseek", authMiddleware(), HandleJarvisChat)
+        r.POST("/api/jarvis/chat/auto", authMiddleware(), HandleJarvisChat)
+        r.POST("/api/jarvis/chat", authMiddleware(), HandleJarvisChat)
+        r.GET("/api/jarvis/status", authMiddleware(), HandleJarvisStatus)
 
         // Stories API
         r.GET("/api/stories", authMiddleware(), getStoriesHandler)

@@ -106,37 +106,16 @@ func createMessageHandler(c *gin.Context) {
   c.JSON(http.StatusCreated, message)
 }
 
-// GetMessages retrieves messages between two users
-func getMessagesHandler(c *gin.Context) {
-  userID1Str := c.Param("user_id_1")
-  userID2Str := c.Param("user_id_2")
-  limitStr := c.DefaultQuery("limit", "50")
-  offsetStr := c.DefaultQuery("offset", "0")
-
-        userID1, err1 := strconv.ParseUint(userID1Str, 10, 32)
-        userID2, err2 := strconv.ParseUint(userID2Str, 10, 32)
-        limit, _ := strconv.Atoi(limitStr)
-        offset, _ := strconv.Atoi(offsetStr)
-
-        if err1 != nil || err2 != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user IDs"})
-                return
-        }
-
-  var messages []DirectMessage
-  if err := db.Preload("ReplyTo").Where(
-    "(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)",
-    userID1, userID2, userID2, userID1,
-  ).Order("created_at ASC").Limit(limit).Offset(offset).Find(&messages).Error; err != nil {
-    c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch messages"})
-    return
-  }
-
-  c.JSON(http.StatusOK, messages)
-}
+// ПРИМЕЧАНИЕ (security): старый getMessagesHandler (GET сообщений по паре
+// user_id_1/user_id_2 без проверки участия вызывающего) удалён — он позволял
+// читать чужие переписки (IDOR). Используйте getUserMessagesHandler, который
+// жёстко привязан к текущему пользователю из контекста.
 
 // DeleteMessage soft deletes a message
 func deleteMessageHandler(c *gin.Context) {
+  userID, _ := c.Get("user_id")
+  uid := uint(userID.(float64))
+
   messageIDStr := c.Param("message_id")
   messageID, err := strconv.ParseUint(messageIDStr, 10, 32)
   if err != nil {
@@ -144,8 +123,18 @@ func deleteMessageHandler(c *gin.Context) {
     return
   }
 
-  if err := db.Model(&DirectMessage{}).Where("id = ?", messageID).Update("deleted_at", time.Now()).Error; err != nil {
+  // IDOR fix: удалять можно только свои сообщения (sender_id = текущий пользователь)
+  result := db.Model(&DirectMessage{}).
+    Where("id = ? AND sender_id = ?", messageID, uid).
+    Update("deleted_at", time.Now())
+  if result.Error != nil {
     c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete message"})
+    return
+  }
+  if result.RowsAffected == 0 {
+    // Либо сообщение не существует, либо оно принадлежит другому пользователю.
+    // Не раскрываем различие: 404 для обоих случаев.
+    c.JSON(http.StatusNotFound, gin.H{"error": "Message not found"})
     return
   }
 
@@ -186,9 +175,15 @@ func updateMessageHandler(c *gin.Context) {
   // Sanitize content before storing
   sanitizedContent := SanitizeMessageContent(req.Content)
 
-  if err := db.Model(&DirectMessage{}).Where("id = ? AND sender_id = ?", messageID, uid).
-    Updates(map[string]interface{}{"content": sanitizedContent, "edited": true, "updated_at": time.Now()}).Error; err != nil {
+  result := db.Model(&DirectMessage{}).Where("id = ? AND sender_id = ?", messageID, uid).
+    Updates(map[string]interface{}{"content": sanitizedContent, "edited": true, "updated_at": time.Now()})
+  if result.Error != nil {
     c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update message"})
+    return
+  }
+  if result.RowsAffected == 0 {
+    // Сообщение не найдено или принадлежит другому пользователю (IDOR-защита)
+    c.JSON(http.StatusNotFound, gin.H{"error": "Message not found"})
     return
   }
 
