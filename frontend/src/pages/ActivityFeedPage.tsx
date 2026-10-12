@@ -66,7 +66,7 @@ export default function ActivityFeedPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
       </div>
     );
   }
@@ -76,10 +76,14 @@ export default function ActivityFeedPage() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Bell className="w-8 h-8 text-purple-400" />
-            <h1 className="text-3xl font-bold">Activity</h1>
+            <div className="p-2 rounded-xl bg-gradient-brand text-white shadow-glow">
+              <Bell className="w-6 h-6" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              <span className="gradient-brand-text">Activity</span>
+            </h1>
             {unreadCount > 0 && (
-              <span className="px-2 py-1 bg-purple-600 rounded-full text-sm font-medium">
+              <span className="px-2 py-1 bg-gradient-brand text-white rounded-full text-sm font-medium shadow-glow">
                 {unreadCount}
               </span>
             )}
@@ -88,7 +92,7 @@ export default function ActivityFeedPage() {
             <button
               onClick={() => markAllReadMutation.mutate()}
               disabled={markAllReadMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-card rounded-lg hover:bg-secondary text-sm"
+              className="flex items-center gap-2 px-4 py-2 glass rounded-xl hover:shadow-glow text-sm transition-all"
             >
               <CheckCheck className="w-4 h-4" />
               Mark all read
@@ -105,8 +109,8 @@ export default function ActivityFeedPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className={`p-4 rounded-xl flex items-start gap-4 cursor-pointer transition-colors ${
-                  activity.is_read ? 'bg-card' : 'bg-card/80 border-l-4 border-purple-500'
+                className={`p-4 rounded-xl flex items-start gap-4 cursor-pointer transition-all hover:shadow-lg-brand ${
+                  activity.is_read ? 'glass' : 'glass border-l-4 border-primary'
                 }`}
                 onClick={() => !activity.is_read && markReadMutation.mutate(activity.id)}
               >
@@ -122,14 +126,14 @@ export default function ActivityFeedPage() {
                   </p>
                 </div>
                 {!activity.is_read && (
-                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2" />
+                  <div className="w-2 h-2 bg-gradient-brand rounded-full mt-2 shadow-glow" />
                 )}
               </motion.div>
             );
           })}
 
           {activities.length === 0 && (
-            <div className="bg-card rounded-xl p-12 text-center">
+            <div className="glass rounded-2xl p-12 text-center">
               <Bell className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2">No activity yet</h3>
               <p className="text-muted-foreground">Your activity feed will appear here</p>

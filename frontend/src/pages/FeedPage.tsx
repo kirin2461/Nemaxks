@@ -590,10 +590,10 @@ export default function FeedPage() {
                   key={filter.id}
                   onClick={() => setSelectedFilter(filter.id)}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap transition-all duration-300 text-sm",
+                    "flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 text-sm font-medium",
                     selectedFilter === filter.id
-                      ? "bg-primary/20 border border-primary/50"
-                      : "bg-accent/10 border border-transparent",
+                      ? "bg-gradient-brand text-white shadow-glow border border-transparent"
+                      : "bg-secondary/60 text-muted-foreground hover:text-foreground border border-border/50",
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -603,7 +603,7 @@ export default function FeedPage() {
             })}
           </div>
           {selectedTag && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 border border-primary/50">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-primary/15 border border-primary/40 text-primary">
               <Hash className="w-4 h-4" />
               <span className="text-sm">#{selectedTag}</span>
               <button
@@ -618,7 +618,7 @@ export default function FeedPage() {
 
         {/* Sidebar - Filters (Desktop only) */}
         <aside className="hidden lg:block w-64 border-r border-border/50 p-4 space-y-2 overflow-y-auto shrink-0">
-          <h2 className="text-lg font-bold mb-4 gradient-text">
+          <h2 className="text-lg font-bold mb-4 tracking-tight gradient-brand-text">
             Фильтры ленты
           </h2>
           {filters.map((filter) => {
@@ -628,10 +628,10 @@ export default function FeedPage() {
                 key={filter.id}
                 onClick={() => setSelectedFilter(filter.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300",
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300",
                   selectedFilter === filter.id
-                    ? "bg-primary/20 border border-primary/50 glow-cosmic"
-                    : "hover:bg-accent/10 border border-transparent",
+                    ? "bg-gradient-brand text-white shadow-glow border border-transparent"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent",
                 )}
               >
                 <Icon className="w-5 h-5" />
@@ -640,14 +640,14 @@ export default function FeedPage() {
             );
           })}
 
-          <div className="divider-cosmic" />
+          <div className="my-4 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">
               Популярные теги
             </h3>
             {selectedTag && (
-              <div className="mb-3 p-2 rounded-lg bg-primary/20 border border-primary/50">
+              <div className="mb-3 p-2 rounded-xl bg-primary/15 border border-primary/40">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Фильтр: #{selectedTag}</span>
                   <button
@@ -664,8 +664,8 @@ export default function FeedPage() {
                 key={tag.name}
                 onClick={() => handleTagClick(tag.name)}
                 className={cn(
-                  "badge-cosmic block w-full text-left transition-colors flex items-center justify-between",
-                  selectedTag === tag.name && "bg-primary/40 ring-1 ring-primary"
+                  "block w-full text-left px-3 py-1.5 rounded-full bg-secondary/60 text-sm border border-transparent transition-all flex items-center justify-between hover:bg-secondary hover:border-primary/30",
+                  selectedTag === tag.name && "bg-primary/15 border-primary/50 text-primary"
                 )}
               >
                 <span>#{tag.name}</span>
@@ -681,7 +681,7 @@ export default function FeedPage() {
         <main ref={feedRef} className="flex-1 overflow-y-auto relative">
           <div className="max-w-2xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
             {/* Stories */}
-            <div className="glass-cosmic rounded-2xl overflow-hidden">
+            <div className="glass rounded-2xl overflow-hidden">
               <Stories 
                 viewUserId={viewingUserStory} 
                 onCloseViewer={() => setViewingUserStory(null)} 
@@ -692,7 +692,7 @@ export default function FeedPage() {
             {newPostsCount > 0 && (
               <button
                 onClick={loadNewPosts}
-                className="w-full glass-cosmic rounded-xl p-3 flex items-center justify-center gap-2 text-primary hover:bg-primary/20 transition-colors animate-pulse"
+                className="w-full glass rounded-xl p-3 flex items-center justify-center gap-2 text-primary hover:bg-primary/20 transition-colors animate-pulse"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>{newPostsCount} {newPostsCount === 1 ? 'новый пост' : newPostsCount < 5 ? 'новых поста' : 'новых постов'}</span>
@@ -701,7 +701,7 @@ export default function FeedPage() {
 
             {/* Fixed Header - Create Post */}
             <div className="sticky top-0 z-10 mb-6 animate-fade-in">
-              <div className="glass-cosmic rounded-2xl p-6 glow-cosmic">
+              <div className="glass rounded-2xl p-6 glow">
                 <div className="flex gap-4">
                   <Avatar
                     src={user?.avatar}
@@ -714,10 +714,7 @@ export default function FeedPage() {
                       value={newPostContent}
                       onChange={(e) => setNewPostContent(e.target.value)}
                       placeholder="Что у вас нового?"
-                      className="w-full px-4 py-3 bg-background/50 border border-border/50 rounded-lg
-                                text-foreground placeholder:text-muted-foreground resize-none
-                                focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-                                transition-all duration-300 hover:border-primary/50"
+                      className="input-field resize-none hover:border-primary/50"
                       rows={3}
                     />
 
@@ -772,7 +769,7 @@ export default function FeedPage() {
                           (!newPostContent.trim() && !selectedMedia) ||
                           isUploading
                         }
-                        className="btn-cosmic px-6 flex items-center gap-2"
+                        className="bg-gradient-brand text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all hover:opacity-90 hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isUploading ? (
                           <>
@@ -798,18 +795,18 @@ export default function FeedPage() {
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="glass-cosmic rounded-2xl p-6 animate-slide-in"
+                    className="glass rounded-2xl p-6 animate-slide-in"
                     style={{ animationDelay: `${i * 0.1}s` }}
                   >
                     <div className="flex gap-4 mb-4">
-                      <div className="skeleton-cosmic w-12 h-12 rounded-full" />
+                      <div className="animate-pulse bg-muted/60 w-12 h-12 rounded-full" />
                       <div className="flex-1 space-y-2">
-                        <div className="skeleton-cosmic h-4 w-32" />
-                        <div className="skeleton-cosmic h-3 w-24" />
+                        <div className="animate-pulse bg-muted/60 rounded h-4 w-32" />
+                        <div className="animate-pulse bg-muted/60 rounded h-3 w-24" />
                       </div>
                     </div>
-                    <div className="skeleton-cosmic h-20 w-full mb-4" />
-                    <div className="skeleton-cosmic h-8 w-full" />
+                    <div className="animate-pulse bg-muted/60 rounded-lg h-20 w-full mb-4" />
+                    <div className="animate-pulse bg-muted/60 rounded-lg h-8 w-full" />
                   </div>
                 ))}
               </div>
@@ -817,7 +814,7 @@ export default function FeedPage() {
 
             {/* Empty State */}
             {!loading && filteredPosts.length === 0 && (
-              <div className="glass-cosmic rounded-2xl p-8 text-center">
+              <div className="glass rounded-2xl p-8 text-center">
                 <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-semibold mb-2">
                   {selectedFilter === "my" 
@@ -838,7 +835,7 @@ export default function FeedPage() {
               filteredPosts.map((post, index) => (
                 <article
                   key={post.id}
-                  className="glass-cosmic card-cosmic rounded-2xl p-6 animate-slide-in"
+                  className="glass rounded-2xl p-6 animate-slide-in hover:shadow-lg-brand transition-shadow"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   {/* Post Header */}
@@ -960,8 +957,8 @@ export default function FeedPage() {
                           key={tag}
                           onClick={() => handleTagClick(tag)}
                           className={cn(
-                            "badge-cosmic cursor-pointer hover:bg-primary/30 transition-colors",
-                            selectedTag === tag && "bg-primary/40 ring-1 ring-primary"
+                            "px-3 py-1 rounded-full bg-secondary/60 text-sm border border-transparent cursor-pointer hover:bg-primary/15 hover:border-primary/30 transition-all",
+                            selectedTag === tag && "bg-primary/15 border-primary/50 text-primary"
                           )}
                         >
                           #{tag}
@@ -1060,7 +1057,7 @@ export default function FeedPage() {
             {/* End of Feed */}
             {!loading && !hasMore && filteredPosts.length > 0 && (
               <div className="text-center py-8">
-                <div className="divider-cosmic" />
+                <div className="my-4 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
                 <p className="text-muted-foreground text-sm mt-6">
                   Вы достигли конца ленты
                 </p>
@@ -1072,8 +1069,8 @@ export default function FeedPage() {
           {showScrollTop && (
             <button
               onClick={scrollToTop}
-              className="fixed bottom-8 right-8 p-4 rounded-full bg-gradient-to-br from-primary to-accent
-                         text-primary-foreground shadow-lg glow-cosmic hover:scale-110 transition-all
+              className="fixed bottom-8 right-8 p-4 rounded-full bg-gradient-brand
+                         text-white shadow-glow hover:scale-110 transition-all
                          duration-300 animate-fade-in"
             >
               <ChevronUp className="w-6 h-6" />
@@ -1089,7 +1086,7 @@ export default function FeedPage() {
           onClick={handleCloseComments}
         >
           <div
-            className="bg-card border border-border rounded-2xl w-full max-w-lg mx-4 shadow-2xl max-h-[80vh] flex flex-col"
+            className="glass-strong rounded-2xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-border">
@@ -1139,7 +1136,7 @@ export default function FeedPage() {
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="Напишите комментарий..."
-                  className="flex-1 bg-background border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="input-field flex-1"
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmitComment()}
                 />
                 <button
@@ -1163,7 +1160,7 @@ export default function FeedPage() {
           onClick={handleCloseEdit}
         >
           <div
-            className="bg-card border border-border rounded-2xl w-full max-w-lg mx-4 shadow-2xl"
+            className="glass-strong rounded-2xl w-full max-w-lg mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-border">
@@ -1180,7 +1177,7 @@ export default function FeedPage() {
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full bg-background border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary resize-none min-h-[120px]"
+                className="input-field resize-none min-h-[120px]"
                 placeholder="Текст поста..."
               />
             </div>
