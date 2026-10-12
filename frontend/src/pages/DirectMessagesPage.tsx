@@ -4,7 +4,7 @@ import { useStore } from "../lib/store";
 import { messagesAPI } from "../lib/api";
 import { Avatar } from "../components/Avatar";
 import { useLanguage } from "../contexts/LanguageContext";
-import { ArrowLeft, Phone, Video, MoreVertical } from "lucide-react";
+import { ArrowLeft, Phone, Video, MoreVertical, MessageSquare } from "lucide-react";
 
 export interface DirectMessage {
   id: string;
@@ -188,7 +188,7 @@ const DirectMessagesPage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="sticky top-0 z-10 shrink-0 flex items-center gap-3 px-3 py-3 border-b border-border bg-background/95 backdrop-blur-md">
+      <div className="sticky top-0 z-10 shrink-0 flex items-center gap-3 px-3 py-3 border-b border-border/60 bg-card/70 backdrop-blur-xl">
         <button
           onClick={() => navigate('/friends')}
           className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
@@ -197,7 +197,7 @@ const DirectMessagesPage: React.FC = () => {
         </button>
         <Avatar size="sm" userId={userId} alt={`User ${userId}`} />
         <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-foreground text-sm truncate">User {userId}</h2>
+          <h2 className="font-semibold tracking-tight text-foreground text-sm truncate">User {userId}</h2>
           <span className="text-xs text-muted-foreground">{t('messages.directMessage') || 'Личное сообщение'}</span>
         </div>
         <div className="flex items-center gap-1">
@@ -209,10 +209,13 @@ const DirectMessagesPage: React.FC = () => {
           </button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            <p>{t('messages.noMessages')}</p>
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <MessageSquare className="w-7 h-7 text-primary/70" />
+            </div>
+            <p className="text-sm">{t('messages.noMessages')}</p>
           </div>
         ) : (
           messages.map((message) => (
@@ -226,10 +229,10 @@ const DirectMessagesPage: React.FC = () => {
             >
               {message.sender_id !== currentUser?.id && <Avatar size="sm" />}
               <div
-                className={`max-w-[75%] px-4 py-2 rounded-lg ${
+                className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-soft transition-shadow duration-200 ${
                   message.sender_id === currentUser?.id
-                    ? "bg-blue-600 text-white"
-                    : "bg-secondary text-foreground"
+                    ? "bg-gradient-brand text-primary-foreground rounded-br-md"
+                    : "bg-card border border-border/60 text-card-foreground rounded-bl-md"
                 }`}
               >
                 {editingId === message.id ? (
@@ -245,7 +248,7 @@ const DirectMessagesPage: React.FC = () => {
                         }
                         if (e.key === 'Escape') setEditingId(null)
                       }}
-                      className="bg-transparent border border-gray-500 rounded px-2 py-1 text-sm w-full focus:outline-none focus:border-blue-500"
+                      className="bg-background/40 border border-border rounded-lg px-2 py-1 text-sm w-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-ring"
                       autoFocus
                     />
                     <button onClick={() => { handleEditMessage(message.id, editContent); setEditingId(null) }} className="text-xs text-green-400 hover:text-green-300 shrink-0">✓</button>
@@ -280,9 +283,9 @@ const DirectMessagesPage: React.FC = () => {
         {typing && (
           <div className="flex gap-3 text-muted-foreground text-sm">
             <div className="flex gap-1">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100"></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200"></div>
             </div>
             <span>{t('messages.typing')}</span>
           </div>
@@ -292,7 +295,7 @@ const DirectMessagesPage: React.FC = () => {
 
       <form
         onSubmit={handleSendMessage}
-        className="border-t border-border p-3 md:p-4 shrink-0 sticky bottom-16 lg:bottom-0 bg-background z-10"
+        className="border-t border-border/60 p-3 md:p-4 shrink-0 sticky bottom-16 lg:bottom-0 bg-card/70 backdrop-blur-xl z-10"
       >
         <div className="flex gap-2">
           <input
@@ -300,12 +303,12 @@ const DirectMessagesPage: React.FC = () => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder={t('messages.placeholder')}
-            className="flex-1 bg-card text-card-foreground px-4 py-2 rounded-lg border border-border focus:border-blue-500 focus:outline-none"
+            className="input-field flex-1"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-secondary text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            className="bg-gradient-brand text-primary-foreground px-6 py-2 rounded-xl font-medium shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {t('messages.send')}
           </button>

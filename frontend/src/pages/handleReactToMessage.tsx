@@ -750,9 +750,9 @@ export default function MessagesPage() {
     <Layout>
       <div className="h-full flex flex-col lg:flex-row">
         {/* Conversations list */}
-        <div className={`${selectedUser ? 'hidden lg:flex' : 'flex'} w-full lg:w-80 bg-card border-r border-border flex-col`}>
+        <div className={`${selectedUser ? 'hidden lg:flex' : 'flex'} w-full lg:w-80 bg-card/60 backdrop-blur-xl border-r border-border/60 flex-col`}>
           {/* Search and New Message */}
-          <div className="p-4 border-b border-border space-y-3">
+          <div className="p-4 border-b border-border/60 space-y-3">
             {/* New Message Button */}
             <div className="flex items-center gap-2">
               <button
@@ -764,7 +764,7 @@ export default function MessagesPage() {
               </button>
               <button
                 onClick={() => setShowCreateGroup(true)}
-                className="p-2 hover:bg-accent rounded-lg transition-colors"
+                className="p-2 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-colors"
                 title="Создать группу"
               >
                 <Users className="w-5 h-5" />
@@ -777,33 +777,34 @@ export default function MessagesPage() {
               <input
                 type="text"
                 placeholder={t('messages.searchConversations')}
-                className="w-full px-4 py-2 pl-10 bg-background border border-border rounded-lg
-                          text-foreground placeholder:text-muted-foreground
-                          focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-                          transition-all duration-300 hover:border-primary/50"
+                className="input-field pl-10 hover:border-primary/50"
               />
             </div>
           </div>
 
           {/* Conversations */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
             {(!conversations || conversations.length === 0) ? (
               <div className="text-center py-12 px-4 animate-fade-in">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/30 flex items-center justify-center orb-glow">
-                  <MessageSquare className="w-8 h-8 text-muted-foreground" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center orb-glow">
+                  <MessageSquare className="w-8 h-8 text-primary/70" />
                 </div>
                 <p className="text-muted-foreground text-sm">{t('messages.noConversations')}</p>
                 <p className="text-xs text-muted-foreground/70 mt-1">{t('messages.startNewChat')}</p>
               </div>
             ) : (
-              conversations.map((conv, index) => (
+              conversations.map((conv, index) => {
+                const isSelected = selectedUser?.id === conv.user.id
+                return (
                 <button
                   key={conv.user.id}
                   onClick={() => handleSelectUser(conv.user)}
                   onContextMenu={(e) => conversationContextMenu.showContextMenu(e, getConversationContextMenuItems(conv.user))}
-                  className={`w-full p-4 flex items-center gap-3 hover:bg-accent/10 transition-all duration-300
-                             border-b border-border hover:scale-[1.02] animate-slide-in ${
-                    selectedUser?.id === conv.user.id ? 'bg-accent/20 border-l-4 border-l-primary' : ''
+                  className={`w-full p-4 flex items-center gap-3 transition-all duration-300
+                             border-b border-border/40 animate-slide-in ${
+                    isSelected
+                      ? 'bg-gradient-brand text-primary-foreground shadow-glow'
+                      : 'hover:bg-primary/10'
                   }`}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
@@ -828,17 +829,20 @@ export default function MessagesPage() {
                           {conv.user.alias || conv.user.username}
                         </p>
                       </div>
-                      <span className="text-xs text-muted-foreground">
+                      <span className={`text-xs ${isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                         {formatTime(conv.last_message.created_at)}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className={`text-sm truncate ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                       {conv.last_message.content}
                     </p>
                   </div>
                   {conv.unread_count > 0 && (
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground
-                                    text-xs flex items-center justify-center font-semibold pulse-call">
+                    <div className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-semibold pulse-call ${
+                      isSelected
+                        ? 'bg-card text-card-foreground'
+                        : 'bg-gradient-brand text-primary-foreground shadow-glow'
+                    }`}>
                       {conv.unread_count}
                     </div>
                   )}
@@ -847,12 +851,15 @@ export default function MessagesPage() {
                       e.stopPropagation()
                       conversationContextMenu.showContextMenu(e as any, getConversationContextMenuItems(conv.user))
                     }}
-                    className="opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 p-1 hover:bg-accent/20 rounded transition-opacity"
+                    className={`opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 p-1 rounded transition-opacity ${
+                      isSelected ? 'hover:bg-white/15 text-primary-foreground/80' : 'hover:bg-accent/20'
+                    }`}
                   >
                     <MoreVertical className="w-4 h-4" />
                   </button>
                 </button>
-              ))
+                )
+              })
             )}
             {groupDMs.length > 0 && (
               <div className="mt-4">
@@ -861,11 +868,11 @@ export default function MessagesPage() {
                   <div
                     key={`group-${group.id}`}
                     onClick={() => selectGroup(group)}
-                    className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-accent/10 transition-colors ${
-                      selectedGroup?.id === group.id ? 'bg-accent/20 border-l-4 border-l-primary' : ''
+                    className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
+                      selectedGroup?.id === group.id ? 'bg-primary/15 border-l-4 border-l-primary' : 'hover:bg-primary/10'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-primary-foreground font-bold text-sm">
                       {group.name?.charAt(0)?.toUpperCase() || 'G'}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -885,7 +892,7 @@ export default function MessagesPage() {
         <div className={`${selectedUser || selectedGroup ? 'flex' : 'hidden lg:flex'} flex-1 flex-col`}>
           {selectedGroup ? (
             <div className="flex-1 flex flex-col">
-              <div className="p-3 sm:p-4 border-b border-border bg-card card-cosmic">
+              <div className="p-3 sm:p-4 border-b border-border/60 bg-card/70 backdrop-blur-xl">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setSelectedGroup(null)}
@@ -895,7 +902,7 @@ export default function MessagesPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  <div className="w-10 h-10 rounded-full bg-[#5865f2] flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-primary-foreground font-bold">
                     {selectedGroup.name?.charAt(0)?.toUpperCase() || 'G'}
                   </div>
                   <div>
@@ -904,10 +911,10 @@ export default function MessagesPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {groupMessages.map((msg: any) => (
                   <div key={msg.id} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
                       {msg.sender?.username?.charAt(0)?.toUpperCase() || msg.sender_username?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                     <div>
@@ -915,14 +922,14 @@ export default function MessagesPage() {
                         <span className="font-medium text-sm">{msg.sender?.username || msg.sender_username}</span>
                         <span className="text-xs text-muted-foreground">{formatTime(msg.created_at)}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-0.5">{msg.content}</p>
+                      <p className="text-sm text-foreground/90 mt-0.5 break-words">{msg.content}</p>
                     </div>
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
               </div>
-              <div className="p-4 border-t border-border">
-                <div className="flex items-center gap-2 bg-background border border-border rounded-lg px-4 py-2">
+              <div className="p-4 border-t border-border/60 bg-card/70 backdrop-blur-xl">
+                <div className="flex items-center gap-2 bg-card/60 border border-border rounded-xl px-4 py-2 transition-all focus-within:ring-2 focus-within:ring-ring focus-within:border-primary/60">
                   <input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
@@ -943,7 +950,7 @@ export default function MessagesPage() {
           ) : selectedUser ? (
             <>
               {/* Header */}
-              <div className="p-3 sm:p-4 border-b border-border bg-card card-cosmic">
+              <div className="p-3 sm:p-4 border-b border-border/60 bg-card/70 backdrop-blur-xl">
                 <div className="flex items-center gap-3">
                   {/* Mobile back button */}
                   <button
@@ -1008,16 +1015,16 @@ export default function MessagesPage() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                       placeholder={t('messages.searchInConversation')}
-                      className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="input-field flex-1 text-sm"
                     />
                     <button onClick={handleSearch} className="btn-cosmic px-4 py-2 text-sm">{t('messages.search')}</button>
                   </div>
                 )}
                 {/* Search results */}
                 {showSearch && searchResults.length > 0 && (
-                  <div className="mt-2 max-h-40 overflow-y-auto bg-background border border-border rounded-lg">
+                  <div className="mt-2 max-h-40 overflow-y-auto bg-card/60 backdrop-blur-sm border border-border/60 rounded-xl custom-scrollbar">
                     {searchResults.map((msg) => (
-                      <div key={msg.id} className="p-2 hover:bg-accent/10 cursor-pointer border-b border-border last:border-0 text-sm">
+                      <div key={msg.id} className="p-2 hover:bg-primary/10 cursor-pointer border-b border-border/40 last:border-0 text-sm transition-colors">
                         <p className="truncate">{msg.content}</p>
                         <span className="text-xs text-muted-foreground">{formatTime(msg.created_at)}</span>
                       </div>
@@ -1034,7 +1041,7 @@ export default function MessagesPage() {
                     {pinnedMessages.map((msg) => (
                       <div 
                         key={msg.id} 
-                        className="p-2 bg-background rounded text-sm mb-1 last:mb-0 cursor-pointer hover:bg-accent/10 transition-colors"
+                        className="p-2 bg-card/70 rounded-lg text-sm mb-1 last:mb-0 cursor-pointer hover:bg-primary/10 transition-colors"
                         onClick={() => scrollToMessage(msg.id)}
                       >
                         <p className="truncate opacity-80">{msg.content.substring(0, 100)}{msg.content.length > 100 ? '...' : ''}</p>
@@ -1045,7 +1052,7 @@ export default function MessagesPage() {
               </div>
 
                   {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col custom-scrollbar">
                 <div className="flex-1" />
                 {loading ? (
                   <div className="text-center py-12 space-y-4">
@@ -1074,8 +1081,8 @@ export default function MessagesPage() {
                         <div
                           className={`message-hoverable max-w-md px-4 py-3 rounded-2xl transition-all duration-300 hover:scale-[1.02] ${
                             isSent
-                              ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground rounded-br-sm'
-                              : 'bg-muted text-foreground rounded-bl-sm card-cosmic'
+                              ? 'bg-gradient-brand text-primary-foreground rounded-br-md shadow-soft'
+                              : 'bg-card/80 backdrop-blur-sm border border-border/60 text-card-foreground rounded-bl-md shadow-soft'
                           }`}
                           onContextMenu={(e) => messageContextMenu.showContextMenu(e, getMessageContextMenuItems(message))}
                         >
@@ -1105,7 +1112,7 @@ export default function MessagesPage() {
                           {message.reply_to_id && (() => {
                             const repliedMessage = message.reply_to || messages.find(m => parseInt(m.id) === message.reply_to_id)
                             return (
-                              <div className={`mb-2 p-2 rounded border-l-2 ${isSent ? 'bg-muted border-white/30' : 'bg-muted border-primary/30'}`}>
+                              <div className={`mb-2 p-2 rounded-lg border-l-2 ${isSent ? 'bg-white/10 border-white/30' : 'bg-secondary/80 border-primary/40'}`}>
                                 <p className={`text-xs font-medium ${isSent ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                                   {repliedMessage ? (String(repliedMessage.sender_id) === String(user?.id) ? 'You' : selectedUser?.username) : 'Message'}
                                 </p>
@@ -1196,10 +1203,10 @@ export default function MessagesPage() {
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t border-border bg-card">
+              <div className="p-4 border-t border-border/60 bg-card/70 backdrop-blur-xl">
                 {/* Reply/Edit indicator */}
                 {(replyingTo || editingMessage) && (
-                  <div className="mb-3 p-3 bg-accent/10 border-l-4 border-l-primary rounded-lg flex items-center justify-between">
+                  <div className="mb-3 p-3 bg-primary/10 border-l-4 border-l-primary rounded-lg flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         {editingMessage ? (
@@ -1245,7 +1252,7 @@ export default function MessagesPage() {
                     <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-primary/10 border border-primary rounded-lg">
                       <button
                         onClick={togglePlayVoicePreview}
-                        className="p-2 rounded-full bg-primary text-white hover:bg-primary/80 transition"
+                        className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/80 transition"
                       >
                         {playingVoice === 'preview' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </button>
@@ -1273,7 +1280,7 @@ export default function MessagesPage() {
                     <>
                       <button
                         onClick={startRecording}
-                        className="p-3 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition"
+                        className="p-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
                         title={t('messages.voiceMessage')}
                       >
                         <Mic className="w-5 h-5" />
@@ -1292,10 +1299,10 @@ export default function MessagesPage() {
                         }}
                         placeholder={editingMessage ? 'Edit your message...' : 'Type a message...'}
                         rows={1}
-                        className="flex-1 px-4 py-3 bg-background border border-border rounded-lg resize-none
+                        className="flex-1 px-4 py-3 bg-card/60 backdrop-blur-sm border border-border rounded-xl resize-none
                                   text-foreground placeholder:text-muted-foreground
-                                  focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-                                  transition-all duration-300 hover:border-primary/50"
+                                  focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary/60
+                                  transition-all duration-200 hover:border-primary/50"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -1353,12 +1360,12 @@ export default function MessagesPage() {
 
       {/* Forward Message Modal */}
       {forwardingMessage && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Forward className="w-5 h-5" /> Forward Message
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="glass-strong rounded-2xl max-w-md w-full p-6 animate-fade-in">
+            <h3 className="text-lg font-semibold tracking-tight mb-4 flex items-center gap-2">
+              <Forward className="w-5 h-5 text-primary" /> Forward Message
             </h3>
-            <p className="text-sm text-muted-foreground mb-4 p-3 bg-muted rounded-lg truncate">
+            <p className="text-sm text-muted-foreground mb-4 p-3 bg-secondary/60 rounded-xl truncate">
               {forwardingMessage.content}
             </p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -1369,7 +1376,7 @@ export default function MessagesPage() {
                   <button
                     key={friend.id}
                     onClick={() => handleForwardMessage(friend.id)}
-                    className="w-full p-3 flex items-center gap-3 hover:bg-accent/10 rounded-lg transition-colors"
+                    className="w-full p-3 flex items-center gap-3 hover:bg-primary/10 rounded-xl transition-colors"
                   >
                     <Avatar src={friend.avatar} alt={friend.username} size="sm" />
                     <span className="font-medium">{friend.alias || friend.username}</span>
@@ -1379,7 +1386,7 @@ export default function MessagesPage() {
             </div>
             <button
               onClick={() => setForwardingMessage(null)}
-              className="mt-4 w-full py-2 border border-border rounded-lg hover:bg-accent/10 transition-colors"
+              className="mt-4 w-full py-2 border border-border rounded-xl hover:bg-secondary transition-colors"
             >
               {t('messages.cancelDelete')}
             </button>
@@ -1397,19 +1404,19 @@ export default function MessagesPage() {
         variant="danger"
       />
       {showCreateGroup && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-lg w-full max-w-md p-6 border border-border">
-            <h3 className="text-lg font-semibold mb-4">Создать групповой чат</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="glass-strong rounded-2xl w-full max-w-md p-6 animate-fade-in">
+            <h3 className="text-lg font-semibold tracking-tight mb-4">Создать групповой чат</h3>
             <input
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
               placeholder="Название группы"
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm placeholder:text-muted-foreground outline-none mb-4 focus:ring-2 focus:ring-primary"
+              className="input-field text-sm mb-4"
             />
             <div className="text-sm text-muted-foreground mb-2">Выберите участников:</div>
             <div className="max-h-48 overflow-y-auto space-y-1 mb-4">
               {conversations.map((conv: any) => (
-                <label key={conv.user.id} className="flex items-center gap-3 p-2 hover:bg-accent/10 rounded-lg cursor-pointer">
+                <label key={conv.user.id} className="flex items-center gap-3 p-2 hover:bg-primary/10 rounded-lg cursor-pointer transition-colors">
                   <input
                     type="checkbox"
                     checked={selectedParticipants.includes(conv.user.id)}

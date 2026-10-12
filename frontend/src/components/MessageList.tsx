@@ -75,18 +75,21 @@ const MessageList: React.FC<MessageListProps> = ({
   let lastDate = '';
 
   return (
-    <div className="w-full h-full flex flex-col bg-card text-card-foreground rounded-lg border border-border">
+    <div className="w-full h-full flex flex-col bg-background text-foreground rounded-xl border border-border overflow-hidden">
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {isLoading && (
           <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         )}
 
         {messages.length === 0 && !isLoading && (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            <p>No messages yet. Start a conversation!</p>
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Send className="w-7 h-7 text-primary/70" />
+            </div>
+            <p className="text-sm">No messages yet. Start a conversation!</p>
           </div>
         )}
 
@@ -117,7 +120,7 @@ const MessageList: React.FC<MessageListProps> = ({
                       className="w-8 h-8 rounded-full"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs text-white font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center text-xs text-primary-foreground font-semibold shadow-soft">
                       {message.username.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -132,10 +135,10 @@ const MessageList: React.FC<MessageListProps> = ({
                   </div>
 
                   <div
-                    className={`inline-block max-w-xs px-4 py-2 rounded-lg ${
+                    className={`inline-block max-w-xs px-4 py-2 rounded-2xl transition-shadow duration-200 hover:shadow-soft ${
                       isOwn
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-secondary text-secondary-foreground'
+                        ? 'bg-gradient-brand text-primary-foreground rounded-br-md'
+                        : 'bg-card border border-border/60 text-card-foreground rounded-bl-md'
                     }`}
                   >
                     <p className="break-words text-sm">{message.content}</p>
@@ -149,7 +152,7 @@ const MessageList: React.FC<MessageListProps> = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`flex items-center gap-1 text-xs underline ${
-                              isOwn ? 'text-blue-100' : 'text-blue-600'
+                              isOwn ? 'text-primary-foreground/80' : 'text-primary'
                             }`}
                           >
                             <Paperclip size={12} />
@@ -167,7 +170,7 @@ const MessageList: React.FC<MessageListProps> = ({
                         <button
                           key={idx}
                           onClick={() => onReaction?.(message.id, reaction.emoji)}
-                          className="px-2 py-1 text-xs bg-secondary rounded hover:bg-muted transition"
+                          className="px-2.5 py-1 text-xs bg-secondary/80 rounded-full hover:bg-primary/20 border border-transparent hover:border-primary/40 transition-colors"
                         >
                           {reaction.emoji} {reaction.users.length}
                         </button>
@@ -179,7 +182,7 @@ const MessageList: React.FC<MessageListProps> = ({
                 {/* Message Actions */}
                 {isOwn && (
                   <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition">
-                    <button className="p-1 hover:bg-secondary rounded">
+                    <button className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
                       <MoreVertical size={16} className="text-muted-foreground" />
                     </button>
                   </div>
@@ -193,11 +196,11 @@ const MessageList: React.FC<MessageListProps> = ({
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-border p-4 bg-card">
+      <div className="border-t border-border/60 p-4 bg-card/60 backdrop-blur-xl">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <button
             type="button"
-            className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-secondary rounded transition"
+            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
           >
             <Paperclip size={20} />
           </button>
@@ -207,12 +210,12 @@ const MessageList: React.FC<MessageListProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="input-field flex-1"
           />
 
           <button
             type="button"
-            className="p-2 text-muted-foreground hover:text-yellow-500 hover:bg-secondary rounded transition"
+            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
           >
             <Smile size={20} />
           </button>
@@ -220,7 +223,7 @@ const MessageList: React.FC<MessageListProps> = ({
           <button
             type="submit"
             disabled={sending || !inputValue.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-muted transition font-medium"
+            className="px-4 py-2 bg-gradient-brand text-primary-foreground rounded-xl shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
           >
             <Send size={20} />
           </button>

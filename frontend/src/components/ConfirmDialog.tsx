@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { X, AlertTriangle } from 'lucide-react'
+import { X, AlertTriangle, Info } from 'lucide-react'
 import { cn, lockBodyScroll, unlockBodyScroll } from '@/lib/utils'
+import { Button } from './Button'
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -47,66 +48,73 @@ export function ConfirmDialog({
 
   const variantStyles = {
     danger: {
-      icon: 'text-red-500',
-      button: 'bg-red-500 hover:bg-red-600 text-white'
+      icon: 'text-red-400',
+      iconBg: 'bg-red-500/15',
+      buttonVariant: 'danger' as const,
+      Icon: AlertTriangle
     },
     warning: {
-      icon: 'text-yellow-500',
-      button: 'bg-yellow-500 hover:bg-yellow-600 text-black'
+      icon: 'text-amber-400',
+      iconBg: 'bg-amber-500/15',
+      buttonVariant: 'primary' as const,
+      Icon: AlertTriangle
     },
     info: {
-      icon: 'text-blue-500',
-      button: 'bg-blue-500 hover:bg-blue-600 text-white'
+      icon: 'text-primary',
+      iconBg: 'bg-primary/15',
+      buttonVariant: 'primary' as const,
+      Icon: Info
     }
   }
 
+  const styles = variantStyles[variant]
+  const IconComponent = styles.Icon
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
         onClick={onClose}
       />
-      <div 
+      <div
         ref={dialogRef}
-        className="relative bg-card rounded-lg shadow-xl w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200"
+        className="relative glass-strong rounded-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200"
       >
-        <div className="flex items-center justify-between p-4 border-b border-[#3f4147]">
+        <div className="flex items-center justify-between p-4 border-b border-border/60">
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-full bg-secondary", variantStyles[variant].icon)}>
-              <AlertTriangle className="w-5 h-5" />
+            <div className={cn("p-2 rounded-full", styles.iconBg, styles.icon)}>
+              <IconComponent className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">{title}</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#3f4147] text-[#b5bac1] hover:text-foreground transition-colors"
+            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-4">
-          <p className="text-foreground text-sm leading-relaxed">{message}</p>
+          <p className="text-muted-foreground text-sm leading-relaxed">{message}</p>
         </div>
 
-        <div className="flex justify-end gap-3 p-4 border-t border-[#3f4147]">
-          <button
+        <div className="flex justify-end gap-3 p-4 border-t border-border/60">
+          <Button
+            variant="ghost"
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-foreground hover:text-foreground hover:underline transition-colors disabled:opacity-50"
           >
             {cancelText}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={styles.buttonVariant}
             onClick={onConfirm}
             disabled={loading}
-            className={cn(
-              "px-4 py-2 text-sm font-medium rounded transition-colors disabled:opacity-50",
-              variantStyles[variant].button
-            )}
+            loading={loading}
           >
-            {loading ? 'Загрузка...' : confirmText}
-          </button>
+            {confirmText}
+          </Button>
         </div>
       </div>
     </div>

@@ -925,12 +925,14 @@ export default function ChannelsPage() {
       <Layout>
         <div className="h-screen flex items-center justify-center">
           <div className="text-center">
-            <Hash className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Нет доступных каналов</h2>
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center orb-glow">
+              <Hash className="w-10 h-10 text-primary/70" />
+            </div>
+            <h2 className="text-xl font-semibold tracking-tight mb-2">Нет доступных каналов</h2>
             <p className="text-muted-foreground">Создайте или присоединитесь к серверу</p>
-            <button 
+            <button
               onClick={() => setShowCreateServerModal(true)}
-              className="mt-4 px-6 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-2 mx-auto"
+              className="mt-4 px-6 py-2 rounded-xl bg-gradient-brand text-primary-foreground shadow-soft hover:shadow-glow transition-all flex items-center gap-2 mx-auto"
             >
               <Plus className="w-5 h-5" />
               Создать сервер
@@ -940,13 +942,13 @@ export default function ChannelsPage() {
 
         {/* Create Server Modal */}
         {showCreateServerModal && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
-            <div className="bg-card rounded-2xl w-full max-w-md mx-4 shadow-2xl border border-border overflow-hidden">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in">
+            <div className="glass-strong rounded-2xl w-full max-w-md mx-4 overflow-hidden">
               <div className="p-6 text-center">
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <Plus className="w-10 h-10 text-white" />
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand shadow-glow flex items-center justify-center">
+                  <Plus className="w-10 h-10 text-primary-foreground" />
                 </div>
-                <h2 className="text-xl font-bold mb-2">Создать сервер</h2>
+                <h2 className="text-xl font-bold tracking-tight mb-2">Создать сервер</h2>
                 <p className="text-muted-foreground text-sm">Создайте свой сервер и пригласите друзей</p>
               </div>
               <div className="px-6 pb-4">
@@ -956,23 +958,23 @@ export default function ChannelsPage() {
                   value={newServerName}
                   onChange={(e) => setNewServerName(e.target.value)}
                   placeholder="Мой сервер"
-                  className="w-full mt-1 px-4 py-3 rounded-lg bg-background border border-border focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="input-field mt-1 py-3"
                 />
               </div>
-              <div className="p-4 border-t border-border flex justify-end gap-2">
-                <button 
+              <div className="p-4 border-t border-border/60 flex justify-end gap-2">
+                <button
                   onClick={() => {
                     setShowCreateServerModal(false)
                     setNewServerName('')
                   }}
-                  className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80"
+                  className="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
                 >
                   Отмена
                 </button>
-                <button 
+                <button
                   onClick={handleCreateServer}
                   disabled={!newServerName.trim()}
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-gradient-brand text-primary-foreground shadow-soft hover:shadow-glow disabled:opacity-50 transition-all"
                 >
                   Создать
                 </button>
@@ -988,7 +990,7 @@ export default function ChannelsPage() {
     <Layout>
       <div className="h-full flex flex-col lg:flex-row">
         {/* Guild Sidebar */}
-        <div className="hidden lg:flex w-20 bg-card border-r border-border flex-col items-center gap-2 py-3 shrink-0">
+        <div className="hidden lg:flex w-20 bg-card/60 backdrop-blur-xl border-r border-border/60 flex-col items-center gap-2 py-3 shrink-0">
           {guilds.map((guild) => (
             <button
               key={guild.id}
@@ -1002,8 +1004,8 @@ export default function ChannelsPage() {
               className={`w-12 h-12 rounded-2xl transition-all duration-300 flex items-center justify-center
                          hover:rounded-xl group relative ${
                 selectedGuild?.id === guild.id
-                  ? 'bg-gradient-to-br from-primary to-accent rounded-xl'
-                  : 'bg-muted hover:bg-accent'
+                  ? 'gradient-brand rounded-xl shadow-glow text-primary-foreground'
+                  : 'bg-secondary/70 text-muted-foreground hover:bg-primary/20 hover:text-foreground'
               }`}
             >
               {guild.icon ? (
@@ -1016,7 +1018,7 @@ export default function ChannelsPage() {
 
               {/* Active indicator */}
               {selectedGuild?.id === guild.id && (
-                <div className="absolute -left-2 w-1 h-8 bg-foreground rounded-r-full" />
+                <div className="absolute -left-2 w-1 h-8 rounded-r-full bg-gradient-to-b from-primary to-accent shadow-glow" />
               )}
             </button>
           ))}
@@ -1024,14 +1026,14 @@ export default function ChannelsPage() {
           {/* Add server button */}
           <button 
             onClick={() => setShowCreateServerModal(true)}
-            className="w-12 h-12 rounded-2xl bg-muted hover:bg-green-500/20 hover:rounded-xl transition-all duration-300 flex items-center justify-center group"
+            className="w-12 h-12 rounded-2xl bg-secondary/70 hover:bg-primary/15 hover:rounded-xl transition-all duration-300 flex items-center justify-center group"
           >
-            <Plus className="w-6 h-6 text-muted-foreground group-hover:text-green-500" />
+            <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary" />
           </button>
         </div>
 
         {/* Mobile Guild Selector */}
-        <div className="lg:hidden flex overflow-x-auto gap-2 p-2 border-b border-border bg-card/50 shrink-0">
+        <div className="lg:hidden flex overflow-x-auto gap-2 p-2 border-b border-border/60 bg-card/60 backdrop-blur-xl shrink-0">
           {guilds.map((guild) => (
             <button
               key={guild.id}
@@ -1043,8 +1045,8 @@ export default function ChannelsPage() {
               }}
               className={`shrink-0 w-10 h-10 rounded-xl transition-all duration-300 flex items-center justify-center ${
                 selectedGuild?.id === guild.id
-                  ? 'bg-gradient-to-br from-primary to-accent'
-                  : 'bg-muted hover:bg-accent'
+                  ? 'gradient-brand shadow-glow text-primary-foreground'
+                  : 'bg-secondary/70 text-muted-foreground hover:bg-primary/20 hover:text-foreground'
               }`}
             >
               {guild.icon ? (
@@ -1058,26 +1060,26 @@ export default function ChannelsPage() {
           ))}
           <button 
             onClick={() => setShowCreateServerModal(true)}
-            className="shrink-0 w-10 h-10 rounded-xl bg-muted hover:bg-green-500/20 transition-all duration-300 flex items-center justify-center"
+            className="shrink-0 w-10 h-10 rounded-xl bg-secondary/70 hover:bg-primary/15 transition-all duration-300 flex items-center justify-center"
           >
             <Plus className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
 
         {/* Channels Sidebar */}
-        <div className="hidden lg:flex w-60 bg-card/50 backdrop-blur-sm border-r border-border flex-col shrink-0">
+        <div className="hidden lg:flex w-60 bg-card/60 backdrop-blur-xl border-r border-border/60 flex-col shrink-0">
           {/* Guild Header */}
-          <div className="border-b border-border">
+          <div className="border-b border-border/60">
             <button
-              className="w-full p-4 hover:bg-accent/10 transition-all flex items-center justify-between group"
+              className="w-full p-4 hover:bg-primary/10 transition-all flex items-center justify-between group"
               onContextMenu={(e) => guildContextMenu.showContextMenu(e, getGuildContextMenuItems(selectedGuild))}
             >
-              <h2 className="font-semibold truncate">{selectedGuild?.name}</h2>
+              <h2 className="font-semibold tracking-tight truncate">{selectedGuild?.name}</h2>
               <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
             </button>
             <button
               onClick={() => setShowCreateChannelModal(true)}
-              className="w-full px-4 py-2 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+              className="w-full px-4 py-2 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Создать канал
@@ -1085,7 +1087,7 @@ export default function ChannelsPage() {
           </div>
 
           {/* Channels List */}
-          <div className="flex-1 overflow-y-auto p-2">
+          <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
             {Object.entries(channelsByCategory).map(([category, channels]) => {
               const isCollapsed = collapsedCategories.has(category)
               const hasUnread = channels.some((c: any) => unreadChannels.has(c.id))
@@ -1112,7 +1114,7 @@ export default function ChannelsPage() {
                         e.stopPropagation()
                         setShowCreateChannelModal(true)
                       }}
-                      className="opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 p-0.5 hover:bg-accent/20 rounded transition-opacity cursor-pointer"
+                      className="opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 p-0.5 hover:bg-primary/15 rounded transition-opacity cursor-pointer"
                       title="Создать канал"
                     >
                       <Plus className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
@@ -1127,7 +1129,7 @@ export default function ChannelsPage() {
                     const getChannelIcon = () => {
                       switch (channel.type) {
                         case 'voice':
-                          return <Volume2 className={cn("w-4 h-4 flex-shrink-0", isVoiceConnected && "text-[#23a559]")} />
+                          return <Volume2 className={cn("w-4 h-4 flex-shrink-0", isVoiceConnected && "text-green-500")} />
                         case 'video':
                           return <Video className="w-4 h-4 flex-shrink-0" />
                         default:
@@ -1168,16 +1170,19 @@ export default function ChannelsPage() {
                           }}
                           onContextMenu={(e) => channelContextMenu.showContextMenu(e, getChannelContextMenuItems(channel))}
                           className={cn(
-                            "w-full px-2 py-1.5 rounded-md flex items-center gap-2 group transition-all cursor-pointer relative",
+                            "w-full px-2 py-1.5 rounded-lg flex items-center gap-2 group transition-colors cursor-pointer relative",
                             isActive
-                              ? 'bg-muted text-foreground'
+                              ? 'bg-primary/15 text-foreground'
                               : isUnread
-                                ? 'text-white hover:bg-accent'
-                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                ? 'text-foreground hover:bg-primary/10'
+                                : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
                           )}
                         >
+                          {isActive && (
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-gradient-to-b from-primary to-accent" />
+                          )}
                           {isUnread && !isActive && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-2 bg-foreground rounded-r-full" />
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-2 rounded-r-full bg-gradient-to-b from-primary to-accent" />
                           )}
                           {getChannelIcon()}
                           <span className={cn(
@@ -1190,7 +1195,7 @@ export default function ChannelsPage() {
                               e.stopPropagation()
                               channelContextMenu.showContextMenu(e as any, getChannelContextMenuItems(channel))
                             }}
-                            className="ml-auto opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 p-0.5 hover:bg-accent rounded"
+                            className="ml-auto opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 p-0.5 hover:bg-primary/15 rounded"
                           >
                             <Settings className="w-3.5 h-3.5 text-muted-foreground" />
                           </button>
@@ -1208,8 +1213,8 @@ export default function ChannelsPage() {
                               >
                                 <div className="relative">
                                   <div className={cn(
-                                    "w-6 h-6 rounded-full bg-[#5865f2] flex items-center justify-center text-[10px] font-medium transition-all duration-200",
-                                    voiceUser.isSpeaking && "ring-2 ring-[#23a559] ring-offset-1 ring-offset-secondary"
+                                    "w-6 h-6 rounded-full bg-gradient-brand text-primary-foreground flex items-center justify-center text-[10px] font-medium transition-all duration-200",
+                                    voiceUser.isSpeaking && "ring-2 ring-green-500 ring-offset-1 ring-offset-secondary"
                                   )}>
                                     {voiceUser.avatar ? (
                                       <img src={voiceUser.avatar} alt="" className="w-full h-full rounded-full object-cover" />
@@ -1219,7 +1224,7 @@ export default function ChannelsPage() {
                                   </div>
                                   {voiceUser.isMuted && (
                                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-secondary rounded-full flex items-center justify-center">
-                                      <MicOff className="w-2 h-2 text-[#da373c]" />
+                                      <MicOff className="w-2 h-2 text-red-500" />
                                     </div>
                                   )}
                                 </div>
@@ -1247,12 +1252,12 @@ export default function ChannelsPage() {
               className="lg:hidden fixed inset-0 bg-black/50 z-40"
               onClick={() => setShowMobileChannels(false)}
             />
-            <div className="lg:hidden fixed left-0 top-0 bottom-0 w-64 bg-card z-50 flex flex-col animate-slide-in border-r border-border">
-              <div className="p-3 border-b border-border flex items-center justify-between">
-                <h2 className="font-semibold truncate">{selectedGuild?.name}</h2>
-                <button 
+            <div className="lg:hidden fixed left-0 top-0 bottom-0 w-64 bg-card/90 backdrop-blur-xl z-50 flex flex-col animate-slide-in border-r border-border/60">
+              <div className="p-3 border-b border-border/60 flex items-center justify-between">
+                <h2 className="font-semibold tracking-tight truncate">{selectedGuild?.name}</h2>
+                <button
                   onClick={() => setShowMobileChannels(false)}
-                  className="p-2 rounded-lg hover:bg-accent"
+                  className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1283,10 +1288,10 @@ export default function ChannelsPage() {
                             setShowMobileChannels(false)
                           }}
                           className={cn(
-                            "w-full px-2 py-2 rounded-md flex items-center gap-2 text-left transition-colors",
+                            "w-full px-2 py-2 rounded-lg flex items-center gap-2 text-left transition-colors",
                             selectedChannel?.id === channel.id
-                              ? 'bg-accent text-foreground'
-                              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                              ? 'bg-primary/15 text-foreground'
+                              : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
                           )}
                         >
                           {channel.type === 'voice' ? (
@@ -1301,13 +1306,13 @@ export default function ChannelsPage() {
                   )
                 })}
               </div>
-              <div className="p-2 border-t border-border">
-                <button 
+              <div className="p-2 border-t border-border/60">
+                <button
                   onClick={() => {
                     setShowCreateChannelModal(true)
                     setShowMobileChannels(false)
                   }}
-                  className="w-full px-3 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 flex items-center gap-2 text-sm"
+                  className="w-full px-3 py-2 rounded-lg bg-primary/15 hover:bg-primary/25 text-foreground flex items-center gap-2 text-sm transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Создать канал
@@ -1320,10 +1325,10 @@ export default function ChannelsPage() {
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Channel Header */}
-          <div className="p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md flex items-center gap-2 md:gap-3 sticky top-0 z-10 shrink-0">
+          <div className="p-3 md:p-4 border-b border-border/60 bg-card/70 backdrop-blur-xl flex items-center gap-2 md:gap-3 sticky top-0 z-10 shrink-0">
             <button
               onClick={() => setShowMobileChannels(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-accent/20 text-muted-foreground"
+              className="lg:hidden p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors"
             >
               <Hash className="w-5 h-5" />
             </button>
@@ -1333,19 +1338,19 @@ export default function ChannelsPage() {
               <Hash className="hidden lg:block w-5 h-5 text-muted-foreground" />
             )}
             <div className="flex-1 min-w-0">
-              <h2 className="font-semibold truncate text-sm md:text-base">{selectedChannel.name}</h2>
+              <h2 className="font-semibold tracking-tight truncate text-sm md:text-base">{selectedChannel.name}</h2>
             </div>
             <div className="flex items-center gap-1 md:gap-2">
               <button
                 onClick={handleOpenChannelSettings}
-                className="p-2 rounded-lg hover:bg-accent/20 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors"
                 title="Настройки канала"
               >
                 <Settings className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setShowMembersPanel(!showMembersPanel)}
-                className={`flex p-2 rounded-lg transition-colors ${showMembersPanel ? 'bg-accent/20 text-foreground' : 'hover:bg-accent/20 text-muted-foreground hover:text-foreground'}`}
+                className={`flex p-2 rounded-lg transition-colors ${showMembersPanel ? 'bg-primary/20 text-primary' : 'hover:bg-primary/10 text-muted-foreground hover:text-foreground'}`}
                 title="Участники"
               >
                 <Users className="w-5 h-5" />
@@ -1355,7 +1360,7 @@ export default function ChannelsPage() {
 
           {/* Messages or Voice Call Content */}
           {selectedChannel.type === 'voice' ? (
-            <div className="flex-1 overflow-hidden bg-card">
+            <div className="flex-1 overflow-hidden bg-background">
               <VoiceChannel
                 channelId={parseInt(selectedChannel.id) || 1}
                 channelName={selectedChannel.name}
@@ -1366,20 +1371,20 @@ export default function ChannelsPage() {
           ) : (
             <>
               {/* Messages List */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {filteredMessages.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
                       <Hash className="w-10 h-10 text-white" />
                     </div>
-                    <h3 className="font-semibold mb-2">Welcome to #{selectedChannel.name}</h3>
+                    <h3 className="font-semibold tracking-tight mb-2">Welcome to #{selectedChannel.name}</h3>
                     <p className="text-sm text-muted-foreground">This is the start of the channel.</p>
                   </div>
                 ) : (
                   filteredMessages.map((message) => (
                     <div
                       key={message.id}
-                      className="message-hoverable flex gap-3 px-3 py-2 rounded-lg -mx-3 group"
+                      className="message-hoverable flex gap-3 px-3 py-2 rounded-xl -mx-3 group hover:bg-secondary/40 transition-colors"
                       onContextMenu={(e) => messageContextMenu.showContextMenu(e, getMessageContextMenuItems(message))}
                     >
                       <Avatar
@@ -1402,7 +1407,7 @@ export default function ChannelsPage() {
                                 if (e.key === 'Enter') handleSaveEditMessage()
                                 if (e.key === 'Escape') handleCancelEditMessage()
                               }}
-                              className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm focus:ring-2 focus:ring-primary"
+                              className="input-field text-sm"
                               autoFocus
                             />
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1411,13 +1416,13 @@ export default function ChannelsPage() {
                               <span>enter для сохранения</span>
                               <button
                                 onClick={handleSaveEditMessage}
-                                className="ml-auto px-2 py-1 bg-primary text-white rounded text-xs hover:bg-primary/90"
+                                className="ml-auto px-2 py-1 bg-gradient-brand text-primary-foreground rounded-lg text-xs hover:shadow-glow transition-all"
                               >
                                 Сохранить
                               </button>
                               <button
                                 onClick={handleCancelEditMessage}
-                                className="px-2 py-1 bg-muted rounded text-xs hover:bg-muted/80"
+                                className="px-2 py-1 bg-secondary rounded-lg text-xs hover:bg-secondary/80 transition-colors"
                               >
                                 Отмена
                               </button>
@@ -1434,8 +1439,8 @@ export default function ChannelsPage() {
                                     <button
                                       key={reaction.emoji}
                                       onClick={() => hasReacted ? handleRemoveReaction(message.id, reaction.emoji) : handleAddReaction(message.id, reaction.emoji)}
-                                      className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                                        hasReacted ? 'bg-primary/20 border border-primary/50' : 'bg-accent/30 hover:bg-accent/50'
+                                      className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs transition-colors ${
+                                        hasReacted ? 'bg-primary/20 border border-primary/50 shadow-glow' : 'bg-secondary/70 border border-transparent hover:bg-secondary hover:border-primary/30'
                                       }`}
                                     >
                                       <span>{reaction.emoji}</span>
@@ -1451,22 +1456,22 @@ export default function ChannelsPage() {
                       
                       {editingMessageId !== message.id && (
                         <div className="opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 flex gap-1 relative">
-                          <button className="p-1 hover:bg-accent rounded" onClick={() => handleReplyToMessage(message)}>
+                          <button className="p-1.5 hover:bg-primary/15 rounded-lg transition-colors" onClick={() => handleReplyToMessage(message)}>
                             <Reply className="w-4 h-4 text-muted-foreground" />
                           </button>
-                          <button 
-                            className="p-1 hover:bg-accent rounded" 
+                          <button
+                            className="p-1.5 hover:bg-primary/15 rounded-lg transition-colors"
                             onClick={() => setShowReactionPicker(showReactionPicker === message.id ? null : message.id)}
                           >
                             <Smile className="w-4 h-4 text-muted-foreground" />
                           </button>
                           {showReactionPicker === message.id && (
-                            <div className="absolute top-8 right-0 z-50 bg-card border border-border rounded-lg shadow-lg p-2 flex gap-1">
+                            <div className="absolute top-8 right-0 z-50 glass-strong rounded-xl p-2 flex gap-1">
                               {commonEmojis.map((emoji) => (
                                 <button
                                   key={emoji}
                                   onClick={() => handleAddReaction(message.id, emoji)}
-                                  className="text-xl hover:bg-accent p-1 rounded transition-all hover:scale-110"
+                                  className="text-xl hover:bg-primary/15 p-1 rounded-lg transition-all hover:scale-110"
                                 >
                                   {emoji}
                                 </button>
@@ -1474,11 +1479,11 @@ export default function ChannelsPage() {
                             </div>
                           )}
                           {String(message.author_id) === String(user?.id) && (
-                            <button className="p-1 hover:bg-accent rounded" onClick={() => handleStartEditMessage(message)}>
+                            <button className="p-1.5 hover:bg-primary/15 rounded-lg transition-colors" onClick={() => handleStartEditMessage(message)}>
                               <Edit3 className="w-4 h-4 text-muted-foreground" />
                             </button>
                           )}
-                          <button className="p-1 hover:bg-accent rounded" onClick={() => messageContextMenu.showContextMenu(null as any, getMessageContextMenuItems(message))}>
+                          <button className="p-1.5 hover:bg-primary/15 rounded-lg transition-colors" onClick={() => messageContextMenu.showContextMenu(null as any, getMessageContextMenuItems(message))}>
                             <MoreVertical className="w-4 h-4 text-muted-foreground" />
                           </button>
                         </div>
@@ -1510,15 +1515,15 @@ export default function ChannelsPage() {
               )}
 
               {/* Message Input */}
-              <div className="p-4 bg-card/80 backdrop-blur-md shrink-0 sticky bottom-16 lg:bottom-0 z-10">
+              <div className="p-4 border-t border-border/60 bg-card/70 backdrop-blur-xl shrink-0 sticky bottom-16 lg:bottom-0 z-10">
                 {replyingTo && (
-                  <div className="mb-2 px-3 py-2 bg-accent/10 rounded-lg flex items-center justify-between">
+                  <div className="mb-2 px-3 py-2 bg-primary/10 border-l-2 border-l-primary rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs">
                       <Reply className="w-3 h-3 text-primary" />
                       <span className="text-muted-foreground">Ответ на</span>
                       <span className="font-semibold">{replyingTo.author.username}</span>
                     </div>
-                    <button onClick={() => setReplyingTo(null)} className="p-1 hover:bg-accent/20 rounded">
+                    <button onClick={() => setReplyingTo(null)} className="p-1 hover:bg-primary/15 rounded transition-colors">
                       <X className="w-3 h-3" />
                     </button>
                   </div>
@@ -1533,12 +1538,12 @@ export default function ChannelsPage() {
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder={`Сообщение в #${selectedChannel.name}`}
-                    className="w-full bg-accent/10 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/50 transition-all pr-12"
+                    className="w-full bg-card/60 backdrop-blur-sm border border-border rounded-xl py-3 px-4 pr-12 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary/60 transition-all"
                   />
                   <button
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-all"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-gradient-brand text-primary-foreground shadow-soft disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-glow hover:scale-105 transition-all"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -1557,8 +1562,8 @@ export default function ChannelsPage() {
         )}
         {/* Members Panel */}
         {showMembersPanel && (
-          <div className="fixed inset-y-0 right-0 w-64 md:static md:w-60 bg-secondary flex flex-col shrink-0 border-l border-border z-[60] md:z-auto">
-            <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="fixed inset-y-0 right-0 w-64 md:static md:w-60 bg-card/80 backdrop-blur-xl flex flex-col shrink-0 border-l border-border/60 z-[60] md:z-auto">
+            <div className="p-4 border-b border-border/60 flex items-center justify-between">
               <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Участники — {members.length}</h3>
               <button onClick={() => setShowMembersPanel(false)} className="md:hidden p-1 rounded hover:bg-accent text-muted-foreground">
                 <X className="w-4 h-4" />
@@ -1574,7 +1579,7 @@ export default function ChannelsPage() {
                       {status === 'online' ? 'В сети' : status === 'idle' ? 'Неактивен' : 'Не в сети'} — {statusMembers.length}
                     </p>
                     {statusMembers.map(member => (
-                      <div key={member.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors cursor-pointer group">
+                      <div key={member.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer group">
                         <div className="relative">
                           <Avatar
                             src={member.avatar || undefined}
@@ -1582,15 +1587,15 @@ export default function ChannelsPage() {
                             userId={member.id}
                             size="sm"
                           />
-                          <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-secondary ${
-                            status === 'online' ? 'bg-[#23a559]' : status === 'idle' ? 'bg-[#f0b232]' : 'bg-[#80848e]'
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-card ${
+                            status === 'online' ? 'bg-green-500' : status === 'idle' ? 'bg-amber-400' : 'bg-muted-foreground'
                           }`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate flex items-center gap-1.5 text-muted-foreground group-hover:text-foreground">
                             {member.username}
-                            {member.role === 'owner' && <Crown className="w-3.5 h-3.5 text-[#f0b232]" />}
-                            {member.role === 'admin' && <Shield className="w-3.5 h-3.5 text-[#f23f43]" />}
+                            {member.role === 'owner' && <Crown className="w-3.5 h-3.5 text-amber-400" />}
+                            {member.role === 'admin' && <Shield className="w-3.5 h-3.5 text-red-400" />}
                           </p>
                         </div>
                       </div>
@@ -1605,11 +1610,11 @@ export default function ChannelsPage() {
 
       {/* Channel Settings Modal */}
       {showChannelSettings && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-card rounded-2xl w-full max-w-lg mx-4 shadow-2xl border border-border overflow-hidden">
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <h2 className="text-lg font-bold">Настройки канала</h2>
-              <button onClick={() => setShowChannelSettings(false)} className="p-2 rounded-lg hover:bg-muted">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in">
+          <div className="glass-strong rounded-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <div className="p-4 border-b border-border/60 flex items-center justify-between">
+              <h2 className="text-lg font-bold tracking-tight">Настройки канала</h2>
+              <button onClick={() => setShowChannelSettings(false)} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1620,7 +1625,7 @@ export default function ChannelsPage() {
                   type="text"
                   value={channelName}
                   onChange={(e) => setChannelName(e.target.value)}
-                  className="w-full mt-1 px-4 py-2 rounded-lg bg-background border border-border focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="input-field mt-1"
                 />
               </div>
               <div>
@@ -1629,7 +1634,7 @@ export default function ChannelsPage() {
                   value={channelDescription}
                   onChange={(e) => setChannelDescription(e.target.value)}
                   placeholder="Добавьте описание канала..."
-                  className="w-full mt-1 px-4 py-2 rounded-lg bg-background border border-border focus:ring-2 focus:ring-primary focus:border-transparent resize-none h-20"
+                  className="input-field mt-1 resize-none h-20"
                 />
               </div>
               <div className="flex items-center justify-between py-2">
@@ -1637,10 +1642,10 @@ export default function ChannelsPage() {
                   <p className="font-medium">Медленный режим</p>
                   <p className="text-sm text-muted-foreground">Ограничить частоту сообщений</p>
                 </div>
-                <select 
+                <select
                   value={slowMode}
                   onChange={(e) => setSlowMode(e.target.value)}
-                  className="px-3 py-1.5 rounded-lg bg-background border border-border"
+                  className="px-3 py-1.5 rounded-lg bg-card/60 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="off">Выкл</option>
                   <option value="5">5 сек</option>
@@ -1661,20 +1666,20 @@ export default function ChannelsPage() {
                 </button>
               </div>
             </div>
-            <div className="p-4 border-t border-border flex justify-between">
-              <button 
+            <div className="p-4 border-t border-border/60 flex justify-between">
+              <button
                 onClick={handleDeleteChannelFromSettings}
-                className="px-4 py-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors"
+                className="px-4 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
               >
                 Удалить канал
               </button>
               <div className="flex gap-2">
-                <button onClick={() => setShowChannelSettings(false)} className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80">
+                <button onClick={() => setShowChannelSettings(false)} className="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
                   Отмена
                 </button>
-                <button 
+                <button
                   onClick={handleSaveChannelSettings}
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90"
+                  className="px-4 py-2 rounded-lg bg-gradient-brand text-primary-foreground shadow-soft hover:shadow-glow transition-all"
                 >
                   Сохранить
                 </button>
@@ -1686,22 +1691,22 @@ export default function ChannelsPage() {
 
       {/* Roles Modal */}
       {showRolesModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-card rounded-2xl w-full max-w-2xl mx-4 shadow-2xl border border-border overflow-hidden max-h-[80vh] flex flex-col">
-            <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
-              <h2 className="text-lg font-bold flex items-center gap-2">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in">
+          <div className="glass-strong rounded-2xl w-full max-w-2xl mx-4 overflow-hidden max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-border/60 flex items-center justify-between shrink-0">
+              <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
                 Управление ролями
               </h2>
-              <button onClick={() => setShowRolesModal(false)} className="p-2 rounded-lg hover:bg-muted">
+              <button onClick={() => setShowRolesModal(false)} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex flex-1 overflow-hidden">
-              <div className="w-48 border-r border-border p-2 overflow-y-auto">
-                <button 
+              <div className="w-48 border-r border-border/60 p-2 overflow-y-auto custom-scrollbar">
+                <button
                   onClick={handleCreateRole}
-                  className="w-full px-3 py-2 rounded-lg bg-accent/10 hover:bg-accent/20 text-left flex items-center gap-2 mb-2 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-left flex items-center gap-2 mb-2 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   <span className="text-sm">Создать роль</span>
@@ -1710,7 +1715,7 @@ export default function ChannelsPage() {
                   <button
                     key={role.id}
                     onClick={() => handleSelectRole(role.id)}
-                    className={`w-full px-3 py-2 rounded-lg text-left flex items-center gap-2 transition-colors ${selectedRole === role.id ? 'bg-accent/20' : 'hover:bg-accent/10'}`}
+                    className={`w-full px-3 py-2 rounded-lg text-left flex items-center gap-2 transition-colors ${selectedRole === role.id ? 'bg-primary/15' : 'hover:bg-primary/10'}`}
                   >
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: role.color }} />
                     <span className="text-sm">{role.name}</span>
@@ -1726,7 +1731,7 @@ export default function ChannelsPage() {
                         type="text"
                         value={roleName}
                         onChange={(e) => setRoleName(e.target.value)}
-                        className="w-full mt-1 px-4 py-2 rounded-lg bg-background border border-border focus:ring-2 focus:ring-primary"
+                        className="input-field mt-1"
                       />
                     </div>
                     <div>
@@ -1736,13 +1741,13 @@ export default function ChannelsPage() {
                           <button
                             key={color}
                             onClick={() => setRoleColor(color)}
-                            className={`w-8 h-8 rounded-lg border-2 transition-colors ${roleColor === color ? 'border-white' : 'border-transparent hover:border-white/50'}`}
+                            className={`w-8 h-8 rounded-lg border-2 transition-colors ${roleColor === color ? 'border-foreground' : 'border-transparent hover:border-foreground/50'}`}
                             style={{ backgroundColor: color }}
                           />
                         ))}
                       </div>
                     </div>
-                    <div className="pt-4 border-t border-border">
+                    <div className="pt-4 border-t border-border/60">
                       <h3 className="font-medium mb-3">Разрешения</h3>
                       <div className="space-y-2">
                         {[
@@ -1774,14 +1779,14 @@ export default function ChannelsPage() {
                 )}
               </div>
             </div>
-            <div className="p-4 border-t border-border flex justify-end gap-2 shrink-0">
-              <button onClick={() => setShowRolesModal(false)} className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80">
+            <div className="p-4 border-t border-border/60 flex justify-end gap-2 shrink-0">
+              <button onClick={() => setShowRolesModal(false)} className="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
                 Отмена
               </button>
-              <button 
+              <button
                 onClick={handleSaveRole}
                 disabled={!selectedRole}
-                className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-gradient-brand text-primary-foreground shadow-soft hover:shadow-glow disabled:opacity-50 transition-all"
               >
                 Сохранить
               </button>
@@ -1792,13 +1797,13 @@ export default function ChannelsPage() {
 
       {/* Create Server Modal */}
       {showCreateServerModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-card rounded-2xl w-full max-w-md mx-4 shadow-2xl border border-border overflow-hidden">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in">
+          <div className="glass-strong rounded-2xl w-full max-w-md mx-4 overflow-hidden">
             <div className="p-6 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Plus className="w-10 h-10 text-white" />
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand shadow-glow flex items-center justify-center">
+                <Plus className="w-10 h-10 text-primary-foreground" />
               </div>
-              <h2 className="text-xl font-bold mb-2">Создать сервер</h2>
+              <h2 className="text-xl font-bold tracking-tight mb-2">Создать сервер</h2>
               <p className="text-muted-foreground text-sm">Создайте свой сервер и пригласите друзей</p>
             </div>
             <div className="px-6 pb-4">
@@ -1808,23 +1813,23 @@ export default function ChannelsPage() {
                 value={newServerName}
                 onChange={(e) => setNewServerName(e.target.value)}
                 placeholder="Мой сервер"
-                className="w-full mt-1 px-4 py-3 rounded-lg bg-background border border-border focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="input-field mt-1 py-3"
               />
             </div>
-            <div className="p-4 border-t border-border flex justify-end gap-2">
-              <button 
+            <div className="p-4 border-t border-border/60 flex justify-end gap-2">
+              <button
                 onClick={() => {
                   setShowCreateServerModal(false)
                   setNewServerName('')
                 }}
-                className="px-4 py-2 rounded-lg bg-muted hover:bg-muted/80"
+                className="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               >
                 Отмена
               </button>
-              <button 
+              <button
                 onClick={handleCreateServer}
                 disabled={!newServerName.trim()}
-                className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-gradient-brand text-primary-foreground shadow-soft hover:shadow-glow disabled:opacity-50 transition-all"
               >
                 Создать
               </button>

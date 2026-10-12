@@ -40,25 +40,25 @@ export function NewMessageModal({ isOpen, onClose, onSelectUser, friends }: NewM
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
         onClick={handleClose}
       />
 
-      <div 
-        className="relative z-10 w-full max-w-md bg-card rounded-xl border border-border shadow-2xl animate-fade-in"
+      <div
+        className="relative z-10 w-full max-w-md glass-strong rounded-2xl animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Новое сообщение</h2>
+        <div className="p-4 border-b border-border/60 flex items-center justify-between">
+          <h2 className="text-lg font-semibold tracking-tight">Новое сообщение</h2>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-accent/20 rounded-lg transition-colors"
+            className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-border">
+        <div className="p-4 border-b border-border/60">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
@@ -66,19 +66,18 @@ export function NewMessageModal({ isOpen, onClose, onSelectUser, friends }: NewM
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Поиск друзей..."
-              className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg
-                        text-foreground placeholder:text-muted-foreground
-                        focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-                        transition-all duration-300"
+              className="input-field pl-10"
               autoFocus
             />
           </div>
         </div>
 
-        <div className="max-h-80 overflow-y-auto">
+        <div className="max-h-80 overflow-y-auto custom-scrollbar">
           {filteredFriends.length === 0 ? (
             <div className="text-center py-12">
-              <MessageSquare className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+              <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center">
+                <MessageSquare className="w-7 h-7 text-primary/70" />
+              </div>
               <p className="text-muted-foreground text-sm">
                 {searchQuery ? 'Друзья не найдены' : 'Нет друзей для отправки сообщения'}
               </p>
@@ -88,7 +87,7 @@ export function NewMessageModal({ isOpen, onClose, onSelectUser, friends }: NewM
               <button
                 key={friend.id}
                 onClick={() => handleSelect(friend)}
-                className="w-full p-4 flex items-center gap-3 hover:bg-accent/10 transition-all duration-300 border-b border-border/50 last:border-b-0 cursor-pointer"
+                className="w-full p-4 flex items-center gap-3 hover:bg-primary/10 transition-colors duration-200 border-b border-border/40 last:border-b-0 cursor-pointer"
               >
                 <Avatar
                   src={friend.avatar}
