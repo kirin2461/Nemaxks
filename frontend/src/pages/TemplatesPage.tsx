@@ -195,9 +195,9 @@ export function TemplatesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+      <div className="min-h-screen bg-nebula text-foreground flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
           <p className="text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
@@ -208,12 +208,12 @@ export function TemplatesPage() {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-8 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-2xl"
+      className="mb-8 p-4 glass rounded-2xl shadow-soft"
     >
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-600/20 rounded-lg">
-            <Crown className="text-purple-400" size={24} />
+          <div className="p-2 bg-primary/15 rounded-lg">
+            <Crown className="text-primary" size={24} />
           </div>
           <div>
             <p className="text-foreground font-medium">{t("templates.unlockWith")} {t("common.premium")}</p>
@@ -222,7 +222,7 @@ export function TemplatesPage() {
         </div>
         <button
           onClick={() => setLocation("/premium")}
-          className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-medium text-sm whitespace-nowrap"
+          className="px-6 py-2.5 gradient-brand hover:brightness-110 rounded-xl font-medium text-sm text-primary-foreground shadow-soft whitespace-nowrap transition-all"
         >
           {t("premium.upgrade")}
         </button>
@@ -281,18 +281,18 @@ export function TemplatesPage() {
   */
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-nebula text-foreground">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/20 px-4 py-2 rounded-full mb-4">
-            <Sparkles size={18} className="text-purple-400" />
-            <span className="text-purple-300 font-medium text-sm">{t("nav.templates")}</span>
+          <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 px-4 py-2 rounded-full mb-4">
+            <Sparkles size={18} className="text-primary" />
+            <span className="gradient-brand-text font-medium text-sm">{t("nav.templates")}</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3">
+          <h1 className="text-4xl md:text-5xl font-bold gradient-brand-text mb-3">
             {t("templates.title")}
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-lg">
@@ -312,18 +312,14 @@ export function TemplatesPage() {
               }}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
                 activeTab === tab.id
-                  ? tab.color === "blue" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30" :
-                    tab.color === "green" ? "bg-green-600 text-white shadow-lg shadow-green-600/30" :
-                    tab.color === "orange" ? "bg-orange-600 text-white shadow-lg shadow-orange-600/30" :
-                    tab.color === "purple" ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30" :
-                    "bg-cyan-600 text-white shadow-lg shadow-cyan-600/30"
-                  : "bg-card/50 text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                  ? "gradient-brand text-primary-foreground shadow-soft"
+                  : "glass text-muted-foreground hover:bg-primary/10 hover:text-foreground"
               }`}
             >
               {tab.icon}
               {tab.label}
               <span className={`text-xs px-2 py-0.5 rounded-full ${
-                activeTab === tab.id ? "bg-white/20" : "bg-secondary"
+                activeTab === tab.id ? "bg-white/20" : "bg-primary/10 text-primary"
               }`}>
                 {templateCounts[tab.id]}
               </span>
@@ -339,7 +335,7 @@ export function TemplatesPage() {
               placeholder={t("templates.search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-card/50 border border-border rounded-xl focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+              className="input-field !rounded-xl pl-12 py-3.5"
             />
           </div>
         </div>
@@ -389,7 +385,7 @@ export function TemplatesPage() {
 
               {filteredTemplates.length === 0 && (
                 <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 glass rounded-full flex items-center justify-center mx-auto mb-4">
                     <Search size={28} className="text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground text-lg">Шаблоны не найдены</p>
@@ -462,9 +458,9 @@ export function TemplatesPage() {
 
 function GuildTemplateCard({ template }: { template: GuildTemplate }) {
   const planBadges: Record<string, { label: string; color: string }> = {
-    free: { label: "Бесплатно", color: "bg-muted" },
-    edu_basic: { label: "Базовый", color: "bg-blue-600" },
-    edu_pro: { label: "Про", color: "bg-purple-600" },
+    free: { label: "Бесплатно", color: "bg-muted text-muted-foreground" },
+    edu_basic: { label: "Базовый", color: "bg-accent/15 text-accent border border-accent/25" },
+    edu_pro: { label: "Про", color: "bg-primary/15 text-primary border border-primary/25" },
   };
   
   const plan = planBadges[template.required_plan] || planBadges.free;
@@ -484,11 +480,11 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="bg-card/40 border border-border/50 rounded-2xl p-5 hover:border-purple-500/50 transition-all"
+      className="glass rounded-2xl p-5 shadow-soft hover:border-primary/50 hover:shadow-glow transition-all"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-purple-600/20 rounded-xl text-purple-400">
+          <div className="p-2.5 bg-primary/15 rounded-xl text-primary">
             {categoryIcons[template.category] || <Building size={20} />}
           </div>
           <div>
@@ -496,7 +492,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
             <p className="text-xs text-muted-foreground">{template.usage_count} использований</p>
           </div>
         </div>
-        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color} text-white`}>
+        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color}`}>
           {plan.label}
         </span>
       </div>
@@ -508,7 +504,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
           <p className="text-xs text-muted-foreground mb-2">Каналы ({channels.length}):</p>
           <div className="flex flex-wrap gap-1.5">
             {channels.slice(0, 5).map((ch, i) => (
-              <span key={i} className="px-2 py-1 bg-secondary/50 rounded text-xs text-foreground">
+              <span key={i} className="px-2 py-1 bg-background/50 border border-border rounded-lg text-xs text-foreground">
                 #{ch.name}
               </span>
             ))}
@@ -519,7 +515,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
         </div>
       )}
 
-      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl font-medium transition-colors">
+      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 gradient-brand hover:brightness-110 text-primary-foreground shadow-soft rounded-xl font-medium transition-all">
         Использовать шаблон
         <ChevronRight size={16} />
       </button>
@@ -529,9 +525,9 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
 
 function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
   const planBadges: Record<string, { label: string; color: string }> = {
-    free: { label: "Бесплатно", color: "bg-muted" },
-    edu_basic: { label: "Базовый", color: "bg-blue-600" },
-    edu_pro: { label: "Про", color: "bg-purple-600" },
+    free: { label: "Бесплатно", color: "bg-muted text-muted-foreground" },
+    edu_basic: { label: "Базовый", color: "bg-accent/15 text-accent border border-accent/25" },
+    edu_pro: { label: "Про", color: "bg-primary/15 text-primary border border-primary/25" },
   };
   
   const plan = planBadges[template.required_plan] || planBadges.free;
@@ -547,11 +543,11 @@ function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="bg-card/40 border border-border/50 rounded-2xl p-5 hover:border-cyan-500/50 transition-all"
+      className="glass rounded-2xl p-5 shadow-soft hover:border-accent/50 hover:shadow-glow transition-all"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-cyan-600/20 rounded-xl text-cyan-400">
+          <div className="p-2.5 bg-accent/15 rounded-xl text-accent">
             {typeIcons[template.type] || <MessageCircle size={20} />}
           </div>
           <div>
@@ -559,14 +555,14 @@ function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
             <p className="text-xs text-muted-foreground">{template.type} · {template.usage_count} использований</p>
           </div>
         </div>
-        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color} text-white`}>
+        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color}`}>
           {plan.label}
         </span>
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
 
-      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-medium transition-colors">
+      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 gradient-brand hover:brightness-110 text-primary-foreground shadow-soft rounded-xl font-medium transition-all">
         Добавить канал
         <ChevronRight size={16} />
       </button>
