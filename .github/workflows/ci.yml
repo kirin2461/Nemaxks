@@ -127,9 +127,10 @@ jobs:
 
       # Advisory: tsc --noEmit не блокирует, пока не разобраны
       # накопленные type-ошибки (отдельная задача).
+      # Прямой вызов через node: на раннере node_modules/.bin не линкуется.
       - name: Type check
         working-directory: ./frontend
-        run: npx tsc --noEmit
+        run: node node_modules/typescript/bin/tsc --noEmit
         continue-on-error: true
 
       - name: Build
