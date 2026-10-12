@@ -859,7 +859,7 @@ export default function MessagesPage() {
                   </button>
                 </button>
                 )
-              })}
+              })
             )}
             {groupDMs.length > 0 && (
               <div className="mt-4">
@@ -1252,7 +1252,7 @@ export default function MessagesPage() {
                     <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-primary/10 border border-primary rounded-lg">
                       <button
                         onClick={togglePlayVoicePreview}
-                        className="p-2 rounded-full bg-primary text-white hover:bg-primary/80 transition"
+                        className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/80 transition"
                       >
                         {playingVoice === 'preview' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </button>
