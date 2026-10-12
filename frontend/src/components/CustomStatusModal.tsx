@@ -119,7 +119,7 @@ export default function CustomStatusModal({
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-card rounded-2xl p-6 max-w-md w-full shadow-2xl border border-purple-500/20"
+          className="glass-strong rounded-xl p-6 max-w-md w-full border-border/50"
           onClick={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-6">
@@ -145,7 +145,7 @@ export default function CustomStatusModal({
                   onClick={() => setEmoji(e)}
                   className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all ${
                     emoji === e 
-                      ? 'bg-purple-600 ring-2 ring-purple-400' 
+                      ? 'gradient-brand ring-2 ring-primary/60 shadow-glow' 
                       : 'bg-secondary hover:bg-muted'
                   }`}
                 >
@@ -167,7 +167,7 @@ export default function CustomStatusModal({
                 onChange={e => setText(e.target.value)}
                 placeholder={language === 'ru' ? 'Что вы делаете?' : 'What are you doing?'}
                 maxLength={100}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                className="input-field pl-12 pr-4 py-3"
               />
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function CustomStatusModal({
             <select
               value={duration}
               onChange={e => setDuration(Number(e.target.value))}
-              className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+              className="input-field px-4 py-3"
             >
               {DURATION_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>
@@ -225,13 +225,13 @@ export default function CustomStatusModal({
                 value={presetName}
                 onChange={e => setPresetName(e.target.value)}
                 placeholder={language === 'ru' ? 'Название пресета' : 'Preset name'}
-                className="w-full px-3 py-2 rounded-lg bg-muted border border-gray-500 text-foreground placeholder-muted-foreground mb-2"
+                className="input-field px-3 py-2 mb-2"
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleSavePreset}
                   disabled={!presetName.trim() || !text.trim()}
-                  className="flex-1 px-3 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50"
+                  className="flex-1 px-3 py-2 rounded-lg gradient-brand text-primary-foreground font-semibold hover:brightness-110 shadow-glow disabled:opacity-50 transition-all"
                 >
                   {language === 'ru' ? 'Сохранить' : 'Save'}
                 </button>
@@ -247,7 +247,7 @@ export default function CustomStatusModal({
             <button
               onClick={() => setShowPresetForm(true)}
               disabled={!text.trim()}
-              className="w-full mb-4 px-4 py-2 rounded-lg border border-dashed border-border text-muted-foreground hover:border-purple-500 hover:text-purple-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full mb-4 px-4 py-2 rounded-lg border border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
               {language === 'ru' ? 'Сохранить как пресет' : 'Save as preset'}
@@ -265,7 +265,7 @@ export default function CustomStatusModal({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 px-4 py-3 rounded-xl bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50 transition-colors"
+              className="flex-1 px-4 py-3 rounded-xl gradient-brand text-primary-foreground font-semibold hover:brightness-110 shadow-glow disabled:opacity-50 transition-all"
             >
               {saving ? (
                 <span className="flex items-center justify-center gap-2">

@@ -93,14 +93,14 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[85vh] overflow-y-auto">
         <div className="flex justify-center">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
               {avatarPreview ? (
                 <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
               ) : (
                 <User className="w-12 h-12 text-white" />
               )}
             </div>
-            <label className="absolute bottom-0 right-0 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-600 transition-colors">
+            <label className="absolute bottom-0 right-0 w-8 h-8 gradient-brand shadow-glow rounded-full flex items-center justify-center cursor-pointer hover:brightness-110 transition-all">
               <Camera className="w-4 h-4 text-white" />
               <input
                 type="file"
@@ -119,7 +119,7 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
             value={displayName}
             onChange={e => setDisplayName(e.target.value)}
             maxLength={32}
-            className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors"
+            className="input-field"
             placeholder="Ваше имя"
           />
         </div>
@@ -131,7 +131,7 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
             onChange={e => setBio(e.target.value)}
             maxLength={200}
             rows={3}
-            className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors resize-none"
+            className="input-field resize-none"
             placeholder="Расскажите о себе..."
           />
           <p className="text-xs text-muted-foreground mt-1">{bio.length}/200</p>
@@ -154,14 +154,14 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
+            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted border border-border/50 rounded-lg text-foreground transition-colors"
           >
             Отмена
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 gradient-brand hover:brightness-110 shadow-glow rounded-lg text-primary-foreground transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
