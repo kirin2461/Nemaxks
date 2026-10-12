@@ -106,7 +106,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
   if (isMinimized) {
     return (
       <div
-        className="fixed bottom-20 lg:bottom-4 right-4 z-50 w-24 h-24 bg-background rounded-lg border-2 border-blue-500 shadow-lg cursor-pointer hover:border-blue-400 transition"
+        className="fixed bottom-20 lg:bottom-4 right-4 z-50 w-24 h-24 bg-background rounded-xl border-2 border-primary shadow-glow cursor-pointer hover:scale-105 transition-all"
         onClick={() => setIsMinimized(false)}
       >
         <video
@@ -120,7 +120,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
   }
 
   return (
-    <div className="w-full h-full bg-black rounded-lg overflow-hidden flex flex-col relative">
+    <div className="w-full h-full bg-black rounded-2xl overflow-hidden flex flex-col relative shadow-lg-brand">
       {/* Remote Video (Main) */}
       <div className="flex-1 relative bg-background">
         {callHook.isVideoEnabled && callHook.remoteParticipants.length > 0 ? (
@@ -138,7 +138,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 className="w-24 h-24 rounded-full mb-4"
               />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mb-4">
+              <div className="w-24 h-24 rounded-full bg-gradient-brand glow flex items-center justify-center mb-4">
                 <span className="text-2xl text-white font-bold">
                   {remoteParticipantName.charAt(0).toUpperCase()}
                 </span>
@@ -152,13 +152,13 @@ const VideoCall: React.FC<VideoCallProps> = ({
         )}
 
         {/* Duration Badge */}
-        <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg font-mono text-sm">
+        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-white/10 text-white px-4 py-2 rounded-xl font-mono text-sm shadow-lg-brand">
           {formatDuration(callHook.duration)}
         </div>
 
         {/* Local Video (Picture-in-Picture) */}
         {callHook.isVideoEnabled && (
-          <div className="absolute bottom-4 right-4 w-32 h-32 bg-background rounded-lg border-2 border-blue-500 overflow-hidden">
+          <div className="absolute bottom-4 right-4 w-32 h-32 bg-background rounded-xl border-2 border-primary/60 shadow-lg-brand overflow-hidden">
             <video
               ref={localVideoRef}
               autoPlay
@@ -170,9 +170,9 @@ const VideoCall: React.FC<VideoCallProps> = ({
       </div>
 
       {/* Controls */}
-      <div className="bg-background bg-opacity-90 px-6 py-4 flex items-center justify-between">
-        <div className="text-white text-left">
-          <p className="font-semibold">{remoteParticipantName}</p>
+      <div className="glass-strong px-6 py-4 flex items-center justify-between">
+        <div className="text-left">
+          <p className="font-semibold tracking-tight">{remoteParticipantName}</p>
           <p className="text-sm text-muted-foreground">Video Call</p>
         </div>
 
@@ -180,10 +180,10 @@ const VideoCall: React.FC<VideoCallProps> = ({
           {/* Audio Toggle */}
           <button
             onClick={handleToggleAudio}
-            className={`p-3 rounded-full transition ${
+            className={`p-3 rounded-full transition-all hover:scale-105 ${
               callHook.isAudioEnabled
-                ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                : 'bg-red-500 hover:bg-red-600 text-white'
+                ? 'bg-secondary/80 hover:bg-secondary text-foreground hover:shadow-glow'
+                : 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/40'
             }`}
             title={callHook.isAudioEnabled ? 'Mute' : 'Unmute'}
           >
@@ -193,10 +193,10 @@ const VideoCall: React.FC<VideoCallProps> = ({
           {/* Video Toggle */}
           <button
             onClick={handleToggleVideo}
-            className={`p-3 rounded-full transition ${
+            className={`p-3 rounded-full transition-all hover:scale-105 ${
               callHook.isVideoEnabled
-                ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                : 'bg-secondary hover:bg-muted text-foreground'
+                ? 'bg-gradient-brand text-white shadow-glow'
+                : 'bg-secondary/80 hover:bg-secondary text-foreground hover:shadow-glow'
             }`}
             title={callHook.isVideoEnabled ? 'Stop Video' : 'Start Video'}
           >
@@ -206,7 +206,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
           {/* Minimize */}
           <button
             onClick={() => setIsMinimized(true)}
-            className="p-3 rounded-full bg-secondary hover:bg-muted text-foreground transition"
+            className="p-3 rounded-full bg-secondary/80 hover:bg-secondary text-foreground transition-all hover:scale-105 hover:shadow-glow"
             title="Minimize"
           >
             <Maximize2 size={20} />
@@ -215,7 +215,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
           {/* End Call */}
           <button
             onClick={handleEndCall}
-            className="p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition ml-4"
+            className="p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-110 shadow-lg shadow-red-500/40 ml-4"
             title="End Call"
           >
             <PhoneOff size={20} />

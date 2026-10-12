@@ -39,11 +39,11 @@ export const IncomingCallNotification: React.FC = () => {
         animating ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
       }`}
     >
-      <div className="bg-card text-card-foreground rounded-lg shadow-2xl p-6 w-80 border-l-4 border-blue-500">
+      <div className="glass-strong text-card-foreground rounded-xl p-6 w-80 border-l-4 border-primary">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-foreground">Incoming Call</h3>
+          <h3 className="text-lg font-bold text-foreground tracking-tight">Incoming Call</h3>
           <div className="flex gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-glow"></div>
           </div>
         </div>
         <div className="mb-4">
@@ -55,13 +55,13 @@ export const IncomingCallNotification: React.FC = () => {
         <div className="flex gap-3">
           <button
             onClick={handleReject}
-            className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-xl transition-all hover:scale-[1.02] shadow-lg shadow-red-500/30"
           >
             Decline
           </button>
           <button
             onClick={handleAccept}
-            className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition-all hover:scale-[1.02] shadow-lg shadow-green-500/30"
           >
             Accept
           </button>

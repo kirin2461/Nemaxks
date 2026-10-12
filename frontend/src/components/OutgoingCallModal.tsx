@@ -41,25 +41,25 @@ export function OutgoingCallModal({ targetUser, status, onCancel }: OutgoingCall
       case 'connected':
         return 'bg-green-500'
       default:
-        return 'bg-blue-500'
+        return 'bg-gradient-brand'
     }
   }
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-sm w-full p-8 animate-fade-in text-center">
+      <div className="glass-strong rounded-2xl max-w-sm w-full p-8 animate-fade-in text-center">
         <div className="relative mb-6">
-          <div className={`w-24 h-24 mx-auto rounded-full overflow-hidden ring-4 ring-primary/50 ${status === 'dialing' || status === 'ringing' ? 'animate-pulse' : ''}`}>
-            <div className="w-full h-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+          <div className={`w-24 h-24 mx-auto rounded-full overflow-hidden ring-4 ring-primary/50 ${status === 'dialing' || status === 'ringing' ? 'animate-pulse shadow-glow' : ''}`}>
+            <div className="w-full h-full bg-gradient-brand flex items-center justify-center">
               <User className="w-12 h-12 text-white" />
             </div>
           </div>
-          <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 ${getStatusColor()} text-white text-xs font-medium rounded-full`}>
+          <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 ${getStatusColor()} text-white text-xs font-medium rounded-full shadow-lg`}>
             {getStatusText()}
           </div>
         </div>
 
-        <h3 className="text-xl font-bold mb-1">{targetUser.username}</h3>
+        <h3 className="text-xl font-bold mb-1 tracking-tight">{targetUser.username}</h3>
         <p className="text-muted-foreground mb-8">
           {status === 'rejected' ? 'User declined the call' : 'Calling...'}
         </p>
@@ -68,7 +68,7 @@ export function OutgoingCallModal({ targetUser, status, onCancel }: OutgoingCall
           <div className="flex items-center justify-center">
             <button
               onClick={onCancel}
-              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 shadow-lg"
+              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 shadow-lg shadow-red-500/40"
             >
               <PhoneOff className="w-7 h-7" />
             </button>
@@ -79,7 +79,7 @@ export function OutgoingCallModal({ targetUser, status, onCancel }: OutgoingCall
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={onCancel}
-              className="px-6 py-3 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+              className="px-6 py-3 bg-secondary hover:bg-secondary/80 rounded-xl transition-all hover:shadow-soft"
             >
               Close
             </button>
