@@ -225,7 +225,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
 
       {/* Error Message */}
       {callHook.error && (
-        <div className="bg-red-500 bg-opacity-90 text-white px-6 py-3 text-sm">
+        <div className="bg-red-500/90 backdrop-blur-sm text-white px-6 py-3 text-sm">
           {callHook.error}
         </div>
       )}
