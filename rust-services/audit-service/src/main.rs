@@ -4,7 +4,7 @@ use sqlx::postgres::PgPoolOptions;
 use dotenv::dotenv;
 use std::env;
 use chrono::Utc;
-use tracing::{info, warn, error};
+use tracing::{info, error};
 use tracing_subscriber;
 
 pub mod audit {

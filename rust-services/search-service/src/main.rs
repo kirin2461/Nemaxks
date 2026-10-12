@@ -3,7 +3,7 @@ use tonic_health::server::health_reporter;
 use sqlx::postgres::PgPoolOptions;
 use dotenv::dotenv;
 use std::env;
-use tantivy::{Index, IndexWriter, Term, field};
+use tantivy::{Index, schema::{TEXT, STORED}};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::{info, warn, error};
@@ -30,12 +30,12 @@ impl MySearchService {
         std::fs::create_dir_all(&self.index_path)?;
         
         let mut schema_builder = tantivy::schema::Schema::builder();
-        schema_builder.add_text_field("content", field::TEXT | field::STORED);
-        schema_builder.add_u64_field("message_id", field::STORED);
-        schema_builder.add_u64_field("author_id", field::STORED);
-        schema_builder.add_text_field("channel_id", field::STORED);
-        schema_builder.add_text_field("guild_id", field::STORED);
-        schema_builder.add_text_field("created_at", field::STORED);
+        schema_builder.add_text_field("content", TEXT | STORED);
+        schema_builder.add_u64_field("message_id", STORED);
+        schema_builder.add_u64_field("author_id", STORED);
+        schema_builder.add_text_field("channel_id", STORED);
+        schema_builder.add_text_field("guild_id", STORED);
+        schema_builder.add_text_field("created_at", STORED);
         
         let schema = schema_builder.build();
         let index = Index::create_in_dir(&self.index_path, schema)?;
