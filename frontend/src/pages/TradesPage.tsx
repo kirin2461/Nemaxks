@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeftRight, Check, X, Clock, User, Package } from 'lucide-react';
 import { tradesAPI, Trade } from '../lib/api';
 import { formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { useStore } from '../lib/store';
 
 export default function TradesPage() {
@@ -116,7 +117,7 @@ export default function TradesPage() {
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {formatDistanceToNow(new Date(trade.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(trade.created_at), { addSuffix: true, locale: ru })}
                   </div>
                   
                   {canRespond && (

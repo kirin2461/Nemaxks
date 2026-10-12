@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Gift, Package, Send, User, MessageSquare, Check } from 'lucide-react';
 import { giftsAPI, UserGift, inventoryAPI } from '../lib/api';
 import { formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 export default function GiftsPage() {
   const queryClient = useQueryClient();
@@ -105,7 +106,7 @@ export default function GiftsPage() {
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(gift.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(gift.created_at), { addSuffix: true, locale: ru })}
                   </p>
 
                   {gift.is_opened && gift.item && (
