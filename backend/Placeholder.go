@@ -155,42 +155,73 @@ func createChannelMessageHandler(c *gin.Context) {
         c.JSON(http.StatusCreated, messageResponse)
 }
 
-// RTC - ICE servers with TURN support for NAT traversal
+// RTC - ICE servers with TURN support for NAT traversal.
+//
+// Конфигурация через env-переменные (рекомендуется для продакшна — свой coturn):
+//   STUN_URLS       — список STUN через запятую (по умолчанию публичные google/cloudflare)
+//   TURN_URLS       — список TURN/TURNS через запятую (по умолчанию бесплатный openrelay.metered.ca)
+//   TURN_USERNAME   — логин TURN (по умолчанию "openrelayproject")
+//   TURN_CREDENTIAL — пароль TURN (по умолчанию "openrelayproject")
+// Пример для своего coturn:
+//   TURN_URLS=turn:turn.example.com:3478,turns:turn.example.com:5349?transport=tcp
+//   TURN_USERNAME=user TURN_CREDENTIAL=secret
 func getICEServersHandler(c *gin.Context) {
         // STUN servers for NAT discovery
-        iceServers := []gin.H{
-                {"urls": "stun:stun.l.google.com:19302"},
-                {"urls": "stun:stun1.l.google.com:19302"},
-                {"urls": "stun:stun2.l.google.com:19302"},
-                {"urls": "stun:stun3.l.google.com:19302"},
+        stunURLs := splitEnvList("STUN_URLS", []string{
+                "stun:stun.l.google.com:19302",
+                "stun:stun1.l.google.com:19302",
+                "stun:stun.cloudflare.com:3478",
+        })
+        iceServers := make([]gin.H, 0, len(stunURLs)+4)
+        for _, u := range stunURLs {
+                iceServers = append(iceServers, gin.H{"urls": u})
         }
-        
-        // Public TURN servers for NAT traversal (relay when direct connection fails)
-        // Using metered.ca free tier TURN servers
-        iceServers = append(iceServers, gin.H{
-                "urls":       "turn:openrelay.metered.ca:80",
-                "username":   "openrelayproject",
-                "credential": "openrelayproject",
+
+        // TURN servers for relay when direct connection fails
+        turnURLs := splitEnvList("TURN_URLS", []string{
+                "turn:openrelay.metered.ca:80",
+                "turn:openrelay.metered.ca:443",
+                "turn:openrelay.metered.ca:443?transport=tcp",
+                "turns:openrelay.metered.ca:443?transport=tcp",
         })
-        iceServers = append(iceServers, gin.H{
-                "urls":       "turn:openrelay.metered.ca:443",
-                "username":   "openrelayproject",
-                "credential": "openrelayproject",
-        })
-        iceServers = append(iceServers, gin.H{
-                "urls":       "turn:openrelay.metered.ca:443?transport=tcp",
-                "username":   "openrelayproject",
-                "credential": "openrelayproject",
-        })
-        iceServers = append(iceServers, gin.H{
-                "urls":       "turns:openrelay.metered.ca:443?transport=tcp",
-                "username":   "openrelayproject",
-                "credential": "openrelayproject",
-        })
-        
+        turnUsername := os.Getenv("TURN_USERNAME")
+        if turnUsername == "" {
+                turnUsername = "openrelayproject"
+        }
+        turnCredential := os.Getenv("TURN_CREDENTIAL")
+        if turnCredential == "" {
+                turnCredential = "openrelayproject"
+        }
+        for _, u := range turnURLs {
+                iceServers = append(iceServers, gin.H{
+                        "urls":       u,
+                        "username":   turnUsername,
+                        "credential": turnCredential,
+                })
+        }
+
         c.JSON(http.StatusOK, gin.H{
                 "iceServers": iceServers,
         })
+}
+
+// splitEnvList читает env-переменную как список через запятую; если пусто — возвращает fallback
+func splitEnvList(envKey string, fallback []string) []string {
+        raw := strings.TrimSpace(os.Getenv(envKey))
+        if raw == "" {
+                return fallback
+        }
+        parts := strings.Split(raw, ",")
+        result := make([]string, 0, len(parts))
+        for _, p := range parts {
+                if trimmed := strings.TrimSpace(p); trimmed != "" {
+                        result = append(result, trimmed)
+                }
+        }
+        if len(result) == 0 {
+                return fallback
+        }
+        return result
 }
 
 // Posts
