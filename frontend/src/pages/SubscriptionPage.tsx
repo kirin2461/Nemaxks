@@ -75,7 +75,7 @@ const SubscriptionPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return <div className="flex justify-center items-center min-h-screen bg-background"><div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
   }
 
   const currentPlanId = currentSubscription?.plan_id;
@@ -83,14 +83,14 @@ const SubscriptionPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-foreground mb-2">Subscription Plans</h1>
+        <h1 className="text-4xl font-bold gradient-brand-text mb-2">Subscription Plans</h1>
         <p className="text-muted-foreground mb-8">Choose the perfect plan for your needs</p>
 
-        {error && <div className="bg-red-500 text-white p-4 rounded mb-6">{error}</div>}
+        {error && <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-4 rounded-xl mb-6">{error}</div>}
 
         {currentSubscription && currentSubscription.status === 'active' && (
-          <div className="bg-green-900 bg-opacity-30 border border-green-600 rounded-lg p-4 mb-8">
-            <p className="text-green-300">
+          <div className="glass rounded-xl border-green-500/30 p-4 mb-8 shadow-soft">
+            <p className="text-green-500">
               Your current plan: <strong>{plans.find(p => p.id === currentSubscription.plan_id)?.name}</strong>
               <br />
               Active until: {new Date(currentSubscription.current_period_end).toLocaleDateString()}
@@ -102,10 +102,10 @@ const SubscriptionPage: React.FC = () => {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`rounded-lg p-6 transition-all ${
+              className={`rounded-xl p-6 transition-all ${
                 currentPlanId === plan.id
-                  ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 border-2 border-indigo-400'
-                  : 'bg-card hover:bg-secondary border-2 border-border'
+                  ? 'gradient-brand glow border-2 border-transparent shadow-lg-brand'
+                  : 'glass hover:shadow-glow border-2 border-border/50'
               }`}
             >
               <h2 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h2>
@@ -128,10 +128,10 @@ const SubscriptionPage: React.FC = () => {
               <button
                 onClick={() => handlePurchase(plan.id)}
                 disabled={currentPlanId === plan.id || isProcessing}
-                className={`w-full py-2 rounded font-semibold transition-all ${
+                className={`w-full py-2 rounded-lg font-semibold transition-all ${
                   currentPlanId === plan.id
                     ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'gradient-brand text-primary-foreground hover:brightness-110 hover:shadow-glow'
                 }`}
               >
                 {currentPlanId === plan.id ? 'Current Plan' : 'Select Plan'}

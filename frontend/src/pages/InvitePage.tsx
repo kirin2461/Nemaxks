@@ -101,25 +101,25 @@ export default function InvitePage() {
             <Users className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Пригласить друзей</h1>
+            <h1 className="text-2xl font-bold">Пригласить <span className="gradient-brand-text">друзей</span></h1>
             <p className="text-muted-foreground">Делись ссылкой и приглашай друзей в Nebula</p>
           </div>
         </div>
 
-        <div className="card p-6 space-y-6">
+        <div className="glass rounded-xl shadow-soft p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold">Твоя реферальная ссылка</h2>
               <p className="text-sm text-muted-foreground">Поделись этой ссылкой с друзьями</p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-primary">{inviteCount}</div>
+              <div className="text-2xl font-bold gradient-brand-text">{inviteCount}</div>
               <div className="text-xs text-muted-foreground">приглашено</div>
             </div>
           </div>
 
           <div className="flex gap-2">
-            <div className="flex-1 bg-secondary/50 rounded-lg px-4 py-3 font-mono text-sm truncate">
+            <div className="flex-1 bg-secondary/50 border border-border/50 rounded-lg px-4 py-3 font-mono text-sm truncate">
               {getInviteLink()}
             </div>
             <button
@@ -159,7 +159,7 @@ export default function InvitePage() {
           )}
 
           <div className="flex gap-2 pt-2">
-            <button onClick={copyLink} className="btn-primary flex-1 flex items-center justify-center gap-2">
+            <button onClick={copyLink} className="gradient-brand text-primary-foreground rounded-lg px-4 py-2 font-medium shadow-soft hover:brightness-110 hover:shadow-glow active:scale-[0.98] transition-all flex-1 flex items-center justify-center gap-2">
               <Link2 className="w-4 h-4" />
               Скопировать ссылку
             </button>
@@ -173,13 +173,13 @@ export default function InvitePage() {
         </div>
 
         {invitedUsers.length > 0 && (
-          <div className="card p-6">
+          <div className="glass rounded-xl shadow-soft p-6">
             <h2 className="text-lg font-semibold mb-4">Приглашённые друзья</h2>
             <div className="space-y-3">
               {invitedUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/40 border border-border/40"
                 >
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                     {user.avatar ? (
@@ -206,7 +206,7 @@ export default function InvitePage() {
           </div>
         )}
 
-        <div className="card p-6 bg-gradient-to-br from-primary/10 to-transparent">
+        <div className="glass rounded-xl shadow-soft p-6 bg-gradient-to-br from-primary/10 to-accent/5">
           <h3 className="font-semibold mb-2">Как это работает?</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
