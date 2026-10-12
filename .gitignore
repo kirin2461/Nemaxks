@@ -55,6 +55,16 @@ __debug_bin
 uploads/*
 !uploads/.gitkeep
 
+# Compiled Go backend binary (backend/backend)
+backend/backend
+
+# Replit junk / exports
+attached_assets/
+
+# Rust build artifacts
+rust-services/target/
+**/target/
+
 # Database
 *.db
 *.sqlite

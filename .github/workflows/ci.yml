@@ -11,7 +11,7 @@ jobs:
   backend:
     name: Backend (Go)
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -34,7 +34,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
           cache-dependency-path: backend/go.sum
 
       - name: Install dependencies
@@ -44,14 +44,15 @@ jobs:
       - name: Run go vet
         working-directory: ./backend
         run: go vet ./...
-        continue-on-error: true
 
+      # Advisory: линтер не должен блокировать CI, пока кодовая база
+      # не приведена к нулю замечаний (см. задачу на очистку линта).
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.54
+          version: v1.64
           working-directory: backend
-          args: --timeout=5m --issues-exit-code=0
+          args: --timeout=5m
         continue-on-error: true
 
       - name: Check if tests exist
@@ -90,18 +91,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Clean install dependencies
+      # Воспроизводимая установка строго по lock-файлу
+      - name: Install dependencies
         working-directory: ./frontend
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+        run: npm ci
 
+      # Advisory: eslint запускается, но пока в кодовой базе есть
+      # legacy-ошибки линта — не блокируем CI (см. отчёт lint).
       - name: Run ESLint
         working-directory: ./frontend
-        run: npx eslint src --max-warnings 200
+        run: npm run lint -- --max-warnings 200
         continue-on-error: true
 
+      # Advisory: tsc --noEmit не блокирует, пока не разобраны
+      # накопленные type-ошибки (отдельная задача).
       - name: Type check
         working-directory: ./frontend
         run: npx tsc --noEmit
@@ -113,31 +119,31 @@ jobs:
         env:
           CI: false
 
-  # Security scanning (optional)
+  # Security scanning (advisory: сканер уязвимостей не блокирует pipeline,
+  # результаты разбираются вручную)
   security:
     name: Security Scan
     runs-on: ubuntu-latest
     continue-on-error: true
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
           severity: 'CRITICAL,HIGH'
           exit-code: '0'
 
-  # Docker build test (optional)
+  # Docker build test
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
     needs: [backend, frontend]
-    continue-on-error: true
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -148,4 +154,3 @@ jobs:
       - name: Build backend Docker image
         working-directory: ./backend
         run: docker build -t nemaxks-backend:test .
-        continue-on-error: true

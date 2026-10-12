@@ -67,4 +67,7 @@ waitForPort = 5000
 
 [userenv.shared]
 FRONTEND_URL = "https://ad8c103e-7f00-4f8c-9f86-5417eba46f44-00-2cp6eq3ssicld.riker.replit.dev"
-JWT_SECRET = "q12mQZvkLIykWXiBYMTe49TVleWG3iZ/b3k0D8MV40w="
+# ВНИМАНИЕ: реальный секрет удалён из репозитория.
+# Старый JWT_SECRET был скомпрометирован (попал в git-историю) — ТРЕБУЕТСЯ РОТАЦИЯ.
+# Сгенерируйте новый: openssl rand -hex 32
+JWT_SECRET = "REPLACE_ME_generate_with_openssl_rand_hex_32"

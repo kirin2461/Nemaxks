@@ -46,10 +46,13 @@ impl AuditService for MyAuditService {
 
         match result {
             Ok(record) => {
-                info!("[AuditService] Logged event with id={}", record.id);
+                use sqlx::Row;
+                let id: i64 = record.try_get("id")
+                    .map_err(|e| Status::internal(format!("Failed to read id: {}", e)))?;
+                info!("[AuditService] Logged event with id={}", id);
                 Ok(Response::new(LogEventResponse {
                     success: true,
-                    id: record.id as u64,
+                    id: id as u64,
                 }))
             },
             Err(e) => {

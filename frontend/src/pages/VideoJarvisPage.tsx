@@ -88,7 +88,7 @@ export default function VideoJarvisPage() {
 
   const playJarvisAudio = (soundName: string) => {
     if (audioRef.current) {
-      audioRef.current.src = `/audio/jarvis/${soundName}.wav`
+      audioRef.current.src = `/jarvis-audio/${soundName}.wav`
       audioRef.current.play().catch(e => console.log('Audio play failed:', e))
     }
   }

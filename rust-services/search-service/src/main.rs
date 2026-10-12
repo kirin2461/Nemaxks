@@ -61,32 +61,9 @@ impl SearchService for MySearchService {
             }));
         }
 
-        // Fallback to SQL search if Tantivy index not ready
-        let mut sql_query = "SELECT m.id, m.content, m.author_id, m.channel_id, c.guild_id, m.created_at 
-                              FROM messages m 
-                              JOIN channels c ON m.channel_id = c.id 
-                              WHERE m.content ILIKE $1".to_string();
-        let mut params: Vec<&dyn sqlx::Encode<sqlx::Postgres>> = vec![&format!("%{}%", req.query)];
-        let mut param_count = 2;
-
-        if !req.channel_id.is_empty() {
-            sql_query.push_str(&format!(" AND m.channel_id = ${}", param_count));
-            param_count += 1;
-        }
-        if !req.guild_id.is_empty() {
-            sql_query.push_str(&format!(" AND c.guild_id = ${}", param_count));
-            param_count += 1;
-        }
-        if !req.author_id.is_empty() {
-            sql_query.push_str(&format!(" AND m.author_id = ${}", param_count));
-            param_count += 1;
-        }
-
-        sql_query.push_str(&format!(" ORDER BY m.created_at DESC LIMIT {} OFFSET {}", 
-                                     req.limit.max(10).min(100), 
-                                     req.offset.max(0)));
-
-        // Execute simplified query (dynamic params not easily done here, using basic search)
+        // Fallback to SQL search if Tantivy index not ready.
+        // NOTE: динамическое построение запроса с фильтрами (channel_id/guild_id/author_id)
+        // пока не реализовано — используется базовый параметризованный поиск.
         let results = sqlx::query(
             r#"SELECT m.id, m.content, m.author_id, m.channel_id, c.guild_id, 
                       to_char(m.created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at
