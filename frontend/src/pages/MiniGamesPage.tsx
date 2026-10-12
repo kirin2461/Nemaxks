@@ -99,7 +99,7 @@ export default function MiniGamesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-nebula flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
@@ -110,7 +110,7 @@ export default function MiniGamesPage() {
     const options = question ? JSON.parse(question.options) : [];
 
     return (
-      <div className="min-h-screen bg-background text-foreground p-6">
+      <div className="min-h-screen bg-nebula text-foreground p-6">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
@@ -128,7 +128,7 @@ export default function MiniGamesPage() {
             </div>
           </div>
 
-          <div className="bg-card rounded-xl p-8">
+          <div className="glass rounded-xl p-8">
             <div className="mb-4">
               <div className="w-full bg-secondary rounded-full h-2">
                 <div
@@ -186,7 +186,7 @@ export default function MiniGamesPage() {
             onClick={exitGame}
             className="mt-6 text-muted-foreground hover:text-foreground transition-colors"
           >
-            Exit Game
+            Выйти из игры
           </button>
         </div>
       </div>
@@ -195,29 +195,29 @@ export default function MiniGamesPage() {
 
   if (gameComplete && completeMutation.data) {
     return (
-      <div className="min-h-screen bg-background text-foreground p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-nebula text-foreground p-6 flex items-center justify-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-card rounded-xl p-8 text-center max-w-md"
+          className="glass rounded-xl p-8 text-center max-w-md"
         >
           <Trophy className="w-16 h-16 text-accent mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Game Complete!</h2>
-          <p className="text-muted-foreground mb-6">Great job playing!</p>
+          <h2 className="text-2xl font-bold mb-2">Игра завершена!</h2>
+          <p className="text-muted-foreground mb-6">Отличная игра!</p>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-secondary rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">Score</p>
+              <p className="text-sm text-muted-foreground">Очки</p>
               <p className="text-2xl font-bold text-primary">{score}</p>
             </div>
             <div className="bg-secondary rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">Coins Earned</p>
+              <p className="text-sm text-muted-foreground">Монет заработано</p>
               <p className="text-2xl font-bold text-accent">+{completeMutation.data.coins_earned}</p>
             </div>
           </div>
 
           <div className="bg-primary/20 rounded-lg p-4 mb-6">
-            <p className="text-sm text-primary">XP Earned</p>
+            <p className="text-sm text-primary">Получено XP</p>
             <p className="text-xl font-bold">+{completeMutation.data.xp_earned} XP</p>
           </div>
 
@@ -225,7 +225,7 @@ export default function MiniGamesPage() {
             onClick={exitGame}
             className="w-full py-3 bg-gradient-brand shadow-soft rounded-xl font-bold hover:brightness-110"
           >
-            Back to Games
+            Назад к играм
           </button>
         </motion.div>
       </div>
@@ -233,11 +233,11 @@ export default function MiniGamesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-nebula text-foreground p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Gamepad2 className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-bold">Mini-Games</h1>
+          <h1 className="text-3xl font-bold gradient-brand-text">Мини-игры</h1>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -248,7 +248,7 @@ export default function MiniGamesPage() {
                 key={game.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card rounded-xl p-6 hover:bg-muted transition-colors"
+                className="glass rounded-xl p-6 hover:shadow-glow transition-shadow"
               >
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-primary/20 rounded-xl">
@@ -257,8 +257,8 @@ export default function MiniGamesPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-lg font-bold">{game.name}</h3>
-                      <span className={`px-2 py-0.5 rounded text-xs capitalize ${getDifficultyColor(game.difficulty)}`}>
-                        {game.difficulty}
+                      <span className={`px-2 py-0.5 rounded text-xs ${getDifficultyColor(game.difficulty)}`}>
+                        {game.difficulty === 'easy' ? 'легко' : game.difficulty === 'medium' ? 'средне' : game.difficulty === 'hard' ? 'сложно' : game.difficulty}
                       </span>
                     </div>
                     <p className="text-muted-foreground text-sm mb-4">{game.description}</p>
@@ -274,7 +274,7 @@ export default function MiniGamesPage() {
                       </div>
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="w-4 h-4" />
-                        <span>{game.cooldown_min}m cooldown</span>
+                        <span>перезарядка {game.cooldown_min} мин</span>
                       </div>
                     </div>
 
@@ -283,7 +283,7 @@ export default function MiniGamesPage() {
                       disabled={startMutation.isPending}
                       className="w-full py-2 bg-gradient-brand shadow-soft rounded-lg font-medium hover:brightness-110 disabled:opacity-50 transition-colors"
                     >
-                      {startMutation.isPending ? 'Starting...' : 'Play Now'}
+                      {startMutation.isPending ? 'Запуск...' : 'Играть'}
                     </button>
                   </div>
                 </div>
@@ -293,9 +293,9 @@ export default function MiniGamesPage() {
         </div>
 
         {games.length === 0 && (
-          <div className="bg-card rounded-xl p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center">
             <Gamepad2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No games available yet</p>
+            <p className="text-muted-foreground">Игры пока недоступны</p>
           </div>
         )}
       </div>

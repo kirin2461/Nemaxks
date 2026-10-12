@@ -37,8 +37,8 @@ export default function QuestsPage() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'tutorial': return 'from-green-500 to-emerald-600';
-      case 'social': return 'from-accent to-accent';
+      case 'tutorial': return 'from-accent/70 to-primary';
+      case 'social': return 'from-accent to-accent/70';
       case 'content': return 'from-primary to-accent';
       case 'exploration': return 'from-primary to-accent';
       default: return 'from-muted-foreground/40 to-muted-foreground/60';
@@ -65,18 +65,18 @@ export default function QuestsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-nebula flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-nebula text-foreground p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Scroll className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-bold">Quest Chains</h1>
+          <h1 className="text-3xl font-bold gradient-brand-text">Цепочки квестов</h1>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -92,10 +92,10 @@ export default function QuestsPage() {
                   key={chain.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`bg-gradient-to-r ${getCategoryColor(chain.category)} p-0.5 rounded-xl cursor-pointer`}
+                  className={`bg-gradient-to-r ${getCategoryColor(chain.category)} p-px rounded-xl cursor-pointer shadow-soft hover:shadow-glow transition-shadow`}
                   onClick={() => setSelectedChain(chain.id)}
                 >
-                  <div className="bg-card rounded-xl p-6">
+                  <div className="bg-card/90 backdrop-blur-xl rounded-xl p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
                         <div className="text-3xl">{getCategoryIcon(chain.category)}</div>
@@ -110,7 +110,7 @@ export default function QuestsPage() {
                           
                           <div className="flex items-center gap-4 text-sm">
                             <span className="text-muted-foreground">
-                              {progress?.current_step || 0}/{chain.total_steps} steps
+                              {progress?.current_step || 0}/{chain.total_steps} шагов
                             </span>
                             {finalReward.coins && (
                               <div className="flex items-center gap-1 text-accent">
@@ -139,7 +139,7 @@ export default function QuestsPage() {
                     {isStarted && !isCompleted && (
                       <div className="mt-4">
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">Progress</span>
+                          <span className="text-muted-foreground">Прогресс</span>
                           <span className="text-primary">
                             {Math.round(((progress?.current_step || 1) / chain.total_steps) * 100)}%
                           </span>
@@ -160,17 +160,17 @@ export default function QuestsPage() {
             })}
 
             {chains.length === 0 && (
-              <div className="bg-card rounded-xl p-8 text-center">
+              <div className="glass rounded-xl p-8 text-center">
                 <Scroll className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No quests available yet</p>
+                <p className="text-muted-foreground">Квесты пока недоступны</p>
               </div>
             )}
           </div>
 
           <div>
             {selectedChain ? (
-              <div className="bg-card rounded-xl p-6 sticky top-6">
-                <h3 className="text-lg font-bold mb-4">Quest Steps</h3>
+              <div className="glass rounded-xl p-6 sticky top-6">
+                <h3 className="text-lg font-bold mb-4">Шаги квеста</h3>
                 
                 {(() => {
                   const chain = chains.find(c => c.id === selectedChain);
@@ -193,7 +193,7 @@ export default function QuestsPage() {
                                   ? 'bg-green-600/10 border-green-600/30'
                                   : isCurrent
                                   ? 'bg-primary/10 border-primary/50'
-                                  : 'bg-secondary/30 border-border'
+                                  : 'bg-secondary/30 border-border/50'
                               }`}
                             >
                               <div className="flex items-start gap-3">
@@ -214,13 +214,13 @@ export default function QuestsPage() {
                                   {!isLocked && (
                                     <div className="flex items-center gap-3 mt-2 text-xs">
                                       {step.reward_coins > 0 && (
-                                        <span className="text-accent">+{step.reward_coins} coins</span>
+                                        <span className="text-accent">+{step.reward_coins} монет</span>
                                       )}
                                       {step.reward_xp > 0 && (
                                         <span className="text-primary">+{step.reward_xp} XP</span>
                                       )}
                                       {step.reward_gems > 0 && (
-                                        <span className="text-accent">+{step.reward_gems} gems</span>
+                                        <span className="text-accent">+{step.reward_gems} гемов</span>
                                       )}
                                     </div>
                                   )}
@@ -238,14 +238,14 @@ export default function QuestsPage() {
                           className="w-full py-3 bg-gradient-brand shadow-soft rounded-xl font-bold hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           <Play className="w-5 h-5" />
-                          {startMutation.isPending ? 'Starting...' : 'Start Quest'}
+                          {startMutation.isPending ? 'Запуск...' : 'Начать квест'}
                         </button>
                       )}
 
                       {progress?.is_completed && (
                         <div className="text-center p-4 bg-green-600/10 rounded-xl border border-green-600/30">
                           <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                          <p className="font-bold text-green-400">Quest Completed!</p>
+                          <p className="font-bold text-green-400">Квест завершён!</p>
                         </div>
                       )}
                     </>
@@ -253,9 +253,9 @@ export default function QuestsPage() {
                 })()}
               </div>
             ) : (
-              <div className="bg-card rounded-xl p-8 text-center sticky top-6">
+              <div className="glass rounded-xl p-8 text-center sticky top-6">
                 <Scroll className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Select a quest to view steps</p>
+                <p className="text-muted-foreground">Выберите квест, чтобы увидеть шаги</p>
               </div>
             )}
           </div>

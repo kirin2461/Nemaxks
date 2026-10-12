@@ -6,10 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const rarityColors: Record<string, string> = {
   common: 'border-border bg-muted/40',
-  uncommon: 'border-green-500 bg-green-500/10',
-  rare: 'border-accent/50 bg-accent/10',
-  epic: 'border-primary/40 bg-primary/10',
-  legendary: 'border-accent/50 bg-accent/10',
+  uncommon: 'border-green-500/50 bg-green-500/10',
+  rare: 'border-accent/50 bg-accent/10 shadow-soft',
+  epic: 'border-primary/50 bg-primary/10 shadow-soft',
+  legendary: 'border-primary/60 bg-gradient-to-br from-primary/15 to-accent/15 shadow-glow',
 };
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -85,12 +85,12 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 pb-20 lg:pb-0">
+    <div className="min-h-screen bg-nebula p-4 sm:p-6 pb-20 lg:pb-0">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
           <div className="flex items-center gap-3">
             <ShoppingBag className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('shop.title')}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold gradient-brand-text">{t('shop.title')}</h1>
           </div>
           
           {currency && (
@@ -114,8 +114,8 @@ export default function ShopPage() {
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeCategory === cat
-                  ? 'bg-primary text-white'
-                  : 'bg-card text-muted-foreground hover:bg-secondary'
+                  ? 'bg-gradient-brand text-white shadow-soft'
+                  : 'bg-card/50 text-muted-foreground hover:bg-secondary'
               }`}
             >
               {categoryIcons[cat]}
@@ -133,7 +133,7 @@ export default function ShopPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className={`relative bg-card/50 rounded-xl border-2 p-4 ${rarityColors[item.rarity]}`}
+                className={`relative bg-card/55 backdrop-blur-xl rounded-xl border-2 p-4 transition-shadow hover:shadow-glow ${rarityColors[item.rarity]}`}
               >
                 <div className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium capitalize bg-background/80">
                   {item.rarity}
@@ -153,7 +153,7 @@ export default function ShopPage() {
                     className={`w-full py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
                       isEquipped(item.id)
                         ? 'bg-green-500/20 text-green-400 cursor-default'
-                        : 'bg-primary hover:bg-primary/80 text-white'
+                        : 'bg-gradient-brand hover:brightness-110 text-white shadow-soft'
                     }`}
                   >
                     {isEquipped(item.id) ? (
