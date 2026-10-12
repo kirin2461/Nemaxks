@@ -61,26 +61,26 @@ export default function CollectionsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-nebula flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-nebula text-foreground p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Bookmark className="w-8 h-8 text-accent" />
-            <h1 className="text-3xl font-bold">Collections</h1>
+            <h1 className="text-3xl font-bold gradient-brand-text">Коллекции</h1>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary rounded-lg hover:bg-primary/80"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-brand text-white rounded-lg shadow-soft hover:brightness-110 hover:shadow-glow transition-all"
           >
             <Plus className="w-4 h-4" />
-            New Collection
+            Новая коллекция
           </button>
         </div>
 
@@ -91,7 +91,7 @@ export default function CollectionsPage() {
                 key={collection.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className={`bg-card rounded-xl p-5 cursor-pointer hover:bg-muted transition-colors ${
+                className={`glass rounded-xl p-5 cursor-pointer hover:bg-card/70 transition-colors ${
                   selectedCollection === collection.id ? 'ring-2 ring-accent/50' : ''
                 }`}
                 onClick={() => setSelectedCollection(collection.id)}
@@ -101,7 +101,7 @@ export default function CollectionsPage() {
                     <span className="text-2xl">{collection.icon_emoji}</span>
                     <div>
                       <h3 className="font-bold">{collection.name}</h3>
-                      <p className="text-muted-foreground text-sm">{collection.item_count} items</p>
+                      <p className="text-muted-foreground text-sm">{collection.item_count} элементов</p>
                     </div>
                   </div>
                   {collection.is_private ? (
@@ -117,17 +117,17 @@ export default function CollectionsPage() {
             ))}
 
             {collections.length === 0 && (
-              <div className="col-span-2 bg-card rounded-xl p-12 text-center">
+              <div className="col-span-2 glass rounded-xl p-12 text-center">
                 <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">No collections yet</h3>
-                <p className="text-muted-foreground">Create your first collection to save content</p>
+                <h3 className="text-xl font-bold mb-2">Коллекций пока нет</h3>
+                <p className="text-muted-foreground">Создайте первую коллекцию, чтобы сохранять контент</p>
               </div>
             )}
           </div>
 
           <div>
             {selectedCollection && collectionData ? (
-              <div className="bg-card rounded-xl p-6 sticky top-6">
+              <div className="glass rounded-xl p-6 sticky top-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{collectionData.collection.icon_emoji}</span>
@@ -170,14 +170,14 @@ export default function CollectionsPage() {
                     </div>
                   ))}
                   {collectionData.items.length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">No items in collection</p>
+                    <p className="text-muted-foreground text-center py-4">В коллекции пусто</p>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="bg-card rounded-xl p-8 text-center sticky top-6">
+              <div className="glass rounded-xl p-8 text-center sticky top-6">
                 <Folder className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Select a collection to view items</p>
+                <p className="text-muted-foreground">Выберите коллекцию, чтобы увидеть элементы</p>
               </div>
             )}
           </div>
@@ -188,37 +188,37 @@ export default function CollectionsPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-card rounded-xl p-6 w-full max-w-md m-4"
+              className="glass-strong rounded-xl p-6 w-full max-w-md m-4"
             >
-              <h3 className="text-xl font-bold mb-4">Create Collection</h3>
+              <h3 className="text-xl font-bold mb-4">Создать коллекцию</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Name</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Название</label>
                   <input
                     type="text"
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
-                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-accent/50"
+                    className="input-field w-full"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Description</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Описание</label>
                   <textarea
                     value={newDesc}
                     onChange={e => setNewDesc(e.target.value)}
-                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-accent/50 resize-none"
+                    className="input-field w-full resize-none"
                     rows={2}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Icon</label>
+                  <label className="block text-sm text-muted-foreground mb-1">Иконка</label>
                   <div className="flex gap-2 flex-wrap">
                     {emojiOptions.map(emoji => (
                       <button
                         key={emoji}
                         onClick={() => setNewEmoji(emoji)}
                         className={`w-10 h-10 rounded-lg text-xl ${
-                          newEmoji === emoji ? 'bg-primary' : 'bg-secondary hover:bg-muted'
+                          newEmoji === emoji ? 'bg-gradient-brand shadow-soft' : 'bg-secondary hover:bg-muted'
                         }`}
                       >
                         {emoji}
@@ -233,21 +233,21 @@ export default function CollectionsPage() {
                     onChange={e => setNewPrivate(e.target.checked)}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm">Private collection</span>
+                  <span className="text-sm">Приватная коллекция</span>
                 </label>
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setShowCreateModal(false)}
                     className="flex-1 py-2 bg-secondary rounded-lg hover:bg-muted"
                   >
-                    Cancel
+                    Отмена
                   </button>
                   <button
                     onClick={() => createMutation.mutate()}
                     disabled={!newName || createMutation.isPending}
-                    className="flex-1 py-2 bg-primary rounded-lg font-medium hover:bg-primary/80 disabled:opacity-50"
+                    className="flex-1 py-2 bg-gradient-brand text-white rounded-lg font-medium shadow-soft hover:brightness-110 disabled:opacity-50 transition-all"
                   >
-                    Create
+                    Создать
                   </button>
                 </div>
               </div>

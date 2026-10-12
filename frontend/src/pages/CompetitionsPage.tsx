@@ -66,11 +66,11 @@ export default function CompetitionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-nebula p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Trophy className="w-8 h-8 text-accent" />
-          <h1 className="text-3xl font-bold text-foreground">Соревнования гильдий</h1>
+          <h1 className="text-3xl font-bold gradient-brand-text">Соревнования гильдий</h1>
         </div>
 
         <div className="flex gap-2 mb-6">
@@ -81,7 +81,7 @@ export default function CompetitionsPage() {
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 activeTab === tab.id
                   ? 'bg-gradient-brand text-white'
-                  : 'bg-card text-muted-foreground hover:bg-secondary'
+                  : 'bg-card/50 text-muted-foreground hover:bg-secondary'
               }`}
             >
               {tab.label}
@@ -97,8 +97,8 @@ export default function CompetitionsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={() => loadCompetitionDetails(comp)}
-                className={`bg-card/50 rounded-xl p-5 border cursor-pointer transition-all hover:border-accent/50 ${
-                  selectedCompetition?.id === comp.id ? 'border-accent/50' : 'border-border'
+                className={`bg-card/55 backdrop-blur-xl rounded-xl p-5 border shadow-soft cursor-pointer transition-all hover:border-accent/50 hover:shadow-glow ${
+                  selectedCompetition?.id === comp.id ? 'border-accent/50 glow' : 'border-border/50'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -146,7 +146,7 @@ export default function CompetitionsPage() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-card/50 rounded-xl p-6 border border-border"
+              className="glass rounded-xl p-6"
             >
               <h3 className="text-xl font-bold text-foreground mb-4">
                 Таблица лидеров
