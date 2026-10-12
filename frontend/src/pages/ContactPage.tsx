@@ -126,11 +126,11 @@ export default function ContactPage() {
   const t = content[lang]
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-white">
-      <nav className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-md border-b border-white/10 p-4">
+    <div className="min-h-screen bg-background text-foreground">
+      <nav className="fixed top-0 w-full z-40 bg-card/55 backdrop-blur-xl border-b border-border/60 p-4 shadow-soft">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <Link href="/welcome">
-            <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+            <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
               <span>Назад</span>
             </button>
@@ -141,7 +141,7 @@ export default function ContactPage() {
                 key={l}
                 onClick={() => setLang(l)}
                 className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-                  lang === l ? 'bg-primary text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                  lang === l ? 'gradient-brand text-primary-foreground shadow-glow' : 'bg-muted text-muted-foreground hover:bg-muted/70'
                 }`}
               >
                 {l.toUpperCase()}
@@ -154,8 +154,8 @@ export default function ContactPage() {
       <main className="pt-24 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-2">{t.title}</h1>
-            <p className="text-gray-400">{t.subtitle}</p>
+            <h1 className="text-4xl font-bold mb-2 gradient-brand-text">{t.title}</h1>
+            <p className="text-muted-foreground">{t.subtitle}</p>
           </div>
 
           <div className="space-y-6">
@@ -163,32 +163,32 @@ export default function ContactPage() {
               href={t.telegram.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="block bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-2xl p-6 hover:border-blue-500/50 transition-all group"
+              className="block glass rounded-xl shadow-soft p-6 hover:shadow-glow hover:border-primary/40 transition-all group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 gradient-brand glow rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Send className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-blue-400 mb-1">{t.telegram.title}</p>
+                  <p className="text-sm text-primary mb-1">{t.telegram.title}</p>
                   <p className="text-2xl font-bold">{t.telegram.handle}</p>
                 </div>
               </div>
             </a>
 
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
+            <div className="glass rounded-xl shadow-soft p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Clock className="w-5 h-5 text-primary" />
-                <p className="text-gray-400">{t.responseTime.title}</p>
+                <p className="text-muted-foreground">{t.responseTime.title}</p>
               </div>
               <p className="text-xl font-semibold">{t.responseTime.value}</p>
             </div>
 
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
+            <div className="glass rounded-xl shadow-soft p-6">
               <h3 className="text-lg font-semibold mb-4">{t.topics.title}</h3>
               <div className="space-y-3">
                 {t.topics.items.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 text-gray-300">
+                  <div key={i} className="flex items-center gap-3 text-foreground/80">
                     <item.icon className="w-5 h-5 text-primary" />
                     <span>{item.text}</span>
                   </div>
@@ -196,12 +196,12 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6">
+            <div className="bg-amber-500/10 backdrop-blur-xl border border-amber-500/30 rounded-xl shadow-soft p-6">
               <h3 className="text-lg font-semibold mb-3 text-amber-400">{t.banAppeal.title}</h3>
-              <p className="text-gray-300 mb-3">{t.banAppeal.description}</p>
+              <p className="text-foreground/80 mb-3">{t.banAppeal.description}</p>
               <ul className="space-y-2 mb-4">
                 {t.banAppeal.items.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-gray-300">
+                  <li key={i} className="flex items-start gap-2 text-foreground/80">
                     <span className="text-amber-400">•</span>
                     <span>{item}</span>
                   </li>
@@ -210,20 +210,20 @@ export default function ContactPage() {
               <p className="text-sm text-amber-400/80">{t.banAppeal.note}</p>
             </div>
 
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
+            <div className="glass rounded-xl shadow-soft p-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-purple-400" />
+                <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">{t.superAdmin.title}</p>
+                  <p className="text-sm text-muted-foreground">{t.superAdmin.title}</p>
                   <p className="font-semibold">{t.superAdmin.handle}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="text-center mt-12 text-gray-500">
+          <div className="text-center mt-12 text-muted-foreground">
             {t.footer}
           </div>
         </div>
