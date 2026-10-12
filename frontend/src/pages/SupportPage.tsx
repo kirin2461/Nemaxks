@@ -135,7 +135,7 @@ export default function SupportPage() {
             size="lg"
           />
           <div>
-            <h1 className="text-2xl font-bold">Поддержать {creator.username}</h1>
+            <h1 className="text-2xl font-bold">Поддержать <span className="gradient-brand-text">{creator.username}</span></h1>
             <p className="text-muted-foreground">
               Помогите создателю продолжать делать контент
             </p>
@@ -144,7 +144,7 @@ export default function SupportPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <Card className="cosmic-border">
+            <Card className="glass rounded-xl shadow-soft">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Heart className="w-5 h-5 text-pink-500" />
@@ -164,7 +164,7 @@ export default function SupportPage() {
                         }}
                         className={`py-2 px-3 rounded-lg font-medium transition-all ${
                           selectedAmount === amount && !customAmount
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'gradient-brand text-primary-foreground shadow-glow'
                             : 'bg-muted hover:bg-muted/80'
                         }`}
                       >
@@ -214,7 +214,7 @@ export default function SupportPage() {
             </Card>
 
             {donations.length > 0 && (
-              <Card>
+              <Card className="glass rounded-xl shadow-soft">
                 <CardHeader>
                   <CardTitle className="text-lg">
                     Последние донаты ({totalDonations.toFixed(0)}₽ всего)
@@ -247,7 +247,7 @@ export default function SupportPage() {
           </div>
 
           <div className="space-y-6">
-            <Card className="cosmic-border">
+            <Card className="glass rounded-xl shadow-soft">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Crown className="w-5 h-5 text-yellow-500" />
@@ -267,11 +267,11 @@ export default function SupportPage() {
                     {plans.map((plan) => (
                       <div
                         key={plan.id}
-                        className="p-4 border border-border rounded-lg hover:border-primary/50 transition-colors"
+                        className="p-4 border border-border/50 bg-card/40 backdrop-blur-sm rounded-xl hover:border-primary/50 hover:shadow-glow transition-all"
                       >
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-semibold text-lg">{plan.name}</h3>
-                          <span className="text-xl font-bold text-primary">
+                          <span className="text-xl font-bold gradient-brand-text">
                             {plan.price_rub}₽<span className="text-sm font-normal">/мес</span>
                           </span>
                         </div>
@@ -296,7 +296,7 @@ export default function SupportPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass rounded-xl shadow-soft">
               <CardHeader>
                 <CardTitle className="text-lg">Зачем поддерживать?</CardTitle>
               </CardHeader>

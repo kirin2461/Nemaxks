@@ -101,10 +101,10 @@ export function NotificationsPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Bell className="w-8 h-8 text-purple-400" />
-            <h1 className="text-2xl font-bold text-foreground">Уведомления</h1>
+            <Bell className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl font-bold gradient-brand-text">Уведомления</h1>
             {unreadCount > 0 && (
-              <span className="px-2 py-0.5 bg-purple-500 rounded-full text-white text-sm font-bold">
+              <span className="px-2 py-0.5 gradient-brand shadow-glow rounded-full text-primary-foreground text-sm font-bold">
                 {unreadCount}
               </span>
             )}
@@ -121,7 +121,7 @@ export function NotificationsPage() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2 rounded-lg transition-colors ${
-                showFilters ? 'bg-purple-500/20 text-purple-400' : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                showFilters ? 'bg-primary/20 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'
               }`}
               title="Фильтры"
             >
@@ -138,12 +138,12 @@ export function NotificationsPage() {
         </div>
 
         {showFilters && (
-          <div className="bg-card border border-border rounded-xl p-4 mb-4 animate-in slide-in-from-top-2">
+          <div className="glass rounded-xl p-4 mb-4 shadow-soft animate-in slide-in-from-top-2">
             <div className="flex flex-wrap gap-2 mb-4">
               <button
                 onClick={() => setSelectedType('')}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                  !selectedType ? 'bg-purple-500 text-white' : 'bg-muted/60 text-foreground hover:bg-muted'
+                  !selectedType ? 'gradient-brand text-primary-foreground shadow-glow' : 'bg-muted/60 text-foreground hover:bg-muted'
                 }`}
               >
                 Все
@@ -153,7 +153,7 @@ export function NotificationsPage() {
                   key={type}
                   onClick={() => setSelectedType(type)}
                   className={`px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1 ${
-                    selectedType === type ? 'bg-purple-500 text-white' : 'bg-muted/60 text-foreground hover:bg-muted'
+                    selectedType === type ? 'gradient-brand text-primary-foreground shadow-glow' : 'bg-muted/60 text-foreground hover:bg-muted'
                   }`}
                 >
                   <span>{info.icon}</span>
@@ -167,7 +167,7 @@ export function NotificationsPage() {
                 type="checkbox"
                 checked={unreadOnly}
                 onChange={e => setUnreadOnly(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-500 bg-transparent text-purple-500 focus:ring-purple-500"
+                className="w-4 h-4 rounded border-border bg-transparent accent-primary"
               />
               <span className="text-foreground text-sm">Только непрочитанные</span>
             </label>
@@ -184,8 +184,8 @@ export function NotificationsPage() {
                   onClick={() => setSelectedType(group.type)}
                   className={`p-3 rounded-xl border transition-all ${
                     selectedType === group.type
-                      ? 'bg-purple-500/20 border-purple-500'
-                      : 'bg-card border-border hover:border-white/20'
+                      ? 'bg-primary/15 border-primary/60 shadow-glow'
+                      : 'bg-card/55 border-border hover:border-primary/40 backdrop-blur-xl'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -195,7 +195,7 @@ export function NotificationsPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{group.count} всего</span>
                     {group.unread > 0 && (
-                      <span className="text-purple-400">{group.unread} новых</span>
+                      <span className="text-primary font-medium">{group.unread} новых</span>
                     )}
                   </div>
                 </button>
@@ -233,10 +233,10 @@ export function NotificationsPage() {
         <div className="space-y-2">
           {loading && page === 1 ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="text-center py-12 bg-card border border-border rounded-xl">
+            <div className="text-center py-12 glass rounded-xl shadow-soft">
               <Bell className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <p className="text-muted-foreground text-lg">Нет уведомлений</p>
               <p className="text-muted-foreground text-sm mt-1">
@@ -251,11 +251,11 @@ export function NotificationsPage() {
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`flex items-start gap-4 p-4 bg-card border rounded-xl transition-all cursor-pointer hover:border-white/20 ${
-                      !notification.is_read ? 'border-purple-500/50 bg-purple-500/5' : 'border-border'
+                    className={`flex items-start gap-4 p-4 bg-card/55 backdrop-blur-xl border rounded-xl transition-all cursor-pointer hover:border-primary/40 hover:shadow-glow ${
+                      !notification.is_read ? 'border-primary/50 bg-primary/5 shadow-soft' : 'border-border/50'
                     }`}
                   >
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                       {notification.actor?.avatar ? (
                         <img
                           src={notification.actor.avatar}
@@ -278,7 +278,7 @@ export function NotificationsPage() {
                           </p>
                         </div>
                         {!notification.is_read && (
-                          <span className="w-2.5 h-2.5 bg-purple-500 rounded-full flex-shrink-0" />
+                          <span className="w-2.5 h-2.5 bg-primary rounded-full flex-shrink-0 shadow-glow" />
                         )}
                       </div>
                       {notification.content && (
@@ -320,10 +320,10 @@ export function NotificationsPage() {
                 <button
                   onClick={() => loadNotifications(page + 1)}
                   disabled={loading}
-                  className="w-full py-3 bg-muted/60 hover:bg-muted rounded-xl text-foreground transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 glass rounded-xl text-foreground hover:bg-accent/10 transition-colors flex items-center justify-center gap-2"
                 >
                   {loading ? (
-                    <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                   ) : (
                     <>
                       <ChevronDown className="w-5 h-5" />

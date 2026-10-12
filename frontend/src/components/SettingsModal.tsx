@@ -22,7 +22,7 @@ const TABS = [
 
 const THEMES = [
   { id: 'dark', name: 'Тёмная', preview: 'bg-background' },
-  { id: 'light', name: 'Светлая', preview: 'bg-gray-100' },
+  { id: 'light', name: 'Светлая', preview: 'bg-muted' },
   { id: 'cosmic', name: 'Космос', preview: 'bg-gradient-to-br from-purple-900 to-blue-900' },
   { id: 'midnight-ocean', name: 'Океан', preview: 'bg-gradient-to-br from-blue-900 to-cyan-900' },
   { id: 'neon-tokyo', name: 'Неон', preview: 'bg-gradient-to-br from-pink-900 to-purple-900' },
@@ -61,7 +61,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     <button
       onClick={() => onChange(!checked)}
       className={`relative w-11 h-6 rounded-full transition-colors ${
-        checked ? 'bg-purple-500' : 'bg-muted'
+        checked ? 'gradient-brand shadow-glow' : 'bg-muted'
       }`}
     >
       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
@@ -80,7 +80,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               onClick={() => setActiveTab(tab.id as TabId)}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-1 transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-purple-500/20 text-purple-400'
+                  ? 'gradient-brand text-primary-foreground shadow-glow'
                   : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
               }`}
             >
@@ -115,7 +115,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         onClick={() => updateSetting('language', lang.id)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                           settings.language === lang.id
-                            ? 'bg-purple-500 text-white'
+                            ? 'gradient-brand text-primary-foreground shadow-glow'
                             : 'bg-muted/60 text-foreground hover:bg-muted'
                         }`}
                       >
@@ -126,7 +126,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/60 border border-border/40 rounded-lg">
                   <div className="flex items-center gap-3">
                     {soundEnabled ? <Volume2 className="w-5 h-5 text-muted-foreground" /> : <VolumeX className="w-5 h-5 text-muted-foreground" />}
                     <div>
@@ -151,7 +151,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 { key: 'notifyGuilds', label: 'Гильдии', desc: 'Новости и события гильдий' },
                 { key: 'desktopNotifications', label: 'Push-уведомления', desc: 'Показывать уведомления на рабочем столе' },
               ].map(item => (
-                <div key={item.key} className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
+                <div key={item.key} className="flex items-center justify-between p-3 bg-muted/60 border border-border/40 rounded-lg">
                   <div>
                     <p className="text-foreground">{item.label}</p>
                     <p className="text-muted-foreground text-sm">{item.desc}</p>
@@ -175,7 +175,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 { key: 'allowDMs', label: 'Личные сообщения', desc: 'Разрешить сообщения от всех', icon: Lock },
                 { key: 'showReadReceipts', label: 'Прочитано', desc: 'Показывать что сообщение прочитано', icon: Eye },
               ].map(item => (
-                <div key={item.key} className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
+                <div key={item.key} className="flex items-center justify-between p-3 bg-muted/60 border border-border/40 rounded-lg">
                   <div className="flex items-center gap-3">
                     <item.icon className="w-5 h-5 text-muted-foreground" />
                     <div>
@@ -190,15 +190,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
               ))}
 
-              <div className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/60 border border-border/40 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-purple-400" />
+                  <Shield className="w-5 h-5 text-primary" />
                   <div>
                     <p className="text-foreground">Двухфакторная аутентификация</p>
                     <p className="text-muted-foreground text-sm">Дополнительная защита аккаунта</p>
                   </div>
                 </div>
-                <button className="px-3 py-1 bg-purple-500 hover:bg-purple-600 rounded text-white text-sm transition-colors">
+                <button className="px-3 py-1 gradient-brand hover:brightness-110 shadow-glow rounded-lg text-primary-foreground text-sm transition-all">
                   Настроить
                 </button>
               </div>
@@ -218,8 +218,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       onClick={() => setTheme(t.id as any)}
                       className={`p-3 rounded-lg border transition-all ${
                         theme === t.id
-                          ? 'border-purple-500 ring-2 ring-purple-500/30'
-                          : 'border-border hover:border-white/30'
+                          ? 'border-primary ring-2 ring-primary/40 shadow-glow'
+                          : 'border-border hover:border-primary/40'
                       }`}
                     >
                       <div className={`w-full h-12 rounded-lg mb-2 ${t.preview}`} />

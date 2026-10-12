@@ -184,9 +184,9 @@ export default function ProfilePage() {
   return (
     <Layout>
       <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">
-        <Card className="cosmic-border mb-6">
+        <Card className="glass rounded-xl shadow-soft overflow-hidden mb-6">
           <div className="relative">
-            <div className="h-32 cosmic-gradient rounded-t-lg" />
+            <div className="h-32 gradient-brand rounded-t-xl opacity-90" />
 
             <div className="px-4 sm:px-6 pb-4 sm:pb-6">
               <div className="flex items-end gap-3 sm:gap-6 -mt-12">
@@ -196,10 +196,10 @@ export default function ProfilePage() {
                     alt={displayUser?.username || 'User'}
                     userId={String(displayUser?.id)}
                     size="xl"
-                    className="border-4 border-card"
+                    className="border-4 border-card glow"
                   />
                   {isOwnProfile && (
-                    <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
+                    <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full gradient-brand text-primary-foreground flex items-center justify-center cursor-pointer hover:brightness-110 transition-all shadow-glow">
                       <Upload className="w-4 h-4" />
                       <input
                         type="file"
@@ -216,7 +216,7 @@ export default function ProfilePage() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-3 sm:gap-0">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-xl sm:text-2xl font-bold">
+                        <h1 className="text-xl sm:text-2xl font-bold drop-shadow-md">
                           {displayUser?.username}
                         </h1>
                         {hasPremium && (
@@ -304,7 +304,7 @@ export default function ProfilePage() {
         {liteMode && isOwnProfile && (
           <div className="grid grid-cols-2 gap-4 mb-6">
             <Link href="/invite">
-              <Card className="cursor-pointer hover:bg-accent/10 transition-colors">
+              <Card className="glass rounded-xl shadow-soft cursor-pointer hover:bg-accent/10 transition-colors">
                 <CardContent className="flex items-center gap-3 py-4">
                   <Share2 className="w-6 h-6 text-primary" />
                   <div>
@@ -315,7 +315,7 @@ export default function ProfilePage() {
               </Card>
             </Link>
             <Link href="/premium">
-              <Card className="cursor-pointer hover:bg-accent/10 transition-colors">
+              <Card className="glass rounded-xl shadow-soft cursor-pointer hover:bg-accent/10 transition-colors">
                 <CardContent className="flex items-center gap-3 py-4">
                   <Crown className="w-6 h-6 text-yellow-500" />
                   <div>
@@ -332,7 +332,7 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
-            <Card>
+            <Card className="glass rounded-xl shadow-soft">
               <CardHeader>
                 <CardTitle>About</CardTitle>
               </CardHeader>
@@ -374,7 +374,7 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass rounded-xl shadow-soft">
               <CardHeader>
                 <CardTitle>Activity</CardTitle>
               </CardHeader>
@@ -387,31 +387,31 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-6">
-            <Card>
+            <Card className="glass rounded-xl shadow-soft">
               <CardHeader>
                 <CardTitle>Stats</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Followers</p>
-                  <p className="text-2xl font-bold">{followersCount}</p>
+                  <p className="text-2xl font-bold gradient-brand-text">{followersCount}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Following</p>
-                  <p className="text-2xl font-bold">{followingCount}</p>
+                  <p className="text-2xl font-bold gradient-brand-text">{followingCount}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Friends</p>
-                  <p className="text-2xl font-bold">{friendsCount}</p>
+                  <p className="text-2xl font-bold gradient-brand-text">{friendsCount}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Posts</p>
-                  <p className="text-2xl font-bold">{postsCount}</p>
+                  <p className="text-2xl font-bold gradient-brand-text">{postsCount}</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass rounded-xl shadow-soft">
               <CardHeader>
                 <CardTitle>Badges</CardTitle>
               </CardHeader>

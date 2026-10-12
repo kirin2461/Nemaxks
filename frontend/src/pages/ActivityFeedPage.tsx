@@ -33,13 +33,13 @@ export default function ActivityFeedPage() {
       case 'trade_accepted':
       case 'trade_rejected': return { icon: ArrowLeftRight, color: 'text-blue-400', bg: 'bg-blue-400/10' };
       case 'friend_add': return { icon: UserPlus, color: 'text-green-400', bg: 'bg-green-400/10' };
-      case 'level_up': return { icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-400/10' };
+      case 'level_up': return { icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10' };
       case 'achievement': return { icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-400/10' };
       case 'mentorship_request': return { icon: Star, color: 'text-orange-400', bg: 'bg-orange-400/10' };
-      case 'message': return { icon: MessageSquare, color: 'text-cyan-400', bg: 'bg-cyan-400/10' };
+      case 'message': return { icon: MessageSquare, color: 'text-accent', bg: 'bg-accent/10' };
       case 'like':
       case 'reaction': return { icon: Heart, color: 'text-red-400', bg: 'bg-red-400/10' };
-      default: return { icon: Bell, color: 'text-muted-foreground', bg: 'bg-gray-400/10' };
+      default: return { icon: Bell, color: 'text-muted-foreground', bg: 'bg-muted' };
     }
   };
 

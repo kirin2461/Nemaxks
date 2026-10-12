@@ -535,11 +535,11 @@ export default function TermsPage() {
   const t = content[lang]
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-white">
-      <nav className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-md border-b border-white/10 p-4">
+    <div className="min-h-screen bg-background text-foreground">
+      <nav className="fixed top-0 w-full z-40 bg-card/55 backdrop-blur-xl border-b border-border/60 shadow-soft p-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <Link href="/welcome">
-            <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+            <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
               <span>Назад</span>
             </button>
@@ -550,7 +550,7 @@ export default function TermsPage() {
                 key={l}
                 onClick={() => setLang(l)}
                 className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-                  lang === l ? 'bg-primary text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                  lang === l ? 'gradient-brand text-primary-foreground shadow-glow' : 'bg-muted text-muted-foreground hover:bg-muted/70'
                 }`}
               >
                 {l.toUpperCase()}
@@ -563,26 +563,26 @@ export default function TermsPage() {
       <main className="pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-2">{t.title}</h1>
-            <p className="text-gray-400">{t.subtitle}</p>
-            <p className="text-sm text-gray-500 mt-2">{t.version} | {t.effectiveDate}</p>
+            <h1 className="text-4xl font-bold gradient-brand-text mb-2">{t.title}</h1>
+            <p className="text-muted-foreground">{t.subtitle}</p>
+            <p className="text-sm text-muted-foreground mt-2">{t.version} | {t.effectiveDate}</p>
           </div>
 
           <div className="space-y-8">
             {t.sections.map((section, i) => (
-              <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
+              <div key={i} className="glass shadow-soft rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <section.icon className="w-6 h-6 text-primary" />
                   <h2 className="text-xl font-semibold">{section.title}</h2>
                 </div>
-                <div className="text-gray-300 whitespace-pre-line leading-relaxed">
+                <div className="text-foreground/80 whitespace-pre-line leading-relaxed">
                   {section.content}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="text-center mt-12 text-gray-500">
+          <div className="text-center mt-12 text-muted-foreground">
             {t.footer}
           </div>
         </div>

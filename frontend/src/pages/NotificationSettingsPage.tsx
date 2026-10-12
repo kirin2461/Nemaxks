@@ -63,7 +63,7 @@ export function NotificationSettingsPage() {
       disabled={disabled}
       className={`relative w-11 h-6 rounded-full transition-colors ${
         disabled ? 'opacity-50 cursor-not-allowed' : ''
-      } ${checked ? 'bg-purple-500' : 'bg-muted'}`}
+      } ${checked ? 'gradient-brand shadow-glow' : 'bg-muted'}`}
     >
       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
         checked ? 'left-6' : 'left-1'
@@ -74,7 +74,7 @@ export function NotificationSettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     )
   }
@@ -98,15 +98,15 @@ export function NotificationSettingsPage() {
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-3">
-            <Bell className="w-8 h-8 text-purple-400" />
-            <h1 className="text-2xl font-bold text-foreground">Настройки уведомлений</h1>
+            <Bell className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground">Настройки <span className="gradient-brand-text">уведомлений</span></h1>
           </div>
         </div>
 
         <div className="space-y-6">
-          <section className="bg-card border border-border rounded-xl p-6">
+          <section className="glass rounded-xl p-6 shadow-soft">
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Volume2 className="w-5 h-5 text-purple-400" />
+              <Volume2 className="w-5 h-5 text-primary" />
               Основные настройки
             </h2>
 
@@ -152,7 +152,7 @@ export function NotificationSettingsPage() {
             </div>
           </section>
 
-          <section className="bg-card border border-border rounded-xl p-6">
+          <section className="glass rounded-xl p-6 shadow-soft">
             <h2 className="text-lg font-semibold text-foreground mb-4">Типы уведомлений</h2>
 
             <div className="space-y-3">
@@ -183,9 +183,9 @@ export function NotificationSettingsPage() {
             </div>
           </section>
 
-          <section className="bg-card border border-border rounded-xl p-6">
+          <section className="glass rounded-xl p-6 shadow-soft">
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Moon className="w-5 h-5 text-purple-400" />
+              <Moon className="w-5 h-5 text-primary" />
               Тихие часы
             </h2>
 
@@ -209,7 +209,7 @@ export function NotificationSettingsPage() {
                       type="time"
                       value={prefs.quiet_hours_start || '22:00'}
                       onChange={e => setPrefs({ ...prefs, quiet_hours_start: e.target.value })}
-                      className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none"
+                      className="input-field"
                     />
                   </div>
                   <div className="flex-1">
@@ -218,7 +218,7 @@ export function NotificationSettingsPage() {
                       type="time"
                       value={prefs.quiet_hours_end || '08:00'}
                       onChange={e => setPrefs({ ...prefs, quiet_hours_end: e.target.value })}
-                      className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none"
+                      className="input-field"
                     />
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export function NotificationSettingsPage() {
           <div className="flex gap-3">
             <button
               onClick={handleTestNotification}
-              className="flex-1 px-4 py-3 bg-muted/60 hover:bg-muted rounded-xl text-foreground transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 glass rounded-xl text-foreground hover:bg-accent/10 transition-colors flex items-center justify-center gap-2"
             >
               <TestTube className="w-5 h-5" />
               Тестовое уведомление
@@ -237,7 +237,7 @@ export function NotificationSettingsPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 px-4 py-3 bg-purple-500 hover:bg-purple-600 rounded-xl text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 gradient-brand hover:brightness-110 shadow-glow rounded-xl text-primary-foreground font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {saving ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
