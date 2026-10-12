@@ -62,7 +62,7 @@ export default function CollectionsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
@@ -72,12 +72,12 @@ export default function CollectionsPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Bookmark className="w-8 h-8 text-amber-400" />
+            <Bookmark className="w-8 h-8 text-accent" />
             <h1 className="text-3xl font-bold">Collections</h1>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 rounded-lg hover:bg-amber-700"
+            className="flex items-center gap-2 px-4 py-2 bg-primary rounded-lg hover:bg-primary/80"
           >
             <Plus className="w-4 h-4" />
             New Collection
@@ -92,7 +92,7 @@ export default function CollectionsPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className={`bg-card rounded-xl p-5 cursor-pointer hover:bg-muted transition-colors ${
-                  selectedCollection === collection.id ? 'ring-2 ring-amber-500' : ''
+                  selectedCollection === collection.id ? 'ring-2 ring-accent/50' : ''
                 }`}
                 onClick={() => setSelectedCollection(collection.id)}
               >
@@ -105,7 +105,7 @@ export default function CollectionsPage() {
                     </div>
                   </div>
                   {collection.is_private ? (
-                    <Lock className="w-4 h-4 text-yellow-400" />
+                    <Lock className="w-4 h-4 text-accent" />
                   ) : (
                     <Globe className="w-4 h-4 text-green-400" />
                   )}
@@ -184,7 +184,7 @@ export default function CollectionsPage() {
         </div>
 
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -198,7 +198,7 @@ export default function CollectionsPage() {
                     type="text"
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
-                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-accent/50"
                   />
                 </div>
                 <div>
@@ -206,7 +206,7 @@ export default function CollectionsPage() {
                   <textarea
                     value={newDesc}
                     onChange={e => setNewDesc(e.target.value)}
-                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-accent/50 resize-none"
                     rows={2}
                   />
                 </div>
@@ -218,7 +218,7 @@ export default function CollectionsPage() {
                         key={emoji}
                         onClick={() => setNewEmoji(emoji)}
                         className={`w-10 h-10 rounded-lg text-xl ${
-                          newEmoji === emoji ? 'bg-amber-600' : 'bg-secondary hover:bg-muted'
+                          newEmoji === emoji ? 'bg-primary' : 'bg-secondary hover:bg-muted'
                         }`}
                       >
                         {emoji}
@@ -245,7 +245,7 @@ export default function CollectionsPage() {
                   <button
                     onClick={() => createMutation.mutate()}
                     disabled={!newName || createMutation.isPending}
-                    className="flex-1 py-2 bg-amber-600 rounded-lg font-medium hover:bg-amber-700 disabled:opacity-50"
+                    className="flex-1 py-2 bg-primary rounded-lg font-medium hover:bg-primary/80 disabled:opacity-50"
                   >
                     Create
                   </button>

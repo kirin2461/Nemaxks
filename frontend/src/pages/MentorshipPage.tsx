@@ -49,7 +49,7 @@ export default function MentorshipPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
@@ -63,7 +63,7 @@ export default function MentorshipPage() {
         </div>
 
         {myMentorship?.mentorship ? (
-          <div className="bg-gradient-to-br from-emerald-600/20 to-teal-600/20 rounded-xl p-6 mb-8 border border-emerald-500/30">
+          <div className="bg-gradient-to-br from-emerald-600/20 to-accent/20 rounded-xl p-6 mb-8 border border-emerald-500/30">
             <h2 className="text-xl font-bold mb-4">Your Mentorship</h2>
             <div className="flex items-center gap-4 mb-6">
               <div className="w-16 h-16 rounded-full bg-emerald-600/30 flex items-center justify-center">
@@ -144,7 +144,7 @@ export default function MentorshipPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-                    <Star className="w-4 h-4 text-yellow-400" />
+                    <Star className="w-4 h-4 text-accent" />
                     <span>{mentor.mentee_count || 0} mentees</span>
                   </div>
                   <button

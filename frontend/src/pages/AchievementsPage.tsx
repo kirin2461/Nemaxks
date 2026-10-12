@@ -5,11 +5,11 @@ import { Trophy, Star, Zap, Medal, Crown, TrendingUp, MessageSquare, Mic, Heart,
 import { achievementsAPI, Achievement, UserAchievement, UserLevel, LeaderboardEntry } from '../lib/api';
 
 const rarityColors: Record<string, string> = {
-  common: 'from-gray-400 to-gray-500',
-  uncommon: 'from-green-400 to-green-600',
-  rare: 'from-blue-400 to-blue-600',
-  epic: 'from-purple-400 to-purple-600',
-  legendary: 'from-yellow-400 to-orange-500',
+  common: 'from-muted-foreground/40 to-muted-foreground/60',
+  uncommon: 'from-accent/50 to-accent/80',
+  rare: 'from-accent to-primary',
+  epic: 'from-primary to-accent',
+  legendary: 'from-primary via-accent to-primary',
 };
 
 const categoryIcons: Record<string, any> = {
@@ -62,7 +62,7 @@ export default function AchievementsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-primary/10 to-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40"></div>
       </div>
     );
   }
@@ -74,21 +74,21 @@ export default function AchievementsPage() {
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-purple-500/20"
+            className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-primary/20"
           >
             <div className="flex items-center gap-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                   <span className="text-3xl font-bold text-white">{userLevel.level}</span>
                 </div>
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-purple-600 px-3 py-1 rounded-full text-xs font-semibold">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-brand shadow-soft px-3 py-1 rounded-full text-xs font-semibold">
                   {language === 'ru' ? 'Уровень' : 'Level'}
                 </div>
               </div>
               
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-5 h-5 text-yellow-400" />
+                  <Zap className="w-5 h-5 text-accent" />
                   <span className="text-lg font-semibold text-foreground">
                     {userLevel.current_xp.toLocaleString()} / {userLevel.xp_needed.toLocaleString()} XP
                   </span>
@@ -99,7 +99,7 @@ export default function AchievementsPage() {
                     initial={{ width: 0 }}
                     animate={{ width: `${userLevel.progress}%` }}
                     transition={{ duration: 1, ease: 'easeOut' }}
-                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                    className="h-full bg-gradient-to-r from-primary to-accent"
                   />
                 </div>
                 
@@ -132,7 +132,7 @@ export default function AchievementsPage() {
             onClick={() => setActiveTab('achievements')}
             className={`px-6 py-3 rounded-xl font-semibold transition-all ${
               activeTab === 'achievements'
-                ? 'bg-purple-600 text-white'
+                ? 'bg-gradient-brand shadow-soft text-white'
                 : 'bg-card/50 text-muted-foreground hover:bg-secondary/50'
             }`}
           >
@@ -143,7 +143,7 @@ export default function AchievementsPage() {
             onClick={() => setActiveTab('leaderboard')}
             className={`px-6 py-3 rounded-xl font-semibold transition-all ${
               activeTab === 'leaderboard'
-                ? 'bg-purple-600 text-white'
+                ? 'bg-gradient-brand shadow-soft text-white'
                 : 'bg-card/50 text-muted-foreground hover:bg-secondary/50'
             }`}
           >
@@ -175,7 +175,7 @@ export default function AchievementsPage() {
                   transition={{ delay: index * 0.05 }}
                   className={`relative rounded-xl p-4 border ${
                     isUnlocked
-                      ? 'bg-card/70 border-purple-500/50'
+                      ? 'bg-card/70 border-primary/50'
                       : 'bg-card/30 border-border/50 opacity-60'
                   }`}
                 >
@@ -196,7 +196,7 @@ export default function AchievementsPage() {
                         <span className={`text-xs px-2 py-0.5 rounded-full bg-gradient-to-r ${rarityColors[ach.rarity]} text-white`}>
                           {ach.rarity}
                         </span>
-                        <span className="text-xs text-yellow-400 flex items-center gap-1">
+                        <span className="text-xs text-accent flex items-center gap-1">
                           <Zap className="w-3 h-3" />
                           +{ach.xp_reward} XP
                         </span>
@@ -228,7 +228,7 @@ export default function AchievementsPage() {
                   onClick={() => setLeaderboardPeriod(period)}
                   className={`px-4 py-2 rounded-lg transition-all ${
                     leaderboardPeriod === period
-                      ? 'bg-purple-600 text-white'
+                      ? 'bg-gradient-brand shadow-soft text-white'
                       : 'bg-card/50 text-muted-foreground hover:bg-secondary/50'
                   }`}
                 >
@@ -239,7 +239,7 @@ export default function AchievementsPage() {
               ))}
             </div>
             
-            <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-purple-500/20 overflow-hidden">
+            <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-primary/20 overflow-hidden">
               {leaderboard.map((entry, index) => (
                 <motion.div
                   key={entry.user_id}
@@ -247,13 +247,13 @@ export default function AchievementsPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.03 }}
                   className={`flex items-center gap-4 p-4 border-b border-border/50 last:border-0 ${
-                    index < 3 ? 'bg-gradient-to-r from-purple-900/30 to-transparent' : ''
+                    index < 3 ? 'bg-gradient-to-r from-primary/25 to-transparent' : ''
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                    entry.rank === 1 ? 'bg-yellow-500 text-black' :
-                    entry.rank === 2 ? 'bg-gray-400 text-black' :
-                    entry.rank === 3 ? 'bg-orange-600 text-white' :
+                    entry.rank === 1 ? 'bg-gradient-brand text-white' :
+                    entry.rank === 2 ? 'bg-muted-foreground/50 text-white' :
+                    entry.rank === 3 ? 'bg-accent text-white' :
                     'bg-secondary text-foreground'
                   }`}>
                     {entry.rank <= 3 ? (
@@ -263,7 +263,7 @@ export default function AchievementsPage() {
                     )}
                   </div>
                   
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold">
                     {entry.avatar ? (
                       <img src={entry.avatar} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
@@ -279,7 +279,7 @@ export default function AchievementsPage() {
                   </div>
                   
                   <div className="text-right">
-                    <div className="text-lg font-bold text-purple-400">{entry.total_xp.toLocaleString()}</div>
+                    <div className="text-lg font-bold text-primary">{entry.total_xp.toLocaleString()}</div>
                     <div className="text-xs text-muted-foreground">XP</div>
                   </div>
                 </motion.div>

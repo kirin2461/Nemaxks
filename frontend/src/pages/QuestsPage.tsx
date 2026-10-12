@@ -38,10 +38,10 @@ export default function QuestsPage() {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'tutorial': return 'from-green-500 to-emerald-600';
-      case 'social': return 'from-blue-500 to-cyan-600';
-      case 'content': return 'from-purple-500 to-pink-600';
-      case 'exploration': return 'from-orange-500 to-red-600';
-      default: return 'from-gray-500 to-gray-600';
+      case 'social': return 'from-accent to-accent';
+      case 'content': return 'from-primary to-accent';
+      case 'exploration': return 'from-primary to-accent';
+      default: return 'from-muted-foreground/40 to-muted-foreground/60';
     }
   };
 
@@ -66,7 +66,7 @@ export default function QuestsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
@@ -75,7 +75,7 @@ export default function QuestsPage() {
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <Scroll className="w-8 h-8 text-purple-400" />
+          <Scroll className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold">Quest Chains</h1>
         </div>
 
@@ -113,19 +113,19 @@ export default function QuestsPage() {
                               {progress?.current_step || 0}/{chain.total_steps} steps
                             </span>
                             {finalReward.coins && (
-                              <div className="flex items-center gap-1 text-yellow-400">
+                              <div className="flex items-center gap-1 text-accent">
                                 <Coins className="w-4 h-4" />
                                 <span>{finalReward.coins}</span>
                               </div>
                             )}
                             {finalReward.gems && (
-                              <div className="flex items-center gap-1 text-purple-400">
+                              <div className="flex items-center gap-1 text-primary">
                                 <Gift className="w-4 h-4" />
                                 <span>{finalReward.gems}</span>
                               </div>
                             )}
                             {finalReward.xp && (
-                              <div className="flex items-center gap-1 text-blue-400">
+                              <div className="flex items-center gap-1 text-accent">
                                 <Star className="w-4 h-4" />
                                 <span>{finalReward.xp} XP</span>
                               </div>
@@ -140,13 +140,13 @@ export default function QuestsPage() {
                       <div className="mt-4">
                         <div className="flex items-center justify-between text-sm mb-1">
                           <span className="text-muted-foreground">Progress</span>
-                          <span className="text-purple-400">
+                          <span className="text-primary">
                             {Math.round(((progress?.current_step || 1) / chain.total_steps) * 100)}%
                           </span>
                         </div>
                         <div className="w-full bg-secondary rounded-full h-2">
                           <div
-                            className="bg-purple-600 h-2 rounded-full transition-all"
+                            className="bg-gradient-brand shadow-soft h-2 rounded-full transition-all"
                             style={{
                               width: `${((progress?.current_step || 1) / chain.total_steps) * 100}%`,
                             }}
@@ -192,7 +192,7 @@ export default function QuestsPage() {
                                 isCompleted
                                   ? 'bg-green-600/10 border-green-600/30'
                                   : isCurrent
-                                  ? 'bg-purple-600/10 border-purple-600/50'
+                                  ? 'bg-primary/10 border-primary/50'
                                   : 'bg-secondary/30 border-border'
                               }`}
                             >
@@ -202,7 +202,7 @@ export default function QuestsPage() {
                                 ) : isLocked ? (
                                   <Lock className="w-5 h-5 text-muted-foreground mt-0.5" />
                                 ) : (
-                                  <Circle className="w-5 h-5 text-purple-400 mt-0.5" />
+                                  <Circle className="w-5 h-5 text-primary mt-0.5" />
                                 )}
                                 <div className="flex-1">
                                   <p className={`font-medium ${isLocked ? 'text-muted-foreground' : ''}`}>
@@ -214,13 +214,13 @@ export default function QuestsPage() {
                                   {!isLocked && (
                                     <div className="flex items-center gap-3 mt-2 text-xs">
                                       {step.reward_coins > 0 && (
-                                        <span className="text-yellow-400">+{step.reward_coins} coins</span>
+                                        <span className="text-accent">+{step.reward_coins} coins</span>
                                       )}
                                       {step.reward_xp > 0 && (
-                                        <span className="text-purple-400">+{step.reward_xp} XP</span>
+                                        <span className="text-primary">+{step.reward_xp} XP</span>
                                       )}
                                       {step.reward_gems > 0 && (
-                                        <span className="text-blue-400">+{step.reward_gems} gems</span>
+                                        <span className="text-accent">+{step.reward_gems} gems</span>
                                       )}
                                     </div>
                                   )}
@@ -235,7 +235,7 @@ export default function QuestsPage() {
                         <button
                           onClick={() => startMutation.mutate(selectedChain)}
                           disabled={startMutation.isPending}
-                          className="w-full py-3 bg-purple-600 rounded-xl font-bold hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="w-full py-3 bg-gradient-brand shadow-soft rounded-xl font-bold hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                           <Play className="w-5 h-5" />
                           {startMutation.isPending ? 'Starting...' : 'Start Quest'}

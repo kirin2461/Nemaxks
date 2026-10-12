@@ -69,7 +69,7 @@ export function GiftSendModal({
     return (
       <Modal isOpen={isOpen} onClose={handleClose} size="sm">
         <div className="text-center py-4">
-          <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+          <div className="w-20 h-20 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
             <Gift className="w-10 h-10 text-white" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Подарок отправлен!</h2>
@@ -78,7 +78,7 @@ export function GiftSendModal({
           </p>
           <button
             onClick={handleClose}
-            className="mt-6 w-full px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white transition-colors"
+            className="mt-6 w-full px-4 py-2 bg-primary hover:bg-primary/80 rounded-lg text-white transition-colors"
           >
             Закрыть
           </button>
@@ -91,7 +91,7 @@ export function GiftSendModal({
     <Modal isOpen={isOpen} onClose={handleClose} title="Отправить подарок" size="lg">
       <div className="space-y-4">
         <div className="flex items-center gap-3 p-3 bg-muted/60 rounded-lg">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
             {recipientAvatar ? (
               <img src={recipientAvatar} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -107,8 +107,8 @@ export function GiftSendModal({
         <div className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
           <span className="text-muted-foreground">Ваш баланс:</span>
           <div className="flex gap-4">
-            <span className="text-yellow-400 font-bold">{userBalance.coins} 🪙</span>
-            <span className="text-purple-400 font-bold">{userBalance.gems} 💎</span>
+            <span className="text-accent font-bold">{userBalance.coins} 🪙</span>
+            <span className="text-primary font-bold">{userBalance.gems} 💎</span>
           </div>
         </div>
 
@@ -127,19 +127,19 @@ export function GiftSendModal({
                   disabled={!affordable}
                   className={`relative p-3 rounded-lg border transition-all ${
                     selectedGift === gift.id
-                      ? 'border-purple-500 bg-purple-500/20 ring-2 ring-purple-500/30'
+                      ? 'border-primary/40 bg-primary/15 ring-2 ring-primary/30'
                       : affordable
                       ? 'border-border bg-muted/60 hover:bg-muted'
-                      : 'border-white/5 bg-muted/60 opacity-50 cursor-not-allowed'
+                      : 'border-border/50 bg-muted/60 opacity-50 cursor-not-allowed'
                   }`}
                 >
                   <div className="text-3xl mb-1">{gift.icon}</div>
                   <p className="text-xs text-white truncate">{gift.name}</p>
-                  <p className={`text-xs ${gift.currency === 'coins' ? 'text-yellow-400' : 'text-purple-400'}`}>
+                  <p className={`text-xs ${gift.currency === 'coins' ? 'text-accent' : 'text-primary'}`}>
                     {gift.price} {gift.currency === 'coins' ? '🪙' : '💎'}
                   </p>
                   {selectedGift === gift.id && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                       <Check className="w-3 h-3 text-white" />
                     </div>
                   )}
@@ -156,7 +156,7 @@ export function GiftSendModal({
             onChange={e => setMessage(e.target.value)}
             maxLength={200}
             rows={2}
-            className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors resize-none"
+            className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-primary/40 outline-none transition-colors resize-none"
             placeholder="Напишите что-нибудь приятное..."
           />
         </div>
@@ -178,7 +178,7 @@ export function GiftSendModal({
           <button
             onClick={handleSend}
             disabled={loading || !selectedGift || !canAfford}
-            className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 rounded-lg text-white font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 bg-gradient-brand hover:brightness-110 rounded-lg text-white font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-soft hover:shadow-glow"
           >
             {loading ? (
               <>

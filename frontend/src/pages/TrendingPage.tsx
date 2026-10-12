@@ -29,7 +29,7 @@ export default function TrendingPage() {
   if (trendingLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
@@ -38,14 +38,14 @@ export default function TrendingPage() {
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <TrendingUp className="w-8 h-8 text-orange-400" />
+          <TrendingUp className="w-8 h-8 text-accent" />
           <h1 className="text-3xl font-bold">Trending & For You</h1>
         </div>
 
         {recommendations.length > 0 && (
           <div className="mb-10">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-400" />
+              <Sparkles className="w-5 h-5 text-primary" />
               Recommended For You
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
@@ -54,11 +54,11 @@ export default function TrendingPage() {
                   key={rec.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl p-5 border border-purple-500/20"
+                  className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-5 border border-primary/20"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs bg-purple-600/30 text-purple-300 px-2 py-0.5 rounded capitalize">
+                      <span className="text-xs bg-primary/30 text-primary/80 px-2 py-0.5 rounded capitalize">
                         {rec.content_type}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -83,7 +83,7 @@ export default function TrendingPage() {
         )}
 
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-orange-400" />
+          <TrendingUp className="w-5 h-5 text-accent" />
           Trending Now
         </h2>
 
@@ -97,7 +97,7 @@ export default function TrendingPage() {
               className="bg-card rounded-xl p-5"
             >
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-orange-600/20 flex items-center justify-center text-orange-400 font-bold">
+                <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold">
                   #{index + 1}
                 </div>
                 <div className="flex-1">

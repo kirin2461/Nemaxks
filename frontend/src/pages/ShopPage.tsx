@@ -5,11 +5,11 @@ import { Coins, Gem, ShoppingBag, Check, Palette, Frame, Image, Sparkles } from 
 import { motion, AnimatePresence } from 'framer-motion';
 
 const rarityColors: Record<string, string> = {
-  common: 'border-gray-500 bg-gray-500/10',
+  common: 'border-border bg-muted/40',
   uncommon: 'border-green-500 bg-green-500/10',
-  rare: 'border-blue-500 bg-blue-500/10',
-  epic: 'border-purple-500 bg-purple-500/10',
-  legendary: 'border-yellow-500 bg-yellow-500/10',
+  rare: 'border-accent/50 bg-accent/10',
+  epic: 'border-primary/40 bg-primary/10',
+  legendary: 'border-accent/50 bg-accent/10',
 };
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -79,7 +79,7 @@ export default function ShopPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-primary/40 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -89,19 +89,19 @@ export default function ShopPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
           <div className="flex items-center gap-3">
-            <ShoppingBag className="w-8 h-8 text-purple-400" />
+            <ShoppingBag className="w-8 h-8 text-primary" />
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('shop.title')}</h1>
           </div>
           
           {currency && (
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-yellow-500/20 px-4 py-2 rounded-lg">
-                <Coins className="w-5 h-5 text-yellow-400 shrink-0" />
-                <span className="text-yellow-400 font-semibold">{currency.coins}</span>
+              <div className="flex items-center gap-2 bg-accent/15 px-4 py-2 rounded-lg">
+                <Coins className="w-5 h-5 text-accent shrink-0" />
+                <span className="text-accent font-semibold">{currency.coins}</span>
               </div>
-              <div className="flex items-center gap-2 bg-purple-500/20 px-4 py-2 rounded-lg">
-                <Gem className="w-5 h-5 text-purple-400 shrink-0" />
-                <span className="text-purple-400 font-semibold">{currency.gems}</span>
+              <div className="flex items-center gap-2 bg-primary/15 px-4 py-2 rounded-lg">
+                <Gem className="w-5 h-5 text-primary shrink-0" />
+                <span className="text-primary font-semibold">{currency.gems}</span>
               </div>
             </div>
           )}
@@ -114,7 +114,7 @@ export default function ShopPage() {
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeCategory === cat
-                  ? 'bg-purple-500 text-white'
+                  ? 'bg-primary text-white'
                   : 'bg-card text-muted-foreground hover:bg-secondary'
               }`}
             >
@@ -135,7 +135,7 @@ export default function ShopPage() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className={`relative bg-card/50 rounded-xl border-2 p-4 ${rarityColors[item.rarity]}`}
               >
-                <div className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium capitalize bg-black/50">
+                <div className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium capitalize bg-background/80">
                   {item.rarity}
                 </div>
 
@@ -153,7 +153,7 @@ export default function ShopPage() {
                     className={`w-full py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
                       isEquipped(item.id)
                         ? 'bg-green-500/20 text-green-400 cursor-default'
-                        : 'bg-purple-500 hover:bg-purple-600 text-white'
+                        : 'bg-primary hover:bg-primary/80 text-white'
                     }`}
                   >
                     {isEquipped(item.id) ? (
@@ -170,7 +170,7 @@ export default function ShopPage() {
                     <button
                       onClick={() => handlePurchase(item, 'coins')}
                       disabled={!currency || currency.coins < item.price_coins || purchasing === item.id}
-                      className="flex-1 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 bg-accent/15 hover:bg-accent/30 text-accent disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Coins className="w-4 h-4" />
                       {item.price_coins}
@@ -179,7 +179,7 @@ export default function ShopPage() {
                       <button
                         onClick={() => handlePurchase(item, 'gems')}
                         disabled={!currency || currency.gems < item.price_gems || purchasing === item.id}
-                        className="flex-1 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 bg-primary/15 hover:bg-primary/30 text-primary disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Gem className="w-4 h-4" />
                         {item.price_gems}

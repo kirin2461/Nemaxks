@@ -20,27 +20,27 @@ interface AchievementModalProps {
 
 const RARITY_STYLES = {
   common: {
-    gradient: 'from-gray-400 to-gray-600',
-    glow: 'shadow-gray-500/30',
+    gradient: 'from-muted-foreground/40 to-muted-foreground/60',
+    glow: 'shadow-soft',
     text: 'text-foreground',
     label: 'Обычное'
   },
   rare: {
-    gradient: 'from-blue-400 to-blue-600',
-    glow: 'shadow-blue-500/30',
-    text: 'text-blue-300',
+    gradient: 'from-accent to-primary',
+    glow: 'shadow-glow',
+    text: 'text-accent/80',
     label: 'Редкое'
   },
   epic: {
-    gradient: 'from-purple-400 to-purple-600',
-    glow: 'shadow-purple-500/30',
-    text: 'text-purple-300',
+    gradient: 'from-primary to-accent',
+    glow: 'shadow-glow',
+    text: 'text-primary/80',
     label: 'Эпическое'
   },
   legendary: {
-    gradient: 'from-yellow-400 via-orange-500 to-red-500',
-    glow: 'shadow-orange-500/50',
-    text: 'text-yellow-300',
+    gradient: 'from-primary via-accent to-primary',
+    glow: 'shadow-glow',
+    text: 'text-accent/80',
     label: 'Легендарное'
   }
 }
@@ -90,15 +90,15 @@ export function AchievementModal({ isOpen, onClose, achievement }: AchievementMo
           {(achievement.xp_reward || achievement.coins_reward) && (
             <div className="flex justify-center gap-4 mb-6">
               {achievement.xp_reward && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 rounded-lg">
-                  <Star className="w-5 h-5 text-blue-400" />
-                  <span className="text-blue-300 font-bold">+{achievement.xp_reward} XP</span>
+                <div className="flex items-center gap-2 px-4 py-2 bg-accent/15 rounded-lg">
+                  <Star className="w-5 h-5 text-accent" />
+                  <span className="text-accent/80 font-bold">+{achievement.xp_reward} XP</span>
                 </div>
               )}
               {achievement.coins_reward && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/20 rounded-lg">
+                <div className="flex items-center gap-2 px-4 py-2 bg-accent/15 rounded-lg">
                   <span className="text-xl">🪙</span>
-                  <span className="text-yellow-300 font-bold">+{achievement.coins_reward}</span>
+                  <span className="text-accent/80 font-bold">+{achievement.coins_reward}</span>
                 </div>
               )}
             </div>

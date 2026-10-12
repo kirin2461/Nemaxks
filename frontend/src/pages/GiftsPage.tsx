@@ -46,7 +46,7 @@ export default function GiftsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
@@ -56,17 +56,17 @@ export default function GiftsPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Gift className="w-8 h-8 text-pink-400" />
+            <Gift className="w-8 h-8 text-accent" />
             <h1 className="text-3xl font-bold">Gifts</h1>
             {unopenedCount > 0 && (
-              <span className="px-2 py-1 bg-pink-600 rounded-full text-sm font-medium">
+              <span className="px-2 py-1 bg-accent rounded-full text-sm font-medium">
                 {unopenedCount} new
               </span>
             )}
           </div>
           <button
             onClick={() => setShowSendModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-pink-600 rounded-lg hover:bg-pink-700"
+            className="flex items-center gap-2 px-4 py-2 bg-accent rounded-lg hover:bg-accent/80"
           >
             <Send className="w-4 h-4" />
             Send Gift
@@ -80,15 +80,15 @@ export default function GiftsPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className={`rounded-xl p-6 ${
-                gift.is_opened ? 'bg-card' : 'bg-gradient-to-br from-pink-600/20 to-purple-600/20 border border-pink-500/30'
+                gift.is_opened ? 'bg-card' : 'bg-gradient-to-br from-accent/20 to-primary/20 border border-accent/30'
               }`}
             >
               <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl ${gift.is_opened ? 'bg-secondary' : 'bg-pink-600/20'}`}>
+                <div className={`p-3 rounded-xl ${gift.is_opened ? 'bg-secondary' : 'bg-accent/20'}`}>
                   {gift.is_opened ? (
                     <Package className="w-8 h-8 text-muted-foreground" />
                   ) : (
-                    <Gift className="w-8 h-8 text-pink-400" />
+                    <Gift className="w-8 h-8 text-accent" />
                   )}
                 </div>
                 <div className="flex-1">
@@ -117,7 +117,7 @@ export default function GiftsPage() {
                     <button
                       onClick={() => openMutation.mutate(gift.id)}
                       disabled={openMutation.isPending}
-                      className="mt-3 w-full py-2 bg-pink-600 rounded-lg font-medium hover:bg-pink-700 disabled:opacity-50"
+                      className="mt-3 w-full py-2 bg-accent rounded-lg font-medium hover:bg-accent/80 disabled:opacity-50"
                     >
                       Open Gift
                     </button>
@@ -137,7 +137,7 @@ export default function GiftsPage() {
         )}
 
         {showSendModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -153,7 +153,7 @@ export default function GiftsPage() {
                     value={receiverId}
                     onChange={e => setReceiverId(e.target.value)}
                     placeholder="Enter user ID"
-                    className="w-full px-4 py-2 bg-secondary rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg focus:ring-2 focus:ring-accent/50 outline-none"
                   />
                 </div>
 
@@ -166,7 +166,7 @@ export default function GiftsPage() {
                         onClick={() => setSelectedItem(inv.item?.id || inv.id)}
                         className={`p-2 rounded-lg text-xs ${
                           selectedItem === (inv.item?.id || inv.id)
-                            ? 'bg-pink-600'
+                            ? 'bg-accent'
                             : 'bg-secondary hover:bg-muted'
                         }`}
                       >
@@ -182,7 +182,7 @@ export default function GiftsPage() {
                     value={message}
                     onChange={e => setMessage(e.target.value)}
                     placeholder="Add a message..."
-                    className="w-full px-4 py-2 bg-secondary rounded-lg focus:ring-2 focus:ring-pink-500 outline-none resize-none"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg focus:ring-2 focus:ring-accent/50 outline-none resize-none"
                     rows={2}
                   />
                 </div>
@@ -197,7 +197,7 @@ export default function GiftsPage() {
                   <button
                     onClick={() => sendMutation.mutate()}
                     disabled={!selectedItem || !receiverId || sendMutation.isPending}
-                    className="flex-1 py-2 bg-pink-600 rounded-lg font-medium hover:bg-pink-700 disabled:opacity-50"
+                    className="flex-1 py-2 bg-accent rounded-lg font-medium hover:bg-accent/80 disabled:opacity-50"
                   >
                     Send Gift
                   </button>

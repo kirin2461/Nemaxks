@@ -29,22 +29,22 @@ export default function TradesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return { text: 'Pending', color: 'bg-yellow-500/20 text-yellow-400' };
+        return { text: 'Pending', color: 'bg-accent/15 text-accent' };
       case 'accepted':
         return { text: 'Accepted', color: 'bg-green-500/20 text-green-400' };
       case 'rejected':
         return { text: 'Rejected', color: 'bg-red-500/20 text-red-400' };
       case 'cancelled':
-        return { text: 'Cancelled', color: 'bg-gray-500/20 text-muted-foreground' };
+        return { text: 'Cancelled', color: 'bg-muted/50 text-muted-foreground' };
       default:
-        return { text: status, color: 'bg-gray-500/20 text-muted-foreground' };
+        return { text: status, color: 'bg-muted/50 text-muted-foreground' };
     }
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
@@ -53,7 +53,7 @@ export default function TradesPage() {
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <ArrowLeftRight className="w-8 h-8 text-blue-400" />
+          <ArrowLeftRight className="w-8 h-8 text-accent" />
           <h1 className="text-3xl font-bold">Trades</h1>
         </div>
 
@@ -64,7 +64,7 @@ export default function TradesPage() {
               onClick={() => setStatusFilter(status)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 statusFilter === status
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-accent text-white'
                   : 'bg-card text-muted-foreground hover:bg-secondary'
               }`}
             >

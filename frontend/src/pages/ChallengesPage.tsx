@@ -72,7 +72,7 @@ export default function ChallengesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-primary/40 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -82,31 +82,31 @@ export default function ChallengesPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Target className="w-8 h-8 text-orange-400" />
+            <Target className="w-8 h-8 text-accent" />
             <h1 className="text-3xl font-bold text-foreground">Задания</h1>
           </div>
           
           {currency && (
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-yellow-500/20 px-4 py-2 rounded-lg">
-                <Coins className="w-5 h-5 text-yellow-400" />
-                <span className="text-yellow-400 font-semibold">{currency.coins}</span>
+              <div className="flex items-center gap-2 bg-accent/15 px-4 py-2 rounded-lg">
+                <Coins className="w-5 h-5 text-accent" />
+                <span className="text-accent font-semibold">{currency.coins}</span>
               </div>
-              <div className="flex items-center gap-2 bg-purple-500/20 px-4 py-2 rounded-lg">
-                <Gem className="w-5 h-5 text-purple-400" />
-                <span className="text-purple-400 font-semibold">{currency.gems}</span>
+              <div className="flex items-center gap-2 bg-primary/15 px-4 py-2 rounded-lg">
+                <Gem className="w-5 h-5 text-primary" />
+                <span className="text-primary font-semibold">{currency.gems}</span>
               </div>
             </div>
           )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl p-6 border border-orange-500/30">
+          <div className="bg-gradient-to-br from-accent/20 to-red-500/20 rounded-xl p-6 border border-accent/30">
             <div className="flex items-center gap-3 mb-4">
-              <Flame className="w-8 h-8 text-orange-400" />
+              <Flame className="w-8 h-8 text-accent" />
               <div>
                 <h3 className="text-xl font-bold text-foreground">Серия входов</h3>
-                <p className="text-orange-300">{streak?.login_streak || 0} дней подряд</p>
+                <p className="text-accent/80">{streak?.login_streak || 0} дней подряд</p>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -119,7 +119,7 @@ export default function ChallengesPage() {
                 className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${
                   claimedToday
                     ? 'bg-green-500/20 text-green-400 cursor-default'
-                    : 'bg-orange-500 hover:bg-orange-600 text-white'
+                    : 'bg-accent hover:bg-accent/80 text-white'
                 }`}
               >
                 {claimedToday ? (
@@ -137,24 +137,24 @@ export default function ChallengesPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl p-6 border border-purple-500/30">
+          <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-6 border border-primary/30">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                 🎰
               </div>
               <div>
                 <h3 className="text-xl font-bold text-foreground">Колесо удачи</h3>
-                <p className="text-purple-300">Испытай удачу!</p>
+                <p className="text-primary/80">Испытай удачу!</p>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground flex items-center gap-1">
-                Стоимость: <Coins className="w-4 h-4 text-yellow-400" /> 25
+                Стоимость: <Coins className="w-4 h-4 text-accent" /> 25
               </div>
               <button
                 onClick={handleSpinWheel}
                 disabled={!currency || currency.coins < 25 || wheelSpinning}
-                className="px-4 py-2 rounded-lg font-medium bg-purple-500 hover:bg-purple-600 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg font-medium bg-primary hover:bg-primary/80 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {wheelSpinning ? 'Крутится...' : 'Крутить'}
               </button>
@@ -178,7 +178,7 @@ export default function ChallengesPage() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-accent text-white'
                   : 'bg-card text-muted-foreground hover:bg-secondary'
               }`}
             >
@@ -217,7 +217,7 @@ export default function ChallengesPage() {
                   <div className="w-full bg-secondary rounded-full h-2 mb-2">
                     <div
                       className={`h-2 rounded-full transition-all ${
-                        challenge.is_completed ? 'bg-green-500' : 'bg-orange-500'
+                        challenge.is_completed ? 'bg-green-500' : 'bg-accent'
                       }`}
                       style={{ width: `${Math.min(100, ((challenge.progress || 0) / challenge.target) * 100)}%` }}
                     />
@@ -230,19 +230,19 @@ export default function ChallengesPage() {
                 <div className="flex flex-col items-end gap-2 ml-4">
                   <div className="flex items-center gap-2">
                     {challenge.xp_reward > 0 && (
-                      <span className="text-sm text-purple-400 flex items-center gap-1">
+                      <span className="text-sm text-primary flex items-center gap-1">
                         <Zap className="w-4 h-4" /> {challenge.xp_reward} XP
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     {challenge.coin_reward > 0 && (
-                      <span className="text-sm text-yellow-400 flex items-center gap-1">
+                      <span className="text-sm text-accent flex items-center gap-1">
                         <Coins className="w-4 h-4" /> {challenge.coin_reward}
                       </span>
                     )}
                     {challenge.gem_reward > 0 && (
-                      <span className="text-sm text-purple-400 flex items-center gap-1">
+                      <span className="text-sm text-primary flex items-center gap-1">
                         <Gem className="w-4 h-4" /> {challenge.gem_reward}
                       </span>
                     )}

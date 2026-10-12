@@ -55,25 +55,25 @@ export default function EventsPage() {
   const getEventStatusBadge = (event: GameEvent) => {
     const start = new Date(event.start_date);
     const end = new Date(event.end_date);
-    if (start > now) return { text: 'Upcoming', color: 'bg-blue-500' };
-    if (end < now) return { text: 'Ended', color: 'bg-gray-500' };
+    if (start > now) return { text: 'Upcoming', color: 'bg-accent' };
+    if (end < now) return { text: 'Ended', color: 'bg-muted' };
     return { text: 'Active', color: 'bg-green-500' };
   };
 
   const getThemeColors = (theme: string) => {
     switch (theme) {
       case 'christmas': return 'from-red-600 to-green-600';
-      case 'halloween': return 'from-orange-500 to-purple-700';
-      case 'summer': return 'from-yellow-400 to-orange-500';
-      case 'winter': return 'from-blue-400 to-cyan-300';
-      default: return 'from-purple-600 to-indigo-600';
+      case 'halloween': return 'from-primary to-accent';
+      case 'summer': return 'from-accent to-primary';
+      case 'winter': return 'from-accent/70 to-primary/60';
+      default: return 'from-primary to-primary';
     }
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
@@ -82,7 +82,7 @@ export default function EventsPage() {
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <Calendar className="w-8 h-8 text-purple-400" />
+          <Calendar className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold">Events</h1>
         </div>
 
@@ -93,7 +93,7 @@ export default function EventsPage() {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === tab
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-gradient-brand shadow-soft text-white'
                   : 'bg-card text-muted-foreground hover:bg-secondary'
               }`}
             >
@@ -144,13 +144,13 @@ export default function EventsPage() {
                           </span>
                         </div>
                         {event.coin_bonus > 1 && (
-                          <div className="flex items-center gap-1 text-yellow-400">
+                          <div className="flex items-center gap-1 text-accent">
                             <Star className="w-4 h-4" />
                             <span>{event.coin_bonus}x Coins</span>
                           </div>
                         )}
                         {event.xp_bonus > 1 && (
-                          <div className="flex items-center gap-1 text-purple-400">
+                          <div className="flex items-center gap-1 text-primary">
                             <Star className="w-4 h-4" />
                             <span>{event.xp_bonus}x XP</span>
                           </div>
@@ -168,7 +168,7 @@ export default function EventsPage() {
               <>
                 <div className="bg-card rounded-xl p-6">
                   <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <Gift className="w-5 h-5 text-purple-400" />
+                    <Gift className="w-5 h-5 text-primary" />
                     Rewards
                   </h3>
                   <div className="space-y-3">
@@ -186,7 +186,7 @@ export default function EventsPage() {
                         <button
                           onClick={() => claimRewardMutation.mutate({ eventId: selectedEvent, rewardId: reward.id })}
                           disabled={claimRewardMutation.isPending}
-                          className="px-3 py-1 bg-purple-600 rounded-lg text-sm hover:bg-purple-700 disabled:opacity-50"
+                          className="px-3 py-1 bg-gradient-brand shadow-soft rounded-lg text-sm hover:brightness-110 disabled:opacity-50"
                         >
                           Claim
                         </button>
@@ -197,7 +197,7 @@ export default function EventsPage() {
 
                 <div className="bg-card rounded-xl p-6">
                   <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-yellow-400" />
+                    <Trophy className="w-5 h-5 text-accent" />
                     Leaderboard
                   </h3>
                   <div className="space-y-2">
@@ -208,13 +208,13 @@ export default function EventsPage() {
                       >
                         <span
                           className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-                            idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-gray-400' : idx === 2 ? 'bg-amber-600' : 'bg-muted'
+                            idx === 0 ? 'bg-gradient-brand' : idx === 1 ? 'bg-muted-foreground/50' : idx === 2 ? 'bg-primary' : 'bg-muted'
                           }`}
                         >
                           {idx + 1}
                         </span>
                         <span className="flex-1">{participant.user?.username || 'User'}</span>
-                        <span className="text-purple-400 font-medium">{participant.points} pts</span>
+                        <span className="text-primary font-medium">{participant.points} pts</span>
                       </div>
                     ))}
                   </div>
@@ -223,7 +223,7 @@ export default function EventsPage() {
                 <button
                   onClick={() => joinMutation.mutate(selectedEvent)}
                   disabled={joinMutation.isPending}
-                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl font-bold hover:opacity-90 disabled:opacity-50"
+                  className="w-full py-3 bg-gradient-to-r from-primary to-primary rounded-xl font-bold hover:opacity-90 disabled:opacity-50"
                 >
                   {joinMutation.isPending ? 'Joining...' : 'Join Event'}
                 </button>

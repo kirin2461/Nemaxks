@@ -41,11 +41,11 @@ export default function CompetitionsPage() {
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
-        return <Crown className="w-6 h-6 text-yellow-400" />;
+        return <Crown className="w-6 h-6 text-accent" />;
       case 2:
         return <Medal className="w-6 h-6 text-muted-foreground" />;
       case 3:
-        return <Award className="w-6 h-6 text-amber-600" />;
+        return <Award className="w-6 h-6 text-accent" />;
       default:
         return <span className="w-6 h-6 flex items-center justify-center text-muted-foreground font-bold">{rank}</span>;
     }
@@ -60,7 +60,7 @@ export default function CompetitionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-primary/40 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -69,7 +69,7 @@ export default function CompetitionsPage() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <Trophy className="w-8 h-8 text-yellow-400" />
+          <Trophy className="w-8 h-8 text-accent" />
           <h1 className="text-3xl font-bold text-foreground">Соревнования гильдий</h1>
         </div>
 
@@ -80,7 +80,7 @@ export default function CompetitionsPage() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 activeTab === tab.id
-                  ? 'bg-yellow-500 text-black'
+                  ? 'bg-gradient-brand text-white'
                   : 'bg-card text-muted-foreground hover:bg-secondary'
               }`}
             >
@@ -97,8 +97,8 @@ export default function CompetitionsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={() => loadCompetitionDetails(comp)}
-                className={`bg-card/50 rounded-xl p-5 border cursor-pointer transition-all hover:border-yellow-500/50 ${
-                  selectedCompetition?.id === comp.id ? 'border-yellow-500' : 'border-border'
+                className={`bg-card/50 rounded-xl p-5 border cursor-pointer transition-all hover:border-accent/50 ${
+                  selectedCompetition?.id === comp.id ? 'border-accent/50' : 'border-border'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -108,8 +108,8 @@ export default function CompetitionsPage() {
                   </div>
                   <div className={`px-3 py-1 rounded-full text-xs font-medium ${
                     activeTab === 'active' ? 'bg-green-500/20 text-green-400' :
-                    activeTab === 'upcoming' ? 'bg-blue-500/20 text-blue-400' :
-                    'bg-gray-500/20 text-muted-foreground'
+                    activeTab === 'upcoming' ? 'bg-accent/15 text-accent' :
+                    'bg-muted/50 text-muted-foreground'
                   }`}>
                     {activeTab === 'active' ? 'Активно' : activeTab === 'upcoming' ? 'Скоро' : 'Завершено'}
                   </div>
@@ -158,7 +158,7 @@ export default function CompetitionsPage() {
                     <div
                       key={entry.id}
                       className={`flex items-center gap-4 p-3 rounded-lg ${
-                        index < 3 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent' : 'bg-secondary/30'
+                        index < 3 ? 'bg-gradient-to-r from-primary/10 to-transparent' : 'bg-secondary/30'
                       }`}
                     >
                       {getRankIcon(entry.rank)}
@@ -166,7 +166,7 @@ export default function CompetitionsPage() {
                         <p className="font-medium text-foreground">{entry.guild?.name || `Guild #${entry.guild_id}`}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-yellow-400">{entry.score.toLocaleString()}</p>
+                        <p className="text-lg font-bold text-accent">{entry.score.toLocaleString()}</p>
                         <p className="text-xs text-muted-foreground">очков</p>
                       </div>
                     </div>
@@ -180,8 +180,8 @@ export default function CompetitionsPage() {
               )}
 
               {selectedCompetition.prizes && (
-                <div className="mt-6 p-4 bg-gradient-to-r from-yellow-500/10 to-purple-500/10 rounded-lg border border-yellow-500/20">
-                  <h4 className="text-sm font-semibold text-yellow-400 mb-2">Призы</h4>
+                <div className="mt-6 p-4 bg-gradient-to-r from-primary/10 to-primary/10 rounded-lg border border-accent/20">
+                  <h4 className="text-sm font-semibold text-accent mb-2">Призы</h4>
                   <div className="text-sm text-foreground">
                     {(() => {
                       try {

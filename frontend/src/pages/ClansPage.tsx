@@ -53,7 +53,7 @@ export default function ClansPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
@@ -63,12 +63,12 @@ export default function ClansPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Users className="w-8 h-8 text-indigo-400" />
+            <Users className="w-8 h-8 text-primary" />
             <h1 className="text-3xl font-bold">Clans</h1>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700"
+            className="flex items-center gap-2 px-4 py-2 bg-primary rounded-lg hover:bg-primary/80"
           >
             <Plus className="w-4 h-4" />
             Create Clan
@@ -100,13 +100,13 @@ export default function ClansPage() {
                         {clan.is_public ? (
                           <Globe className="w-4 h-4 text-green-400" />
                         ) : (
-                          <Lock className="w-4 h-4 text-yellow-400" />
+                          <Lock className="w-4 h-4 text-accent" />
                         )}
                       </div>
                       <p className="text-muted-foreground text-sm">{clan.description || 'No description'}</p>
                       <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Crown className="w-4 h-4 text-yellow-400" />
+                          <Crown className="w-4 h-4 text-accent" />
                           {clan.leader?.username || 'Unknown'}
                         </div>
                         <span>{clan.total_xp.toLocaleString()} XP</span>
@@ -123,7 +123,7 @@ export default function ClansPage() {
                       joinMutation.mutate(clan.id);
                     }}
                     disabled={joinMutation.isPending}
-                    className="mt-4 w-full py-2 bg-indigo-600/20 text-indigo-400 rounded-lg hover:bg-indigo-600/30"
+                    className="mt-4 w-full py-2 bg-primary/20 text-primary rounded-lg hover:bg-primary/30"
                   >
                     Join Clan
                   </button>
@@ -186,7 +186,7 @@ export default function ClansPage() {
         </div>
 
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -200,7 +200,7 @@ export default function ClansPage() {
                     type="text"
                     value={newClanName}
                     onChange={e => setNewClanName(e.target.value)}
-                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
                 <div>
@@ -208,7 +208,7 @@ export default function ClansPage() {
                   <textarea
                     value={newClanDesc}
                     onChange={e => setNewClanDesc(e.target.value)}
-                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                    className="w-full px-4 py-2 bg-secondary rounded-lg outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                     rows={3}
                   />
                 </div>
@@ -240,7 +240,7 @@ export default function ClansPage() {
                   <button
                     onClick={() => createMutation.mutate()}
                     disabled={!newClanName || createMutation.isPending}
-                    className="flex-1 py-2 bg-indigo-600 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50"
+                    className="flex-1 py-2 bg-primary rounded-lg font-medium hover:bg-primary/80 disabled:opacity-50"
                   >
                     Create
                   </button>

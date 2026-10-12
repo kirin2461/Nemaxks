@@ -28,10 +28,10 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
 
   const getRewardIcon = (type: string) => {
     switch (type) {
-      case 'coins': return <Coins className="w-5 h-5 text-yellow-400" />
-      case 'gems': return <Gem className="w-5 h-5 text-purple-400" />
-      case 'xp': return <Star className="w-5 h-5 text-blue-400" />
-      default: return <Gift className="w-5 h-5 text-pink-400" />
+      case 'coins': return <Coins className="w-5 h-5 text-accent" />
+      case 'gems': return <Gem className="w-5 h-5 text-primary" />
+      case 'xp': return <Star className="w-5 h-5 text-accent" />
+      default: return <Gift className="w-5 h-5 text-accent" />
     }
   }
 
@@ -39,18 +39,18 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
     <Modal isOpen={isOpen} onClose={onClose} size="sm" showCloseButton={false}>
       <div className="text-center py-4">
         <div className="relative w-32 h-32 mx-auto mb-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 rounded-full animate-pulse opacity-50 blur-xl" />
-          <div className="relative w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-4 border-yellow-300 shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-primary rounded-full animate-pulse opacity-50 blur-xl" />
+          <div className="relative w-32 h-32 bg-gradient-brand rounded-full flex items-center justify-center border-4 border-primary/40 shadow-2xl">
             <div className="text-center">
-              <p className="text-yellow-100 text-sm font-medium">УРОВЕНЬ</p>
+              <p className="text-accent/80 text-sm font-medium">УРОВЕНЬ</p>
               <p className="text-5xl font-black text-foreground drop-shadow-lg">{newLevel}</p>
             </div>
           </div>
-          <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-yellow-300 animate-bounce" />
-          <Sparkles className="absolute -bottom-1 -left-3 w-6 h-6 text-orange-300 animate-bounce delay-100" />
+          <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-accent/80 animate-bounce" />
+          <Sparkles className="absolute -bottom-1 -left-3 w-6 h-6 text-accent/80 animate-bounce delay-100" />
         </div>
 
-        <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
+        <h2 className="text-2xl font-black gradient-brand-text mb-2">
           УРОВЕНЬ ПОВЫШЕН!
         </h2>
         <p className="text-muted-foreground mb-6">
@@ -85,7 +85,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
 
         <button
           onClick={onClose}
-          className="mt-6 w-full px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 rounded-lg text-white font-bold transition-all shadow-lg hover:shadow-orange-500/30"
+          className="mt-6 w-full px-6 py-3 bg-gradient-brand hover:brightness-110 rounded-lg text-white font-bold transition-all shadow-lg hover:shadow-glow"
         >
           Отлично!
         </button>
