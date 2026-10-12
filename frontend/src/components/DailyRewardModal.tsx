@@ -50,13 +50,13 @@ export function DailyRewardModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Ежедневные награды" size="lg">
       <div className="space-y-6">
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-accent/20 to-accent/20 rounded-lg border border-accent/30">
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 rounded-lg border border-accent/30">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-brand rounded-full flex items-center justify-center shadow-soft">
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-white font-bold">Серия: {currentStreak} дней</p>
+              <p className="text-foreground font-bold">Серия: {currentStreak} дней</p>
               <p className="text-accent/80 text-sm">Заходите каждый день для бонусов!</p>
             </div>
           </div>
@@ -99,7 +99,7 @@ export function DailyRewardModal({
               </div>
               
               <p className={`text-sm font-bold ${
-                reward.claimed ? 'text-muted-foreground' : 'text-white'
+                reward.claimed ? 'text-muted-foreground' : 'text-foreground'
               }`}>
                 {reward.special || (reward.gems ? `${reward.gems}💎` : `${reward.coins}🪙`)}
               </p>
@@ -135,7 +135,7 @@ export function DailyRewardModal({
           <button
             onClick={handleClaim}
             disabled={!canClaim || loading}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-accent hover:from-primary hover:to-accent rounded-lg text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-gradient-brand hover:brightness-110 rounded-lg text-white font-bold transition-all shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

@@ -42,8 +42,8 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
           <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-primary rounded-full animate-pulse opacity-50 blur-xl" />
           <div className="relative w-32 h-32 bg-gradient-brand rounded-full flex items-center justify-center border-4 border-primary/40 shadow-2xl">
             <div className="text-center">
-              <p className="text-accent/80 text-sm font-medium">УРОВЕНЬ</p>
-              <p className="text-5xl font-black text-foreground drop-shadow-lg">{newLevel}</p>
+              <p className="text-white/80 text-sm font-medium">УРОВЕНЬ</p>
+              <p className="text-5xl font-black text-white drop-shadow-lg">{newLevel}</p>
             </div>
           </div>
           <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-accent/80 animate-bounce" />

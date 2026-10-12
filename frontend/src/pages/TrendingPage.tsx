@@ -28,25 +28,25 @@ export default function TrendingPage() {
 
   if (trendingLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-nebula flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-nebula text-foreground p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <TrendingUp className="w-8 h-8 text-accent" />
-          <h1 className="text-3xl font-bold">Trending & For You</h1>
+          <h1 className="text-3xl font-bold gradient-brand-text">В тренде и для вас</h1>
         </div>
 
         {recommendations.length > 0 && (
           <div className="mb-10">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              Recommended For You
+              Рекомендовано вам
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               {recommendations.map((rec: Recommendation) => (
@@ -54,7 +54,7 @@ export default function TrendingPage() {
                   key={rec.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-5 border border-primary/20"
+                  className="glass rounded-xl p-5 border border-primary/30 hover:shadow-glow transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -62,7 +62,7 @@ export default function TrendingPage() {
                         {rec.content_type}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {Math.round((rec.score || 0) * 100)}% match
+                        {Math.round((rec.score || 0) * 100)}% совпадение
                       </span>
                     </div>
                     <button
@@ -74,7 +74,7 @@ export default function TrendingPage() {
                   </div>
                   <p className="text-sm text-foreground mb-2">{rec.reason}</p>
                   <p className="text-xs text-muted-foreground">
-                    Content ID: {rec.content_id}
+                    ID контента: {rec.content_id}
                   </p>
                 </motion.div>
               ))}
@@ -84,7 +84,7 @@ export default function TrendingPage() {
 
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-accent" />
-          Trending Now
+          Сейчас в тренде
         </h2>
 
         <div className="space-y-4">
@@ -94,7 +94,7 @@ export default function TrendingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-card rounded-xl p-5"
+              className="glass rounded-xl p-5"
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold">
@@ -106,13 +106,13 @@ export default function TrendingPage() {
                       {content.content_type}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      Score: {Math.round(content.score || 0)}
+                      Очки: {Math.round(content.score || 0)}
                     </span>
                   </div>
                   <p className="text-foreground mb-3">
-                    {content.content_type === 'post' && `Post #${content.content_id}`}
-                    {content.content_type === 'channel' && `Channel #${content.content_id}`}
-                    {content.content_type === 'video' && `Video #${content.content_id}`}
+                    {content.content_type === 'post' && `Пост #${content.content_id}`}
+                    {content.content_type === 'channel' && `Канал #${content.content_id}`}
+                    {content.content_type === 'video' && `Видео #${content.content_id}`}
                   </p>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
@@ -135,11 +135,11 @@ export default function TrendingPage() {
         </div>
 
         {trending.length === 0 && (
-          <div className="bg-card rounded-xl p-12 text-center">
+          <div className="glass rounded-xl p-12 text-center">
             <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Nothing trending yet</h3>
+            <h3 className="text-xl font-bold mb-2">Пока ничего нет в трендах</h3>
             <p className="text-muted-foreground">
-              Content with high engagement will appear here
+              Здесь появится контент с высокой активностью
             </p>
           </div>
         )}

@@ -72,13 +72,13 @@ export function GiftSendModal({
           <div className="w-20 h-20 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
             <Gift className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Подарок отправлен!</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">Подарок отправлен!</h2>
           <p className="text-muted-foreground">
             {recipientName} получит ваш подарок
           </p>
           <button
             onClick={handleClose}
-            className="mt-6 w-full px-4 py-2 bg-primary hover:bg-primary/80 rounded-lg text-white transition-colors"
+            className="mt-6 w-full px-4 py-2 bg-gradient-brand hover:brightness-110 rounded-lg text-white shadow-soft transition-all"
           >
             Закрыть
           </button>
@@ -99,7 +99,7 @@ export function GiftSendModal({
             )}
           </div>
           <div>
-            <p className="text-white font-medium">{recipientName}</p>
+            <p className="text-foreground font-medium">{recipientName}</p>
             <p className="text-muted-foreground text-sm">Получатель подарка</p>
           </div>
         </div>
@@ -134,7 +134,7 @@ export function GiftSendModal({
                   }`}
                 >
                   <div className="text-3xl mb-1">{gift.icon}</div>
-                  <p className="text-xs text-white truncate">{gift.name}</p>
+                  <p className="text-xs text-foreground truncate">{gift.name}</p>
                   <p className={`text-xs ${gift.currency === 'coins' ? 'text-accent' : 'text-primary'}`}>
                     {gift.price} {gift.currency === 'coins' ? '🪙' : '💎'}
                   </p>
