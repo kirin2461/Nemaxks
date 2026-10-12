@@ -114,7 +114,7 @@ export default function SettingsPage() {
         onClick={onChange}
         className={cn(
           'relative w-12 h-7 rounded-full transition-colors',
-          checked ? 'bg-primary' : 'bg-muted'
+          checked ? 'gradient-brand shadow-glow' : 'bg-muted'
         )}
       >
         <div
@@ -141,14 +141,14 @@ export default function SettingsPage() {
     <Layout>
       <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">{t('common.settings')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold gradient-brand-text mb-2">{t('common.settings')}</h1>
           <p className="text-muted-foreground">
             {t('settings.account')}
           </p>
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="glass rounded-xl shadow-soft">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Globe className="w-5 h-5 text-primary" />
@@ -166,7 +166,7 @@ export default function SettingsPage() {
                       className={cn(
                         'flex items-center gap-3 p-4 rounded-xl border-2 transition-all',
                         i18n.language === lang.code
-                          ? 'border-primary bg-primary/10'
+                          ? 'border-primary bg-primary/10 shadow-glow'
                           : 'border-border hover:border-border bg-card/50'
                       )}
                     >
@@ -182,7 +182,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass rounded-xl shadow-soft">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-primary" />
@@ -199,7 +199,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass rounded-xl shadow-soft">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-primary" />
@@ -222,7 +222,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass rounded-xl shadow-soft">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Mic className="w-5 h-5 text-primary" />
@@ -245,7 +245,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass rounded-xl shadow-soft">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Bot className="w-5 h-5 text-primary" />
@@ -315,7 +315,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass rounded-xl shadow-soft">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
@@ -354,7 +354,7 @@ export default function SettingsPage() {
           {/* Lite mode: Quick access to reports */}
           {liteMode && (
             <Link href="/reports">
-              <Card className="cursor-pointer hover:bg-accent/10 transition-colors">
+              <Card className="glass rounded-xl shadow-soft cursor-pointer hover:bg-accent/10 transition-colors">
                 <CardContent className="flex items-center gap-3 py-4">
                   <FileText className="w-6 h-6 text-primary" />
                   <div>
