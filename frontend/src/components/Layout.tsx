@@ -120,7 +120,7 @@ export function Layout({ children }: LayoutProps) {
   const closeSidebar = () => setSidebarOpen(false)
 
   return (
-    <div className="min-h-screen bg-background/80 backdrop-blur-sm flex flex-col relative z-10">
+    <div className="h-app-shell bg-background/80 backdrop-blur-sm flex flex-col relative z-10 overflow-hidden">
       {/* Demo mode banner */}
       {isDemoMode && (
         <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 text-center">
@@ -146,16 +146,16 @@ export function Layout({ children }: LayoutProps) {
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-50"
           onClick={closeSidebar}
         />
       )}
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Sidebar - Hidden on mobile, shown as overlay when open */}
         <aside
           className={cn(
-            "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card/95 backdrop-blur-md border-r border-border flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0",
+            "fixed lg:static inset-y-0 left-0 z-[60] w-64 bg-card/95 backdrop-blur-md border-r border-border flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0",
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -257,7 +257,7 @@ export function Layout({ children }: LayoutProps) {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto bg-background/50 pb-20 lg:pb-0">
+        <main className="flex-1 min-h-0 min-w-0 overflow-auto bg-background/50 pb-20 lg:pb-0">
           <BannerDisplay />
           {children}
         </main>
