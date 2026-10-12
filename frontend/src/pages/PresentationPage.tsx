@@ -62,7 +62,7 @@ export default function PresentationPage() {
               <span className="text-xl font-bold">N</span>
             </div>
             <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-              Nemaks
+              Nebula
             </span>
           </div>
           <div className="flex gap-2 sm:gap-4">
@@ -105,7 +105,7 @@ export default function PresentationPage() {
             transition={{ delay: 0.2 }}
             className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto"
           >
-            Nemaks — платформа с геймификацией, AI-ассистентом и системой лицензий. 
+            Nebula — платформа с геймификацией, AI-ассистентом и системой лицензий. 
             Общайтесь, зарабатывайте достижения и открывайте новые возможности.
           </motion.p>
           <motion.div 
@@ -133,7 +133,7 @@ export default function PresentationPage() {
       <section className="py-20 px-4 bg-white/[0.02]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Почему выбирают Nemaks?</h2>
+            <h2 className="text-4xl font-bold mb-4">Почему выбирают Nebula?</h2>
             <p className="text-gray-400">Все необходимые инструменты в одном приложении</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -161,7 +161,7 @@ export default function PresentationPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 opacity-50">
             <div className="w-6 h-6 rounded-lg gradient-cosmic-rainbow-animated" />
-            <span className="font-bold">Nemaks © 2026</span>
+            <span className="font-bold">Nebula © 2026</span>
           </div>
           <div className="flex gap-8 text-sm text-gray-500">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>

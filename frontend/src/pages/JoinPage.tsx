@@ -108,9 +108,9 @@ export default function JoinPage() {
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold mb-2">Приглашение в Nemaks</h1>
+              <h1 className="text-2xl font-bold mb-2">Приглашение в Nebula</h1>
               <p className="text-muted-foreground">
-                <span className="font-semibold text-primary">{inviter?.username}</span> приглашает вас присоединиться к Nemaks
+                <span className="font-semibold text-primary">{inviter?.username}</span> приглашает вас присоединиться к Nebula
               </p>
             </div>
 
@@ -147,7 +147,7 @@ export default function JoinPage() {
             </div>
 
             <div className="pt-4 border-t border-border">
-              <h3 className="font-medium mb-2">Что такое Nemaks?</h3>
+              <h3 className="font-medium mb-2">Что такое Nebula?</h3>
               <p className="text-sm text-muted-foreground">
                 Современная платформа для общения с друзьями, голосовыми и видео звонками, 
                 AI-ассистентом и многим другим.

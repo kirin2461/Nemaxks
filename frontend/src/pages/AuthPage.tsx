@@ -12,7 +12,7 @@ type Language = 'ru' | 'en'
 
 const translations = {
   ru: {
-    welcome: 'Добро пожаловать в Nemaks',
+    welcome: 'Добро пожаловать в Nebula',
     signInSubtitle: 'Войдите в свой аккаунт',
     signUpSubtitle: 'Создайте новый аккаунт',
     username: 'Имя пользователя',
@@ -43,7 +43,7 @@ const translations = {
     termsError: 'Необходимо принять Правила использования и Политику конфиденциальности',
   },
   en: {
-    welcome: 'Welcome to Nemaks',
+    welcome: 'Welcome to Nebula',
     signInSubtitle: 'Sign in to your account',
     signUpSubtitle: 'Create a new account',
     username: 'Username',

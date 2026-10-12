@@ -1,6 +1,6 @@
-# Nemaks Frontend - Modern Chat Platform
+# Nebula Frontend — Modern Chat Platform
 
-Modern, responsive frontend for the Nemaks chat platform built with React, TypeScript, and Tailwind CSS.
+Modern, responsive frontend for the Nebula chat platform built with React, TypeScript, and Tailwind CSS.
 
 ## Features
 

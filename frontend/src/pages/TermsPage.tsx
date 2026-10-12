@@ -7,14 +7,14 @@ type Lang = 'ru' | 'en' | 'zh'
 const content = {
   ru: {
     title: 'Правила использования',
-    subtitle: 'Платформа Nemaks',
+    subtitle: 'Платформа Nebula',
     version: 'Версия: 1.0',
     effectiveDate: 'Дата вступления в силу: 01 февраля 2026 г.',
     sections: [
       {
         icon: Shield,
         title: '1. Общие положения',
-        content: `1.1. Настоящие Правила регулируют использование платформы Nemaks (далее — «Платформа»).
+        content: `1.1. Настоящие Правила регулируют использование платформы Nebula (далее — «Платформа»).
 
 1.2. Оператор платформы: Самозанятый Умаров Курбанбек.
 
@@ -107,17 +107,17 @@ const content = {
         title: '5. Интеллектуальная собственность',
         content: `5.1. Контент пользователей:
 • Права на контент принадлежат пользователям
-• Nemaks получает неисключительную лицензию на отображение
+• Nebula получает неисключительную лицензию на отображение
 • При удалении аккаунта контент удаляется
 
 5.2. Контент платформы:
-• Логотип, дизайн, код являются собственностью Nemaks
+• Логотип, дизайн, код являются собственностью Nebula
 • Копирование без разрешения запрещено`
       },
       {
         icon: AlertTriangle,
         title: '6. Ограничение ответственности',
-        content: `6.1. Nemaks НЕ несёт ответственности за:
+        content: `6.1. Nebula НЕ несёт ответственности за:
 ❌ Контент пользователей
 ❌ Технические сбои и простои
 ❌ Действия третьих лиц (YooKassa, LiveKit)
@@ -187,18 +187,18 @@ Telegram: https://t.me/neMaxks
 Срок ответа: до 48 часов`
       }
     ],
-    footer: '© 2026 Nemaks. Все права защищены.'
+    footer: '© 2026 Nebula. Все права защищены.'
   },
   en: {
     title: 'Terms of Service',
-    subtitle: 'Nemaks Platform',
+    subtitle: 'Nebula Platform',
     version: 'Version: 1.0',
     effectiveDate: 'Effective Date: February 01, 2026',
     sections: [
       {
         icon: Shield,
         title: '1. General Provisions',
-        content: `1.1. These Terms govern the use of Nemaks platform (hereinafter — "Platform").
+        content: `1.1. These Terms govern the use of Nebula platform (hereinafter — "Platform").
 
 1.2. Platform Operator: Self-employed Umarov Kurbanbek.
 
@@ -288,17 +288,17 @@ Telegram: https://t.me/neMaxks
         title: '5. Intellectual Property',
         content: `5.1. User content:
 • Rights belong to users
-• Nemaks receives non-exclusive license to display
+• Nebula receives non-exclusive license to display
 • Content deleted upon account deletion
 
 5.2. Platform content:
-• Logo, design, code are Nemaks property
+• Logo, design, code are Nebula property
 • Copying without permission is prohibited`
       },
       {
         icon: AlertTriangle,
         title: '6. Limitation of Liability',
-        content: `6.1. Nemaks is NOT responsible for:
+        content: `6.1. Nebula is NOT responsible for:
 ❌ User content
 ❌ Technical failures and downtime
 ❌ Third party actions (YooKassa, LiveKit)
@@ -368,18 +368,18 @@ Super-admin: @kirin2461
 Response time: up to 48 hours`
       }
     ],
-    footer: '© 2026 Nemaks. All rights reserved.'
+    footer: '© 2026 Nebula. All rights reserved.'
   },
   zh: {
     title: '服务条款',
-    subtitle: 'Nemaks 平台',
+    subtitle: 'Nebula 平台',
     version: '版本：1.0',
     effectiveDate: '生效日期：2026年2月1日',
     sections: [
       {
         icon: Shield,
         title: '1. 一般规定',
-        content: `1.1. 本条款规范 Nemaks 平台（以下简称"平台"）的使用。
+        content: `1.1. 本条款规范 Nebula 平台（以下简称"平台"）的使用。
 
 1.2. 平台运营商：自雇人士 Umarov Kurbanbek。
 
@@ -455,17 +455,17 @@ Response time: up to 48 hours`
         title: '5. 知识产权',
         content: `5.1. 用户内容：
 • 权利归用户所有
-• Nemaks 获得非独占展示许可
+• Nebula 获得非独占展示许可
 • 删除账户时删除内容
 
 5.2. 平台内容：
-• 标志、设计、代码归 Nemaks 所有
+• 标志、设计、代码归 Nebula 所有
 • 禁止未经许可复制`
       },
       {
         icon: AlertTriangle,
         title: '6. 责任限制',
-        content: `6.1. Nemaks 不对以下内容负责：
+        content: `6.1. Nebula 不对以下内容负责：
 ❌ 用户内容
 ❌ 技术故障和停机
 ❌ 第三方行为
@@ -526,7 +526,7 @@ Telegram: https://t.me/neMaxks
 响应时间：最多48小时`
       }
     ],
-    footer: '© 2026 Nemaks. 保留所有权利。'
+    footer: '© 2026 Nebula. 保留所有权利。'
   }
 }
 

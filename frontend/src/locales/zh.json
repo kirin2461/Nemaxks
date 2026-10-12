@@ -301,7 +301,7 @@
   },
   "premium": {
     "title": "高级订阅",
-    "subtitle": "解锁 Nemaks 全部功能",
+    "subtitle": "解锁 Nebula 全部功能",
     "currentPlan": "当前套餐",
     "freePlan": "免费版",
     "upgrade": "升级套餐",
@@ -513,7 +513,7 @@
     "noItems": "该分类暂无商品"
   },
   "welcome": {
-    "title": "欢迎来到 Nemaks",
+    "title": "欢迎来到 Nebula",
     "subtitle": "现代化通讯平台",
     "getStarted": "开始使用",
     "learnMore": "了解更多",

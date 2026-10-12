@@ -207,7 +207,7 @@ export const useStore = create<AppState>((set, get) => ({
       id: 'demo-user-1',
       username: 'demo',
       alias: 'Demo User',
-      bio: 'Exploring Nemaks in demo mode',
+      bio: 'Exploring Nebula in demo mode',
       created_at: new Date().toISOString(),
     }
     set({ user: demoUser, isAuthenticated: true, isDemoMode: true, isLoading: false })

@@ -53,7 +53,7 @@ const pricingTiers: LicensePricing[] = [
 
 const benefits = [
   { icon: Check, text: "Полный доступ к регистрации и авторизации" },
-  { icon: Ban, text: "Без системной рекламы от Nemaks" },
+  { icon: Ban, text: "Без системной рекламы от Nebula" },
   { icon: Shield, text: "Защищённый доступ к платформе" },
   { icon: Sparkles, text: "Все функции без ограничений" },
 ];
@@ -153,7 +153,7 @@ export default function LicenseActivationPage() {
             <h1 className="text-2xl sm:text-4xl font-bold">Активация лицензии</h1>
           </div>
           <p className="text-muted-foreground text-sm sm:text-lg max-w-2xl mx-auto px-2">
-            Для доступа к платформе Nemaks необходима действующая лицензия.
+            Для доступа к платформе Nebula необходима действующая лицензия.
             Выберите подходящий тариф или активируйте имеющийся ключ.
           </p>
         </motion.div>

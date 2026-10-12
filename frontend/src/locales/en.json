@@ -301,7 +301,7 @@
   },
   "premium": {
     "title": "Premium Subscription",
-    "subtitle": "Unlock all Nemaks features",
+    "subtitle": "Unlock all Nebula features",
     "currentPlan": "Current plan",
     "freePlan": "Free",
     "upgrade": "Upgrade plan",
@@ -513,7 +513,7 @@
     "noItems": "No items in this category"
   },
   "welcome": {
-    "title": "Welcome to Nemaks",
+    "title": "Welcome to Nebula",
     "subtitle": "Modern communication platform",
     "getStarted": "Get Started",
     "learnMore": "Learn More",

@@ -114,7 +114,7 @@ export default function MentorshipPage() {
           <div className="bg-card rounded-xl p-6 mb-8">
             <h2 className="text-xl font-bold mb-2">Find a Mentor</h2>
             <p className="text-muted-foreground">
-              Connect with experienced users who can help guide your journey on Nemaks.
+              Connect with experienced users who can help guide your journey on Nebula.
             </p>
           </div>
         )}

@@ -59,15 +59,15 @@ export function Logo({ size = 'md', className, showText = false }: LogoProps) {
         getThemeClass()
       )}>
         <img
-          src="/logos/nemaks_neon_cyberpunk_logo.png"
-          alt="Nemaks"
+          src="/nebula-logo.png"
+          alt="Nebula"
           className="w-full h-full object-cover logo-image"
         />
         <div className="logo-overlay absolute inset-0" />
       </div>
       {showText && (
         <span className={cn('font-bold gradient-text', textSizeClasses[size])}>
-          Nemaks
+          Nebula
         </span>
       )}
     </div>

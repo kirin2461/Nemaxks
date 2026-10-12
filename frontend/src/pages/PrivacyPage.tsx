@@ -7,14 +7,14 @@ type Lang = 'ru' | 'en' | 'zh'
 const content = {
   ru: {
     title: 'Политика конфиденциальности',
-    subtitle: 'Платформа Nemaks',
+    subtitle: 'Платформа Nebula',
     version: 'Версия: 1.0',
     effectiveDate: 'Дата вступления в силу: 01 февраля 2026 г.',
     sections: [
       {
         icon: Shield,
         title: '1. Общие положения',
-        content: `1.1. Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей платформы Nemaks (далее — «Платформа»).
+        content: `1.1. Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей платформы Nebula (далее — «Платформа»).
 
 1.2. Оператор персональных данных: Умаров Курбанбек Одашбаевич, Московская область, г. Видное, р.п. Бутово Парк, д. 15, кв. 245.
 Контакты для вопросов по персональным данным:
@@ -44,15 +44,15 @@ const content = {
 
 2.4. Платёжные данные:
 • Обрабатываются платёжной системой YooKassa
-• Nemaks хранит только ID транзакции и статус платежа
-• Данные банковских карт НЕ хранятся на серверах Nemaks`
+• Nebula хранит только ID транзакции и статус платежа
+• Данные банковских карт НЕ хранятся на серверах Nebula`
       },
       {
         icon: Lock,
         title: '3. Шифрование сообщений',
         content: `3.1. Личные сообщения защищены сквозным шифрованием (E2E) по алгоритму X25519-XSalsa20-Poly1305.
 
-3.2. При E2E шифровании сервер Nemaks НЕ имеет технической возможности прочитать содержимое сообщений.
+3.2. При E2E шифровании сервер Nebula НЕ имеет технической возможности прочитать содержимое сообщений.
 
 3.3. Групповые каналы поддерживают опциональное E2E шифрование по выбору администратора канала.`
       },
@@ -80,21 +80,21 @@ const content = {
       {
         icon: Users,
         title: '6. Передача данных третьим лицам',
-        content: `6.1. Nemaks передаёт данные следующим партнёрам:
+        content: `6.1. Nebula передаёт данные следующим партнёрам:
 • YooKassa — для обработки платежей (Россия)
 • LiveKit — для голосовых и видеозвонков
 • Replit Inc. — хостинг и базы данных (США)
 
 6.2. ТРАНСГРАНИЧНАЯ ПЕРЕДАЧА: Данные хранятся на серверах Replit Inc. (США). Регистрируясь, вы даёте согласие на передачу данных в США в соответствии с ФЗ-152 «О персональных данных».
 
-6.3. Nemaks НЕ продаёт персональные данные третьим лицам.
+6.3. Nebula НЕ продаёт персональные данные третьим лицам.
 
 6.4. Данные могут быть предоставлены правоохранительным органам по официальному запросу в соответствии с законодательством РФ.`
       },
       {
         icon: Database,
         title: '7. Данные, которые НЕ собираются',
-        content: `Nemaks НЕ собирает и НЕ обрабатывает:
+        content: `Nebula НЕ собирает и НЕ обрабатывает:
 • Геолокацию (GPS-координаты)
 • Контакты из телефонной книги
 • Данные других приложений
@@ -120,7 +120,7 @@ const content = {
       {
         icon: Cookie,
         title: '9. Cookies и технологии',
-        content: `9.1. Nemaks использует сессионные cookies для поддержания авторизации.
+        content: `9.1. Nebula использует сессионные cookies для поддержания авторизации.
 
 9.2. Сторонние рекламные и аналитические трекеры НЕ используются.`
       },
@@ -146,7 +146,7 @@ const content = {
         title: '11. Изменения политики',
         content: `11.1. Оператор вправе вносить изменения в настоящую Политику.
 
-11.2. Уведомление об изменениях: публикация обновлённой редакции Политики в боте Nemaks за 7 дней до вступления изменений в силу, а также направление уведомления пользователям через Платформу (push-уведомление) и/или по email (если указан).
+11.2. Уведомление об изменениях: публикация обновлённой редакции Политики в боте Nebula за 7 дней до вступления изменений в силу, а также направление уведомления пользователям через Платформу (push-уведомление) и/или по email (если указан).
 
 11.3. Продолжение использования платформы означает согласие с обновлённой Политикой.`
       },
@@ -177,18 +177,18 @@ const content = {
 Оператор зарегистрирован в реестре операторов персональных данных Роскомнадзора. Регистрационный номер: 100135010, регистрационный ключ: 15463569.`
       }
     ],
-    footer: '© 2026 Nemaks. Все права защищены.'
+    footer: '© 2026 Nebula. Все права защищены.'
   },
   en: {
     title: 'Privacy Policy',
-    subtitle: 'Nemaks Platform',
+    subtitle: 'Nebula Platform',
     version: 'Version: 1.0',
     effectiveDate: 'Effective Date: February 01, 2026',
     sections: [
       {
         icon: Shield,
         title: '1. General Provisions',
-        content: `1.1. This Privacy Policy defines the procedure for processing and protecting personal data of Nemaks platform users (hereinafter — "Platform").
+        content: `1.1. This Privacy Policy defines the procedure for processing and protecting personal data of Nebula platform users (hereinafter — "Platform").
 
 1.2. Data Controller: Umarov Kurbanbek Odashbaevich, Moscow Region, Vidnoye, Butovo Park, bld. 15, apt. 245.
 Contact for personal data inquiries:
@@ -218,15 +218,15 @@ Contact for personal data inquiries:
 
 2.4. Payment data:
 • Processed by YooKassa payment system
-• Nemaks only stores transaction ID and payment status
-• Bank card data is NOT stored on Nemaks servers`
+• Nebula only stores transaction ID and payment status
+• Bank card data is NOT stored on Nebula servers`
       },
       {
         icon: Lock,
         title: '3. Message Encryption',
         content: `3.1. Direct messages are protected by end-to-end encryption (E2E) using X25519-XSalsa20-Poly1305 algorithm.
 
-3.2. With E2E encryption, Nemaks server has NO technical ability to read message content.
+3.2. With E2E encryption, Nebula server has NO technical ability to read message content.
 
 3.3. Group channels support optional E2E encryption at channel administrator's choice.`
       },
@@ -254,21 +254,21 @@ Contact for personal data inquiries:
       {
         icon: Users,
         title: '6. Data Sharing with Third Parties',
-        content: `6.1. Nemaks shares data with the following partners:
+        content: `6.1. Nebula shares data with the following partners:
 • YooKassa — for payment processing (Russia)
 • LiveKit — for voice and video calls
 • Replit Inc. — hosting and databases (USA)
 
 6.2. CROSS-BORDER TRANSFER: Data is stored on Replit Inc. servers (USA). By registering, you consent to data transfer to the USA.
 
-6.3. Nemaks does NOT sell personal data to third parties.
+6.3. Nebula does NOT sell personal data to third parties.
 
 6.4. Data may be provided to law enforcement upon official request in accordance with applicable legislation.`
       },
       {
         icon: Database,
         title: '7. Data We Do NOT Collect',
-        content: `Nemaks does NOT collect or process:
+        content: `Nebula does NOT collect or process:
 • Geolocation (GPS coordinates)
 • Contacts from your phone book
 • Data from other applications
@@ -294,7 +294,7 @@ Request processing time: up to 10 business days.
       {
         icon: Cookie,
         title: '9. Cookies and Technologies',
-        content: `9.1. Nemaks uses session cookies to maintain authorization.
+        content: `9.1. Nebula uses session cookies to maintain authorization.
 
 9.2. Third-party advertising and analytics trackers are NOT used.`
       },
@@ -320,7 +320,7 @@ Request processing time: up to 10 business days.
         title: '11. Policy Changes',
         content: `11.1. The Operator reserves the right to make changes to this Policy.
 
-11.2. Change notifications: Publication of the updated Policy in Nemaks bot 7 days before changes take effect, as well as sending notifications to users via the Platform (push notification) and/or by email (if provided).
+11.2. Change notifications: Publication of the updated Policy in Nebula bot 7 days before changes take effect, as well as sending notifications to users via the Platform (push notification) and/or by email (if provided).
 
 11.3. Continued use of the platform means acceptance of the updated Policy.`
       },
@@ -351,11 +351,11 @@ Response times:
 The Operator is registered in the Roskomnadzor personal data operators registry. Registration number: 100135010, registration key: 15463569.`
       }
     ],
-    footer: '© 2026 Nemaks. All rights reserved.'
+    footer: '© 2026 Nebula. All rights reserved.'
   },
   zh: {
     title: '隐私政策',
-    subtitle: 'Nemaks 平台',
+    subtitle: 'Nebula 平台',
     version: '版本：1.0',
     effectiveDate: '生效日期：2026年2月1日',
     sections: [
@@ -364,7 +364,7 @@ The Operator is registered in the Roskomnadzor personal data operators registry.
         title: '1. 一般规定',
         content: `1.1. 数据控制者：自雇人士 Umarov Kurbanbek（以下简称"运营商"）。
 
-1.2. 本隐私政策规定了 Nemaks 平台用户个人数据的处理和保护程序。
+1.2. 本隐私政策规定了 Nebula 平台用户个人数据的处理和保护程序。
 
 1.3. 该平台适用于年满18周岁的用户。注册即表示您确认已达到该年龄。`
       },
@@ -387,15 +387,15 @@ The Operator is registered in the Roskomnadzor personal data operators registry.
 
 2.4. 支付数据：
 • 由 YooKassa 支付系统处理
-• Nemaks 仅存储交易 ID 和支付状态
-• 银行卡数据不存储在 Nemaks 服务器上`
+• Nebula 仅存储交易 ID 和支付状态
+• 银行卡数据不存储在 Nebula 服务器上`
       },
       {
         icon: Lock,
         title: '3. 消息加密',
         content: `3.1. 私信采用端到端加密 (E2E)，使用 X25519-XSalsa20-Poly1305 算法。
 
-3.2. 使用 E2E 加密时，Nemaks 服务器在技术上无法读取消息内容。
+3.2. 使用 E2E 加密时，Nebula 服务器在技术上无法读取消息内容。
 
 3.3. 群组频道支持可选的 E2E 加密，由频道管理员选择。`
       },
@@ -426,11 +426,11 @@ The Operator is registered in the Roskomnadzor personal data operators registry.
       {
         icon: Users,
         title: '6. 与第三方共享数据',
-        content: `6.1. Nemaks 与以下合作伙伴共享数据：
+        content: `6.1. Nebula 与以下合作伙伴共享数据：
 • YooKassa — 用于支付处理
 • LiveKit — 用于语音和视频通话
 
-6.2. Nemaks 不向第三方出售个人数据。
+6.2. Nebula 不向第三方出售个人数据。
 
 6.3. 根据俄罗斯联邦法律，可应执法机构的正式请求提供数据。`
       },
@@ -448,7 +448,7 @@ The Operator is registered in the Roskomnadzor personal data operators registry.
       {
         icon: Cookie,
         title: '8. Cookies 和技术',
-        content: `8.1. Nemaks 使用会话 cookies 来维持授权。
+        content: `8.1. Nebula 使用会话 cookies 来维持授权。
 
 8.2. 不使用第三方广告和分析跟踪器。`
       },
@@ -480,7 +480,7 @@ Telegram: https://t.me/neMaxks
 响应时间：最多48小时`
       }
     ],
-    footer: '© 2026 Nemaks. 保留所有权利。'
+    footer: '© 2026 Nebula. 保留所有权利。'
   }
 }
 
