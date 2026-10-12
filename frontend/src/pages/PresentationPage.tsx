@@ -53,15 +53,13 @@ const features = [
 
 export default function PresentationPage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-white overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-[#0B0D17] text-white overflow-x-hidden font-sans">
       {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-md border-b border-white/10 p-4">
+      <nav className="fixed top-0 w-full z-50 glass-strong border-b border-white/10 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl gradient-cosmic-rainbow-animated flex items-center justify-center orb-glow">
-              <span className="text-xl font-bold">N</span>
-            </div>
-            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+            <img src="/nebula-logo.png" alt="Nebula" className="w-10 h-10 rounded-xl object-cover shadow-glow" />
+            <span className="text-2xl font-bold gradient-brand-text tracking-tight">
               Nebula
             </span>
           </div>
@@ -72,7 +70,7 @@ export default function PresentationPage() {
               </button>
             </Link>
             <Link href="/activate">
-              <button className="px-4 sm:px-6 py-2 rounded-full bg-primary hover:bg-primary/80 transition-all shadow-lg shadow-primary/20 text-sm sm:text-base whitespace-nowrap">
+              <button className="px-4 sm:px-6 py-2 rounded-full bg-gradient-brand hover:brightness-110 hover:shadow-glow transition-all shadow-lg shadow-primary/25 text-sm sm:text-base whitespace-nowrap">
                 <span className="hidden sm:inline">Присоединиться</span>
                 <span className="sm:hidden">Join</span>
               </button>
@@ -84,18 +82,30 @@ export default function PresentationPage() {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4">
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] animate-pulse delay-700" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#7C5CFF]/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#22D3EE]/15 rounded-full blur-[120px] animate-pulse delay-700" />
         </div>
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+            className="flex justify-center mb-8"
+          >
+            <img
+              src="/nebula-logo.png"
+              alt="Nebula"
+              className="w-24 h-24 md:w-32 md:h-32 rounded-3xl object-cover shadow-glow"
+            />
+          </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl md:text-8xl font-bold mb-6 leading-tight"
           >
             Общение нового <br /> 
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+            <span className="gradient-brand-text">
               поколения
             </span>
           </motion.h1>
@@ -115,7 +125,7 @@ export default function PresentationPage() {
             className="flex flex-col md:flex-row gap-4 justify-center"
           >
             <Link href="/activate">
-              <button className="px-10 py-4 bg-primary rounded-2xl text-lg font-bold hover:scale-105 transition-all shadow-xl shadow-primary/30 flex items-center justify-center gap-2 group">
+              <button className="px-10 py-4 bg-gradient-brand rounded-2xl text-lg font-bold hover:scale-105 hover:shadow-glow transition-all shadow-xl shadow-primary/30 flex items-center justify-center gap-2 group">
                 Начать бесплатно
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
@@ -144,7 +154,7 @@ export default function PresentationPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all hover:bg-white/[0.05] group"
+                className="glass p-8 rounded-3xl hover:border-white/20 transition-all hover:-translate-y-1 group"
               >
                 <div className="mb-4 group-hover:scale-110 transition-transform">{f.icon}</div>
                 <h3 className="text-xl font-bold mb-2">{f.title}</h3>
@@ -160,7 +170,7 @@ export default function PresentationPage() {
       <footer className="py-10 border-t border-white/10 px-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 opacity-50">
-            <div className="w-6 h-6 rounded-lg gradient-cosmic-rainbow-animated" />
+            <img src="/nebula-logo.png" alt="Nebula" className="w-6 h-6 rounded-lg object-cover" />
             <span className="font-bold">Nebula © 2026</span>
           </div>
           <div className="flex gap-8 text-sm text-gray-500">

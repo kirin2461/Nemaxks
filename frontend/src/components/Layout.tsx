@@ -120,7 +120,7 @@ export function Layout({ children }: LayoutProps) {
   const closeSidebar = () => setSidebarOpen(false)
 
   return (
-    <div className="h-app-shell bg-background/80 backdrop-blur-sm flex flex-col relative z-10 overflow-hidden">
+    <div className="h-app-shell bg-background flex flex-col relative z-10 overflow-hidden">
       {/* Demo mode banner */}
       {isDemoMode && (
         <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 text-center">
@@ -131,7 +131,7 @@ export function Layout({ children }: LayoutProps) {
       )}
 
       {/* Mobile Header */}
-      <header className="lg:hidden flex items-center justify-between p-3 border-b border-border bg-card/90 backdrop-blur-md sticky top-0 z-50">
+      <header className="lg:hidden flex items-center justify-between p-3 border-b border-border/60 bg-card/55 backdrop-blur-xl sticky top-0 z-50 shadow-soft">
         <button
           onClick={() => setSidebarOpen(true)}
           className="p-2 hover:bg-accent rounded-lg transition-colors"
@@ -155,12 +155,12 @@ export function Layout({ children }: LayoutProps) {
         {/* Sidebar - Hidden on mobile, shown as overlay when open */}
         <aside
           className={cn(
-            "fixed lg:static inset-y-0 left-0 z-[60] w-64 bg-card/95 backdrop-blur-md border-r border-border flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0",
+            "fixed lg:static inset-y-0 left-0 z-[60] w-64 bg-card/55 backdrop-blur-xl border-r border-border/60 flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0 shadow-lg-brand",
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
           {/* Logo and close button for mobile */}
-          <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="p-4 border-b border-border/60 flex items-center justify-between">
             <Logo size="md" showText />
             <button
               onClick={closeSidebar}
@@ -215,7 +215,7 @@ export function Layout({ children }: LayoutProps) {
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-border space-y-2">
+          <div className="p-4 border-t border-border/60 space-y-2">
             {/* Theme toggle */}
             <button
               onClick={handleThemeChange}
@@ -257,14 +257,14 @@ export function Layout({ children }: LayoutProps) {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-h-0 min-w-0 overflow-auto bg-background/50 pb-20 lg:pb-0">
+        <main className="flex-1 min-h-0 min-w-0 overflow-auto bg-background/40 pb-20 lg:pb-0">
           <BannerDisplay />
           {children}
         </main>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-40 safe-area-bottom">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/55 backdrop-blur-xl border-t border-border/60 z-40 safe-area-bottom shadow-lg-brand">
         <div className="flex items-center justify-around py-2">
           {bottomNavItems.map((item) => {
             const Icon = item.icon
@@ -277,7 +277,7 @@ export function Layout({ children }: LayoutProps) {
                 className={cn(
                   "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-[60px]",
                   isActive
-                    ? "text-primary"
+                    ? "text-primary drop-shadow-[0_0_10px_hsl(var(--primary)/0.7)]"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >

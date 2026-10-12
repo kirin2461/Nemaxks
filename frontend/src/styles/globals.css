@@ -1289,33 +1289,33 @@
 
   /* Dark theme - subtle purple pulse */
   .logo-dark {
-    box-shadow: 0 0 20px hsla(263, 70%, 50%, 0.4);
+    box-shadow: 0 0 20px hsla(252, 100%, 68%, 0.4);
     animation: logo-pulse-dark 3s ease-in-out infinite;
   }
   .logo-dark .logo-overlay {
-    background: linear-gradient(135deg, hsla(263, 70%, 50%, 0.2), transparent);
+    background: linear-gradient(135deg, hsla(252, 100%, 68%, 0.18), hsla(188, 86%, 53%, 0.08), transparent);
   }
 
   @keyframes logo-pulse-dark {
-    0%, 100% { box-shadow: 0 0 20px hsla(263, 70%, 50%, 0.4); }
-    50% { box-shadow: 0 0 35px hsla(263, 70%, 50%, 0.6); }
+    0%, 100% { box-shadow: 0 0 20px hsla(252, 100%, 68%, 0.4); }
+    50% { box-shadow: 0 0 35px hsla(188, 86%, 53%, 0.45); }
   }
 
   /* Light theme - soft glow */
   .logo-light {
-    box-shadow: 0 0 25px hsla(263, 80%, 60%, 0.3);
+    box-shadow: 0 0 25px hsla(252, 90%, 65%, 0.3);
     animation: logo-glow-light 4s ease-in-out infinite;
   }
   .logo-light .logo-overlay {
-    background: linear-gradient(135deg, hsla(263, 80%, 70%, 0.3), hsla(200, 80%, 60%, 0.2));
+    background: linear-gradient(135deg, hsla(252, 90%, 72%, 0.3), hsla(188, 86%, 55%, 0.2));
   }
   .logo-light .logo-image {
     filter: brightness(1.1) saturate(0.9);
   }
 
   @keyframes logo-glow-light {
-    0%, 100% { box-shadow: 0 0 25px hsla(263, 80%, 60%, 0.3); transform: scale(1); }
-    50% { box-shadow: 0 0 40px hsla(263, 80%, 60%, 0.5); transform: scale(1.02); }
+    0%, 100% { box-shadow: 0 0 25px hsla(252, 90%, 65%, 0.3); transform: scale(1); }
+    50% { box-shadow: 0 0 40px hsla(188, 86%, 55%, 0.45); transform: scale(1.02); }
   }
 
   /* Cosmic theme - rotating border glow */
