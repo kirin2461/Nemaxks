@@ -75,7 +75,7 @@ const MessageList: React.FC<MessageListProps> = ({
   let lastDate = '';
 
   return (
-    <div className="w-full h-full flex flex-col bg-white rounded-lg border border-gray-200">
+    <div className="w-full h-full flex flex-col bg-card text-card-foreground rounded-lg border border-border">
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {isLoading && (
@@ -85,7 +85,7 @@ const MessageList: React.FC<MessageListProps> = ({
         )}
 
         {messages.length === 0 && !isLoading && (
-          <div className="flex items-center justify-center h-full text-gray-500">
+          <div className="flex items-center justify-center h-full text-muted-foreground">
             <p>No messages yet. Start a conversation!</p>
           </div>
         )}
@@ -101,13 +101,13 @@ const MessageList: React.FC<MessageListProps> = ({
             <div key={message.id}>
               {showDate && (
                 <div className="flex items-center gap-2 my-4">
-                  <div className="flex-1 border-t border-gray-300"></div>
-                  <span className="text-xs text-gray-500 px-2">{messageDate}</span>
-                  <div className="flex-1 border-t border-gray-300"></div>
+                  <div className="flex-1 border-t border-border"></div>
+                  <span className="text-xs text-muted-foreground px-2">{messageDate}</span>
+                  <div className="flex-1 border-t border-border"></div>
                 </div>
               )}
 
-              <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex gap-3 group ${isOwn ? 'flex-row-reverse' : ''}`}>
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                   {message.avatar ? (
@@ -126,16 +126,16 @@ const MessageList: React.FC<MessageListProps> = ({
                 {/* Message Content */}
                 <div className={`flex-1 ${isOwn ? 'text-right' : ''}`}>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-semibold text-gray-800">{message.username}</span>
-                    <span className="text-xs text-gray-500">{formatTime(message.createdAt)}</span>
-                    {message.isEdited && <span className="text-xs text-gray-400">(edited)</span>}
+                    <span className="text-sm font-semibold text-foreground">{message.username}</span>
+                    <span className="text-xs text-muted-foreground">{formatTime(message.createdAt)}</span>
+                    {message.isEdited && <span className="text-xs text-muted-foreground">(edited)</span>}
                   </div>
 
                   <div
                     className={`inline-block max-w-xs px-4 py-2 rounded-lg ${
                       isOwn
                         ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-800'
+                        : 'bg-secondary text-secondary-foreground'
                     }`}
                   >
                     <p className="break-words text-sm">{message.content}</p>
@@ -167,7 +167,7 @@ const MessageList: React.FC<MessageListProps> = ({
                         <button
                           key={idx}
                           onClick={() => onReaction?.(message.id, reaction.emoji)}
-                          className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200 transition"
+                          className="px-2 py-1 text-xs bg-secondary rounded hover:bg-muted transition"
                         >
                           {reaction.emoji} {reaction.users.length}
                         </button>
@@ -178,9 +178,9 @@ const MessageList: React.FC<MessageListProps> = ({
 
                 {/* Message Actions */}
                 {isOwn && (
-                  <div className="flex-shrink-0 opacity-0 hover:opacity-100 transition">
-                    <button className="p-1 hover:bg-gray-100 rounded">
-                      <MoreVertical size={16} className="text-gray-600" />
+                  <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition">
+                    <button className="p-1 hover:bg-secondary rounded">
+                      <MoreVertical size={16} className="text-muted-foreground" />
                     </button>
                   </div>
                 )}
@@ -193,11 +193,11 @@ const MessageList: React.FC<MessageListProps> = ({
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 p-4 bg-gray-50">
+      <div className="border-t border-border p-4 bg-card">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <button
             type="button"
-            className="p-2 text-gray-600 hover:text-blue-500 hover:bg-gray-100 rounded transition"
+            className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-secondary rounded transition"
           >
             <Paperclip size={20} />
           </button>
@@ -207,12 +207,12 @@ const MessageList: React.FC<MessageListProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <button
             type="button"
-            className="p-2 text-gray-600 hover:text-yellow-500 hover:bg-gray-100 rounded transition"
+            className="p-2 text-muted-foreground hover:text-yellow-500 hover:bg-secondary rounded transition"
           >
             <Smile size={20} />
           </button>
@@ -220,7 +220,7 @@ const MessageList: React.FC<MessageListProps> = ({
           <button
             type="submit"
             disabled={sending || !inputValue.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition font-medium"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-muted transition font-medium"
           >
             <Send size={20} />
           </button>

@@ -53,13 +53,13 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
         <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
           УРОВЕНЬ ПОВЫШЕН!
         </h2>
-        <p className="text-gray-400 mb-6">
+        <p className="text-muted-foreground mb-6">
           Поздравляем! Вы достигли {newLevel} уровня
         </p>
 
         {rewards.length > 0 && (
           <div className={`transition-all duration-500 ${showRewards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <p className="text-sm text-gray-400 mb-3">Ваши награды:</p>
+            <p className="text-sm text-muted-foreground mb-3">Ваши награды:</p>
             <div className="space-y-2">
               {rewards.map((reward, index) => (
                 <div

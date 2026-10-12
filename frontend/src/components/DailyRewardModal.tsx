@@ -62,7 +62,7 @@ export function DailyRewardModal({
           </div>
           <div className="text-right">
             <p className="text-2xl font-black text-orange-400">x{Math.min(currentStreak, 7)}</p>
-            <p className="text-xs text-gray-400">множитель</p>
+            <p className="text-xs text-muted-foreground">множитель</p>
           </div>
         </div>
 
@@ -83,7 +83,7 @@ export function DailyRewardModal({
               )}
               
               <p className={`text-xs font-medium mb-2 ${
-                reward.isToday ? 'text-purple-300' : 'text-gray-400'
+                reward.isToday ? 'text-purple-300' : 'text-muted-foreground'
               }`}>
                 День {reward.day}
               </p>
@@ -99,7 +99,7 @@ export function DailyRewardModal({
               </div>
               
               <p className={`text-sm font-bold ${
-                reward.claimed ? 'text-gray-500' : 'text-white'
+                reward.claimed ? 'text-muted-foreground' : 'text-white'
               }`}>
                 {reward.special || (reward.gems ? `${reward.gems}💎` : `${reward.coins}🪙`)}
               </p>

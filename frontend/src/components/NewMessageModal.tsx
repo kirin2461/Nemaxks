@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Avatar } from './Avatar'
 import { X, Search, MessageSquare } from 'lucide-react'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/utils'
 
 interface NewMessageModalProps {
   isOpen: boolean
@@ -11,6 +12,12 @@ interface NewMessageModalProps {
 
 export function NewMessageModal({ isOpen, onClose, onSelectUser, friends }: NewMessageModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
+    if (!isOpen) return
+    lockBodyScroll()
+    return () => unlockBodyScroll()
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -31,7 +38,7 @@ export function NewMessageModal({ isOpen, onClose, onSelectUser, friends }: NewM
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={handleClose}

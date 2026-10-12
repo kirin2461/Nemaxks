@@ -40,13 +40,13 @@ export function DeleteMessageModal({
         </div>
 
         <h2 className="text-xl font-bold text-white mb-2">Удалить сообщение?</h2>
-        <p className="text-gray-400 text-sm mb-4">
+        <p className="text-muted-foreground text-sm mb-4">
           Это действие нельзя отменить
         </p>
 
         {messagePreview && (
           <div className="p-3 bg-white/5 rounded-lg mb-4 text-left">
-            <p className="text-gray-300 text-sm line-clamp-3">{messagePreview}</p>
+            <p className="text-foreground text-sm line-clamp-3">{messagePreview}</p>
           </div>
         )}
 
@@ -60,7 +60,7 @@ export function DeleteMessageModal({
             />
             <div className="text-left">
               <p className="text-white text-sm font-medium">Удалить для всех</p>
-              <p className="text-gray-400 text-xs">Сообщение исчезнет у всех участников</p>
+              <p className="text-muted-foreground text-xs">Сообщение исчезнет у всех участников</p>
             </div>
           </label>
         )}

@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { PhoneOff, User } from 'lucide-react'
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/utils'
 
 interface OutgoingCallModalProps {
   targetUser: {
@@ -10,6 +12,11 @@ interface OutgoingCallModalProps {
 }
 
 export function OutgoingCallModal({ targetUser, status, onCancel }: OutgoingCallModalProps) {
+  useEffect(() => {
+    lockBodyScroll()
+    return () => unlockBodyScroll()
+  }, [])
+
   const getStatusText = () => {
     switch (status) {
       case 'dialing':
@@ -39,7 +46,7 @@ export function OutgoingCallModal({ targetUser, status, onCancel }: OutgoingCall
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
       <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-sm w-full p-8 animate-fade-in text-center">
         <div className="relative mb-6">
           <div className={`w-24 h-24 mx-auto rounded-full overflow-hidden ring-4 ring-primary/50 ${status === 'dialing' || status === 'ringing' ? 'animate-pulse' : ''}`}>

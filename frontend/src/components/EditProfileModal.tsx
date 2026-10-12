@@ -113,7 +113,7 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-1">Отображаемое имя</label>
+          <label className="block text-sm text-muted-foreground mb-1">Отображаемое имя</label>
           <input
             type="text"
             value={displayName}
@@ -125,7 +125,7 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-1">О себе</label>
+          <label className="block text-sm text-muted-foreground mb-1">О себе</label>
           <textarea
             value={bio}
             onChange={e => setBio(e.target.value)}
@@ -134,7 +134,7 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
             className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none transition-colors resize-none"
             placeholder="Расскажите о себе..."
           />
-          <p className="text-xs text-gray-500 mt-1">{bio.length}/200</p>
+          <p className="text-xs text-muted-foreground mt-1">{bio.length}/200</p>
         </div>
 
         {error && (

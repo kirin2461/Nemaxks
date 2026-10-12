@@ -76,7 +76,7 @@ export function TwoFactorModal({ isOpen, onClose, onVerify, error }: TwoFactorMo
         </div>
         
         <h2 className="text-xl font-bold text-white mb-2">Двухфакторная аутентификация</h2>
-        <p className="text-gray-400 text-sm mb-6">
+        <p className="text-muted-foreground text-sm mb-6">
           Введите 6-значный код из приложения-аутентификатора
         </p>
 
@@ -108,7 +108,7 @@ export function TwoFactorModal({ isOpen, onClose, onVerify, error }: TwoFactorMo
           </div>
         )}
 
-        <p className="text-gray-500 text-xs mt-4">
+        <p className="text-muted-foreground text-xs mt-4">
           Не получили код? Проверьте синхронизацию времени в приложении
         </p>
       </div>

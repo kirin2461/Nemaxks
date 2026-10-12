@@ -96,7 +96,7 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
   if (!user) {
     return (
       <Modal isOpen={isOpen} onClose={onClose} size="md">
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-8 text-muted-foreground">
           Пользователь не найден
         </div>
       </Modal>
@@ -111,7 +111,7 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
         <div className="h-24 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-t-lg -mx-4 -mt-4" />
         
         <div className="relative -mt-12 px-4">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-4 border-[#1a1a2e] flex items-center justify-center overflow-hidden">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-4 border-card flex items-center justify-center overflow-hidden">
             {user.avatar ? (
               <img src={user.avatar} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -131,14 +131,14 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
                 </span>
               )}
             </div>
-            <p className="text-gray-400">@{user.username}</p>
+            <p className="text-muted-foreground">@{user.username}</p>
           </div>
 
           {user.bio && (
-            <p className="mt-3 text-gray-300 text-sm">{user.bio}</p>
+            <p className="mt-3 text-foreground text-sm">{user.bio}</p>
           )}
 
-          <div className="flex items-center gap-4 mt-4 text-sm text-gray-400">
+          <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-400" />
               <span>Уровень {user.level || 1}</span>
@@ -152,15 +152,15 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
           <div className="grid grid-cols-3 gap-4 mt-4 p-4 bg-white/5 rounded-lg">
             <div className="text-center">
               <p className="text-xl font-bold text-white">{user.friends_count || 0}</p>
-              <p className="text-xs text-gray-400">Друзей</p>
+              <p className="text-xs text-muted-foreground">Друзей</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-bold text-white">{user.messages_count || 0}</p>
-              <p className="text-xs text-gray-400">Сообщений</p>
+              <p className="text-xs text-muted-foreground">Сообщений</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-bold text-white">{user.xp || 0}</p>
-              <p className="text-xs text-gray-400">XP</p>
+              <p className="text-xs text-muted-foreground">XP</p>
             </div>
           </div>
 
@@ -196,11 +196,11 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
           </div>
 
           <div className="flex gap-2 mt-2">
-            <button className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 transition-colors flex items-center justify-center gap-2 text-sm">
+            <button className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-muted-foreground transition-colors flex items-center justify-center gap-2 text-sm">
               <Ban className="w-4 h-4" />
               Заблокировать
             </button>
-            <button className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 transition-colors flex items-center justify-center gap-2 text-sm">
+            <button className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-muted-foreground transition-colors flex items-center justify-center gap-2 text-sm">
               <Flag className="w-4 h-4" />
               Пожаловаться
             </button>

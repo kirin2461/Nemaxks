@@ -39,7 +39,7 @@ export default function ActivityFeedPage() {
       case 'message': return { icon: MessageSquare, color: 'text-cyan-400', bg: 'bg-cyan-400/10' };
       case 'like':
       case 'reaction': return { icon: Heart, color: 'text-red-400', bg: 'bg-red-400/10' };
-      default: return { icon: Bell, color: 'text-gray-400', bg: 'bg-gray-400/10' };
+      default: return { icon: Bell, color: 'text-muted-foreground', bg: 'bg-gray-400/10' };
     }
   };
 
@@ -65,14 +65,14 @@ export default function ActivityFeedPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -88,7 +88,7 @@ export default function ActivityFeedPage() {
             <button
               onClick={() => markAllReadMutation.mutate()}
               disabled={markAllReadMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-card rounded-lg hover:bg-secondary text-sm"
             >
               <CheckCheck className="w-4 h-4" />
               Mark all read
@@ -106,7 +106,7 @@ export default function ActivityFeedPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 className={`p-4 rounded-xl flex items-start gap-4 cursor-pointer transition-colors ${
-                  activity.is_read ? 'bg-gray-800' : 'bg-gray-800/80 border-l-4 border-purple-500'
+                  activity.is_read ? 'bg-card' : 'bg-card/80 border-l-4 border-purple-500'
                 }`}
                 onClick={() => !activity.is_read && markReadMutation.mutate(activity.id)}
               >
@@ -114,10 +114,10 @@ export default function ActivityFeedPage() {
                   <Icon className={`w-5 h-5 ${color}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`${activity.is_read ? 'text-gray-300' : 'text-white font-medium'}`}>
+                  <p className={`${activity.is_read ? 'text-foreground' : 'text-white font-medium'}`}>
                     {getActivityMessage(activity)}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
                   </p>
                 </div>
@@ -129,10 +129,10 @@ export default function ActivityFeedPage() {
           })}
 
           {activities.length === 0 && (
-            <div className="bg-gray-800 rounded-xl p-12 text-center">
-              <Bell className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <div className="bg-card rounded-xl p-12 text-center">
+              <Bell className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2">No activity yet</h3>
-              <p className="text-gray-400">Your activity feed will appear here</p>
+              <p className="text-muted-foreground">Your activity feed will appear here</p>
             </div>
           )}
         </div>

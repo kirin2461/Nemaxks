@@ -81,7 +81,7 @@ export function EditMessageModal({
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none transition-colors resize-none"
             placeholder="Введите сообщение..."
           />
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <div className="flex justify-between text-xs text-muted-foreground mt-1">
             <span>Enter - сохранить, Shift+Enter - новая строка</span>
             <span>{content.length}/2000</span>
           </div>

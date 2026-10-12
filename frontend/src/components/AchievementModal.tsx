@@ -22,7 +22,7 @@ const RARITY_STYLES = {
   common: {
     gradient: 'from-gray-400 to-gray-600',
     glow: 'shadow-gray-500/30',
-    text: 'text-gray-300',
+    text: 'text-foreground',
     label: 'Обычное'
   },
   rare: {
@@ -83,7 +83,7 @@ export function AchievementModal({ isOpen, onClose, achievement }: AchievementMo
           <h2 className="text-2xl font-black text-white mb-2">
             {achievement.name}
           </h2>
-          <p className="text-gray-400 mb-6">
+          <p className="text-muted-foreground mb-6">
             {achievement.description}
           </p>
 

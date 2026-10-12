@@ -59,7 +59,7 @@ export function QRCodeModal({
         </div>
 
         {description && (
-          <p className="text-gray-400 text-sm">{description}</p>
+          <p className="text-muted-foreground text-sm">{description}</p>
         )}
 
         <div className="p-3 bg-white/5 rounded-lg">

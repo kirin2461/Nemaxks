@@ -84,7 +84,7 @@ export function ReportModal({
             <CheckCircle className="w-8 h-8 text-green-400" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Жалоба отправлена</h2>
-          <p className="text-gray-400 text-sm mb-6">
+          <p className="text-muted-foreground text-sm mb-6">
             Спасибо за обращение! Наша команда модерации рассмотрит вашу жалобу в ближайшее время.
           </p>
           <button
@@ -110,13 +110,13 @@ export function ReportModal({
         </div>
 
         <div>
-          <p className="text-gray-400 text-sm mb-3">
+          <p className="text-muted-foreground text-sm mb-3">
             Жалоба на {getTargetLabel()}{targetName ? `: ${targetName}` : ''}
           </p>
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-2">Причина жалобы *</label>
+          <label className="block text-sm text-muted-foreground mb-2">Причина жалобы *</label>
           <div className="grid grid-cols-2 gap-2">
             {REPORT_CATEGORIES.map(cat => (
               <button
@@ -125,7 +125,7 @@ export function ReportModal({
                 className={`flex items-center gap-2 p-3 rounded-lg border transition-all text-left ${
                   category === cat.id
                     ? 'border-red-500 bg-red-500/10 text-red-300'
-                    : 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10'
+                    : 'border-white/10 bg-white/5 text-foreground hover:bg-white/10'
                 }`}
               >
                 <span>{cat.icon}</span>
@@ -136,7 +136,7 @@ export function ReportModal({
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-2">Дополнительная информация</label>
+          <label className="block text-sm text-muted-foreground mb-2">Дополнительная информация</label>
           <textarea
             value={details}
             onChange={e => setDetails(e.target.value)}
@@ -145,7 +145,7 @@ export function ReportModal({
             className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-purple-500 outline-none transition-colors resize-none"
             placeholder="Опишите ситуацию подробнее (необязательно)..."
           />
-          <p className="text-xs text-gray-500 mt-1">{details.length}/500</p>
+          <p className="text-xs text-muted-foreground mt-1">{details.length}/500</p>
         </div>
 
         {error && (

@@ -119,7 +119,7 @@ export default function CustomStatusModal({
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-purple-500/20"
+          className="bg-card rounded-2xl p-6 max-w-md w-full shadow-2xl border border-purple-500/20"
           onClick={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-6">
@@ -128,14 +128,14 @@ export default function CustomStatusModal({
             </h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-secondary transition-colors"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <X className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm text-muted-foreground mb-2">
               {language === 'ru' ? 'Эмодзи' : 'Emoji'}
             </label>
             <div className="flex flex-wrap gap-2">
@@ -146,7 +146,7 @@ export default function CustomStatusModal({
                   className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all ${
                     emoji === e 
                       ? 'bg-purple-600 ring-2 ring-purple-400' 
-                      : 'bg-gray-700 hover:bg-gray-600'
+                      : 'bg-secondary hover:bg-muted'
                   }`}
                 >
                   {e}
@@ -156,7 +156,7 @@ export default function CustomStatusModal({
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm text-muted-foreground mb-2">
               {language === 'ru' ? 'Текст статуса' : 'Status text'}
             </label>
             <div className="relative">
@@ -167,20 +167,20 @@ export default function CustomStatusModal({
                 onChange={e => setText(e.target.value)}
                 placeholder={language === 'ru' ? 'Что вы делаете?' : 'What are you doing?'}
                 maxLength={100}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-secondary border border-border text-white placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
               />
             </div>
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm text-muted-foreground mb-2">
               <Clock className="w-4 h-4 inline-block mr-1" />
               {language === 'ru' ? 'Очистить через' : 'Clear after'}
             </label>
             <select
               value={duration}
               onChange={e => setDuration(Number(e.target.value))}
-              className="w-full px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+              className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
             >
               {DURATION_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>
@@ -192,7 +192,7 @@ export default function CustomStatusModal({
 
           {(presets.default.length > 0 || presets.custom.length > 0) && (
             <div className="mb-4">
-              <label className="block text-sm text-gray-400 mb-2">
+              <label className="block text-sm text-muted-foreground mb-2">
                 {language === 'ru' ? 'Быстрый выбор' : 'Quick select'}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -200,14 +200,14 @@ export default function CustomStatusModal({
                   <div key={preset.id || `default-${i}`} className="relative group">
                     <button
                       onClick={() => handlePresetClick(preset)}
-                      className="px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm text-white transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-muted text-sm text-white transition-colors"
                     >
                       {preset.emoji} {preset.text}
                     </button>
                     {preset.id && (
                       <button
                         onClick={() => handleDeletePreset(preset.id!)}
-                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity flex items-center justify-center"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -219,13 +219,13 @@ export default function CustomStatusModal({
           )}
 
           {showPresetForm ? (
-            <div className="mb-4 p-3 bg-gray-700/50 rounded-xl">
+            <div className="mb-4 p-3 bg-secondary/50 rounded-xl">
               <input
                 type="text"
                 value={presetName}
                 onChange={e => setPresetName(e.target.value)}
                 placeholder={language === 'ru' ? 'Название пресета' : 'Preset name'}
-                className="w-full px-3 py-2 rounded-lg bg-gray-600 border border-gray-500 text-white placeholder-gray-400 mb-2"
+                className="w-full px-3 py-2 rounded-lg bg-muted border border-gray-500 text-white placeholder-muted-foreground mb-2"
               />
               <div className="flex gap-2">
                 <button
@@ -237,7 +237,7 @@ export default function CustomStatusModal({
                 </button>
                 <button
                   onClick={() => setShowPresetForm(false)}
-                  className="px-3 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-500"
+                  className="px-3 py-2 rounded-lg bg-muted text-white hover:bg-gray-500"
                 >
                   {language === 'ru' ? 'Отмена' : 'Cancel'}
                 </button>
@@ -247,7 +247,7 @@ export default function CustomStatusModal({
             <button
               onClick={() => setShowPresetForm(true)}
               disabled={!text.trim()}
-              className="w-full mb-4 px-4 py-2 rounded-lg border border-dashed border-gray-600 text-gray-400 hover:border-purple-500 hover:text-purple-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full mb-4 px-4 py-2 rounded-lg border border-dashed border-border text-muted-foreground hover:border-purple-500 hover:text-purple-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
               {language === 'ru' ? 'Сохранить как пресет' : 'Save as preset'}
@@ -258,7 +258,7 @@ export default function CustomStatusModal({
             <button
               onClick={handleClear}
               disabled={saving}
-              className="px-4 py-3 rounded-xl bg-gray-700 text-gray-300 font-semibold hover:bg-gray-600 transition-colors"
+              className="px-4 py-3 rounded-xl bg-secondary text-foreground font-semibold hover:bg-muted transition-colors"
             >
               {language === 'ru' ? 'Очистить' : 'Clear'}
             </button>

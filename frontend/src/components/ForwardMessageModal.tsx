@@ -108,11 +108,11 @@ export function ForwardMessageModal({
     <Modal isOpen={isOpen} onClose={handleClose} title="Переслать сообщение" size="md">
       <div className="space-y-4">
         <div className="p-3 bg-white/5 rounded-lg border-l-4 border-purple-500">
-          <p className="text-gray-300 text-sm line-clamp-3">{messageContent}</p>
+          <p className="text-foreground text-sm line-clamp-3">{messageContent}</p>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
             value={search}
@@ -128,7 +128,7 @@ export function ForwardMessageModal({
               <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
             </div>
           ) : filteredTargets.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
+            <div className="text-center py-8 text-muted-foreground">
               {search ? 'Ничего не найдено' : 'Нет доступных получателей'}
             </div>
           ) : (
@@ -154,7 +154,7 @@ export function ForwardMessageModal({
                 <div className="flex-1 text-left">
                   <p className="text-white font-medium">{target.name}</p>
                   {target.subtitle && (
-                    <p className="text-gray-400 text-sm">{target.subtitle}</p>
+                    <p className="text-muted-foreground text-sm">{target.subtitle}</p>
                   )}
                 </div>
                 {selectedTarget?.id === target.id && selectedTarget?.type === target.type && (

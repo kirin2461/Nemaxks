@@ -87,7 +87,7 @@ export function LeaveGuildModal({
             />
           </div>
         ) : (
-          <p className="text-gray-400 text-sm mb-4">
+          <p className="text-muted-foreground text-sm mb-4">
             Вы больше не сможете видеть каналы и сообщения этой гильдии.
             Вы сможете присоединиться снова по приглашению.
           </p>

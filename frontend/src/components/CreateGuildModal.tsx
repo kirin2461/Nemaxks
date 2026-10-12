@@ -77,7 +77,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
     <Modal isOpen={isOpen} onClose={handleClose} title={step === 1 ? 'Создать гильдию' : 'Настройка гильдии'} size="md">
       {step === 1 ? (
         <div className="space-y-3 max-h-[85vh] overflow-y-auto">
-          <p className="text-gray-400 text-sm mb-4">Выберите шаблон для быстрого старта</p>
+          <p className="text-muted-foreground text-sm mb-4">Выберите шаблон для быстрого старта</p>
           
           {GUILD_TEMPLATES.map(t => (
             <button
@@ -97,7 +97,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
               </div>
               <div className="text-left flex-1">
                 <p className="text-white font-medium">{t.name}</p>
-                <p className="text-gray-400 text-sm">Каналы: {t.channels.join(', ')}</p>
+                <p className="text-muted-foreground text-sm">Каналы: {t.channels.join(', ')}</p>
               </div>
               <Sparkles className="w-5 h-5 text-purple-400" />
             </button>
@@ -127,7 +127,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Название гильдии *</label>
+            <label className="block text-sm text-muted-foreground mb-1">Название гильдии *</label>
             <input
               type="text"
               value={name}
@@ -140,7 +140,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Описание</label>
+            <label className="block text-sm text-muted-foreground mb-1">Описание</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -162,7 +162,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
                 <p className="text-white font-medium">
                   {isPrivate ? 'Приватная гильдия' : 'Публичная гильдия'}
                 </p>
-                <p className="text-gray-400 text-sm">
+                <p className="text-muted-foreground text-sm">
                   {isPrivate ? 'Только по приглашению' : 'Любой может присоединиться'}
                 </p>
               </div>
@@ -170,7 +170,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
             <button
               onClick={() => setIsPrivate(!isPrivate)}
               className={`relative w-12 h-6 rounded-full transition-colors ${
-                isPrivate ? 'bg-purple-500' : 'bg-gray-600'
+                isPrivate ? 'bg-purple-500' : 'bg-muted'
               }`}
             >
               <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${

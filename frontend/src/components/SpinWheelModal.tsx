@@ -132,7 +132,7 @@ export function SpinWheelModal({
         )}
 
         {!canSpin && nextSpinTime && !spinning && (
-          <p className="text-gray-400 text-sm mb-4">
+          <p className="text-muted-foreground text-sm mb-4">
             Следующее вращение доступно: {nextSpinTime}
           </p>
         )}
