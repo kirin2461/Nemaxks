@@ -298,6 +298,31 @@ cargo run --release
 
 ---
 
+## 🗄️ Database migrations
+
+Сейчас схема БД управляется **GORM AutoMigrate** при старте backend. Вызовы
+разбросаны по нескольким местам инициализации:
+
+- `backend/handlers.go` (`initDB`) — базовые модели;
+- `backend/handlers_phase1.go`, `handlers_phase2.go`, `handlers_phase3.go` — фазовые модули;
+- `backend/models_fraud.go`, `backend/models_license.go` — модели fraud/license.
+
+Ограничения подхода: нет версионирования и истории изменений схемы; нет отката
+(rollback) и повторяемости между окружениями; AutoMigrate не удаляет колонки/индексы
+и молча расходится с реальной схемой; параллельный старт нескольких инстансов
+может гонять DDL без блокировок; сложно ревьюить изменения схемы в PR.
+
+Рекомендуемый план перехода на [golang-migrate](https://github.com/golang-migrate/migrate)
+(пока не реализовано):
+
+1. Сгенерировать baseline-миграцию из текущей схемы (`pg_dump --schema-only`).
+2. Добавить `migrations/` с up/down SQL-файлами и CLI `migrate` в CI.
+3. Запуск миграций — отдельным шагом деплоя (init-контейнер/job), а не в коде приложения.
+4. Отключить AutoMigrate после подтверждения parity схемы на staging.
+5. Правило: любые изменения моделей GORM сопровождаются новой миграцией.
+
+---
+
 ## 📁 Project Structure
 
 ```
