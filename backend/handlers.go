@@ -1,829 +1,864 @@
 package main
 
 import (
-        "crypto/rand"
-        "encoding/hex"
-        "log"
-        "net/http"
-        "os"
-        "strconv"
-        "strings"
-        "time"
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+	"unicode"
 
-        "github.com/gin-gonic/gin"
-        "github.com/golang-jwt/jwt/v5"
-        "golang.org/x/crypto/bcrypt"
-        "gorm.io/driver/postgres"
-        "gorm.io/gorm"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // jwtSecretCache caches the generated JWT secret for the session
 var jwtSecretCache []byte
 
-// getJWTSecret returns the JWT secret from environment or generates a secure random one
+// getJWTSecret returns the JWT secret from environment.
+// В release-режиме (см. isReleaseMode) отсутствие JWT_SECRET фатально:
+// случайный секрет на каждый рестарт делает невозможным контроль сессий
+// и молча инвалидирует все токены. В debug/test генерируется случайный
+// секрет на сессию процесса (только для локальной разработки).
 func getJWTSecret() []byte {
-        secret := os.Getenv("JWT_SECRET")
-        if secret != "" {
-                return []byte(secret)
-        }
+	secret := os.Getenv("JWT_SECRET")
+	if secret != "" {
+		return []byte(secret)
+	}
 
-        // Use cached secret if already generated this session
-        if jwtSecretCache != nil {
-                return jwtSecretCache
-        }
+	if isReleaseMode() {
+		log.Fatal("CRITICAL: JWT_SECRET is not set in release mode. " +
+			"Refusing to start with an ephemeral random secret. " +
+			"Set JWT_SECRET env var, or run with GIN_MODE=debug for local development.")
+	}
 
-        // Generate a secure random secret for this session
-        randomBytes := make([]byte, 32) // 256 bits
-        if _, err := rand.Read(randomBytes); err != nil {
-                // Critical failure - cannot continue without secure secret
-                log.Fatalf("CRITICAL: Failed to generate secure JWT secret: %v. Cannot start server securely.", err)
-        }
-        jwtSecretCache = []byte(hex.EncodeToString(randomBytes))
-        log.Println("WARNING: JWT_SECRET not set. Generated random secret for this session.")
-        log.Println("NOTE: Users will need to re-login after server restart. Set JWT_SECRET for persistent sessions.")
+	// Use cached secret if already generated this session
+	if jwtSecretCache != nil {
+		return jwtSecretCache
+	}
 
-        return jwtSecretCache
+	// Generate a secure random secret for this session (dev only)
+	randomBytes := make([]byte, 32) // 256 bits
+	if _, err := rand.Read(randomBytes); err != nil {
+		// Critical failure - cannot continue without secure secret
+		log.Fatalf("CRITICAL: Failed to generate secure JWT secret: %v. Cannot start server securely.", err)
+	}
+	jwtSecretCache = []byte(hex.EncodeToString(randomBytes))
+	log.Println("WARNING: JWT_SECRET not set. Generated random secret for this session (dev mode only).")
+
+	return jwtSecretCache
 }
 
 // generateSecurePassword generates a cryptographically secure random password
 func generateSecurePassword() string {
-        bytes := make([]byte, 32)
-        if _, err := rand.Read(bytes); err != nil {
-                log.Printf("Error generating secure password: %v", err)
-                return "fallback-secure-password-" + time.Now().String()
-        }
-        return hex.EncodeToString(bytes)
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		log.Printf("Error generating secure password: %v", err)
+		return "fallback-secure-password-" + time.Now().String()
+	}
+	return hex.EncodeToString(bytes)
 }
 
 // getUserIDFromContext safely extracts user ID from gin context
 func getUserIDFromContext(c *gin.Context) (uint, bool) {
-        userID, exists := c.Get("user_id")
-        if !exists {
-                return 0, false
-        }
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return 0, false
+	}
 
-        switch v := userID.(type) {
-        case float64:
-                return uint(v), true
-        case uint:
-                return v, true
-        case int:
-                return uint(v), true
-        case int64:
-                return uint(v), true
-        default:
-                log.Printf("Unexpected user_id type: %T", userID)
-                return 0, false
-        }
+	switch v := userID.(type) {
+	case float64:
+		return uint(v), true
+	case uint:
+		return v, true
+	case int:
+		return uint(v), true
+	case int64:
+		return uint(v), true
+	default:
+		log.Printf("Unexpected user_id type: %T", userID)
+		return 0, false
+	}
 }
 
 func initDB() {
-        dsn := os.Getenv("DATABASE_URL")
-        if dsn == "" {
-                log.Println("DATABASE_URL not set")
-                return
-        }
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		log.Println("DATABASE_URL not set")
+		return
+	}
 
-        var err error
-        db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-        if err != nil {
-                log.Printf("DB error: %v", err)
-                return
-        }
+	var err error
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Printf("DB error: %v", err)
+		return
+	}
 
-        // Configure connection pool for serverless Postgres (Neon)
-        sqlDB, err := db.DB()
-        if err != nil {
-                log.Printf("Failed to get DB instance: %v", err)
-                return
-        }
-        sqlDB.SetMaxOpenConns(10)
-        sqlDB.SetMaxIdleConns(5)
-        sqlDB.SetConnMaxLifetime(5 * time.Minute)
+	// Configure connection pool for serverless Postgres (Neon)
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Printf("Failed to get DB instance: %v", err)
+		return
+	}
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
-        db.AutoMigrate(
-                &User{}, &Guild{}, &Channel{}, &Message{}, &Post{},
-                &Friend{}, &FriendRequest{}, &DirectMessage{}, &MessageReaction{}, &Settings{},
-                &AdminRole{}, &AdminUserRole{}, &BanHistory{}, &Ban{}, &BlockedUser{},
-                &BotActivityLog{}, &BotRateLimit{}, &BotToken{}, &BotWebhook{}, &BotWebhookDelivery{},
-                &Call{}, &CallParticipant{}, &CallRecording{}, &CallSignaling{},
-                &TwoFactorAuth{}, &TwoFactorRecoveryCode{},
-                &RefreshToken{}, &UserSession{},
-                &UserKeyPair{}, &ChannelEncryptionSettings{}, &ChannelGroupKey{},
-                &AdminAccessPermission{}, &ConversationEncryption{}, &EncryptedDirectMessage{},
-                &ChannelCategory{}, &ChannelInvitation{}, &ChannelMember{}, &ChannelMessageReaction{},
-                &JarvisCommand{}, &JarvisContext{}, &JarvisReminder{}, &JarvisSession{},
-                &Story{}, &StoryView{}, &PostRating{}, &PostComment{}, &PostLike{}, &Subscription{}, &PostBookmark{},
-                &UserPresence{}, &TypingIndicator{}, &ReadReceipt{},
-                &IPBan{}, &AuditLog{}, &AbuseReport{},
-                &InviteLink{}, &UserNote{}, &FileAttachment{},
-                &PinnedMessage{}, &ChannelPermission{}, &GuildRole{}, &GuildMemberRole{},
-                &UserSettings{}, &QRLoginSession{},
-                &ForbiddenWord{}, &ForbiddenAttempt{},
-                &TelegramLink{}, &TelegramNotification{},
-                &Notification{}, &NotificationPreferences{},
-                &UserReferral{}, &ReferralUse{},
-                &Video{}, &VideoChapter{}, &VideoLike{}, &VideoBookmark{},
-                &PremiumPlan{}, &UserPremium{}, &CreatorDonation{},
-                &UserRequest{}, &PremiumSubscription{}, &PremiumTransaction{},
-                &PromoCode{}, &PromoCodeUsage{}, &GiftSubscription{}, &ReferralBonus{}, &PostBoost{},
-                &SubscriptionPlan{}, &SeatPricing{}, &OveragePricing{},
-                &Org{}, &OrgSubscription{}, &OrgEntitlement{}, &OrgMember{}, &ChannelACL{},
-                &StorageOverageDaily{}, &DonationSettings{}, &Donation{}, &PricingChangeLog{},
-                &GuildTemplate{}, &ChannelTemplate{}, &EducationalToolTemplate{}, &InteractiveBoard{}, &OnlineNotebook{},
-                &JarvisUsage{}, &ManualPayment{}, &GuildMember{}, &NotificationBanner{},
-                &ModerationCase{}, &ModerationVerdict{}, &ModerationActionLog{},
-                &Appeal{}, &JarvisAudioResponse{}, &JarvisVoiceCommand{}, &Voicemail{}, &JarvisCallSession{},
-                &ChannelTool{},
-                &GroupDM{}, &GroupDMParticipant{}, &GroupDMMessage{},
-        )
-        log.Println("DB connected")
+	db.AutoMigrate(
+		&User{}, &Guild{}, &Channel{}, &Message{}, &Post{},
+		&Friend{}, &FriendRequest{}, &DirectMessage{}, &MessageReaction{}, &Settings{},
+		&AdminRole{}, &AdminUserRole{}, &BanHistory{}, &Ban{}, &BlockedUser{},
+		&BotActivityLog{}, &BotRateLimit{}, &BotToken{}, &BotWebhook{}, &BotWebhookDelivery{},
+		&Call{}, &CallParticipant{}, &CallRecording{}, &CallSignaling{},
+		&TwoFactorAuth{}, &TwoFactorRecoveryCode{},
+		&RefreshToken{}, &UserSession{},
+		&UserKeyPair{}, &ChannelEncryptionSettings{}, &ChannelGroupKey{},
+		&AdminAccessPermission{}, &ConversationEncryption{}, &EncryptedDirectMessage{},
+		&ChannelCategory{}, &ChannelInvitation{}, &ChannelMember{}, &ChannelMessageReaction{},
+		&JarvisCommand{}, &JarvisContext{}, &JarvisReminder{}, &JarvisSession{},
+		&Story{}, &StoryView{}, &PostRating{}, &PostComment{}, &PostLike{}, &Subscription{}, &PostBookmark{},
+		&UserPresence{}, &TypingIndicator{}, &ReadReceipt{},
+		&IPBan{}, &AuditLog{}, &AbuseReport{},
+		&InviteLink{}, &UserNote{}, &FileAttachment{},
+		&PinnedMessage{}, &ChannelPermission{}, &GuildRole{}, &GuildMemberRole{},
+		&UserSettings{}, &QRLoginSession{},
+		&ForbiddenWord{}, &ForbiddenAttempt{},
+		&TelegramLink{}, &TelegramNotification{},
+		&Notification{}, &NotificationPreferences{},
+		&UserReferral{}, &ReferralUse{},
+		&Video{}, &VideoChapter{}, &VideoLike{}, &VideoBookmark{},
+		&PremiumPlan{}, &UserPremium{}, &CreatorDonation{},
+		&UserRequest{}, &PremiumSubscription{}, &PremiumTransaction{},
+		&PromoCode{}, &PromoCodeUsage{}, &GiftSubscription{}, &ReferralBonus{}, &PostBoost{},
+		&SubscriptionPlan{}, &SeatPricing{}, &OveragePricing{},
+		&Org{}, &OrgSubscription{}, &OrgEntitlement{}, &OrgMember{}, &ChannelACL{},
+		&StorageOverageDaily{}, &DonationSettings{}, &Donation{}, &PricingChangeLog{},
+		&GuildTemplate{}, &ChannelTemplate{}, &EducationalToolTemplate{}, &InteractiveBoard{}, &OnlineNotebook{},
+		&JarvisUsage{}, &ManualPayment{}, &GuildMember{}, &NotificationBanner{},
+		&ModerationCase{}, &ModerationVerdict{}, &ModerationActionLog{},
+		&Appeal{}, &JarvisAudioResponse{}, &JarvisVoiceCommand{}, &Voicemail{}, &JarvisCallSession{},
+		&ChannelTool{},
+		&GroupDM{}, &GroupDMParticipant{}, &GroupDMMessage{},
+	)
+	log.Println("DB connected")
 
-        initDefaultForbiddenWords()
-        ensureGlobalGuild()
-        seedPremiumPlans()
-        initOrgBillingSeeds()
+	initDefaultForbiddenWords()
+	ensureGlobalGuild()
+	seedPremiumPlans()
+	initOrgBillingSeeds()
 }
 
 func ensureGlobalGuild() {
-        var globalGuild Guild
-        if err := db.Where("name = ?", "Nemaks Общий").First(&globalGuild).Error; err != nil {
-                // Create a system user if none exists to own the global guild
-                var systemUser User
-                if err := db.Where("id = ?", 1).First(&systemUser).Error; err != nil {
-                        // Generate a secure random password for system user
-                        securePassword := generateSecurePassword()
-                        hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(securePassword), bcrypt.DefaultCost)
-                        if hashErr != nil {
-                                log.Printf("Error hashing system user password: %v", hashErr)
-                                return
-                        }
+	var globalGuild Guild
+	if err := db.Where("name = ?", "Nemaks Общий").First(&globalGuild).Error; err != nil {
+		// Create a system user if none exists to own the global guild
+		var systemUser User
+		if err := db.Where("id = ?", 1).First(&systemUser).Error; err != nil {
+			// Generate a secure random password for system user
+			securePassword := generateSecurePassword()
+			hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(securePassword), bcrypt.DefaultCost)
+			if hashErr != nil {
+				log.Printf("Error hashing system user password: %v", hashErr)
+				return
+			}
 
-                        systemUser = User{
-                                ID:       1,
-                                Username: "System",
-                                Password: string(hashedPassword),
-                                Role:     "admin",
-                        }
-                        db.Create(&systemUser)
-                }
+			systemUser = User{
+				ID:       1,
+				Username: "System",
+				Password: string(hashedPassword),
+				Role:     "admin",
+			}
+			db.Create(&systemUser)
+		}
 
-                // Create global guild if it doesn't exist
-                globalGuild = Guild{
-                        Name:      "Nemaks Общий",
-                        OwnerID:   systemUser.ID,
-                        IsPrivate: false, // Explicitly public
-                }
-                if err := db.Create(&globalGuild).Error; err == nil {
-                        // Create a default general channel
-                        channel := Channel{
-                                GuildID: globalGuild.ID,
-                                Name:    "general",
-                                Type:    "text",
-                        }
-                        db.Create(&channel)
-                }
-        } else {
-                // Ensure existing global guild is public
-                if globalGuild.IsPrivate {
-                        db.Model(&globalGuild).Update("is_private", false)
-                }
-        }
+		// Create global guild if it doesn't exist
+		globalGuild = Guild{
+			Name:      "Nemaks Общий",
+			OwnerID:   systemUser.ID,
+			IsPrivate: false, // Explicitly public
+		}
+		if err := db.Create(&globalGuild).Error; err == nil {
+			// Create a default general channel
+			channel := Channel{
+				GuildID: globalGuild.ID,
+				Name:    "general",
+				Type:    "text",
+			}
+			db.Create(&channel)
+		}
+	} else {
+		// Ensure existing global guild is public
+		if globalGuild.IsPrivate {
+			db.Model(&globalGuild).Update("is_private", false)
+		}
+	}
 
-        // Auto-add all existing users who aren't members
-        var users []User
-        db.Find(&users)
-        for _, user := range users {
-                var member ChannelMember
-                var generalChannel Channel
-                db.Where("guild_id = ? AND name = ?", globalGuild.ID, "general").First(&generalChannel)
-                if generalChannel.ID != 0 {
-                        if db.Where("channel_id = ? AND user_id = ?", generalChannel.ID, user.ID).First(&member).RowsAffected == 0 {
-                                db.Create(&ChannelMember{
-                                        ChannelID: generalChannel.ID,
-                                        UserID:    user.ID,
-                                        Role:      "member",
-                                        JoinedAt:  time.Now(),
-                                })
-                        }
-                }
-        }
+	// Auto-add all existing users who aren't members
+	var users []User
+	db.Find(&users)
+	for _, user := range users {
+		var member ChannelMember
+		var generalChannel Channel
+		db.Where("guild_id = ? AND name = ?", globalGuild.ID, "general").First(&generalChannel)
+		if generalChannel.ID != 0 {
+			if db.Where("channel_id = ? AND user_id = ?", generalChannel.ID, user.ID).First(&member).RowsAffected == 0 {
+				db.Create(&ChannelMember{
+					ChannelID: generalChannel.ID,
+					UserID:    user.ID,
+					Role:      "member",
+					JoinedAt:  time.Now(),
+				})
+			}
+		}
+	}
 }
 
 func registerHandler(c *gin.Context) {
-        log.Printf("Register attempt: Method=%s Path=%s IP=%s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
-        var req struct {
-                Username string  `json:"username" binding:"required"`
-                Email    *string `json:"email"`
-                Password string  `json:"password" binding:"required,min=6"`
-        }
-        if err := c.ShouldBindJSON(&req); err != nil {
-                log.Printf("Register bind error: %v", err)
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
+	log.Printf("Register attempt: Method=%s Path=%s IP=%s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
+	var req struct {
+		Username string  `json:"username" binding:"required"`
+		Email    *string `json:"email"`
+		Password string  `json:"password" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("Register bind error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        // Content filter check
-        filterResult := checkContentFilter(req.Username, 0, "registration")
-        if filterResult.IsForbidden {
-                log.Printf("Register blocked: username contains forbidden words: %v", filterResult.MatchedWords)
-                c.JSON(http.StatusForbidden, gin.H{
-                        "error":         "Username contains forbidden content",
-                        "matched_words": filterResult.MatchedWords,
-                })
-                return
-        }
+	// Password policy: минимум 8 символов, хотя бы одна буква и одна цифра
+	if err := validatePasswordPolicy(req.Password); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        // Check if user already exists
-        var count int64
-        db.Model(&User{}).Where("username = ?", req.Username).Count(&count)
-        if count > 0 {
-                log.Printf("Register error: Username %s already taken", req.Username)
-                c.JSON(http.StatusConflict, gin.H{"error": "Username already taken"})
-                return
-        }
+	// Content filter check
+	filterResult := checkContentFilter(req.Username, 0, "registration")
+	if filterResult.IsForbidden {
+		log.Printf("Register blocked: username contains forbidden words: %v", filterResult.MatchedWords)
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":         "Username contains forbidden content",
+			"matched_words": filterResult.MatchedWords,
+		})
+		return
+	}
 
-        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-        if err != nil {
-                log.Printf("Error hashing password: %v", err)
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process password"})
-                return
-        }
+	// Check if user already exists
+	var count int64
+	db.Model(&User{}).Where("username = ?", req.Username).Count(&count)
+	if count > 0 {
+		log.Printf("Register error: Username %s already taken", req.Username)
+		c.JSON(http.StatusConflict, gin.H{"error": "Username already taken"})
+		return
+	}
 
-        email := req.Email
-        if email != nil && *email == "" {
-                email = nil
-        }
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Error hashing password: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process password"})
+		return
+	}
 
-        user := User{
-                Username: req.Username,
-                Email:    email,
-                Password: string(hashedPassword),
-        }
+	email := req.Email
+	if email != nil && *email == "" {
+		email = nil
+	}
 
-        if err := db.Create(&user).Error; err != nil {
-                log.Printf("Registration error: %v", err)
-                // Check for duplicate key constraint violation
-                if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "23505") {
-                        c.JSON(http.StatusConflict, gin.H{"error": "Username already taken"})
-                        return
-                }
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-                return
-        }
+	user := User{
+		Username: req.Username,
+		Email:    email,
+		Password: string(hashedPassword),
+	}
 
-        // Auto-add new user to the global guild's general channel
-        var globalGuild Guild
-        if db.Where("name = ?", "Nemaks Общий").First(&globalGuild).RowsAffected > 0 {
-                var generalChannel Channel
-                if db.Where("guild_id = ? AND name = ?", globalGuild.ID, "general").First(&generalChannel).RowsAffected > 0 {
-                        var existingMember ChannelMember
-                        if db.Where("channel_id = ? AND user_id = ?", generalChannel.ID, user.ID).First(&existingMember).RowsAffected == 0 {
-                                db.Create(&ChannelMember{
-                                        ChannelID: generalChannel.ID,
-                                        UserID:    user.ID,
-                                        Role:      "member",
-                                        JoinedAt:  time.Now(),
-                                })
-                                log.Printf("Added user %s to general channel", user.Username)
-                        }
-                }
-        }
+	if err := db.Create(&user).Error; err != nil {
+		log.Printf("Registration error: %v", err)
+		// Check for duplicate key constraint violation
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "23505") {
+			c.JSON(http.StatusConflict, gin.H{"error": "Username already taken"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		return
+	}
 
-        deviceInfo := c.GetHeader("X-Device-Info")
-        if deviceInfo == "" {
-                deviceInfo = c.GetHeader("User-Agent")
-        }
+	// Auto-add new user to the global guild's general channel
+	var globalGuild Guild
+	if db.Where("name = ?", "Nemaks Общий").First(&globalGuild).RowsAffected > 0 {
+		var generalChannel Channel
+		if db.Where("guild_id = ? AND name = ?", globalGuild.ID, "general").First(&generalChannel).RowsAffected > 0 {
+			var existingMember ChannelMember
+			if db.Where("channel_id = ? AND user_id = ?", generalChannel.ID, user.ID).First(&existingMember).RowsAffected == 0 {
+				db.Create(&ChannelMember{
+					ChannelID: generalChannel.ID,
+					UserID:    user.ID,
+					Role:      "member",
+					JoinedAt:  time.Now(),
+				})
+				log.Printf("Added user %s to general channel", user.Username)
+			}
+		}
+	}
 
-        accessToken, refreshToken, err := generateTokenPair(&user, "", deviceInfo, c.ClientIP())
-        if err != nil {
-                log.Printf("Token generation error: %v", err)
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
-                return
-        }
+	deviceInfo := c.GetHeader("X-Device-Info")
+	if deviceInfo == "" {
+		deviceInfo = c.GetHeader("User-Agent")
+	}
 
-        c.JSON(http.StatusCreated, gin.H{
-                "access_token":  accessToken,
-                "refresh_token": refreshToken,
-                "expires_in":    int(accessTokenExpiry.Seconds()),
-                "user":          user.ToPublic(),
-        })
+	accessToken, refreshToken, err := generateTokenPair(&user, "", deviceInfo, c.ClientIP())
+	if err != nil {
+		log.Printf("Token generation error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"expires_in":    int(accessTokenExpiry.Seconds()),
+		"user":          user.ToPublic(),
+	})
 }
 
 func loginHandler(c *gin.Context) {
-        log.Printf("Login attempt: Method=%s Path=%s IP=%s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
-        var req struct {
-                Username string `json:"username" binding:"required"`
-                Password string `json:"password" binding:"required"`
-        }
-        if err := c.ShouldBindJSON(&req); err != nil {
-                log.Printf("Login bind error: %v", err)
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
+	log.Printf("Login attempt: Method=%s Path=%s IP=%s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
+	var req struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("Login bind error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        // Content filter check
-        filterResult := checkContentFilter(req.Username, 0, "login")
-        if filterResult.IsForbidden {
-                log.Printf("Login blocked: username contains forbidden words: %v", filterResult.MatchedWords)
-                c.JSON(http.StatusForbidden, gin.H{
-                        "error":         "Username contains forbidden content",
-                        "matched_words": filterResult.MatchedWords,
-                })
-                return
-        }
+	// Content filter check
+	filterResult := checkContentFilter(req.Username, 0, "login")
+	if filterResult.IsForbidden {
+		log.Printf("Login blocked: username contains forbidden words: %v", filterResult.MatchedWords)
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":         "Username contains forbidden content",
+			"matched_words": filterResult.MatchedWords,
+		})
+		return
+	}
 
-        var user User
-        if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
-                log.Printf("Login attempt failed for username %s: user not found", req.Username)
-                RecordFailedLogin(c.ClientIP())
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-                return
-        }
+	var user User
+	if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
+		log.Printf("Login attempt failed for username %s: user not found", req.Username)
+		RecordFailedLogin(c.ClientIP())
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
 
-        if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-                log.Printf("Login attempt failed for username %s: invalid password", req.Username)
-                RecordFailedLogin(c.ClientIP())
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-                return
-        }
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		log.Printf("Login attempt failed for username %s: invalid password", req.Username)
+		RecordFailedLogin(c.ClientIP())
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
 
-        // Clear failed login attempts on successful password verification
-        ClearFailedLogins(c.ClientIP())
+	// Clear failed login attempts on successful password verification
+	ClearFailedLogins(c.ClientIP())
 
-        // Check if 2FA is enabled
-        if is2FAEnabled(user.ID) {
-                c.JSON(http.StatusOK, gin.H{
-                        "requires_2fa": true,
-                        "user_id":      user.ID,
-                        "message":      "Please provide your 2FA code",
-                })
-                return
-        }
+	// Check if 2FA is enabled
+	if is2FAEnabled(user.ID) {
+		c.JSON(http.StatusOK, gin.H{
+			"requires_2fa": true,
+			"user_id":      user.ID,
+			"message":      "Please provide your 2FA code",
+		})
+		return
+	}
 
-        deviceInfo := c.GetHeader("X-Device-Info")
-        if deviceInfo == "" {
-                deviceInfo = c.GetHeader("User-Agent")
-        }
+	deviceInfo := c.GetHeader("X-Device-Info")
+	if deviceInfo == "" {
+		deviceInfo = c.GetHeader("User-Agent")
+	}
 
-        accessToken, refreshToken, err := generateTokenPair(&user, "", deviceInfo, c.ClientIP())
-        if err != nil {
-                log.Printf("Token generation error: %v", err)
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
-                return
-        }
+	accessToken, refreshToken, err := generateTokenPair(&user, "", deviceInfo, c.ClientIP())
+	if err != nil {
+		log.Printf("Token generation error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
+		return
+	}
 
-        c.JSON(http.StatusOK, gin.H{
-                "access_token":  accessToken,
-                "refresh_token": refreshToken,
-                "expires_in":    int(accessTokenExpiry.Seconds()),
-                "user":          user.ToPublic(),
-        })
+	c.JSON(http.StatusOK, gin.H{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"expires_in":    int(accessTokenExpiry.Seconds()),
+		"user":          user.ToPublic(),
+	})
+}
+
+// validatePasswordPolicy: минимум 8 символов, хотя бы одна буква и одна цифра.
+func validatePasswordPolicy(password string) error {
+	if len(password) < 8 {
+		return fmt.Errorf("password must be at least 8 characters long")
+	}
+	var hasLetter, hasDigit bool
+	for _, r := range password {
+		switch {
+		case unicode.IsLetter(r):
+			hasLetter = true
+		case unicode.IsDigit(r):
+			hasDigit = true
+		}
+	}
+	if !hasLetter || !hasDigit {
+		return fmt.Errorf("password must contain at least one letter and one digit")
+	}
+	return nil
 }
 
 func logoutHandler(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
+	// Реальный отзыв токена: заносим access-token (jti) и сессию (sid) в
+	// blacklist, деактивируем сессию и отзываем refresh-токены в БД.
+	if tokenID, ok := c.Get("token_id"); ok {
+		if tid, ok := tokenID.(string); ok && tid != "" {
+			blacklistToken(tid, accessTokenExpiry)
+		}
+	}
+
+	if sidRaw, ok := c.Get("session_id"); ok {
+		if sid, ok := sidRaw.(string); ok && sid != "" {
+			blacklistSession(sid, accessTokenExpiry)
+			now := time.Now()
+			db.Model(&UserSession{}).Where("session_id = ?", sid).Update("is_active", false)
+			db.Model(&RefreshToken{}).Where("session_id = ? AND revoked = ?", sid, false).
+				Updates(map[string]interface{}{"revoked": true, "revoked_at": now})
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 }
 
 func meHandler(c *gin.Context) {
-        userID, ok := getUserIDFromContext(c)
-        if !ok {
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user session"})
-                return
-        }
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user session"})
+		return
+	}
 
-        var user User
-        if err := db.First(&user, userID).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-                return
-        }
+	var user User
+	if err := db.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
 
-        c.JSON(http.StatusOK, user.ToPublic())
+	c.JSON(http.StatusOK, user.ToPublic())
 }
 
 func updateMeHandler(c *gin.Context) {
-        userID, ok := getUserIDFromContext(c)
-        if !ok {
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Недействительная сессия"})
-                return
-        }
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Недействительная сессия"})
+		return
+	}
 
-        var user User
-        if err := db.First(&user, userID).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
-                return
-        }
+	var user User
+	if err := db.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
+		return
+	}
 
-        var req struct {
-                Bio         *string `json:"bio"`
-                Avatar      *string `json:"avatar"`
-                Status      *string `json:"status"`
-                DisplayName *string `json:"display_name"`
-        }
-        if err := c.ShouldBindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные"})
-                return
-        }
+	var req struct {
+		Bio         *string `json:"bio"`
+		Avatar      *string `json:"avatar"`
+		Status      *string `json:"status"`
+		DisplayName *string `json:"display_name"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные"})
+		return
+	}
 
-        if req.Bio != nil {
-                user.Bio = req.Bio
-        }
-        if req.Avatar != nil {
-                user.Avatar = req.Avatar
-        }
-        if req.Status != nil {
-                user.Status = *req.Status
-        }
-        if req.DisplayName != nil {
-                user.DisplayName = req.DisplayName
-        }
+	if req.Bio != nil {
+		user.Bio = req.Bio
+	}
+	if req.Avatar != nil {
+		user.Avatar = req.Avatar
+	}
+	if req.Status != nil {
+		user.Status = *req.Status
+	}
+	if req.DisplayName != nil {
+		user.DisplayName = req.DisplayName
+	}
 
-        if err := db.Save(&user).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить профиль"})
-                return
-        }
+	if err := db.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось обновить профиль"})
+		return
+	}
 
-        c.JSON(http.StatusOK, user.ToPublic())
+	c.JSON(http.StatusOK, user.ToPublic())
 }
 
+// authMiddleware — защита всех закрытых роутов. Делегирует
+// enhancedAuthMiddleware (jwt_enhanced.go): проверяет тип токена (access),
+// blacklist по jti/sid и активность сессии — это делает работающими
+// logout/revoke. Раньше токены после logout оставались валидными до exp.
 func authMiddleware() gin.HandlerFunc {
-        return func(c *gin.Context) {
-                authHeader := c.GetHeader("Authorization")
-                if authHeader == "" {
-                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-                        return
-                }
-
-                tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-                token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-                        // Validate signing method
-                        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                                return nil, jwt.ErrSignatureInvalid
-                        }
-                        return getJWTSecret(), nil
-                })
-
-                if err != nil || !token.Valid {
-                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-                        return
-                }
-
-                claims, ok := token.Claims.(jwt.MapClaims)
-                if !ok {
-                        c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
-                        return
-                }
-
-                // Support both "user_id" and "uid" claims
-                if uid, ok := claims["user_id"]; ok {
-                        c.Set("user_id", uid)
-                } else if uid, ok := claims["uid"]; ok {
-                        c.Set("user_id", uid)
-                }
-                c.Next()
-        }
+	return enhancedAuthMiddleware()
 }
 
 // optionalAuthMiddleware extracts user_id if token is present but doesn't require it
 func optionalAuthMiddleware() gin.HandlerFunc {
-        return func(c *gin.Context) {
-                authHeader := c.GetHeader("Authorization")
-                if authHeader == "" {
-                        c.Next()
-                        return
-                }
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Next()
+			return
+		}
 
-                tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-                token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-                        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                                return nil, jwt.ErrSignatureInvalid
-                        }
-                        return getJWTSecret(), nil
-                })
+		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return getJWTSecret(), nil
+		})
 
-                if err == nil && token.Valid {
-                        if claims, ok := token.Claims.(jwt.MapClaims); ok {
-                                // Support both "user_id" and "uid" claims
-                                if uid, ok := claims["user_id"]; ok {
-                                        c.Set("user_id", uid)
-                                } else if uid, ok := claims["uid"]; ok {
-                                        c.Set("user_id", uid)
-                                }
-                        }
-                }
-                c.Next()
-        }
+		if err == nil && token.Valid {
+			if claims, ok := token.Claims.(jwt.MapClaims); ok {
+				// Не принимаем отозванные токены/сессии (logout/revoke)
+				revoked := false
+				if jti, ok := claims["jti"].(string); ok && jti != "" && isTokenBlacklisted(jti) {
+					revoked = true
+				}
+				if sid, ok := claims["sid"].(string); ok && sid != "" && isSessionBlacklisted(sid) {
+					revoked = true
+				}
+				if !revoked {
+					// Support both "user_id" and "uid" claims
+					if uid, ok := claims["user_id"]; ok {
+						c.Set("user_id", uid)
+					} else if uid, ok := claims["uid"]; ok {
+						c.Set("user_id", uid)
+					}
+				}
+			}
+		}
+		c.Next()
+	}
 }
 
 func generateToken(user *User) (string, error) {
-        token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-                "user_id":  user.ID,
-                "username": user.Username,
-                "exp":      time.Now().Add(time.Hour * 24).Unix(),
-        })
-        return token.SignedString(getJWTSecret())
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":  user.ID,
+		"username": user.Username,
+		"exp":      time.Now().Add(time.Hour * 24).Unix(),
+	})
+	return token.SignedString(getJWTSecret())
 }
 
 func getGuildsHandler(c *gin.Context) {
-        userID, _ := getUserIDFromContext(c)
-        var guilds []Guild
-        
-        // Get guilds where user is a member
-        var memberGuildIDs []uint
-        db.Model(&GuildMember{}).Where("user_id = ?", userID).Pluck("guild_id", &memberGuildIDs)
-        
-        // Get guilds: user is member, OR user is owner, OR guild is "Nemaks Общий" (the only public server)
-        if len(memberGuildIDs) > 0 {
-                db.Where("id IN ? OR owner_id = ? OR (name = ? AND is_private = ?)", memberGuildIDs, userID, "Nemaks Общий", false).Find(&guilds)
-        } else {
-                db.Where("owner_id = ? OR (name = ? AND is_private = ?)", userID, "Nemaks Общий", false).Find(&guilds)
-        }
-        
-        c.JSON(http.StatusOK, guilds)
+	userID, _ := getUserIDFromContext(c)
+	var guilds []Guild
+
+	// Get guilds where user is a member
+	var memberGuildIDs []uint
+	db.Model(&GuildMember{}).Where("user_id = ?", userID).Pluck("guild_id", &memberGuildIDs)
+
+	// Get guilds: user is member, OR user is owner, OR guild is "Nemaks Общий" (the only public server)
+	if len(memberGuildIDs) > 0 {
+		db.Where("id IN ? OR owner_id = ? OR (name = ? AND is_private = ?)", memberGuildIDs, userID, "Nemaks Общий", false).Find(&guilds)
+	} else {
+		db.Where("owner_id = ? OR (name = ? AND is_private = ?)", userID, "Nemaks Общий", false).Find(&guilds)
+	}
+
+	c.JSON(http.StatusOK, guilds)
 }
 
 func createGuildHandler(c *gin.Context) {
-        userID, ok := getUserIDFromContext(c)
-        if !ok {
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user session"})
-                return
-        }
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user session"})
+		return
+	}
 
-        var req struct {
-                Name string `json:"name" binding:"required"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
+	var req struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        guild := Guild{
-                Name:      req.Name,
-                OwnerID:   userID,
-                IsPrivate: true, // All new servers are invitation-only by default
-        }
-        if err := db.Create(&guild).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create guild"})
-                return
-        }
-        
-        // Add owner as a member of the guild
-        member := GuildMember{
-                GuildID:  guild.ID,
-                UserID:   userID,
-                Role:     "owner",
-                JoinedAt: time.Now(),
-        }
-        db.Create(&member)
+	guild := Guild{
+		Name:      req.Name,
+		OwnerID:   userID,
+		IsPrivate: true, // All new servers are invitation-only by default
+	}
+	if err := db.Create(&guild).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create guild"})
+		return
+	}
 
-        c.JSON(http.StatusCreated, guild)
+	// Add owner as a member of the guild
+	member := GuildMember{
+		GuildID:  guild.ID,
+		UserID:   userID,
+		Role:     "owner",
+		JoinedAt: time.Now(),
+	}
+	db.Create(&member)
+
+	c.JSON(http.StatusCreated, guild)
 }
 
 func getChannelsHandler(c *gin.Context) {
-        guildID := c.Param("guild_id")
-        userID, _ := getUserIDFromContext(c)
+	guildID := c.Param("guild_id")
+	userID, _ := getUserIDFromContext(c)
 
-        var channels []Channel
-        db.Where("guild_id = ?", guildID).Find(&channels)
+	var channels []Channel
+	db.Where("guild_id = ?", guildID).Find(&channels)
 
-        var guild Guild
-        db.First(&guild, guildID)
-        isGuildOwner := guild.OwnerID == userID
+	var guild Guild
+	db.First(&guild, guildID)
+	isGuildOwner := guild.OwnerID == userID
 
-        var user User
-        db.First(&user, userID)
-        isAdmin := user.Role == "admin"
+	var user User
+	db.First(&user, userID)
+	isAdmin := user.Role == "admin"
 
-        isGuildModerator := false
-        if !isAdmin && !isGuildOwner {
-                var memberRoles []GuildMemberRole
-                db.Where("guild_id = ? AND user_id = ?", guildID, userID).Find(&memberRoles)
-                for _, mr := range memberRoles {
-                        var role GuildRole
-                        if db.First(&role, mr.RoleID).Error == nil {
-                                if role.Permissions&PermAdministrator != 0 || role.Permissions&PermManageChannels != 0 || role.Permissions&PermBanMembers != 0 {
-                                        isGuildModerator = true
-                                        break
-                                }
-                        }
-                }
-        }
+	isGuildModerator := false
+	if !isAdmin && !isGuildOwner {
+		var memberRoles []GuildMemberRole
+		db.Where("guild_id = ? AND user_id = ?", guildID, userID).Find(&memberRoles)
+		for _, mr := range memberRoles {
+			var role GuildRole
+			if db.First(&role, mr.RoleID).Error == nil {
+				if role.Permissions&PermAdministrator != 0 || role.Permissions&PermManageChannels != 0 || role.Permissions&PermBanMembers != 0 {
+					isGuildModerator = true
+					break
+				}
+			}
+		}
+	}
 
-        var visibleChannels []Channel
-        for _, ch := range channels {
-                if !ch.IsPrivate || ch.Name == "Nemaks Общий" {
-                        visibleChannels = append(visibleChannels, ch)
-                } else if isGuildOwner || isAdmin || isGuildModerator {
-                        visibleChannels = append(visibleChannels, ch)
-                } else {
-                        var member ChannelMember
-                        if db.Where("channel_id = ? AND user_id = ?", ch.ID, userID).First(&member).Error == nil {
-                                visibleChannels = append(visibleChannels, ch)
-                        }
-                }
-        }
+	var visibleChannels []Channel
+	for _, ch := range channels {
+		if !ch.IsPrivate || ch.Name == "Nemaks Общий" {
+			visibleChannels = append(visibleChannels, ch)
+		} else if isGuildOwner || isAdmin || isGuildModerator {
+			visibleChannels = append(visibleChannels, ch)
+		} else {
+			var member ChannelMember
+			if db.Where("channel_id = ? AND user_id = ?", ch.ID, userID).First(&member).Error == nil {
+				visibleChannels = append(visibleChannels, ch)
+			}
+		}
+	}
 
-        c.JSON(http.StatusOK, visibleChannels)
+	c.JSON(http.StatusOK, visibleChannels)
 }
 
 func createChannelHandler(c *gin.Context) {
-        guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
-        if err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
-                return
-        }
+	guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+		return
+	}
 
-        userID, _ := getUserIDFromContext(c)
+	userID, _ := getUserIDFromContext(c)
 
-        var req struct {
-                Name      string `json:"name" binding:"required"`
-                Type      string `json:"type"`
-                IsPrivate bool   `json:"is_private"`
-        }
-        if err := c.BindJSON(&req); err != nil {
-                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-                return
-        }
+	var req struct {
+		Name      string `json:"name" binding:"required"`
+		Type      string `json:"type"`
+		IsPrivate bool   `json:"is_private"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-        channelType := req.Type
-        if channelType == "" {
-                channelType = "text"
-        }
+	channelType := req.Type
+	if channelType == "" {
+		channelType = "text"
+	}
 
-        isPrivate := req.IsPrivate
-        if req.Name == "Nemaks Общий" {
-                isPrivate = false
-        }
+	isPrivate := req.IsPrivate
+	if req.Name == "Nemaks Общий" {
+		isPrivate = false
+	}
 
-        channel := Channel{
-                GuildID:   uint(guildID),
-                Name:      req.Name,
-                Type:      channelType,
-                IsPrivate: isPrivate,
-        }
-        if err := db.Create(&channel).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create channel"})
-                return
-        }
+	channel := Channel{
+		GuildID:   uint(guildID),
+		Name:      req.Name,
+		Type:      channelType,
+		IsPrivate: isPrivate,
+	}
+	if err := db.Create(&channel).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create channel"})
+		return
+	}
 
-        if isPrivate {
-                member := ChannelMember{
-                        ChannelID: channel.ID,
-                        UserID:    userID,
-                        Role:      "owner",
-                        JoinedAt:  time.Now(),
-                }
-                db.Create(&member)
-        }
+	if isPrivate {
+		member := ChannelMember{
+			ChannelID: channel.ID,
+			UserID:    userID,
+			Role:      "owner",
+			JoinedAt:  time.Now(),
+		}
+		db.Create(&member)
+	}
 
-        c.JSON(http.StatusCreated, channel)
+	c.JSON(http.StatusCreated, channel)
 }
 
 func getGuildHandler(c *gin.Context) {
-        id := c.Param("id")
-        var guild Guild
-        if err := db.First(&guild, id).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Guild not found"})
-                return
-        }
-        c.JSON(http.StatusOK, guild)
+	id := c.Param("id")
+	var guild Guild
+	if err := db.First(&guild, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Guild not found"})
+		return
+	}
+	c.JSON(http.StatusOK, guild)
 }
 
 // QR Login Handlers - 10 minute expiration
 
 func generateQRLoginHandler(c *gin.Context) {
-        // Generate unique token
-        token := generateRandomString(32)
-        
-        // Create session with 10-minute expiration
-        session := QRLoginSession{
-                Token:     token,
-                Status:    "pending",
-                ExpiresAt: time.Now().Add(10 * time.Minute),
-        }
-        
-        if err := db.Create(&session).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create QR session"})
-                return
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "token":      token,
-                "expires_at": session.ExpiresAt,
-        })
+	// Generate unique token
+	token := generateRandomString(32)
+
+	// Create session with 10-minute expiration
+	session := QRLoginSession{
+		Token:     token,
+		Status:    "pending",
+		ExpiresAt: time.Now().Add(10 * time.Minute),
+	}
+
+	if err := db.Create(&session).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create QR session"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token":      token,
+		"expires_at": session.ExpiresAt,
+	})
 }
 
 func checkQRLoginStatusHandler(c *gin.Context) {
-        token := c.Param("token")
-        
-        var session QRLoginSession
-        if err := db.Preload("User").Where("token = ?", token).First(&session).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Session not found"})
-                return
-        }
-        
-        // Check if expired
-        if time.Now().After(session.ExpiresAt) {
-                session.Status = "expired"
-                db.Save(&session)
-                c.JSON(http.StatusGone, gin.H{
-                        "status":     "expired",
-                        "expires_at": session.ExpiresAt,
-                })
-                return
-        }
-        
-        response := gin.H{
-                "status":     session.Status,
-                "expires_at": session.ExpiresAt,
-        }
-        
-        // If confirmed, include JWT token and user info
-        if session.Status == "confirmed" && session.JWTToken != nil {
-                response["jwt_token"] = *session.JWTToken
-                if session.User != nil {
-                        response["user"] = session.User.ToPublic()
-                }
-        }
-        
-        c.JSON(http.StatusOK, response)
+	token := c.Param("token")
+
+	var session QRLoginSession
+	if err := db.Preload("User").Where("token = ?", token).First(&session).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Session not found"})
+		return
+	}
+
+	// Check if expired
+	if time.Now().After(session.ExpiresAt) {
+		session.Status = "expired"
+		db.Save(&session)
+		c.JSON(http.StatusGone, gin.H{
+			"status":     "expired",
+			"expires_at": session.ExpiresAt,
+		})
+		return
+	}
+
+	response := gin.H{
+		"status":     session.Status,
+		"expires_at": session.ExpiresAt,
+	}
+
+	// If confirmed, include JWT token and user info
+	if session.Status == "confirmed" && session.JWTToken != nil {
+		response["jwt_token"] = *session.JWTToken
+		if session.User != nil {
+			response["user"] = session.User.ToPublic()
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func confirmQRLoginHandler(c *gin.Context) {
-        token := c.Param("token")
-        userID, ok := getUserIDFromContext(c)
-        if !ok {
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-                return
-        }
-        
-        var session QRLoginSession
-        if err := db.Where("token = ?", token).First(&session).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "Session not found"})
-                return
-        }
-        
-        // Check if expired
-        if time.Now().After(session.ExpiresAt) {
-                session.Status = "expired"
-                db.Save(&session)
-                c.JSON(http.StatusGone, gin.H{"error": "QR code has expired"})
-                return
-        }
-        
-        // Check if already confirmed
-        if session.Status == "confirmed" {
-                c.JSON(http.StatusBadRequest, gin.H{"error": "Session already confirmed"})
-                return
-        }
-        
-        // Get user
-        var user User
-        if err := db.First(&user, userID).Error; err != nil {
-                c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-                return
-        }
-        
-        // Generate JWT for the QR session
-        deviceInfo := c.GetHeader("X-Device-Info")
-        if deviceInfo == "" {
-                deviceInfo = c.GetHeader("User-Agent")
-        }
-        accessToken, refreshToken, err := generateTokenPair(&user, "", deviceInfo, c.ClientIP())
-        if err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-                return
-        }
-        
-        // Update session
-        session.Status = "confirmed"
-        session.UserID = &user.ID
-        session.ConfirmedBy = &user.ID
-        session.JWTToken = &accessToken
-        session.RefreshToken = &refreshToken
-        
-        if err := db.Save(&session).Error; err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to confirm session"})
-                return
-        }
-        
-        c.JSON(http.StatusOK, gin.H{
-                "message":  "Login confirmed",
-                "username": user.Username,
-        })
+	token := c.Param("token")
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var session QRLoginSession
+	if err := db.Where("token = ?", token).First(&session).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Session not found"})
+		return
+	}
+
+	// Check if expired
+	if time.Now().After(session.ExpiresAt) {
+		session.Status = "expired"
+		db.Save(&session)
+		c.JSON(http.StatusGone, gin.H{"error": "QR code has expired"})
+		return
+	}
+
+	// Check if already confirmed
+	if session.Status == "confirmed" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Session already confirmed"})
+		return
+	}
+
+	// Get user
+	var user User
+	if err := db.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Generate JWT for the QR session
+	deviceInfo := c.GetHeader("X-Device-Info")
+	if deviceInfo == "" {
+		deviceInfo = c.GetHeader("User-Agent")
+	}
+	accessToken, refreshToken, err := generateTokenPair(&user, "", deviceInfo, c.ClientIP())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	// Update session
+	session.Status = "confirmed"
+	session.UserID = &user.ID
+	session.ConfirmedBy = &user.ID
+	session.JWTToken = &accessToken
+	session.RefreshToken = &refreshToken
+
+	if err := db.Save(&session).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to confirm session"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Login confirmed",
+		"username": user.Username,
+	})
 }
 
 func generateRandomString(length int) string {
-        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        b := make([]byte, length)
-        randomBytes := make([]byte, length)
-        _, err := rand.Read(randomBytes)
-        if err != nil {
-                log.Printf("CRITICAL: crypto/rand failed: %v", err)
-                panic("crypto/rand unavailable - cannot generate secure tokens")
-        }
-        for i := range b {
-                b[i] = chars[int(randomBytes[i])%len(chars)]
-        }
-        return string(b)
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	randomBytes := make([]byte, length)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		log.Printf("CRITICAL: crypto/rand failed: %v", err)
+		panic("crypto/rand unavailable - cannot generate secure tokens")
+	}
+	for i := range b {
+		b[i] = chars[int(randomBytes[i])%len(chars)]
+	}
+	return string(b)
 }

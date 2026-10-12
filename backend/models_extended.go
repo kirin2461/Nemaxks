@@ -1,949 +1,978 @@
 package main
 
 import (
-        "time"
+	"strings"
+	"time"
 
-        "github.com/lib/pq"
-        "gorm.io/gorm"
+	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 // Users & Roles
 type AdminRole struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        Name      string    `gorm:"unique;not null" json:"name"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Name      string    `gorm:"unique;not null" json:"name"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type AdminUserRole struct {
-        ID     uint `gorm:"primaryKey" json:"id"`
-        UserID uint `gorm:"index" json:"user_id"`
-        RoleID uint `gorm:"index" json:"role_id"`
+	ID     uint `gorm:"primaryKey" json:"id"`
+	UserID uint `gorm:"index" json:"user_id"`
+	RoleID uint `gorm:"index" json:"role_id"`
 }
 
 type BanHistory struct {
-        ID        uint       `gorm:"primaryKey" json:"id"`
-        UserID    uint       `gorm:"index" json:"user_id"`
-        Reason    string     `json:"reason"`
-        BannedBy  uint       `json:"banned_by"`
-        ExpiresAt *time.Time `json:"expires_at"`
-        CreatedAt time.Time  `json:"created_at"`
+	ID        uint       `gorm:"primaryKey" json:"id"`
+	UserID    uint       `gorm:"index" json:"user_id"`
+	Reason    string     `json:"reason"`
+	BannedBy  uint       `json:"banned_by"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 type Ban struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        UserID    uint      `gorm:"uniqueIndex" json:"user_id"`
-        Reason    string    `json:"reason"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"uniqueIndex" json:"user_id"`
+	Reason    string    `json:"reason"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type BlockedUser struct {
-        ID            uint      `gorm:"primaryKey" json:"id"`
-        UserID        uint      `gorm:"index" json:"user_id"`
-        BlockedUserID uint      `gorm:"index" json:"blocked_user_id"`
-        CreatedAt     time.Time `json:"created_at"`
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	UserID        uint      `gorm:"index" json:"user_id"`
+	BlockedUserID uint      `gorm:"index" json:"blocked_user_id"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // Bot Management
 type BotActivityLog struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        BotID     uint      `gorm:"index" json:"bot_id"`
-        Action    string    `json:"action"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	BotID     uint      `gorm:"index" json:"bot_id"`
+	Action    string    `json:"action"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type BotRateLimit struct {
-        ID         uint   `gorm:"primaryKey" json:"id"`
-        BotID      uint   `gorm:"index" json:"bot_id"`
-        Endpoint   string `json:"endpoint"`
-        LimitCount int    `json:"limit_count"`
+	ID         uint   `gorm:"primaryKey" json:"id"`
+	BotID      uint   `gorm:"index" json:"bot_id"`
+	Endpoint   string `json:"endpoint"`
+	LimitCount int    `json:"limit_count"`
 }
 
 type BotToken struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        BotID     uint      `gorm:"index" json:"bot_id"`
-        Token     string    `gorm:"unique;not null" json:"token"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	BotID     uint      `gorm:"index" json:"bot_id"`
+	Token     string    `gorm:"unique;not null" json:"token"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type BotWebhook struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        BotID     uint      `gorm:"index" json:"bot_id"`
-        URL       string    `json:"url"`
-        Secret    string    `json:"secret"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	BotID     uint      `gorm:"index" json:"bot_id"`
+	URL       string    `json:"url"`
+	Secret    string    `json:"secret"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type BotWebhookDelivery struct {
-        ID         uint      `gorm:"primaryKey" json:"id"`
-        WebhookID  uint      `gorm:"index" json:"webhook_id"`
-        StatusCode int       `json:"status_code"`
-        Payload    string    `gorm:"type:text" json:"payload"`
-        CreatedAt  time.Time `json:"created_at"`
+	ID         uint      `gorm:"primaryKey" json:"id"`
+	WebhookID  uint      `gorm:"index" json:"webhook_id"`
+	StatusCode int       `json:"status_code"`
+	Payload    string    `gorm:"type:text" json:"payload"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // Calls
 type Call struct {
-        ID        uint       `gorm:"primaryKey" json:"id"`
-        ChannelID uint       `gorm:"index" json:"channel_id"`
-        Status    string     `json:"status"` // ongoing, ended
-        StartedAt time.Time  `json:"started_at"`
-        EndedAt   *time.Time `json:"ended_at"`
+	ID        uint       `gorm:"primaryKey" json:"id"`
+	ChannelID uint       `gorm:"index" json:"channel_id"`
+	Status    string     `json:"status"` // ongoing, ended
+	StartedAt time.Time  `json:"started_at"`
+	EndedAt   *time.Time `json:"ended_at"`
 }
 
 type CallParticipant struct {
-        ID       uint       `gorm:"primaryKey" json:"id"`
-        CallID   uint       `gorm:"index" json:"call_id"`
-        UserID   uint       `gorm:"index" json:"user_id"`
-        JoinedAt time.Time  `json:"joined_at"`
-        LeftAt   *time.Time `json:"left_at"`
+	ID       uint       `gorm:"primaryKey" json:"id"`
+	CallID   uint       `gorm:"index" json:"call_id"`
+	UserID   uint       `gorm:"index" json:"user_id"`
+	JoinedAt time.Time  `json:"joined_at"`
+	LeftAt   *time.Time `json:"left_at"`
 }
 
 type CallRecording struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        CallID    uint      `gorm:"index" json:"call_id"`
-        URL       string    `json:"url"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	CallID    uint      `gorm:"index" json:"call_id"`
+	URL       string    `json:"url"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type CallSignaling struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        CallID    uint      `gorm:"index" json:"call_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        Data      string    `gorm:"type:text" json:"data"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	CallID    uint      `gorm:"index" json:"call_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Data      string    `gorm:"type:text" json:"data"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // Channels & Members
 type ChannelCategory struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        GuildID   uint      `gorm:"index" json:"guild_id"`
-        Name      string    `json:"name"`
-        Position  int       `gorm:"default:0" json:"position"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	GuildID   uint      `gorm:"index" json:"guild_id"`
+	Name      string    `json:"name"`
+	Position  int       `gorm:"default:0" json:"position"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type ChannelInvitation struct {
-        ID        uint       `gorm:"primaryKey" json:"id"`
-        ChannelID uint       `gorm:"index" json:"channel_id"`
-        InviterID uint       `json:"inviter_id"`
-        Code      string     `gorm:"unique" json:"code"`
-        ExpiresAt *time.Time `json:"expires_at"`
-        CreatedAt time.Time  `json:"created_at"`
+	ID        uint       `gorm:"primaryKey" json:"id"`
+	ChannelID uint       `gorm:"index" json:"channel_id"`
+	InviterID uint       `json:"inviter_id"`
+	Code      string     `gorm:"unique" json:"code"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 type ChannelMember struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        ChannelID uint      `gorm:"index" json:"channel_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        Role      string    `json:"role"`
-        JoinedAt  time.Time `json:"joined_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	ChannelID uint      `gorm:"index" json:"channel_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Role      string    `json:"role"`
+	JoinedAt  time.Time `json:"joined_at"`
 }
 
 // GuildMember represents membership of a user in a guild.
 // Used by voice/LiveKit handlers for access checks.
 type GuildMember struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        GuildID   uint      `gorm:"index" json:"guild_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        Role      string    `gorm:"size:32;default:'member'" json:"role"`
-        JoinedAt  time.Time `json:"joined_at"`
-        CreatedAt time.Time `json:"created_at"`
-        UpdatedAt time.Time `json:"updated_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	GuildID   uint      `gorm:"index" json:"guild_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Role      string    `gorm:"size:32;default:'member'" json:"role"`
+	JoinedAt  time.Time `json:"joined_at"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ChannelMessageReaction struct {
-        ID        uint   `gorm:"primaryKey" json:"id"`
-        MessageID uint   `gorm:"index" json:"message_id"`
-        UserID    uint   `gorm:"index" json:"user_id"`
-        Emoji     string `json:"emoji"`
+	ID        uint   `gorm:"primaryKey" json:"id"`
+	MessageID uint   `gorm:"index" json:"message_id"`
+	UserID    uint   `gorm:"index" json:"user_id"`
+	Emoji     string `json:"emoji"`
 }
 
 // Jarvis AI
 type JarvisCommand struct {
-        ID          uint   `gorm:"primaryKey" json:"id"`
-        Name        string `gorm:"unique" json:"name"`
-        Description string `json:"description"`
+	ID          uint   `gorm:"primaryKey" json:"id"`
+	Name        string `gorm:"unique" json:"name"`
+	Description string `json:"description"`
 }
 
 type JarvisContext struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        Content   string    `gorm:"type:text" json:"content"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Content   string    `gorm:"type:text" json:"content"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type JarvisReminder struct {
-        ID                  uint      `gorm:"primaryKey" json:"id"`
-        UserID              uint      `gorm:"index" json:"user_id"`
-        Content             string    `json:"content"`
-        RemindAt            time.Time `json:"remind_at"`
-        IsSent              bool      `gorm:"default:false" json:"is_sent"`
-        CreatedAt           time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Content   string    `json:"content"`
+	RemindAt  time.Time `json:"remind_at"`
+	IsSent    bool      `gorm:"default:false" json:"is_sent"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type JarvisSession struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        Token     string    `gorm:"unique" json:"token"`
-        ExpiresAt time.Time `json:"expires_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Token     string    `gorm:"unique" json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 // Existing types (for consistency in models_extended.go)
 type Friend struct {
-        ID        uint           `gorm:"primaryKey" json:"id"`
-        UserID    uint           `gorm:"index" json:"user_id"`
-        FriendID  uint           `gorm:"index" json:"friend_id"`
-        CreatedAt time.Time      `json:"created_at"`
-        DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	UserID    uint           `gorm:"index" json:"user_id"`
+	FriendID  uint           `gorm:"index" json:"friend_id"`
+	CreatedAt time.Time      `json:"created_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 type FriendRequest struct {
-        ID          uint      `gorm:"primaryKey" json:"id"`
-        RequesterID uint      `gorm:"index" json:"requester_id"`
-        AddresseeID uint      `gorm:"index" json:"addressee_id"`
-        Status      string    `gorm:"size:16;default:'pending'" json:"status"`
-        CreatedAt   time.Time `json:"created_at"`
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	RequesterID uint      `gorm:"index" json:"requester_id"`
+	AddresseeID uint      `gorm:"index" json:"addressee_id"`
+	Status      string    `gorm:"size:16;default:'pending'" json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 type DirectMessage struct {
-        ID              uint           `gorm:"primaryKey" json:"id"`
-        SenderID        uint           `gorm:"index;index:idx_direct_messages_conversation,priority:1" json:"sender_id"`
-        ReceiverID      uint           `gorm:"index;index:idx_direct_messages_conversation,priority:2" json:"receiver_id"`
-        Content         string         `gorm:"type:text" json:"content"`
-        Read            bool           `gorm:"default:false" json:"read"`
-        Edited          bool           `gorm:"default:false" json:"edited"`
-        ReplyToID       *uint          `gorm:"index" json:"reply_to_id"`
-        ReplyTo         *DirectMessage `gorm:"foreignKey:ReplyToID" json:"reply_to,omitempty"`
-        ForwardedFromID *uint          `gorm:"index" json:"forwarded_from_id"`
-        VoiceURL        *string        `json:"voice_url"`
-        VoiceDuration   int            `gorm:"default:0" json:"voice_duration"`
-        IsPinned        bool           `gorm:"default:false" json:"is_pinned"`
-        CreatedAt       time.Time      `json:"created_at" gorm:"index:idx_direct_messages_conversation,priority:3,sort:desc"`
-        UpdatedAt       time.Time      `json:"updated_at"`
-        DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
+	ID              uint           `gorm:"primaryKey" json:"id"`
+	SenderID        uint           `gorm:"index;index:idx_direct_messages_conversation,priority:1" json:"sender_id"`
+	ReceiverID      uint           `gorm:"index;index:idx_direct_messages_conversation,priority:2" json:"receiver_id"`
+	Content         string         `gorm:"type:text" json:"content"`
+	Read            bool           `gorm:"default:false" json:"read"`
+	Edited          bool           `gorm:"default:false" json:"edited"`
+	ReplyToID       *uint          `gorm:"index" json:"reply_to_id"`
+	ReplyTo         *DirectMessage `gorm:"foreignKey:ReplyToID" json:"reply_to,omitempty"`
+	ForwardedFromID *uint          `gorm:"index" json:"forwarded_from_id"`
+	VoiceURL        *string        `json:"voice_url"`
+	VoiceDuration   int            `gorm:"default:0" json:"voice_duration"`
+	IsPinned        bool           `gorm:"default:false" json:"is_pinned"`
+	CreatedAt       time.Time      `json:"created_at" gorm:"index:idx_direct_messages_conversation,priority:3,sort:desc"`
+	UpdatedAt       time.Time      `json:"updated_at"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 type MessageReaction struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        MessageID uint      `gorm:"index" json:"message_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        Emoji     string    `gorm:"size:10" json:"emoji"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	MessageID uint      `gorm:"index" json:"message_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Emoji     string    `gorm:"size:10" json:"emoji"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // Stories (24-hour disappearing content)
 type Story struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        Content   string    `gorm:"type:text" json:"content"`
-        MediaURL  *string   `json:"media_url"`
-        MediaType string    `gorm:"size:20" json:"media_type"`
-        ViewCount int       `gorm:"default:0" json:"view_count"`
-        ExpiresAt time.Time `gorm:"index" json:"expires_at"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Content   string    `gorm:"type:text" json:"content"`
+	MediaURL  *string   `json:"media_url"`
+	MediaType string    `gorm:"size:20" json:"media_type"`
+	ViewCount int       `gorm:"default:0" json:"view_count"`
+	ExpiresAt time.Time `gorm:"index" json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type StoryView struct {
-        ID       uint      `gorm:"primaryKey" json:"id"`
-        StoryID  uint      `gorm:"index" json:"story_id"`
-        ViewerID uint      `gorm:"index" json:"viewer_id"`
-        ViewedAt time.Time `json:"viewed_at"`
+	ID       uint      `gorm:"primaryKey" json:"id"`
+	StoryID  uint      `gorm:"index" json:"story_id"`
+	ViewerID uint      `gorm:"index" json:"viewer_id"`
+	ViewedAt time.Time `json:"viewed_at"`
 }
 
 type Video struct {
-        ID          uint          `gorm:"primaryKey" json:"id"`
-        AuthorID    uint          `gorm:"index" json:"author_id"`
-        Title       string        `gorm:"size:255;not null" json:"title"`
-        Description string        `gorm:"type:text" json:"description"`
-        VideoURL    string        `gorm:"type:text;not null" json:"video_url"`
-        Thumbnail   string        `gorm:"type:text" json:"thumbnail"`
-        Duration    int           `gorm:"default:0" json:"duration"`
-        Views       int           `gorm:"default:0" json:"views"`
-        Likes       int           `gorm:"default:0" json:"likes"`
-        Category    string        `gorm:"size:50" json:"category"`
-        Tags        pq.StringArray `gorm:"type:text[]" json:"tags"`
-        IsPublic    bool          `gorm:"default:true" json:"is_public"`
-        CreatedAt   time.Time     `json:"created_at"`
-        UpdatedAt   time.Time     `json:"updated_at"`
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	AuthorID    uint           `gorm:"index" json:"author_id"`
+	Title       string         `gorm:"size:255;not null" json:"title"`
+	Description string         `gorm:"type:text" json:"description"`
+	VideoURL    string         `gorm:"type:text;not null" json:"video_url"`
+	Thumbnail   string         `gorm:"type:text" json:"thumbnail"`
+	Duration    int            `gorm:"default:0" json:"duration"`
+	Views       int            `gorm:"default:0" json:"views"`
+	Likes       int            `gorm:"default:0" json:"likes"`
+	Category    string         `gorm:"size:50" json:"category"`
+	Tags        pq.StringArray `gorm:"type:text[]" json:"tags"`
+	IsPublic    bool           `gorm:"default:true" json:"is_public"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
 type VideoChapter struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        VideoID   uint      `gorm:"index" json:"video_id"`
-        Title     string    `gorm:"size:255;not null" json:"title"`
-        Timestamp int       `gorm:"not null" json:"timestamp"`
-        Duration  int       `gorm:"default:0" json:"duration"`
-        Summary   string    `gorm:"type:text" json:"summary"`
-        SortOrder int       `gorm:"default:0" json:"sort_order"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	VideoID   uint      `gorm:"index" json:"video_id"`
+	Title     string    `gorm:"size:255;not null" json:"title"`
+	Timestamp int       `gorm:"not null" json:"timestamp"`
+	Duration  int       `gorm:"default:0" json:"duration"`
+	Summary   string    `gorm:"type:text" json:"summary"`
+	SortOrder int       `gorm:"default:0" json:"sort_order"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type VideoLike struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        VideoID   uint      `gorm:"index" json:"video_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	VideoID   uint      `gorm:"index" json:"video_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type VideoBookmark struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        VideoID   uint      `gorm:"index" json:"video_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	VideoID   uint      `gorm:"index" json:"video_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // Post Ratings (5-star system)
 type PostRating struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        PostID    uint      `gorm:"index" json:"post_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        Rating    int       `gorm:"check:rating >= 1 AND rating <= 5" json:"rating"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	PostID    uint      `gorm:"index" json:"post_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Rating    int       `gorm:"check:rating >= 1 AND rating <= 5" json:"rating"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type PostComment struct {
-        ID        uint           `gorm:"primaryKey" json:"id"`
-        PostID    uint           `gorm:"index" json:"post_id"`
-        UserID    uint           `gorm:"index" json:"user_id"`
-        Content   string         `gorm:"type:text;not null" json:"content"`
-        ParentID  *uint          `gorm:"index" json:"parent_id"`
-        CreatedAt time.Time      `json:"created_at"`
-        UpdatedAt time.Time      `json:"updated_at"`
-        DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	PostID    uint           `gorm:"index" json:"post_id"`
+	UserID    uint           `gorm:"index" json:"user_id"`
+	Content   string         `gorm:"type:text;not null" json:"content"`
+	ParentID  *uint          `gorm:"index" json:"parent_id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 type PostLike struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        PostID    uint      `gorm:"index" json:"post_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	PostID    uint      `gorm:"index" json:"post_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Subscription struct {
-        ID          uint      `gorm:"primaryKey" json:"id"`
-        FollowerID  uint      `gorm:"index" json:"follower_id"`
-        FollowingID uint      `gorm:"index" json:"following_id"`
-        CreatedAt   time.Time `json:"created_at"`
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	FollowerID  uint      `gorm:"index" json:"follower_id"`
+	FollowingID uint      `gorm:"index" json:"following_id"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 type PostBookmark struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        PostID    uint      `gorm:"index" json:"post_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	PostID    uint      `gorm:"index" json:"post_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // User Presence & Status
 type UserPresence struct {
-        ID           uint      `gorm:"primaryKey" json:"id"`
-        UserID       uint      `gorm:"uniqueIndex" json:"user_id"`
-        Status       string    `gorm:"size:20;default:'offline'" json:"status"`
-        LastSeenAt   time.Time `json:"last_seen_at"`
-        CustomStatus *string   `json:"custom_status"`
-        UpdatedAt    time.Time `json:"updated_at"`
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	UserID       uint      `gorm:"uniqueIndex" json:"user_id"`
+	Status       string    `gorm:"size:20;default:'offline'" json:"status"`
+	LastSeenAt   time.Time `json:"last_seen_at"`
+	CustomStatus *string   `json:"custom_status"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type TypingIndicator struct {
-        ID         uint      `gorm:"primaryKey" json:"id"`
-        UserID     uint      `gorm:"index" json:"user_id"`
-        ChannelID  *uint     `gorm:"index" json:"channel_id"`
-        ChatUserID *uint     `gorm:"index" json:"chat_user_id"`
-        StartedAt  time.Time `json:"started_at"`
+	ID         uint      `gorm:"primaryKey" json:"id"`
+	UserID     uint      `gorm:"index" json:"user_id"`
+	ChannelID  *uint     `gorm:"index" json:"channel_id"`
+	ChatUserID *uint     `gorm:"index" json:"chat_user_id"`
+	StartedAt  time.Time `json:"started_at"`
 }
 
 type ReadReceipt struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        MessageID uint      `gorm:"index" json:"message_id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        ReadAt    time.Time `json:"read_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	MessageID uint      `gorm:"index" json:"message_id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	ReadAt    time.Time `json:"read_at"`
 }
 
 // IP Bans & Security
 type IPBan struct {
-        ID        uint       `gorm:"primaryKey" json:"id"`
-        IPAddress string     `gorm:"index;not null" json:"ip_address"`
-        Reason    string     `json:"reason"`
-        BannedBy  uint       `json:"banned_by"`
-        ExpiresAt *time.Time `json:"expires_at"`
-        CreatedAt time.Time  `json:"created_at"`
+	ID        uint       `gorm:"primaryKey" json:"id"`
+	IPAddress string     `gorm:"index;not null" json:"ip_address"`
+	Reason    string     `json:"reason"`
+	BannedBy  uint       `json:"banned_by"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 type AuditLog struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        UserID    uint      `gorm:"index" json:"user_id"`
-        Action    string    `gorm:"size:50" json:"action"`
-        Target    string    `json:"target"`
-        Details   string    `gorm:"type:text" json:"details"`
-        IPAddress string    `json:"ip_address"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	Action    string    `gorm:"size:50" json:"action"`
+	Target    string    `json:"target"`
+	Details   string    `gorm:"type:text" json:"details"`
+	IPAddress string    `json:"ip_address"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type AbuseReport struct {
-        ID         uint       `gorm:"primaryKey" json:"id"`
-        ReporterID uint       `gorm:"index" json:"reporter_id"`
-        TargetType string     `gorm:"size:20" json:"target_type"`
-        TargetID   uint       `json:"target_id"`
-        Reason     string     `gorm:"type:text" json:"reason"`
-        Status     string     `gorm:"size:20;default:'pending'" json:"status"`
-        ReviewedBy *uint      `json:"reviewed_by"`
-        ReviewedAt *time.Time `json:"reviewed_at"`
-        CreatedAt  time.Time  `json:"created_at"`
+	ID         uint       `gorm:"primaryKey" json:"id"`
+	ReporterID uint       `gorm:"index" json:"reporter_id"`
+	TargetType string     `gorm:"size:20" json:"target_type"`
+	TargetID   uint       `json:"target_id"`
+	Reason     string     `gorm:"type:text" json:"reason"`
+	Status     string     `gorm:"size:20;default:'pending'" json:"status"`
+	ReviewedBy *uint      `json:"reviewed_by"`
+	ReviewedAt *time.Time `json:"reviewed_at"`
+	CreatedAt  time.Time  `json:"created_at"`
 }
 
 // UserRequest - general user requests/reports to admins
 type UserRequest struct {
-        ID          uint       `gorm:"primaryKey" json:"id"`
-        UserID      uint       `gorm:"index" json:"user_id"`
-        User        User       `gorm:"foreignKey:UserID" json:"user,omitempty"`
-        Category    string     `gorm:"size:30;not null" json:"category"` // abuse, technical, feature_request, billing, other
-        Subject     string     `gorm:"size:200;not null" json:"subject"`
-        Description string     `gorm:"type:text" json:"description"`
-        Priority    string     `gorm:"size:20;default:'normal'" json:"priority"` // low, normal, high
-        Status      string     `gorm:"size:20;default:'pending'" json:"status"`  // pending, in_progress, resolved, rejected
-        AdminNotes  string     `gorm:"type:text" json:"admin_notes,omitempty"`
-        ReviewedBy  *uint      `json:"reviewed_by,omitempty"`
-        ReviewedAt  *time.Time `json:"reviewed_at,omitempty"`
-        CreatedAt   time.Time  `json:"created_at"`
-        UpdatedAt   time.Time  `json:"updated_at"`
+	ID          uint       `gorm:"primaryKey" json:"id"`
+	UserID      uint       `gorm:"index" json:"user_id"`
+	User        User       `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Category    string     `gorm:"size:30;not null" json:"category"` // abuse, technical, feature_request, billing, other
+	Subject     string     `gorm:"size:200;not null" json:"subject"`
+	Description string     `gorm:"type:text" json:"description"`
+	Priority    string     `gorm:"size:20;default:'normal'" json:"priority"` // low, normal, high
+	Status      string     `gorm:"size:20;default:'pending'" json:"status"`  // pending, in_progress, resolved, rejected
+	AdminNotes  string     `gorm:"type:text" json:"admin_notes,omitempty"`
+	ReviewedBy  *uint      `json:"reviewed_by,omitempty"`
+	ReviewedAt  *time.Time `json:"reviewed_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
 // Invite Links
 type InviteLink struct {
-        ID        uint       `gorm:"primaryKey" json:"id"`
-        Code      string     `gorm:"unique;not null" json:"code"`
-        GuildID   *uint      `gorm:"index" json:"guild_id"`
-        ChannelID *uint      `gorm:"index" json:"channel_id"`
-        CreatorID uint       `json:"creator_id"`
-        MaxUses   *int       `json:"max_uses"`
-        Uses      int        `gorm:"default:0" json:"uses"`
-        ExpiresAt *time.Time `json:"expires_at"`
-        CreatedAt time.Time  `json:"created_at"`
+	ID        uint       `gorm:"primaryKey" json:"id"`
+	Code      string     `gorm:"unique;not null" json:"code"`
+	GuildID   *uint      `gorm:"index" json:"guild_id"`
+	ChannelID *uint      `gorm:"index" json:"channel_id"`
+	CreatorID uint       `json:"creator_id"`
+	MaxUses   *int       `json:"max_uses"`
+	Uses      int        `gorm:"default:0" json:"uses"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 // User Notes
 type UserNote struct {
-        ID       uint      `gorm:"primaryKey" json:"id"`
-        UserID   uint      `gorm:"index" json:"user_id"`
-        TargetID uint      `gorm:"index" json:"target_id"`
-        Note     string    `gorm:"type:text" json:"note"`
-        CreatedAt time.Time `json:"created_at"`
-        UpdatedAt time.Time `json:"updated_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"index" json:"user_id"`
+	TargetID  uint      `gorm:"index" json:"target_id"`
+	Note      string    `gorm:"type:text" json:"note"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // File Attachments
 type FileAttachment struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        MessageID uint      `gorm:"index" json:"message_id"`
-        FileName  string    `json:"file_name"`
-        FileSize  int64     `json:"file_size"`
-        FileType  string    `json:"file_type"`
-        URL       string    `json:"url"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	MessageID uint      `gorm:"index" json:"message_id"`
+	FileName  string    `json:"file_name"`
+	FileSize  int64     `json:"file_size"`
+	FileType  string    `json:"file_type"`
+	URL       string    `json:"url"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // Pinned Messages
 type PinnedMessage struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        ChannelID uint      `gorm:"index" json:"channel_id"`
-        MessageID uint      `gorm:"index" json:"message_id"`
-        PinnedBy  uint      `json:"pinned_by"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	ChannelID uint      `gorm:"index" json:"channel_id"`
+	MessageID uint      `gorm:"index" json:"message_id"`
+	PinnedBy  uint      `json:"pinned_by"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // Channel Permissions
 type ChannelPermission struct {
-        ID        uint  `gorm:"primaryKey" json:"id"`
-        ChannelID uint  `gorm:"index" json:"channel_id"`
-        RoleID    *uint `gorm:"index" json:"role_id"`
-        UserID    *uint `gorm:"index" json:"user_id"`
-        Allow     int64 `gorm:"default:0" json:"allow"`
-        Deny      int64 `gorm:"default:0" json:"deny"`
+	ID        uint  `gorm:"primaryKey" json:"id"`
+	ChannelID uint  `gorm:"index" json:"channel_id"`
+	RoleID    *uint `gorm:"index" json:"role_id"`
+	UserID    *uint `gorm:"index" json:"user_id"`
+	Allow     int64 `gorm:"default:0" json:"allow"`
+	Deny      int64 `gorm:"default:0" json:"deny"`
 }
 
 type GuildRole struct {
-        ID          uint   `gorm:"primaryKey" json:"id"`
-        GuildID     uint   `gorm:"index" json:"guild_id"`
-        Name        string `json:"name"`
-        Color       string `gorm:"size:7" json:"color"`
-        Position    int    `gorm:"default:0" json:"position"`
-        Permissions int64  `gorm:"default:0" json:"permissions"`
-        Mentionable bool   `gorm:"default:false" json:"mentionable"`
+	ID          uint   `gorm:"primaryKey" json:"id"`
+	GuildID     uint   `gorm:"index" json:"guild_id"`
+	Name        string `json:"name"`
+	Color       string `gorm:"size:7" json:"color"`
+	Position    int    `gorm:"default:0" json:"position"`
+	Permissions int64  `gorm:"default:0" json:"permissions"`
+	Mentionable bool   `gorm:"default:false" json:"mentionable"`
 }
 
 type GuildMemberRole struct {
-        ID      uint `gorm:"primaryKey" json:"id"`
-        GuildID uint `gorm:"index" json:"guild_id"`
-        UserID  uint `gorm:"index" json:"user_id"`
-        RoleID  uint `gorm:"index" json:"role_id"`
+	ID      uint `gorm:"primaryKey" json:"id"`
+	GuildID uint `gorm:"index" json:"guild_id"`
+	UserID  uint `gorm:"index" json:"user_id"`
+	RoleID  uint `gorm:"index" json:"role_id"`
+}
+
+// MaskAPIKey маскирует API-ключ для отдачи в JSON: видны только первые 3
+// и последние 4 символа (например "sk-...1234"). Пустой ключ остаётся пустым.
+func MaskAPIKey(key string) string {
+	if key == "" {
+		return ""
+	}
+	if len(key) <= 7 {
+		return "****"
+	}
+	return key[:3] + "..." + key[len(key)-4:]
+}
+
+// IsMaskedAPIKey определяет, является ли значение маской (а не новым ключом).
+// Маски/пустые значения при сохранении не должны затирать реальный ключ.
+func IsMaskedAPIKey(value string) bool {
+	return value == "" || strings.Contains(value, "...") || strings.Contains(value, "****")
+}
+
+// MaskedCopy возвращает копию настроек с замаскированными AI-ключами для JSON.
+// TODO(security): ключи хранятся в БД в plaintext — готового AES-хелпера
+// at-rest в проекте нет (encryption.go — это E2E для сообщений). При
+// появлении общего шифрования at-rest шифровать OpenAIKey/DeepSeekKey/HuggingFaceKey.
+func (s *UserSettings) MaskedCopy() UserSettings {
+	masked := *s
+	masked.OpenAIKey = MaskAPIKey(s.OpenAIKey)
+	masked.DeepSeekKey = MaskAPIKey(s.DeepSeekKey)
+	masked.HuggingFaceKey = MaskAPIKey(s.HuggingFaceKey)
+	return masked
 }
 
 // User Settings Extended
 type UserSettings struct {
-        ID                    uint   `gorm:"primaryKey" json:"id"`
-        UserID                uint   `gorm:"uniqueIndex" json:"user_id"`
-        Language              string `gorm:"size:10;default:'ru'" json:"language"`
-        Theme                 string `gorm:"size:20;default:'dark'" json:"theme"`
-        NotificationsEnabled  bool   `gorm:"default:true" json:"notifications_enabled"`
-        SoundEnabled          bool   `gorm:"default:true" json:"sound_enabled"`
-        VoiceEnabled          bool   `gorm:"default:true" json:"voice_enabled"`
-        NoiseReduction        bool   `gorm:"default:true" json:"noise_reduction"`
-        TelegramNotifications bool   `gorm:"default:false" json:"telegram_notifications"`
-        // AI API Keys
-        OpenAIKey      string `gorm:"size:255" json:"openai_key"`
-        DeepSeekKey    string `gorm:"size:255" json:"deepseek_key"`
-        HuggingFaceKey string `gorm:"size:255" json:"huggingface_key"`
-        // Jarvis Settings
-        JarvisPersonality string `gorm:"size:50;default:'professional'" json:"jarvis_personality"`
-        JarvisWakeWord    string `gorm:"size:50;default:'Jarvis'" json:"jarvis_wake_word"`
-        // Privacy Settings
-        ProfileVisibility string `gorm:"size:20;default:'public'" json:"profile_visibility"`
-        MessagePrivacy    string `gorm:"size:20;default:'everyone'" json:"message_privacy"`
+	ID                    uint   `gorm:"primaryKey" json:"id"`
+	UserID                uint   `gorm:"uniqueIndex" json:"user_id"`
+	Language              string `gorm:"size:10;default:'ru'" json:"language"`
+	Theme                 string `gorm:"size:20;default:'dark'" json:"theme"`
+	NotificationsEnabled  bool   `gorm:"default:true" json:"notifications_enabled"`
+	SoundEnabled          bool   `gorm:"default:true" json:"sound_enabled"`
+	VoiceEnabled          bool   `gorm:"default:true" json:"voice_enabled"`
+	NoiseReduction        bool   `gorm:"default:true" json:"noise_reduction"`
+	TelegramNotifications bool   `gorm:"default:false" json:"telegram_notifications"`
+	// AI API Keys
+	OpenAIKey      string `gorm:"size:255" json:"openai_key"`
+	DeepSeekKey    string `gorm:"size:255" json:"deepseek_key"`
+	HuggingFaceKey string `gorm:"size:255" json:"huggingface_key"`
+	// Jarvis Settings
+	JarvisPersonality string `gorm:"size:50;default:'professional'" json:"jarvis_personality"`
+	JarvisWakeWord    string `gorm:"size:50;default:'Jarvis'" json:"jarvis_wake_word"`
+	// Privacy Settings
+	ProfileVisibility string `gorm:"size:20;default:'public'" json:"profile_visibility"`
+	MessagePrivacy    string `gorm:"size:20;default:'everyone'" json:"message_privacy"`
 }
 
 // Content Filtering
 type ForbiddenWord struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        Word      string    `gorm:"uniqueIndex;not null" json:"word"`
-        Category  string    `gorm:"size:50" json:"category"`
-        IsRegex   bool      `gorm:"default:false" json:"is_regex"`
-        AddedBy   uint      `json:"added_by"`
-        CreatedAt time.Time `json:"created_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Word      string    `gorm:"uniqueIndex;not null" json:"word"`
+	Category  string    `gorm:"size:50" json:"category"`
+	IsRegex   bool      `gorm:"default:false" json:"is_regex"`
+	AddedBy   uint      `json:"added_by"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type ForbiddenAttempt struct {
-        ID               uint      `gorm:"primaryKey" json:"id"`
-        UserID           uint      `gorm:"index" json:"user_id"`
-        AttemptedContent string    `gorm:"type:text" json:"attempted_content"`
-        MatchedWords     string    `gorm:"type:text" json:"matched_words"`
-        Context          string    `gorm:"size:50" json:"context"`
-        CreatedAt        time.Time `json:"created_at"`
+	ID               uint      `gorm:"primaryKey" json:"id"`
+	UserID           uint      `gorm:"index" json:"user_id"`
+	AttemptedContent string    `gorm:"type:text" json:"attempted_content"`
+	MatchedWords     string    `gorm:"type:text" json:"matched_words"`
+	Context          string    `gorm:"size:50" json:"context"`
+	CreatedAt        time.Time `json:"created_at"`
 }
 
 // Telegram Integration
 type TelegramLink struct {
-        ID               uint       `gorm:"primaryKey" json:"id"`
-        UserID           uint       `gorm:"uniqueIndex" json:"user_id"`
-        TelegramID       int64      `gorm:"uniqueIndex" json:"telegram_id"`
-        TelegramUsername string     `json:"telegram_username"`
-        LinkCode         string     `gorm:"index" json:"link_code"`
-        IsVerified       bool       `gorm:"default:false" json:"is_verified"`
-        CreatedAt        time.Time  `json:"created_at"`
-        VerifiedAt       *time.Time `json:"verified_at"`
+	ID               uint       `gorm:"primaryKey" json:"id"`
+	UserID           uint       `gorm:"uniqueIndex" json:"user_id"`
+	TelegramID       int64      `gorm:"uniqueIndex" json:"telegram_id"`
+	TelegramUsername string     `json:"telegram_username"`
+	LinkCode         string     `gorm:"index" json:"link_code"`
+	IsVerified       bool       `gorm:"default:false" json:"is_verified"`
+	CreatedAt        time.Time  `json:"created_at"`
+	VerifiedAt       *time.Time `json:"verified_at"`
 }
 
 type TelegramNotification struct {
-        ID             uint      `gorm:"primaryKey" json:"id"`
-        UserID         uint      `gorm:"index" json:"user_id"`
-        Type           string    `gorm:"size:50" json:"type"`
-        Content        string    `gorm:"type:text" json:"content"`
-        SentToTelegram bool      `gorm:"default:false" json:"sent_to_telegram"`
-        SentToSite     bool      `gorm:"default:false" json:"sent_to_site"`
-        CreatedAt      time.Time `json:"created_at"`
+	ID             uint      `gorm:"primaryKey" json:"id"`
+	UserID         uint      `gorm:"index" json:"user_id"`
+	Type           string    `gorm:"size:50" json:"type"`
+	Content        string    `gorm:"type:text" json:"content"`
+	SentToTelegram bool      `gorm:"default:false" json:"sent_to_telegram"`
+	SentToSite     bool      `gorm:"default:false" json:"sent_to_site"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 // User Referrals
 type UserReferral struct {
-        ID          uint      `gorm:"primaryKey" json:"id"`
-        UserID      uint      `gorm:"uniqueIndex" json:"user_id"`
-        Code        string    `gorm:"uniqueIndex;not null" json:"code"`
-        InviteCount int       `gorm:"default:0" json:"invite_count"`
-        CreatedAt   time.Time `json:"created_at"`
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	UserID      uint      `gorm:"uniqueIndex" json:"user_id"`
+	Code        string    `gorm:"uniqueIndex;not null" json:"code"`
+	InviteCount int       `gorm:"default:0" json:"invite_count"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 type ReferralUse struct {
-        ID            uint      `gorm:"primaryKey" json:"id"`
-        ReferralID    uint      `gorm:"index" json:"referral_id"`
-        InvitedUserID uint      `gorm:"uniqueIndex" json:"invited_user_id"`
-        BonusGranted  bool      `gorm:"default:false" json:"bonus_granted"`
-        CreatedAt     time.Time `json:"created_at"`
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	ReferralID    uint      `gorm:"index" json:"referral_id"`
+	InvitedUserID uint      `gorm:"uniqueIndex" json:"invited_user_id"`
+	BonusGranted  bool      `gorm:"default:false" json:"bonus_granted"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // Referral Bonus tracking
 type ReferralBonus struct {
-        ID            uint      `gorm:"primaryKey" json:"id"`
-        UserID        uint      `gorm:"index" json:"user_id"`
-        ReferralUseID uint      `gorm:"index" json:"referral_use_id"`
-        BonusDays     int       `json:"bonus_days"`
-        BonusType     string    `gorm:"size:30" json:"bonus_type"` // signup, premium_subscription
-        Description   string    `json:"description"`
-        CreatedAt     time.Time `json:"created_at"`
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	UserID        uint      `gorm:"index" json:"user_id"`
+	ReferralUseID uint      `gorm:"index" json:"referral_use_id"`
+	BonusDays     int       `json:"bonus_days"`
+	BonusType     string    `gorm:"size:30" json:"bonus_type"` // signup, premium_subscription
+	Description   string    `json:"description"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // Post Boost for promotion
 type PostBoost struct {
-        ID            uint       `gorm:"primaryKey" json:"id"`
-        PostID        uint       `gorm:"index" json:"post_id"`
-        UserID        uint       `gorm:"index" json:"user_id"`
-        BoostType     string     `gorm:"size:30" json:"boost_type"` // featured, trending, top
-        AmountRub     float64    `json:"amount_rub"`
-        DurationHours int        `json:"duration_hours"`
-        Impressions   int        `gorm:"default:0" json:"impressions"`
-        Clicks        int        `gorm:"default:0" json:"clicks"`
-        Status        string     `gorm:"size:20;default:'pending'" json:"status"` // pending, active, expired, cancelled
-        TransactionID *uint      `json:"transaction_id,omitempty"`
-        StartedAt     *time.Time `json:"started_at,omitempty"`
-        ExpiresAt     *time.Time `json:"expires_at,omitempty"`
-        CreatedAt     time.Time  `json:"created_at"`
+	ID            uint       `gorm:"primaryKey" json:"id"`
+	PostID        uint       `gorm:"index" json:"post_id"`
+	UserID        uint       `gorm:"index" json:"user_id"`
+	BoostType     string     `gorm:"size:30" json:"boost_type"` // featured, trending, top
+	AmountRub     float64    `json:"amount_rub"`
+	DurationHours int        `json:"duration_hours"`
+	Impressions   int        `gorm:"default:0" json:"impressions"`
+	Clicks        int        `gorm:"default:0" json:"clicks"`
+	Status        string     `gorm:"size:20;default:'pending'" json:"status"` // pending, active, expired, cancelled
+	TransactionID *uint      `json:"transaction_id,omitempty"`
+	StartedAt     *time.Time `json:"started_at,omitempty"`
+	ExpiresAt     *time.Time `json:"expires_at,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
 }
 
 // Premium Subscriptions
 type PremiumPlan struct {
-        ID           uint      `gorm:"primaryKey" json:"id"`
-        Slug         string    `gorm:"uniqueIndex" json:"slug"`
-        Name         string    `json:"name"`
-        Tier         string    `gorm:"size:20;default:'basic'" json:"tier"` // basic, pro, vip
-        Description  string    `json:"description"`
-        PriceRub     float64   `json:"price_rub"`
-        BillingCycle string    `gorm:"size:20;default:'monthly'" json:"billing_cycle"` // monthly, quarterly, annual
-        Features     string    `gorm:"type:text" json:"features"` // JSON array of features
-        IsActive     bool      `gorm:"default:true" json:"is_active"`
-        SortOrder    int       `gorm:"default:0" json:"sort_order"`
-        CreatedAt    time.Time `json:"created_at"`
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	Slug         string    `gorm:"uniqueIndex" json:"slug"`
+	Name         string    `json:"name"`
+	Tier         string    `gorm:"size:20;default:'basic'" json:"tier"` // basic, pro, vip
+	Description  string    `json:"description"`
+	PriceRub     float64   `json:"price_rub"`
+	BillingCycle string    `gorm:"size:20;default:'monthly'" json:"billing_cycle"` // monthly, quarterly, annual
+	Features     string    `gorm:"type:text" json:"features"`                      // JSON array of features
+	IsActive     bool      `gorm:"default:true" json:"is_active"`
+	SortOrder    int       `gorm:"default:0" json:"sort_order"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type UserPremium struct {
-        ID                 uint       `gorm:"primaryKey" json:"id"`
-        UserID             uint       `gorm:"uniqueIndex" json:"user_id"`
-        PlanID             uint       `json:"plan_id"`
-        Plan               PremiumPlan `gorm:"foreignKey:PlanID" json:"plan"`
-        Status             string     `gorm:"default:'active'" json:"status"`
-        CurrentPeriodStart time.Time  `json:"current_period_start"`
-        CurrentPeriodEnd   time.Time  `json:"current_period_end"`
-        AutoRenew          bool       `gorm:"default:true" json:"auto_renew"`
-        CreatedAt          time.Time  `json:"created_at"`
-        UpdatedAt          time.Time  `json:"updated_at"`
+	ID                 uint        `gorm:"primaryKey" json:"id"`
+	UserID             uint        `gorm:"uniqueIndex" json:"user_id"`
+	PlanID             uint        `json:"plan_id"`
+	Plan               PremiumPlan `gorm:"foreignKey:PlanID" json:"plan"`
+	Status             string      `gorm:"default:'active'" json:"status"`
+	CurrentPeriodStart time.Time   `json:"current_period_start"`
+	CurrentPeriodEnd   time.Time   `json:"current_period_end"`
+	AutoRenew          bool        `gorm:"default:true" json:"auto_renew"`
+	CreatedAt          time.Time   `json:"created_at"`
+	UpdatedAt          time.Time   `json:"updated_at"`
 }
 
 // Creator Donations
 type CreatorDonation struct {
-        ID          uint      `gorm:"primaryKey" json:"id"`
-        FromUserID  *uint     `gorm:"index" json:"from_user_id"`
-        ToUserID    uint      `gorm:"index" json:"to_user_id"`
-        AmountRub   float64   `json:"amount_rub"`
-        Message     string    `gorm:"type:text" json:"message"`
-        Status      string    `gorm:"default:'pending'" json:"status"`
-        PaymentID   string    `json:"payment_id"`
-        CreatedAt   time.Time `json:"created_at"`
+	ID         uint      `gorm:"primaryKey" json:"id"`
+	FromUserID *uint     `gorm:"index" json:"from_user_id"`
+	ToUserID   uint      `gorm:"index" json:"to_user_id"`
+	AmountRub  float64   `json:"amount_rub"`
+	Message    string    `gorm:"type:text" json:"message"`
+	Status     string    `gorm:"default:'pending'" json:"status"`
+	PaymentID  string    `json:"payment_id"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // Premium Subscription (active subscription for billing)
 type PremiumSubscription struct {
-        ID                   uint       `gorm:"primaryKey" json:"id"`
-        UserID               uint       `gorm:"uniqueIndex" json:"user_id"`
-        User                 User       `gorm:"foreignKey:UserID" json:"user,omitempty"`
-        PlanID               uint       `json:"plan_id"`
-        Plan                 PremiumPlan `gorm:"foreignKey:PlanID" json:"plan,omitempty"`
-        Status               string     `gorm:"size:20;default:'active'" json:"status"` // active, cancelled, expired, past_due, trialing
-        CurrentPeriodStart   time.Time  `json:"current_period_start"`
-        CurrentPeriodEnd     time.Time  `json:"current_period_end"`
-        TrialEnd             *time.Time `json:"trial_end,omitempty"`
-        IsTrialing           bool       `gorm:"default:false" json:"is_trialing"`
-        AutoRenew            bool       `gorm:"default:true" json:"auto_renew"`
-        CancelAtPeriodEnd    bool       `gorm:"default:false" json:"cancel_at_period_end"`
-        CancelledAt          *time.Time `json:"cancelled_at,omitempty"`
-        PaymentMethodID      string     `json:"payment_method_id,omitempty"` // YooKassa saved payment method
-        GiftCodeID           *uint      `json:"gift_code_id,omitempty"`
-        CreatedAt            time.Time  `json:"created_at"`
-        UpdatedAt            time.Time  `json:"updated_at"`
+	ID                 uint        `gorm:"primaryKey" json:"id"`
+	UserID             uint        `gorm:"uniqueIndex" json:"user_id"`
+	User               User        `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	PlanID             uint        `json:"plan_id"`
+	Plan               PremiumPlan `gorm:"foreignKey:PlanID" json:"plan,omitempty"`
+	Status             string      `gorm:"size:20;default:'active'" json:"status"` // active, cancelled, expired, past_due, trialing
+	CurrentPeriodStart time.Time   `json:"current_period_start"`
+	CurrentPeriodEnd   time.Time   `json:"current_period_end"`
+	TrialEnd           *time.Time  `json:"trial_end,omitempty"`
+	IsTrialing         bool        `gorm:"default:false" json:"is_trialing"`
+	AutoRenew          bool        `gorm:"default:true" json:"auto_renew"`
+	CancelAtPeriodEnd  bool        `gorm:"default:false" json:"cancel_at_period_end"`
+	CancelledAt        *time.Time  `json:"cancelled_at,omitempty"`
+	PaymentMethodID    string      `json:"payment_method_id,omitempty"` // YooKassa saved payment method
+	GiftCodeID         *uint       `json:"gift_code_id,omitempty"`
+	CreatedAt          time.Time   `json:"created_at"`
+	UpdatedAt          time.Time   `json:"updated_at"`
 }
 
 // Premium Transaction (payment history)
 type PremiumTransaction struct {
-        ID              uint       `gorm:"primaryKey" json:"id"`
-        UserID          uint       `gorm:"index" json:"user_id"`
-        User            User       `gorm:"foreignKey:UserID" json:"-"`
-        SubscriptionID  *uint      `gorm:"index" json:"subscription_id,omitempty"`
-        PlanID          uint       `json:"plan_id"`
-        AmountRub       float64    `json:"amount_rub"`
-        DiscountRub     float64    `json:"discount_rub"`
-        PromoCodeID     *uint      `json:"promo_code_id,omitempty"`
-        Currency        string     `gorm:"size:3;default:'RUB'" json:"currency"`
-        Status          string     `gorm:"size:20;default:'pending'" json:"status"` // pending, succeeded, failed, refunded
-        PaymentProvider string     `gorm:"size:30" json:"payment_provider"` // yookassa, manual_transfer
-        ProviderPaymentID string   `json:"provider_payment_id,omitempty"`
-        Description     string     `json:"description"`
-        ConfirmationURL string     `json:"confirmation_url,omitempty"`
-        CompletedAt     *time.Time `json:"completed_at,omitempty"`
-        CreatedAt       time.Time  `json:"created_at"`
+	ID                uint       `gorm:"primaryKey" json:"id"`
+	UserID            uint       `gorm:"index" json:"user_id"`
+	User              User       `gorm:"foreignKey:UserID" json:"-"`
+	SubscriptionID    *uint      `gorm:"index" json:"subscription_id,omitempty"`
+	PlanID            uint       `json:"plan_id"`
+	AmountRub         float64    `json:"amount_rub"`
+	DiscountRub       float64    `json:"discount_rub"`
+	PromoCodeID       *uint      `json:"promo_code_id,omitempty"`
+	Currency          string     `gorm:"size:3;default:'RUB'" json:"currency"`
+	Status            string     `gorm:"size:20;default:'pending'" json:"status"` // pending, succeeded, failed, refunded
+	PaymentProvider   string     `gorm:"size:30" json:"payment_provider"`         // yookassa, manual_transfer
+	ProviderPaymentID string     `json:"provider_payment_id,omitempty"`
+	Description       string     `json:"description"`
+	ConfirmationURL   string     `json:"confirmation_url,omitempty"`
+	CompletedAt       *time.Time `json:"completed_at,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
 }
 
 // Promo Code for discounts
 type PromoCode struct {
-        ID              uint       `gorm:"primaryKey" json:"id"`
-        Code            string     `gorm:"uniqueIndex;size:50" json:"code"`
-        Description     string     `json:"description"`
-        DiscountType    string     `gorm:"size:20" json:"discount_type"` // percent, fixed
-        DiscountValue   float64    `json:"discount_value"`
-        MaxUses         int        `json:"max_uses"`
-        UsedCount       int        `gorm:"default:0" json:"used_count"`
-        MinPurchase     float64    `json:"min_purchase"`
-        ValidFrom       time.Time  `json:"valid_from"`
-        ValidUntil      time.Time  `json:"valid_until"`
-        ApplicablePlans string     `gorm:"type:text" json:"applicable_plans"` // JSON array of plan IDs, empty = all
-        IsActive        bool       `gorm:"default:true" json:"is_active"`
-        CreatedBy       uint       `json:"created_by"`
-        CreatedAt       time.Time  `json:"created_at"`
+	ID              uint      `gorm:"primaryKey" json:"id"`
+	Code            string    `gorm:"uniqueIndex;size:50" json:"code"`
+	Description     string    `json:"description"`
+	DiscountType    string    `gorm:"size:20" json:"discount_type"` // percent, fixed
+	DiscountValue   float64   `json:"discount_value"`
+	MaxUses         int       `json:"max_uses"`
+	UsedCount       int       `gorm:"default:0" json:"used_count"`
+	MinPurchase     float64   `json:"min_purchase"`
+	ValidFrom       time.Time `json:"valid_from"`
+	ValidUntil      time.Time `json:"valid_until"`
+	ApplicablePlans string    `gorm:"type:text" json:"applicable_plans"` // JSON array of plan IDs, empty = all
+	IsActive        bool      `gorm:"default:true" json:"is_active"`
+	CreatedBy       uint      `json:"created_by"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 // Promo Code Usage tracking
 type PromoCodeUsage struct {
-        ID          uint      `gorm:"primaryKey" json:"id"`
-        PromoCodeID uint      `gorm:"index" json:"promo_code_id"`
-        UserID      uint      `gorm:"index" json:"user_id"`
-        TransactionID uint    `json:"transaction_id"`
-        DiscountRub float64   `json:"discount_rub"`
-        CreatedAt   time.Time `json:"created_at"`
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	PromoCodeID   uint      `gorm:"index" json:"promo_code_id"`
+	UserID        uint      `gorm:"index" json:"user_id"`
+	TransactionID uint      `json:"transaction_id"`
+	DiscountRub   float64   `json:"discount_rub"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // Gift Subscription
 type GiftSubscription struct {
-        ID            uint       `gorm:"primaryKey" json:"id"`
-        Code          string     `gorm:"uniqueIndex;size:50" json:"code"`
-        FromUserID    uint       `gorm:"index" json:"from_user_id"`
-        ToUserID      *uint      `gorm:"index" json:"to_user_id,omitempty"`
-        PlanID        uint       `json:"plan_id"`
-        Plan          PremiumPlan `gorm:"foreignKey:PlanID" json:"plan,omitempty"`
-        DurationDays  int        `json:"duration_days"`
-        Message       string     `gorm:"type:text" json:"message"`
-        Status        string     `gorm:"size:20;default:'pending'" json:"status"` // pending, redeemed, expired
-        TransactionID *uint      `json:"transaction_id,omitempty"`
-        RedeemedAt    *time.Time `json:"redeemed_at,omitempty"`
-        ExpiresAt     time.Time  `json:"expires_at"`
-        CreatedAt     time.Time  `json:"created_at"`
+	ID            uint        `gorm:"primaryKey" json:"id"`
+	Code          string      `gorm:"uniqueIndex;size:50" json:"code"`
+	FromUserID    uint        `gorm:"index" json:"from_user_id"`
+	ToUserID      *uint       `gorm:"index" json:"to_user_id,omitempty"`
+	PlanID        uint        `json:"plan_id"`
+	Plan          PremiumPlan `gorm:"foreignKey:PlanID" json:"plan,omitempty"`
+	DurationDays  int         `json:"duration_days"`
+	Message       string      `gorm:"type:text" json:"message"`
+	Status        string      `gorm:"size:20;default:'pending'" json:"status"` // pending, redeemed, expired
+	TransactionID *uint       `json:"transaction_id,omitempty"`
+	RedeemedAt    *time.Time  `json:"redeemed_at,omitempty"`
+	ExpiresAt     time.Time   `json:"expires_at"`
+	CreatedAt     time.Time   `json:"created_at"`
 }
-
 
 // ChannelTool represents an educational tool for channels (board/notebook)
 type ChannelTool struct {
-        ID        uint   `json:"id" gorm:"primaryKey"`
-        ChannelID uint   `json:"channel_id"`
-        ToolType  string `json:"tool_type"` // "board" or "notebook"
-        Title     string `json:"title"`
-        Content   string `json:"content"` // Stores content as JSON
-        OwnerID   uint   `json:"owner_id"`
-        VisibleTo string `json:"visible_to"` // "all", "moderators", "owner"
-        CreatedAt int64  `json:"created_at"`
-        UpdatedAt int64  `json:"updated_at"`
+	ID        uint   `json:"id" gorm:"primaryKey"`
+	ChannelID uint   `json:"channel_id"`
+	ToolType  string `json:"tool_type"` // "board" or "notebook"
+	Title     string `json:"title"`
+	Content   string `json:"content"` // Stores content as JSON
+	OwnerID   uint   `json:"owner_id"`
+	VisibleTo string `json:"visible_to"` // "all", "moderators", "owner"
+	CreatedAt int64  `json:"created_at"`
+	UpdatedAt int64  `json:"updated_at"`
 }
 
 // ToolSnapshot stores version history for collaborative tools
 type ToolSnapshot struct {
-        ID          uint      `gorm:"primaryKey" json:"id"`
-        ToolID      uint      `gorm:"index" json:"tool_id"`
-        Name        string    `gorm:"size:255" json:"name"`
-        Content     string    `gorm:"type:text" json:"content"`
-        UserID      uint      `gorm:"index" json:"user_id"`
-        ChangeType  string    `gorm:"size:50" json:"change_type"`
-        Description string    `gorm:"type:text" json:"description"`
-        CreatedAt   time.Time `json:"created_at"`
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	ToolID      uint      `gorm:"index" json:"tool_id"`
+	Name        string    `gorm:"size:255" json:"name"`
+	Content     string    `gorm:"type:text" json:"content"`
+	UserID      uint      `gorm:"index" json:"user_id"`
+	ChangeType  string    `gorm:"size:50" json:"change_type"`
+	Description string    `gorm:"type:text" json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // Helper functions for real-time collaboration
 
 // GetCurrentTimestamp returns current timestamp in milliseconds
 func GetCurrentTimestamp() int64 {
-        return time.Now().UnixNano() / int64(time.Millisecond)
+	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
 // SaveToolSnapshot saves a snapshot of tool state for version history
 func SaveToolSnapshot(toolID uint, name string, description string, userID uint, changeType string) error {
-        var tool ChannelTool
-        if err := db.First(&tool, toolID).Error; err != nil {
-                return err
-        }
+	var tool ChannelTool
+	if err := db.First(&tool, toolID).Error; err != nil {
+		return err
+	}
 
-        snapshot := ToolSnapshot{
-                ToolID:      toolID,
-                Name:        name,
-                Content:     tool.Content,
-                UserID:      userID,
-                ChangeType:  changeType,
-                Description: description,
-                CreatedAt:   time.Now(),
-        }
+	snapshot := ToolSnapshot{
+		ToolID:      toolID,
+		Name:        name,
+		Content:     tool.Content,
+		UserID:      userID,
+		ChangeType:  changeType,
+		Description: description,
+		CreatedAt:   time.Now(),
+	}
 
-        if err := db.Create(&snapshot).Error; err != nil {
-                return err
-        }
+	if err := db.Create(&snapshot).Error; err != nil {
+		return err
+	}
 
-        // Keep only last 100 snapshots per tool to prevent unlimited growth
-        var count int64
-        db.Model(&ToolSnapshot{}).Where("tool_id = ?", toolID).Count(&count)
-        if count > 100 {
-                var oldestSnapshots []ToolSnapshot
-                db.Where("tool_id = ?", toolID).Order("created_at ASC").Limit(int(count - 100)).Find(&oldestSnapshots)
-                for _, s := range oldestSnapshots {
-                        db.Delete(&s)
-                }
-        }
+	// Keep only last 100 snapshots per tool to prevent unlimited growth
+	var count int64
+	db.Model(&ToolSnapshot{}).Where("tool_id = ?", toolID).Count(&count)
+	if count > 100 {
+		var oldestSnapshots []ToolSnapshot
+		db.Where("tool_id = ?", toolID).Order("created_at ASC").Limit(int(count - 100)).Find(&oldestSnapshots)
+		for _, s := range oldestSnapshots {
+			db.Delete(&s)
+		}
+	}
 
-        return nil
+	return nil
 }
 
 // Moderation System Models
 
 // ModerationCase represents a case opened for moderation review
 type ModerationCase struct {
-        ID             uint        `gorm:"primaryKey" json:"id"`
-        ReportID       uint        `gorm:"index" json:"report_id"`
-        Report         AbuseReport `gorm:"foreignKey:ReportID" json:"report,omitempty"`
-        TargetUserID   uint       `gorm:"index" json:"target_user_id"`
-        TargetUser     User       `gorm:"foreignKey:TargetUserID" json:"target_user,omitempty"`
-        ReporterID     uint       `gorm:"index" json:"reporter_id"`
-        Reporter       User       `gorm:"foreignKey:ReporterID" json:"reporter,omitempty"`
-        ContentType    string     `gorm:"size:50" json:"content_type"` // post, message, video, profile
-        ContentID      uint       `json:"content_id"`
-        ContentPreview string     `gorm:"type:text" json:"content_preview"`
-        Status         string     `gorm:"size:30;default:'pending'" json:"status"` // pending, in_review, resolved, escalated
-        Priority       string     `gorm:"size:20;default:'normal'" json:"priority"` // low, normal, high, critical
-        AssignedToAI   bool       `gorm:"default:true" json:"assigned_to_ai"`
-        ReviewedByID   *uint      `json:"reviewed_by_id,omitempty"`
-        ReviewedBy     *User      `gorm:"foreignKey:ReviewedByID" json:"reviewed_by,omitempty"`
-        CreatedAt      time.Time  `json:"created_at"`
-        UpdatedAt      time.Time  `json:"updated_at"`
-        ResolvedAt     *time.Time `json:"resolved_at,omitempty"`
+	ID             uint        `gorm:"primaryKey" json:"id"`
+	ReportID       uint        `gorm:"index" json:"report_id"`
+	Report         AbuseReport `gorm:"foreignKey:ReportID" json:"report,omitempty"`
+	TargetUserID   uint        `gorm:"index" json:"target_user_id"`
+	TargetUser     User        `gorm:"foreignKey:TargetUserID" json:"target_user,omitempty"`
+	ReporterID     uint        `gorm:"index" json:"reporter_id"`
+	Reporter       User        `gorm:"foreignKey:ReporterID" json:"reporter,omitempty"`
+	ContentType    string      `gorm:"size:50" json:"content_type"` // post, message, video, profile
+	ContentID      uint        `json:"content_id"`
+	ContentPreview string      `gorm:"type:text" json:"content_preview"`
+	Status         string      `gorm:"size:30;default:'pending'" json:"status"`  // pending, in_review, resolved, escalated
+	Priority       string      `gorm:"size:20;default:'normal'" json:"priority"` // low, normal, high, critical
+	AssignedToAI   bool        `gorm:"default:true" json:"assigned_to_ai"`
+	ReviewedByID   *uint       `json:"reviewed_by_id,omitempty"`
+	ReviewedBy     *User       `gorm:"foreignKey:ReviewedByID" json:"reviewed_by,omitempty"`
+	CreatedAt      time.Time   `json:"created_at"`
+	UpdatedAt      time.Time   `json:"updated_at"`
+	ResolvedAt     *time.Time  `json:"resolved_at,omitempty"`
 }
 
 // ModerationVerdict represents Jarvis AI's verdict on a case
 type ModerationVerdict struct {
-        ID              uint           `gorm:"primaryKey" json:"id"`
-        CaseID          uint           `gorm:"uniqueIndex" json:"case_id"`
-        Case            ModerationCase `gorm:"foreignKey:CaseID" json:"case,omitempty"`
-        VerdictType     string         `gorm:"size:30" json:"verdict_type"` // ban, warn, dismiss, escalate
-        Reason          string         `gorm:"type:text" json:"reason"`
-        ConfidenceScore float64        `json:"confidence_score"` // 0-1 AI confidence
-        PenaltyDuration *int           `json:"penalty_duration,omitempty"` // hours, null for permanent
-        AudioResponseID *uint          `json:"audio_response_id,omitempty"`
-        IsAutomatic     bool           `gorm:"default:true" json:"is_automatic"`
-        OverriddenByID  *uint          `json:"overridden_by_id,omitempty"`
-        OverriddenBy    *User          `gorm:"foreignKey:OverriddenByID" json:"overridden_by,omitempty"`
-        OverrideReason  string         `gorm:"type:text" json:"override_reason,omitempty"`
-        CreatedAt       time.Time      `json:"created_at"`
-        UpdatedAt       time.Time      `json:"updated_at"`
+	ID              uint           `gorm:"primaryKey" json:"id"`
+	CaseID          uint           `gorm:"uniqueIndex" json:"case_id"`
+	Case            ModerationCase `gorm:"foreignKey:CaseID" json:"case,omitempty"`
+	VerdictType     string         `gorm:"size:30" json:"verdict_type"` // ban, warn, dismiss, escalate
+	Reason          string         `gorm:"type:text" json:"reason"`
+	ConfidenceScore float64        `json:"confidence_score"`           // 0-1 AI confidence
+	PenaltyDuration *int           `json:"penalty_duration,omitempty"` // hours, null for permanent
+	AudioResponseID *uint          `json:"audio_response_id,omitempty"`
+	IsAutomatic     bool           `gorm:"default:true" json:"is_automatic"`
+	OverriddenByID  *uint          `json:"overridden_by_id,omitempty"`
+	OverriddenBy    *User          `gorm:"foreignKey:OverriddenByID" json:"overridden_by,omitempty"`
+	OverrideReason  string         `gorm:"type:text" json:"override_reason,omitempty"`
+	CreatedAt       time.Time      `json:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at"`
 }
 
 // ModerationActionLog logs all moderation actions for audit
 type ModerationActionLog struct {
-        ID          uint           `gorm:"primaryKey" json:"id"`
-        CaseID      uint           `gorm:"index" json:"case_id"`
-        Case        ModerationCase `gorm:"foreignKey:CaseID" json:"case,omitempty"`
-        Action      string         `gorm:"size:50" json:"action"` // verdict_issued, penalty_applied, appeal_filed, verdict_overridden
-        ActorType   string         `gorm:"size:20" json:"actor_type"` // jarvis, admin, system
-        ActorID     *uint          `json:"actor_id,omitempty"`
-        Actor       *User          `gorm:"foreignKey:ActorID" json:"actor,omitempty"`
-        Details     string         `gorm:"type:text" json:"details"`
-        IPAddress   string         `gorm:"size:45" json:"ip_address,omitempty"`
-        CreatedAt   time.Time      `json:"created_at"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CaseID    uint           `gorm:"index" json:"case_id"`
+	Case      ModerationCase `gorm:"foreignKey:CaseID" json:"case,omitempty"`
+	Action    string         `gorm:"size:50" json:"action"`     // verdict_issued, penalty_applied, appeal_filed, verdict_overridden
+	ActorType string         `gorm:"size:20" json:"actor_type"` // jarvis, admin, system
+	ActorID   *uint          `json:"actor_id,omitempty"`
+	Actor     *User          `gorm:"foreignKey:ActorID" json:"actor,omitempty"`
+	Details   string         `gorm:"type:text" json:"details"`
+	IPAddress string         `gorm:"size:45" json:"ip_address,omitempty"`
+	CreatedAt time.Time      `json:"created_at"`
 }
 
 // Appeal represents user's appeal against a moderation verdict
 type Appeal struct {
-        ID              uint              `gorm:"primaryKey" json:"id"`
-        VerdictID       uint              `gorm:"index" json:"verdict_id"`
-        Verdict         ModerationVerdict `gorm:"foreignKey:VerdictID" json:"verdict,omitempty"`
-        UserID          uint              `gorm:"index" json:"user_id"`
-        User            User              `gorm:"foreignKey:UserID" json:"user,omitempty"`
-        Reason          string            `gorm:"type:text" json:"reason"`
-        Evidence        string            `gorm:"type:text" json:"evidence,omitempty"`
-        Status          string            `gorm:"size:30;default:'pending'" json:"status"` // pending, under_review, approved, rejected
-        ReviewerID      *uint             `json:"reviewer_id,omitempty"`
-        Reviewer        *User             `gorm:"foreignKey:ReviewerID" json:"reviewer,omitempty"`
-        ReviewerNotes   string            `gorm:"type:text" json:"reviewer_notes,omitempty"`
-        Resolution      string            `gorm:"type:text" json:"resolution,omitempty"`
-        CreatedAt       time.Time         `json:"created_at"`
-        UpdatedAt       time.Time         `json:"updated_at"`
-        ResolvedAt      *time.Time        `json:"resolved_at,omitempty"`
+	ID            uint              `gorm:"primaryKey" json:"id"`
+	VerdictID     uint              `gorm:"index" json:"verdict_id"`
+	Verdict       ModerationVerdict `gorm:"foreignKey:VerdictID" json:"verdict,omitempty"`
+	UserID        uint              `gorm:"index" json:"user_id"`
+	User          User              `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Reason        string            `gorm:"type:text" json:"reason"`
+	Evidence      string            `gorm:"type:text" json:"evidence,omitempty"`
+	Status        string            `gorm:"size:30;default:'pending'" json:"status"` // pending, under_review, approved, rejected
+	ReviewerID    *uint             `json:"reviewer_id,omitempty"`
+	Reviewer      *User             `gorm:"foreignKey:ReviewerID" json:"reviewer,omitempty"`
+	ReviewerNotes string            `gorm:"type:text" json:"reviewer_notes,omitempty"`
+	Resolution    string            `gorm:"type:text" json:"resolution,omitempty"`
+	CreatedAt     time.Time         `json:"created_at"`
+	UpdatedAt     time.Time         `json:"updated_at"`
+	ResolvedAt    *time.Time        `json:"resolved_at,omitempty"`
 }
 
 // JarvisAudioResponse stores pre-recorded audio responses for Jarvis
 type JarvisAudioResponse struct {
-        ID           uint      `gorm:"primaryKey" json:"id"`
-        Key          string    `gorm:"uniqueIndex;size:100" json:"key"` // e.g., "verdict_ban", "verdict_warn", "appeal_received"
-        Name         string    `gorm:"size:200" json:"name"`
-        Description  string    `gorm:"type:text" json:"description"`
-        AudioURL     string    `gorm:"size:500" json:"audio_url"`
-        Duration     int       `json:"duration"` // seconds
-        Category     string    `gorm:"size:50" json:"category"` // moderation, greeting, system
-        IsActive     bool      `gorm:"default:true" json:"is_active"`
-        CreatedAt    time.Time `json:"created_at"`
-        UpdatedAt    time.Time `json:"updated_at"`
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	Key         string    `gorm:"uniqueIndex;size:100" json:"key"` // e.g., "verdict_ban", "verdict_warn", "appeal_received"
+	Name        string    `gorm:"size:200" json:"name"`
+	Description string    `gorm:"type:text" json:"description"`
+	AudioURL    string    `gorm:"size:500" json:"audio_url"`
+	Duration    int       `json:"duration"`                // seconds
+	Category    string    `gorm:"size:50" json:"category"` // moderation, greeting, system
+	IsActive    bool      `gorm:"default:true" json:"is_active"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // JarvisVoiceCommand represents admin voice commands for Jarvis
 type JarvisVoiceCommand struct {
-        ID           uint      `gorm:"primaryKey" json:"id"`
-        UserID       uint      `gorm:"index" json:"user_id"`
-        User         User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
-        CommandText  string    `gorm:"type:text" json:"command_text"`
-        IntentType   string    `gorm:"size:50" json:"intent_type"` // ban_user, review_report, approve_appeal, etc.
-        Parameters   string    `gorm:"type:text" json:"parameters"` // JSON
-        Status       string    `gorm:"size:30" json:"status"` // processing, completed, failed
-        ResponseAudioID *uint  `json:"response_audio_id,omitempty"`
-        ResultMessage string   `gorm:"type:text" json:"result_message,omitempty"`
-        CreatedAt    time.Time `json:"created_at"`
-        CompletedAt  *time.Time `json:"completed_at,omitempty"`
+	ID              uint       `gorm:"primaryKey" json:"id"`
+	UserID          uint       `gorm:"index" json:"user_id"`
+	User            User       `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	CommandText     string     `gorm:"type:text" json:"command_text"`
+	IntentType      string     `gorm:"size:50" json:"intent_type"`  // ban_user, review_report, approve_appeal, etc.
+	Parameters      string     `gorm:"type:text" json:"parameters"` // JSON
+	Status          string     `gorm:"size:30" json:"status"`       // processing, completed, failed
+	ResponseAudioID *uint      `json:"response_audio_id,omitempty"`
+	ResultMessage   string     `gorm:"type:text" json:"result_message,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
+	CompletedAt     *time.Time `json:"completed_at,omitempty"`
 }
 
 // Voicemail represents recorded voice messages
 type Voicemail struct {
-        ID           uint      `gorm:"primaryKey" json:"id"`
-        FromUserID   *uint     `gorm:"index" json:"from_user_id,omitempty"` // null for anonymous/external
-        ToUserID     uint      `gorm:"index" json:"to_user_id"`
-        ToUser       User      `gorm:"foreignKey:ToUserID" json:"to_user,omitempty"`
-        AudioURL     string    `gorm:"size:500" json:"audio_url"`
-        Duration     int       `json:"duration"` // seconds
-        Transcription string   `gorm:"type:text" json:"transcription,omitempty"`
-        IsRead       bool      `gorm:"default:false" json:"is_read"`
-        CallerNumber string    `gorm:"size:50" json:"caller_number,omitempty"` // for external calls
-        CreatedAt    time.Time `json:"created_at"`
+	ID            uint      `gorm:"primaryKey" json:"id"`
+	FromUserID    *uint     `gorm:"index" json:"from_user_id,omitempty"` // null for anonymous/external
+	ToUserID      uint      `gorm:"index" json:"to_user_id"`
+	ToUser        User      `gorm:"foreignKey:ToUserID" json:"to_user,omitempty"`
+	AudioURL      string    `gorm:"size:500" json:"audio_url"`
+	Duration      int       `json:"duration"` // seconds
+	Transcription string    `gorm:"type:text" json:"transcription,omitempty"`
+	IsRead        bool      `gorm:"default:false" json:"is_read"`
+	CallerNumber  string    `gorm:"size:50" json:"caller_number,omitempty"` // for external calls
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // JarvisCallSession represents Jarvis auto-answering a call
 type JarvisCallSession struct {
-        ID             uint       `gorm:"primaryKey" json:"id"`
-        CallID         uint       `gorm:"index" json:"call_id"`
-        Call           Call       `gorm:"foreignKey:CallID" json:"call,omitempty"`
-        CallerID       uint       `gorm:"index" json:"caller_id"`
-        Caller         User       `gorm:"foreignKey:CallerID" json:"caller,omitempty"`
-        TargetUserID   uint       `gorm:"index" json:"target_user_id"`
-        TargetUser     User       `gorm:"foreignKey:TargetUserID" json:"target_user,omitempty"`
-        Status         string     `gorm:"size:30" json:"status"` // greeting, recording, routing, completed
-        GreetingPlayed bool       `gorm:"default:false" json:"greeting_played"`
-        VoicemailID    *uint      `json:"voicemail_id,omitempty"`
-        Voicemail      *Voicemail `gorm:"foreignKey:VoicemailID" json:"voicemail,omitempty"`
-        RoutedTo       *uint      `json:"routed_to,omitempty"` // user/channel ID if routed
-        RoutedToType   string     `gorm:"size:20" json:"routed_to_type,omitempty"` // user, channel
-        StartedAt      time.Time  `json:"started_at"`
-        EndedAt        *time.Time `json:"ended_at,omitempty"`
+	ID             uint       `gorm:"primaryKey" json:"id"`
+	CallID         uint       `gorm:"index" json:"call_id"`
+	Call           Call       `gorm:"foreignKey:CallID" json:"call,omitempty"`
+	CallerID       uint       `gorm:"index" json:"caller_id"`
+	Caller         User       `gorm:"foreignKey:CallerID" json:"caller,omitempty"`
+	TargetUserID   uint       `gorm:"index" json:"target_user_id"`
+	TargetUser     User       `gorm:"foreignKey:TargetUserID" json:"target_user,omitempty"`
+	Status         string     `gorm:"size:30" json:"status"` // greeting, recording, routing, completed
+	GreetingPlayed bool       `gorm:"default:false" json:"greeting_played"`
+	VoicemailID    *uint      `json:"voicemail_id,omitempty"`
+	Voicemail      *Voicemail `gorm:"foreignKey:VoicemailID" json:"voicemail,omitempty"`
+	RoutedTo       *uint      `json:"routed_to,omitempty"`                     // user/channel ID if routed
+	RoutedToType   string     `gorm:"size:20" json:"routed_to_type,omitempty"` // user, channel
+	StartedAt      time.Time  `json:"started_at"`
+	EndedAt        *time.Time `json:"ended_at,omitempty"`
 }
 
 // Group DM
 type GroupDM struct {
-        ID        uint      `gorm:"primaryKey" json:"id"`
-        Name      string    `json:"name" gorm:"not null"`
-        OwnerID   uint      `gorm:"index" json:"owner_id"`
-        Avatar    *string   `json:"avatar,omitempty"`
-        CreatedAt time.Time `json:"created_at"`
-        UpdatedAt time.Time `json:"updated_at"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Name      string    `json:"name" gorm:"not null"`
+	OwnerID   uint      `gorm:"index" json:"owner_id"`
+	Avatar    *string   `json:"avatar,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type GroupDMParticipant struct {
-        ID       uint      `gorm:"primaryKey" json:"id"`
-        GroupID  uint      `gorm:"index:idx_gdm_participant,unique,priority:1" json:"group_id"`
-        UserID   uint      `gorm:"index:idx_gdm_participant,unique,priority:2" json:"user_id"`
-        JoinedAt time.Time `json:"joined_at"`
+	ID       uint      `gorm:"primaryKey" json:"id"`
+	GroupID  uint      `gorm:"index:idx_gdm_participant,unique,priority:1" json:"group_id"`
+	UserID   uint      `gorm:"index:idx_gdm_participant,unique,priority:2" json:"user_id"`
+	JoinedAt time.Time `json:"joined_at"`
 }
 
 type GroupDMMessage struct {
-        ID        uint            `gorm:"primaryKey" json:"id"`
-        GroupID   uint            `gorm:"index" json:"group_id"`
-        SenderID  uint            `gorm:"index" json:"sender_id"`
-        Content   string          `gorm:"type:text" json:"content"`
-        ReplyToID *uint           `gorm:"index" json:"reply_to_id"`
-        ReplyTo   *GroupDMMessage `gorm:"foreignKey:ReplyToID" json:"reply_to,omitempty"`
-        Edited    bool            `gorm:"default:false" json:"edited"`
-        CreatedAt time.Time       `json:"created_at"`
-        UpdatedAt time.Time       `json:"updated_at"`
-        DeletedAt gorm.DeletedAt  `gorm:"index" json:"-"`
+	ID        uint            `gorm:"primaryKey" json:"id"`
+	GroupID   uint            `gorm:"index" json:"group_id"`
+	SenderID  uint            `gorm:"index" json:"sender_id"`
+	Content   string          `gorm:"type:text" json:"content"`
+	ReplyToID *uint           `gorm:"index" json:"reply_to_id"`
+	ReplyTo   *GroupDMMessage `gorm:"foreignKey:ReplyToID" json:"reply_to,omitempty"`
+	Edited    bool            `gorm:"default:false" json:"edited"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
+	DeletedAt gorm.DeletedAt  `gorm:"index" json:"-"`
 }
-
