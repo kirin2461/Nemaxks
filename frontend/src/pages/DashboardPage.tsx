@@ -115,7 +115,7 @@ export default function DashboardPage() {
   const totalUnreadMessages = (conversations || []).reduce((sum, c) => sum + (c.unread_count || 0), 0)
 
   const stats = [
-    { name: 'Друзья', value: String(friendsCount), icon: Users, color: 'from-purple-500 to-pink-500', change: 'добавлено' },
+    { name: 'Друзья', value: String(friendsCount), icon: Users, color: 'from-primary to-accent', change: 'добавлено' },
     { name: 'В сети', value: String(platformStats.onlineUsers || 0), icon: Wifi, color: 'from-green-500 to-emerald-500', change: 'пользователей' },
     { name: 'Стримов', value: String(liveStreams.length || platformStats.activeStreams || 0), icon: Radio, color: 'from-orange-500 to-red-500', change: 'активных' },
   ]
@@ -137,7 +137,7 @@ export default function DashboardPage() {
       action: `${platformStats.totalUsers || 0} пользователей зарегистрировано`,
       time: 'всего',
       icon: Users,
-      color: 'text-purple-500'
+      color: 'text-primary'
     },
     {
       id: 3,
@@ -164,7 +164,7 @@ export default function DashboardPage() {
     <Layout>
       <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
         {/* Header with cosmic gradient background */}
-        <div className="mb-6 md:mb-8 p-4 md:p-6 lg:p-8 rounded-2xl gradient-aurora-animated relative overflow-hidden">
+        <div className="mb-6 md:mb-8 p-4 md:p-6 lg:p-8 rounded-2xl gradient-brand glow relative overflow-hidden">
           <div className="relative z-10">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-white drop-shadow-lg">
               С возвращением, <span className="text-white">{user?.alias || user?.username}</span>!
@@ -190,13 +190,13 @@ export default function DashboardPage() {
             return (
               <div
                 key={stat.name}
-                className="card-cosmic animate-slide-in"
+                className="glass rounded-xl shadow-soft p-6 animate-slide-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs md:text-sm text-muted-foreground mb-1 truncate">{stat.name}</p>
-                    <p className="text-xl md:text-2xl lg:text-3xl font-bold mb-1">{isLoading ? '...' : stat.value}</p>
+                    <p className="text-xl md:text-2xl lg:text-3xl font-bold mb-1 gradient-brand-text">{isLoading ? '...' : stat.value}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
                       {stat.change}
                     </p>
@@ -219,38 +219,38 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold mb-4 text-muted-foreground">{t('common.more')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               <Link href="/feed">
-                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
                   <Rss className="w-6 h-6 mx-auto mb-2 text-blue-500" />
                   <span className="text-sm">{t('nav.feed')}</span>
                 </div>
               </Link>
               <Link href="/jarvis">
-                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
-                  <Sparkles className="w-6 h-6 mx-auto mb-2 text-purple-500" />
+                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
+                  <Sparkles className="w-6 h-6 mx-auto mb-2 text-primary" />
                   <span className="text-sm">{t('nav.jarvis')}</span>
                 </div>
               </Link>
               <Link href="/video">
-                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
                   <Video className="w-6 h-6 mx-auto mb-2 text-red-500" />
                   <span className="text-sm">{t('nav.video')}</span>
                 </div>
               </Link>
               <Link href="/call">
-                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
                   <Phone className="w-6 h-6 mx-auto mb-2 text-green-500" />
                   <span className="text-sm">{t('nav.calls')}</span>
                 </div>
               </Link>
               <Link href="/premium">
-                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
+                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
                   <Crown className="w-6 h-6 mx-auto mb-2 text-yellow-500" />
                   <span className="text-sm">{t('nav.premium')}</span>
                 </div>
               </Link>
               <Link href="/invite">
-                <div className="card-cosmic p-4 text-center hover:scale-105 transition-transform cursor-pointer">
-                  <UserPlus className="w-6 h-6 mx-auto mb-2 text-cyan-500" />
+                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
+                  <UserPlus className="w-6 h-6 mx-auto mb-2 text-accent" />
                   <span className="text-sm">{t('nav.invite')}</span>
                 </div>
               </Link>
@@ -261,7 +261,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent activity */}
           <div className="lg:col-span-2">
-            <div className="card-cosmic">
+            <div className="glass rounded-xl shadow-soft p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" />
@@ -305,7 +305,7 @@ export default function DashboardPage() {
 
           {/* Trending / Live streams */}
           <div className="space-y-6">
-            <div className="card-cosmic">
+            <div className="glass rounded-xl shadow-soft p-6">
               <div className="flex items-center gap-2 mb-6">
                 {liveStreams.length > 0 ? (
                   <Radio className="w-5 h-5 text-red-500 animate-pulse" />
@@ -344,7 +344,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick stats */}
-            <div className="card-cosmic">
+            <div className="glass rounded-xl shadow-soft p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Wifi className="w-5 h-5 text-green-500" />
                 <h2 className="text-lg font-bold">Статус платформы</h2>
