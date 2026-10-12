@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Modal } from './Modal'
+import { Button } from './Button'
 import { Edit3, Loader2 } from 'lucide-react'
 
 interface EditMessageModalProps {
@@ -78,7 +79,7 @@ export function EditMessageModal({
             onKeyDown={handleKeyDown}
             maxLength={2000}
             rows={4}
-            className="w-full px-4 py-3 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors resize-none"
+            className="input-field py-3 resize-none"
             placeholder="Введите сообщение..."
           />
           <div className="flex justify-between text-xs text-muted-foreground mt-1">
@@ -94,17 +95,18 @@ export function EditMessageModal({
         )}
 
         <div className="flex gap-3">
-          <button
+          <Button
+            variant="secondary"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
+            className="flex-1"
           >
             Отмена
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSave}
             disabled={loading || !content.trim()}
-            className="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -114,7 +116,7 @@ export function EditMessageModal({
                 Сохранить
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

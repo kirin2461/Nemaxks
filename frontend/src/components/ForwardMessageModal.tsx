@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Modal } from './Modal'
+import { Button } from './Button'
 import { Forward, Search, User, Users, Loader2, Check } from 'lucide-react'
 import { guildsAPI } from '../lib/api'
 
@@ -107,7 +108,7 @@ export function ForwardMessageModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Переслать сообщение" size="md">
       <div className="space-y-4">
-        <div className="p-3 bg-muted/60 rounded-lg border-l-4 border-purple-500">
+        <div className="p-3 bg-secondary/60 rounded-xl border-l-4 border-primary">
           <p className="text-foreground text-sm line-clamp-3">{messageContent}</p>
         </div>
 
@@ -117,15 +118,15 @@ export function ForwardMessageModal({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors"
+            className="input-field pl-10"
             placeholder="Поиск друзей и каналов..."
           />
         </div>
 
-        <div className="max-h-64 overflow-y-auto space-y-1">
+        <div className="max-h-64 overflow-y-auto space-y-1 custom-scrollbar">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+              <Loader2 className="w-6 h-6 text-primary animate-spin" />
             </div>
           ) : filteredTargets.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -136,19 +137,19 @@ export function ForwardMessageModal({
               <button
                 key={`${target.type}-${target.id}`}
                 onClick={() => setSelectedTarget(target)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
                   selectedTarget?.id === target.id && selectedTarget?.type === target.type
-                    ? 'bg-purple-500/20 border border-purple-500'
-                    : 'bg-muted/60 hover:bg-muted border border-transparent'
+                    ? 'bg-primary/15 border border-primary/60 shadow-glow'
+                    : 'bg-secondary/50 hover:bg-secondary border border-transparent'
                 }`}
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center overflow-hidden">
                   {target.avatar ? (
                     <img src={target.avatar} alt="" className="w-full h-full object-cover" />
                   ) : target.type === 'user' ? (
-                    <User className="w-5 h-5 text-white" />
+                    <User className="w-5 h-5 text-primary-foreground" />
                   ) : (
-                    <Users className="w-5 h-5 text-white" />
+                    <Users className="w-5 h-5 text-primary-foreground" />
                   )}
                 </div>
                 <div className="flex-1 text-left">
@@ -158,7 +159,7 @@ export function ForwardMessageModal({
                   )}
                 </div>
                 {selectedTarget?.id === target.id && selectedTarget?.type === target.type && (
-                  <Check className="w-5 h-5 text-purple-400" />
+                  <Check className="w-5 h-5 text-primary" />
                 )}
               </button>
             ))
@@ -166,17 +167,18 @@ export function ForwardMessageModal({
         </div>
 
         <div className="flex gap-3">
-          <button
+          <Button
+            variant="secondary"
             onClick={handleClose}
             disabled={forwarding}
-            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
+            className="flex-1"
           >
             Отмена
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleForward}
             disabled={!selectedTarget || forwarding}
-            className="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1"
           >
             {forwarding ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -186,7 +188,7 @@ export function ForwardMessageModal({
                 Переслать
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

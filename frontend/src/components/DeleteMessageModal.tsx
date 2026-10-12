@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Modal } from './Modal'
+import { Button } from './Button'
 import { Trash2, Loader2, AlertTriangle } from 'lucide-react'
 
 interface DeleteMessageModalProps {
@@ -35,28 +36,28 @@ export function DeleteMessageModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
       <div className="text-center">
-        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-red-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
           <Trash2 className="w-8 h-8 text-red-400" />
         </div>
 
-        <h2 className="text-xl font-bold text-foreground mb-2">Удалить сообщение?</h2>
+        <h2 className="text-xl font-bold tracking-tight text-foreground mb-2">Удалить сообщение?</h2>
         <p className="text-muted-foreground text-sm mb-4">
           Это действие нельзя отменить
         </p>
 
         {messagePreview && (
-          <div className="p-3 bg-muted/60 rounded-lg mb-4 text-left">
+          <div className="p-3 bg-secondary/60 rounded-xl mb-4 text-left">
             <p className="text-foreground text-sm line-clamp-3">{messagePreview}</p>
           </div>
         )}
 
         {canDeleteForEveryone && (
-          <label className="flex items-center gap-3 p-3 bg-muted/60 rounded-lg mb-4 cursor-pointer hover:bg-muted transition-colors">
+          <label className="flex items-center gap-3 p-3 bg-secondary/60 rounded-xl mb-4 cursor-pointer hover:bg-secondary transition-colors">
             <input
               type="checkbox"
               checked={deleteForEveryone}
               onChange={e => setDeleteForEveryone(e.target.checked)}
-              className="w-5 h-5 rounded border-gray-500 bg-transparent text-red-500 focus:ring-red-500"
+              className="w-5 h-5 rounded border-border bg-transparent text-red-500 focus:ring-red-500"
             />
             <div className="text-left">
               <p className="text-foreground text-sm font-medium">Удалить для всех</p>
@@ -66,17 +67,19 @@ export function DeleteMessageModal({
         )}
 
         <div className="flex gap-3">
-          <button
+          <Button
+            variant="secondary"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-muted/60 hover:bg-muted rounded-lg text-foreground transition-colors"
+            className="flex-1"
           >
             Отмена
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
             onClick={handleDelete}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white transition-colors flex items-center justify-center gap-2"
+            className="flex-1"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -86,7 +89,7 @@ export function DeleteMessageModal({
                 Удалить
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>
