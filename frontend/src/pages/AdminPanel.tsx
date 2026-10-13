@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Layout } from '@/components/Layout'
 import { Avatar } from '@/components/Avatar'
 import { useStore } from '@/lib/store'
-import { adminAPI, type AdminStats, type IPBan, type AbuseReport, type AuditLog, type User, type ForbiddenWord, type ForbiddenAttempt, type BillingStats, type BillingTransaction } from '@/lib/api'
+import { adminAPI, adminLicenseAPI, apiKeysAPI, type AdminStats, type IPBan, type AbuseReport, type AuditLog, type User, type ForbiddenWord, type ForbiddenAttempt, type BillingStats, type BillingTransaction, type LicenseKey, type ApiKey, type ApiKeyStats, type CreatedApiKey } from '@/lib/api'
 import {
   Users,
   Shield,
@@ -26,11 +26,23 @@ import {
   X,
   CreditCard,
   DollarSign,
-  RefreshCw
+  RefreshCw,
+  KeyRound,
+  KeySquare,
+  Copy,
+  Check
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type TabType = 'dashboard' | 'users' | 'bans' | 'reports' | 'logs' | 'filter' | 'attempts' | 'billing'
+type TabType = 'dashboard' | 'users' | 'bans' | 'reports' | 'logs' | 'filter' | 'attempts' | 'billing' | 'licenses' | 'apikeys'
+
+interface LicenseStats {
+  total_keys: number
+  used_keys: number
+  unused_keys: number
+  active_users: number
+  revenue_rub: number
+}
 
 export default function AdminPanel() {
   const { user } = useStore()
@@ -49,10 +61,28 @@ export default function AdminPanel() {
   const [newWordCategory, setNewWordCategory] = useState('general')
   const [newWordIsRegex, setNewWordIsRegex] = useState(false)
   const [editingWord, setEditingWord] = useState<ForbiddenWord | null>(null)
+  // Лицензии
+  const [licenseStats, setLicenseStats] = useState<LicenseStats | null>(null)
+  const [licenses, setLicenses] = useState<LicenseKey[]>([])
+  const [licensesTotal, setLicensesTotal] = useState(0)
+  const [licensePage, setLicensePage] = useState(1)
+  const [licenseType, setLicenseType] = useState('PREMIUM')
+  const [licenseError, setLicenseError] = useState('')
+  const [licenseGenerating, setLicenseGenerating] = useState(false)
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  // API-ключи
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
+  const [apiKeysStats, setApiKeysStats] = useState<ApiKeyStats | null>(null)
+  const [apiKeysError, setApiKeysError] = useState('')
+  const [newKeyName, setNewKeyName] = useState('')
+  const [newKeyScopes, setNewKeyScopes] = useState<string[]>(['read'])
+  const [newKeyExpiry, setNewKeyExpiry] = useState('')
+  const [createdKey, setCreatedKey] = useState<CreatedApiKey | null>(null)
+  const [apiKeyCreating, setApiKeyCreating] = useState(false)
 
   useEffect(() => {
     loadData()
-  }, [activeTab])
+  }, [activeTab, licensePage])
 
   const loadData = async () => {
     setLoading(true)
@@ -90,11 +120,107 @@ export default function AdminPanel() {
           const billingData = await adminAPI.getBillingStats()
           setBillingStats(billingData)
           break
+        case 'licenses': {
+          const [licensesData, statsData] = await Promise.all([
+            adminLicenseAPI.getAll(licensePage, 20),
+            adminLicenseAPI.getStats(),
+          ])
+          setLicenses(licensesData.licenses)
+          setLicensesTotal(licensesData.total)
+          setLicenseStats(statsData)
+          setLicenseError('')
+          break
+        }
+        case 'apikeys': {
+          const [keysData, keyStatsData] = await Promise.all([
+            apiKeysAPI.list(),
+            apiKeysAPI.stats(),
+          ])
+          setApiKeys(keysData.keys)
+          setApiKeysStats(keyStatsData)
+          setApiKeysError('')
+          break
+        }
       }
     } catch (error) {
       console.error('Failed to load admin data:', error)
+      if (activeTab === 'licenses') setLicenseError('Не удалось загрузить лицензии')
+      if (activeTab === 'apikeys') setApiKeysError('Не удалось загрузить API-ключи')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGenerateLicense = async (count: number) => {
+    setLicenseGenerating(true)
+    setLicenseError('')
+    try {
+      if (count === 1) {
+        await adminLicenseAPI.generate(licenseType)
+      } else {
+        await adminLicenseAPI.generateBatch(licenseType, count)
+      }
+      setLicensePage(1)
+      loadData()
+    } catch (error) {
+      console.error('Failed to generate license:', error)
+      setLicenseError('Ошибка генерации ключа')
+    } finally {
+      setLicenseGenerating(false)
+    }
+  }
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedKey(text)
+      setTimeout(() => setCopiedKey(null), 2000)
+    } catch (error) {
+      console.error('Failed to copy:', error)
+    }
+  }
+
+  const handleCreateApiKey = async () => {
+    if (!newKeyName.trim()) return
+    setApiKeyCreating(true)
+    setApiKeysError('')
+    try {
+      const created = await apiKeysAPI.create({
+        name: newKeyName.trim(),
+        scopes: newKeyScopes,
+        expires_in_days: newKeyExpiry ? parseInt(newKeyExpiry) : undefined,
+      })
+      setCreatedKey(created)
+      setNewKeyName('')
+      setNewKeyScopes(['read'])
+      setNewKeyExpiry('')
+      loadData()
+    } catch (error) {
+      console.error('Failed to create API key:', error)
+      setApiKeysError('Ошибка создания API-ключа')
+    } finally {
+      setApiKeyCreating(false)
+    }
+  }
+
+  const handleToggleApiKey = async (key: ApiKey) => {
+    try {
+      await apiKeysAPI.update(key.id, { is_active: !key.is_active })
+      loadData()
+    } catch (error) {
+      console.error('Failed to update API key:', error)
+      setApiKeysError('Ошибка обновления API-ключа')
+    }
+  }
+
+  const handleRevokeApiKey = async (id: number) => {
+    if (!confirm('Отозвать этот API-ключ? Действие необратимо.')) return
+    try {
+      await apiKeysAPI.revoke(id)
+      loadData()
+    } catch (error) {
+      console.error('Failed to revoke API key:', error)
+      setApiKeysError('Ошибка отзыва API-ключа')
     }
   }
 
@@ -185,6 +311,8 @@ export default function AdminPanel() {
     { id: 'attempts' as TabType, label: 'Попытки', icon: AlertTriangle },
     { id: 'logs' as TabType, label: 'Журнал', icon: FileText },
     { id: 'billing' as TabType, label: 'Биллинг', icon: CreditCard },
+    { id: 'licenses' as TabType, label: 'Лицензии', icon: KeyRound },
+    { id: 'apikeys' as TabType, label: 'API-ключи', icon: KeySquare },
   ]
 
   return (
@@ -201,7 +329,7 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6 border-b border-border pb-4">
+        <div className="flex flex-wrap gap-2 mb-6 border-b border-border pb-4">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -688,6 +816,289 @@ export default function AdminPanel() {
                             )}>
                               {tx.status === 'succeeded' ? 'Успешно' : tx.status === 'pending' ? 'Ожидание' : 'Ошибка'}
                             </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'licenses' && (
+              <div className="space-y-6">
+                {licenseError && (
+                  <div className="p-4 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                    {licenseError}
+                  </div>
+                )}
+
+                {licenseStats && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <StatCard title="Всего ключей" value={licenseStats.total_keys} icon={KeyRound} color="text-blue-500" />
+                    <StatCard title="Использовано" value={licenseStats.used_keys} icon={CheckCircle} color="text-green-500" />
+                    <StatCard title="Свободно" value={licenseStats.unused_keys} icon={Clock} color="text-yellow-500" />
+                    <StatCard title="Активаций" value={licenseStats.active_users} icon={Users} color="text-purple-500" />
+                    <StatCard title="Выручка (₽)" value={licenseStats.revenue_rub} icon={DollarSign} color="text-orange-500" />
+                  </div>
+                )}
+
+                <div className="glass rounded-xl p-4">
+                  <h3 className="font-medium mb-4">Генерация ключей</h3>
+                  <div className="flex flex-wrap gap-3">
+                    <select
+                      value={licenseType}
+                      onChange={(e) => setLicenseType(e.target.value)}
+                      className="input-field !w-auto px-3 py-2"
+                    >
+                      <option value="PREMIUM">PREMIUM</option>
+                      <option value="BASIC">BASIC</option>
+                    </select>
+                    <button
+                      onClick={() => handleGenerateLicense(1)}
+                      disabled={licenseGenerating}
+                      className="px-4 py-2 rounded-lg gradient-brand text-primary-foreground shadow-soft hover:brightness-110 flex items-center gap-2 transition-all disabled:opacity-50"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Сгенерировать
+                    </button>
+                    <button
+                      onClick={() => handleGenerateLicense(10)}
+                      disabled={licenseGenerating}
+                      className="px-4 py-2 rounded-lg bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 flex items-center gap-2 transition-all disabled:opacity-50"
+                    >
+                      <Plus className="w-4 h-4" />
+                      10 шт
+                    </button>
+                  </div>
+                </div>
+
+                <div className="glass rounded-xl">
+                  <div className="divide-y divide-border">
+                    {licenses.length === 0 ? (
+                      <div className="p-8 text-center text-muted-foreground">
+                        Нет лицензионных ключей
+                      </div>
+                    ) : (
+                      licenses.map((lic) => (
+                        <div key={lic.id} className="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="font-mono text-sm bg-muted/70 px-2 py-1 rounded-lg border border-border truncate">
+                              {lic.key}
+                            </span>
+                            <button
+                              onClick={() => copyToClipboard(lic.key)}
+                              className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                              title="Скопировать"
+                            >
+                              {copiedKey === lic.key ? (
+                                <Check className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <Copy className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-primary/15 text-primary border border-primary/25">
+                              {lic.type}
+                            </span>
+                            <span className="text-sm text-muted-foreground w-16 text-right">
+                              {lic.duration_days} дн.
+                            </span>
+                            <span className={cn(
+                              'px-2 py-0.5 rounded-full text-xs',
+                              lic.is_used
+                                ? 'bg-muted text-muted-foreground'
+                                : 'bg-accent/15 text-accent border border-accent/25'
+                            )}>
+                              {lic.is_used ? 'Использован' : 'Свободен'}
+                            </span>
+                            <span className="text-sm text-muted-foreground hidden md:block">
+                              {new Date(lic.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between p-4 border-t border-border">
+                    <span className="text-sm text-muted-foreground">
+                      Страница {licensePage} из {Math.max(1, Math.ceil(licensesTotal / 20))} (всего {licensesTotal})
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setLicensePage((p) => Math.max(1, p - 1))}
+                        disabled={licensePage <= 1}
+                        className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Назад
+                      </button>
+                      <button
+                        onClick={() => setLicensePage((p) => p + 1)}
+                        disabled={licensePage * 20 >= licensesTotal}
+                        className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Вперёд
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'apikeys' && (
+              <div className="space-y-6">
+                {apiKeysError && (
+                  <div className="p-4 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                    {apiKeysError}
+                  </div>
+                )}
+
+                {apiKeysStats && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <StatCard title="Всего ключей" value={apiKeysStats.total} icon={KeySquare} color="text-blue-500" />
+                    <StatCard title="Активных" value={apiKeysStats.active} icon={CheckCircle} color="text-green-500" />
+                    <StatCard title="Использовано за 24ч" value={apiKeysStats.used_last_24h} icon={Activity} color="text-purple-500" />
+                  </div>
+                )}
+
+                <div className="glass rounded-xl p-4">
+                  <h3 className="font-medium mb-4">Создать API-ключ</h3>
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <input
+                      type="text"
+                      value={newKeyName}
+                      onChange={(e) => setNewKeyName(e.target.value)}
+                      placeholder="Название ключа..."
+                      className="input-field flex-1 min-w-[200px]"
+                    />
+                    <label className="flex items-center gap-2 px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={newKeyScopes.includes('read')}
+                        onChange={(e) =>
+                          setNewKeyScopes((s) =>
+                            e.target.checked ? [...new Set([...s, 'read'])] : s.filter((x) => x !== 'read')
+                          )
+                        }
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">read</span>
+                    </label>
+                    <label className="flex items-center gap-2 px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={newKeyScopes.includes('write')}
+                        onChange={(e) =>
+                          setNewKeyScopes((s) =>
+                            e.target.checked ? [...new Set([...s, 'write'])] : s.filter((x) => x !== 'write')
+                          )
+                        }
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">write</span>
+                    </label>
+                    <select
+                      value={newKeyExpiry}
+                      onChange={(e) => setNewKeyExpiry(e.target.value)}
+                      className="input-field !w-auto px-3 py-2"
+                    >
+                      <option value="">Бессрочно</option>
+                      <option value="30">30 дней</option>
+                      <option value="90">90 дней</option>
+                    </select>
+                    <button
+                      onClick={handleCreateApiKey}
+                      disabled={apiKeyCreating || !newKeyName.trim()}
+                      className="px-4 py-2 rounded-lg gradient-brand text-primary-foreground shadow-soft hover:brightness-110 flex items-center gap-2 transition-all disabled:opacity-50"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Создать
+                    </button>
+                  </div>
+                </div>
+
+                {createdKey && (
+                  <div className="glass rounded-xl p-4 border border-yellow-500/40 bg-yellow-500/5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                      <h3 className="font-medium text-yellow-400">
+                        Сохраните ключ — он показывается один раз
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <code className="flex-1 font-mono text-sm bg-background/60 px-3 py-2 rounded-lg border border-border break-all">
+                        {createdKey.key}
+                      </code>
+                      <button
+                        onClick={() => copyToClipboard(createdKey.key)}
+                        className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors flex-shrink-0"
+                        title="Скопировать"
+                      >
+                        {copiedKey === createdKey.key ? (
+                          <Check className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setCreatedKey(null)}
+                        className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors flex-shrink-0"
+                        title="Скрыть"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="glass rounded-xl">
+                  <div className="divide-y divide-border">
+                    {apiKeys.length === 0 ? (
+                      <div className="p-8 text-center text-muted-foreground">
+                        Нет API-ключей
+                      </div>
+                    ) : (
+                      apiKeys.map((key) => (
+                        <div key={key.id} className="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div>
+                              <p className="font-medium">{key.name}</p>
+                              <p className="text-sm text-muted-foreground font-mono">{key.prefix}…</p>
+                            </div>
+                            <div className="flex gap-1">
+                              {(key.scopes || []).map((scope) => (
+                                <span
+                                  key={scope}
+                                  className="px-2 py-0.5 rounded-full text-xs bg-accent/15 text-accent border border-accent/25"
+                                >
+                                  {scope}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <span className="text-sm text-muted-foreground hidden md:block">
+                              {key.last_used_at ? new Date(key.last_used_at).toLocaleString() : '—'}
+                            </span>
+                            <button
+                              onClick={() => handleToggleApiKey(key)}
+                              className={cn(
+                                'px-2 py-0.5 rounded-full text-xs border transition-colors',
+                                key.is_active
+                                  ? 'bg-green-500/15 text-green-400 border-green-500/25 hover:bg-green-500/25'
+                                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                              )}
+                              title={key.is_active ? 'Деактивировать' : 'Активировать'}
+                            >
+                              {key.is_active ? 'Активен' : 'Отозван'}
+                            </button>
+                            <button
+                              onClick={() => handleRevokeApiKey(key.id)}
+                              className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
+                              title="Отозвать ключ"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
                       ))

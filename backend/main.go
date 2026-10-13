@@ -697,6 +697,9 @@ func main() {
 	registerLicenseRoutes(r, authMiddleware(), adminMiddleware())
 	go cleanupExpiredLicenses()
 
+	// API Keys (админское управление ключами для X-API-Key)
+	registerAPIKeyRoutes(r, authMiddleware(), adminMiddleware())
+
 	// Account Management (GDPR: deletion, consent withdrawal)
 	registerAccountRoutes(r, authMiddleware())
 	go ProcessScheduledDeletions()

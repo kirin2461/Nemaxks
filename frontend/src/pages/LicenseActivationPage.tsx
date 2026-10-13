@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { Key, Check, Shield, Ban, Sparkles, Clock, Star, Crown } from 'lucide-react';
+import { useStore } from '@/lib/store';
 
 interface LicensePricing {
   type: string;
@@ -60,6 +61,7 @@ const benefits = [
 
 export default function LicenseActivationPage() {
   const [, setLocation] = useLocation();
+  const enableDemoMode = useStore((s) => s.enableDemoMode);
   const [licenseKey, setLicenseKey] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState('');
@@ -133,6 +135,11 @@ export default function LicenseActivationPage() {
 
   const handlePurchase = (tier: LicensePricing) => {
     setSelectedTier(tier);
+  };
+
+  const handleDemoMode = () => {
+    enableDemoMode();
+    setLocation('/');
   };
 
   return (
@@ -238,6 +245,13 @@ export default function LicenseActivationPage() {
                     Активировать
                   </>
                 )}
+              </button>
+
+              <button
+                onClick={handleDemoMode}
+                className="w-full py-2 text-sm text-white/50 hover:text-white transition-colors"
+              >
+                Продолжить без ключа — демо-режим
               </button>
             </div>
 

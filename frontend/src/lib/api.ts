@@ -2441,6 +2441,39 @@ export const adminLicenseAPI = {
   getStats: () => request<{ total_keys: number; used_keys: number; unused_keys: number; active_users: number; revenue_rub: number }>('/admin/licenses/stats'),
 };
 
+// Admin API Keys
+export interface ApiKey {
+  id: number;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  is_active: boolean;
+  last_used_at?: string;
+  expires_at?: string;
+  created_at: string;
+}
+
+export interface ApiKeyStats {
+  total: number;
+  active: number;
+  revoked: number;
+  used_last_24h: number;
+}
+
+export interface CreatedApiKey extends ApiKey {
+  key: string;
+}
+
+export const apiKeysAPI = {
+  list: () => request<{ keys: ApiKey[] }>('/admin/api-keys'),
+  create: (data: { name: string; scopes?: string[]; expires_in_days?: number }) =>
+    request<CreatedApiKey>('/admin/api-keys', { method: 'POST', data }),
+  update: (id: number, data: { name?: string; scopes?: string[]; is_active?: boolean }) =>
+    request<ApiKey>(`/admin/api-keys/${id}`, { method: 'PUT', data }),
+  revoke: (id: number) => request<{ success: boolean }>(`/admin/api-keys/${id}`, { method: 'DELETE' }),
+  stats: () => request<ApiKeyStats>('/admin/api-keys/stats'),
+};
+
 export const adminAdsAPI = {
   getRequests: (status?: string, page = 1, limit = 20) => {
     const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });

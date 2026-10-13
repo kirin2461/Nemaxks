@@ -147,6 +147,7 @@ func initDB() {
 		&Appeal{}, &JarvisAudioResponse{}, &JarvisVoiceCommand{}, &Voicemail{}, &JarvisCallSession{},
 		&ChannelTool{},
 		&GroupDM{}, &GroupDMParticipant{}, &GroupDMMessage{},
+		&ApiKey{},
 	)
 	log.Println("DB connected")
 
@@ -510,8 +511,21 @@ func updateMeHandler(c *gin.Context) {
 // enhancedAuthMiddleware (jwt_enhanced.go): проверяет тип токена (access),
 // blacklist по jti/sid и активность сессии — это делает работающими
 // logout/revoke. Раньше токены после logout оставались валидными до exp.
+//
+// Если в запросе присутствует заголовок X-API-Key, используется
+// альтернативная аутентификация по API-ключу (см. api_keys.go):
+// ключ ищется среди активных и неистёкших, обновляется LastUsedAt.
+// Заголовок присутствует, но ключ невалиден — 401, на JWT не проваливаемся.
 func authMiddleware() gin.HandlerFunc {
-	return enhancedAuthMiddleware()
+	jwtAuth := enhancedAuthMiddleware()
+	apiKeyAuth := AuthenticateAPIKey()
+	return func(c *gin.Context) {
+		if c.GetHeader("X-API-Key") != "" {
+			apiKeyAuth(c)
+			return
+		}
+		jwtAuth(c)
+	}
 }
 
 // optionalAuthMiddleware extracts user_id if token is present but doesn't require it

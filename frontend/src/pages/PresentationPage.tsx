@@ -1,7 +1,8 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { MessageSquare, Shield, Zap, Users, Trophy, Gift, Bot, Gamepad2, ArrowRight, Key, Crown, UserCheck } from 'lucide-react'
-import { Link } from 'wouter'
+import { Link, useLocation } from 'wouter'
+import { useStore } from '@/lib/store'
 
 const features = [
   {
@@ -52,6 +53,14 @@ const features = [
 ]
 
 export default function PresentationPage() {
+  const enableDemoMode = useStore((s) => s.enableDemoMode)
+  const [, setLocation] = useLocation()
+
+  const handleDemo = () => {
+    enableDemoMode()
+    setLocation('/')
+  }
+
   return (
     <div className="min-h-screen bg-[#0B0D17] text-white overflow-x-hidden font-sans">
       {/* Navbar */}
@@ -130,11 +139,12 @@ export default function PresentationPage() {
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
-            <Link href="/activate">
-              <button className="px-10 py-4 bg-white/5 rounded-2xl text-lg font-bold hover:bg-white/10 transition-all border border-white/10">
-                Посмотреть демо
-              </button>
-            </Link>
+            <button
+              onClick={handleDemo}
+              className="px-10 py-4 bg-white/5 rounded-2xl text-lg font-bold hover:bg-white/10 transition-all border border-white/10"
+            >
+              Посмотреть демо
+            </button>
           </motion.div>
         </div>
       </section>
