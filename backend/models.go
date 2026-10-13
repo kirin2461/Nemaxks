@@ -15,9 +15,12 @@ type UserPublic struct {
         Bio         *string    `json:"bio,omitempty"`
         CreatedAt   time.Time  `json:"created_at"`
         UpdatedAt   time.Time  `json:"updated_at"`
-        Role        string     `json:"role"`
-        LastSeen    *time.Time `json:"last_seen,omitempty"`
-        IsOnline    bool       `json:"is_online"`
+        Role        string       `json:"role"`
+        LastSeen    *time.Time   `json:"last_seen,omitempty"`
+        IsOnline    bool         `json:"is_online"`
+        // Premium заполняется только в meHandler (запрос к БД/Redis),
+        // в остальных местах ToPublic остаётся без premium.
+        Premium     *PremiumInfo `json:"premium,omitempty"`
 }
 
 type User struct {

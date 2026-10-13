@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { useStore } from "@/lib/store";
 import { useLocation, useSearch } from "wouter";
-import { 
+import {
   Crown, Check, Shield, CreditCard, Wallet, ArrowLeft,
-  Loader2, AlertCircle, Sparkles, Clock, Tag
+  Loader2, AlertCircle, Sparkles, Clock, Tag, CheckCircle
 } from "lucide-react";
 
 interface SubscriptionPlan {
@@ -35,12 +35,13 @@ export default function PremiumCheckoutPage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const searchString = useSearch();
-  const { user, isAuthenticated } = useStore();
-  
+  const { user, isAuthenticated, checkAuth } = useStore();
+
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [testModeSuccess, setTestModeSuccess] = useState<string | null>(null);
   
   const [promoCode, setPromoCode] = useState("");
   const [promoValidation, setPromoValidation] = useState<PromoValidation | null>(null);
@@ -126,6 +127,13 @@ export default function PremiumCheckoutPage() {
         setError(data.error);
       } else if (data.confirmation_url) {
         window.location.href = data.confirmation_url;
+      } else if (data.test_mode) {
+        setTestModeSuccess(data.message || "Тестовый платёж: подписка активирована");
+        checkAuth().catch(() => {});
+        setTimeout(() => {
+          setLocation("/premium");
+        }, 1500);
+        return;
       } else if (data.status === "free_with_promo") {
         setLocation("/premium?status=success");
       } else if (data.message) {
@@ -197,6 +205,26 @@ export default function PremiumCheckoutPage() {
           >
             Вернуться к планам
           </button>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (testModeSuccess) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-nebula p-6 flex items-center justify-center">
+          <div className="max-w-md w-full glass rounded-2xl p-8 shadow-soft border border-emerald-500/30 bg-emerald-500/10 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+              <CheckCircle className="w-9 h-9 text-emerald-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Подписка активирована (тестовый режим)</h2>
+            <p className="text-muted-foreground mb-3">{testModeSuccess}</p>
+            <p className="text-sm text-emerald-400 flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Перенаправление на страницу Premium...
+            </p>
+          </div>
         </div>
       </Layout>
     );

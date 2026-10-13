@@ -5,10 +5,10 @@ import { Button } from "@/components/Button";
 import { premiumAPI } from "@/lib/api";
 import { useStore } from "@/lib/store";
 import { 
-  Crown, Check, Sparkles, Zap, Shield, Star, Gift, Users, 
+  Crown, Check, Sparkles, Zap, Shield, Star, Gift, Users,
   Percent, Clock, ChevronDown, ChevronUp, X,
   Rocket, MessageCircle, Video, Palette, TrendingUp, Award,
-  BookOpen, Bot
+  BookOpen, Bot, CheckCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +43,7 @@ interface OrgPlan {
 }
 
 export default function PremiumPage() {
-  const { user, isAuthenticated } = useStore();
+  const { user, isAuthenticated, checkAuth } = useStore();
   const [orgPlans, setOrgPlans] = useState<OrgPlan[]>([]);
   const [userPremium, setUserPremium] = useState<UserPremium | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,6 +57,7 @@ export default function PremiumPage() {
   const [redeemCode, setRedeemCode] = useState("");
   const [showFAQ, setShowFAQ] = useState<number | null>(null);
   const [startingTrial, setStartingTrial] = useState(false);
+  const [testModeSuccess, setTestModeSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -112,6 +113,12 @@ export default function PremiumPage() {
       const data = await response.json();
       if (data.confirmation_url) {
         window.location.href = data.confirmation_url;
+      } else if (data.test_mode) {
+        setTestModeSuccess(data.message || "Тестовый платёж: подписка активирована");
+        checkAuth().catch(() => {});
+        setTimeout(() => {
+          window.location.href = "/premium";
+        }, 1500);
       } else if (data.message) {
         alert(data.message);
       }
@@ -260,6 +267,21 @@ export default function PremiumPage() {
             </Button>
           )}
         </div>
+
+        {testModeSuccess && (
+          <Card className="glass rounded-xl p-6 mb-8 shadow-soft border border-emerald-500/30 bg-emerald-500/10">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg text-emerald-300">Подписка активирована (тестовый режим)</h3>
+                <p className="text-muted-foreground">{testModeSuccess}</p>
+                <p className="text-sm text-emerald-400 mt-1">Перенаправление...</p>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {userPremium?.has_premium && (
           <Card className="glass rounded-xl p-6 mb-8 shadow-soft">

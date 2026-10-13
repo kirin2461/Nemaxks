@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Layout } from '@/components/Layout'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card'
 import { Avatar } from '@/components/Avatar'
+import { PremiumBadge } from '@/components/PremiumBadge'
 import { Button } from '@/components/Button'
 import { Input, Textarea } from '@/components/Input'
 import { TelegramLink } from '@/components/TelegramLink'
@@ -219,12 +220,11 @@ export default function ProfilePage() {
                         <h1 className="text-xl sm:text-2xl font-bold drop-shadow-md">
                           {displayUser?.username}
                         </h1>
-                        {hasPremium && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-medium">
-                            <Crown className="w-3 h-3" />
-                            {premiumInfo?.plan_name || 'Premium'}
-                          </span>
-                        )}
+                        <PremiumBadge
+                          planName={isOwnProfile ? user?.premium?.plan_name : premiumInfo?.plan_name}
+                          tier={isOwnProfile ? user?.premium?.tier : undefined}
+                          active={isOwnProfile ? !!user?.premium?.active : hasPremium}
+                        />
                       </div>
                       <p className="text-muted-foreground">@{displayUser?.username}</p>
                     </div>

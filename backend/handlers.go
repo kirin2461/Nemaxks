@@ -453,7 +453,12 @@ func meHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user.ToPublic())
+	public := user.ToPublic()
+	// Premium-статус подтягиваем только здесь, чтобы не нагружать БД
+	// при массовых вызовах ToPublic для других пользователей.
+	public.Premium = getPremiumInfoStruct(userID)
+
+	c.JSON(http.StatusOK, public)
 }
 
 func updateMeHandler(c *gin.Context) {

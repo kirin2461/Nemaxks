@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Link } from 'wouter'
 import { Layout } from '@/components/Layout'
+import { premiumAPI, type JarvisQuota } from '@/lib/api'
 import {
   Send,
   Sparkles,
@@ -22,7 +24,8 @@ import {
   Globe,
   Zap,
   Activity,
-  Radio
+  Radio,
+  Crown
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -265,6 +268,8 @@ export default function JarvisPage() {
     messageTime?: string
   }>({ type: null })
   const [showSettings, setShowSettings] = useState(false)
+  const [quota, setQuota] = useState<JarvisQuota | null>(null)
+  const [quotaExceeded, setQuotaExceeded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
   const alwaysListenRef = useRef<any>(null)
@@ -321,6 +326,7 @@ export default function JarvisPage() {
     }
     
     fetchAiStatus()
+    fetchQuota()
 
     const welcomeMessage: Message = {
       id: '1',
@@ -366,6 +372,19 @@ export default function JarvisPage() {
       }
     } catch (error) {
       console.error('Failed to fetch AI status:', error)
+    }
+  }
+
+  const fetchQuota = async () => {
+    try {
+      const data = await premiumAPI.getQuota()
+      setQuota(data)
+      if (data.remaining > 0) {
+        setQuotaExceeded(false)
+      }
+    } catch (error) {
+      // Пользователь не авторизован или эндпоинт недоступен — просто не показываем счётчик
+      console.error('Failed to fetch Jarvis quota:', error)
     }
   }
 
@@ -474,6 +493,7 @@ export default function JarvisPage() {
   const handleSendMessage = async (content?: string) => {
     const messageContent = content || inputMessage.trim()
     if (!messageContent) return
+    if (quotaExceeded && !quota?.premium) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -505,20 +525,52 @@ export default function JarvisPage() {
     ]
 
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`${API_BASE}/api/jarvis/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           message: messageContent,
           history: newHistory.slice(-10)
         })
       })
 
+      if (response.status === 429) {
+        let quotaError: any = null
+        try {
+          quotaError = await response.json()
+        } catch {
+          quotaError = null
+        }
+        if (quotaError?.error === 'quota_exceeded') {
+          setQuota({
+            limit: quotaError.limit ?? quota?.limit ?? 0,
+            used: quotaError.used ?? quota?.used ?? 0,
+            remaining: 0,
+            premium: !!quotaError.premium,
+          })
+        }
+        setQuotaExceeded(true)
+        setMessages(prev => prev.filter(msg => !msg.isLoading))
+        setJarvisStatus('Ready')
+        if (!isMutedRef.current && language === 'ru') {
+          speakCategory('errors')
+        }
+        return
+      }
+
       if (!response.ok) {
         throw new Error('AI service unavailable')
       }
 
       const data = await response.json()
+
+      if (data.quota) {
+        setQuota(data.quota)
+      }
 
       setConversationHistory([
         ...newHistory,
@@ -1084,6 +1136,21 @@ export default function JarvisPage() {
               </div>
             )}
 
+            {quota && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full glass border border-primary/20">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span>Запросов сегодня: {quota.used}/{quota.limit}</span>
+                </div>
+                {quota.premium && (
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/25">
+                    <Crown className="w-3 h-3" />
+                    Premium: расширенный лимит ({quota.limit}/день)
+                  </span>
+                )}
+              </div>
+            )}
+
             {showSettings && (
               <div className="mt-4 p-4 rounded-xl glass">
                 <h3 className="font-semibold mb-4">Настройки J.A.R.V.I.S.</h3>
@@ -1251,6 +1318,28 @@ export default function JarvisPage() {
             ))}
             <div ref={messagesEndRef} />
           </div>
+
+          {quotaExceeded && !quota?.premium && (
+            <div className="px-4 pt-4">
+              <div className="glass rounded-xl p-5 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 text-center animate-fade-in">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 flex items-center justify-center glow">
+                  <Crown className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="font-semibold text-lg mb-1">Лимит бесплатных запросов исчерпан</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Вы использовали {quota?.used ?? 0} из {quota?.limit ?? 0} запросов сегодня.
+                  С Nebula Premium лимит расширяется до 100 запросов в день.
+                </p>
+                <Link
+                  href="/premium"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl gradient-brand text-primary-foreground font-medium hover:brightness-110 transition-all shadow-glow"
+                >
+                  <Crown className="w-4 h-4" />
+                  Перейти на Premium
+                </Link>
+              </div>
+            </div>
+          )}
 
           <div className="p-4 border-t border-border glass">
             <div className="flex items-center gap-3">

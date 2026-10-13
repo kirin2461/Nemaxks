@@ -427,6 +427,7 @@ func main() {
 	r.POST("/api/jarvis/chat/deepseek", authMiddleware(), HandleJarvisChat)
 	r.POST("/api/jarvis/chat/auto", authMiddleware(), HandleJarvisChat)
 	r.POST("/api/jarvis/chat", authMiddleware(), HandleJarvisChat)
+	r.GET("/api/jarvis/quota", authMiddleware(), HandleJarvisQuota)
 	r.GET("/api/jarvis/status", authMiddleware(), HandleJarvisStatus)
 
 	// Stories API

@@ -5,6 +5,7 @@ import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { Avatar } from './Avatar'
 import { Logo } from './Logo'
+import { PremiumBadge } from './PremiumBadge'
 import { NotificationCenter } from './NotificationCenter'
 import { BannerDisplay } from './BannerDisplay'
 import {
@@ -235,9 +236,18 @@ export function Layout({ children }: LayoutProps) {
                 size="sm"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {user?.alias || user?.username}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-medium truncate">
+                    {user?.alias || user?.username}
+                  </p>
+                  {user?.premium?.active && (
+                    <PremiumBadge
+                      planName={user.premium.plan_name}
+                      tier={user.premium.tier}
+                      className="shrink-0"
+                    />
+                  )}
+                </div>
               </div>
             </Link>
 

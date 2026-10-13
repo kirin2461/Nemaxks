@@ -25,10 +25,19 @@ type JarvisRequest struct {
 }
 
 type JarvisResponse struct {
-	Response   string `json:"response"`
-	Provider   string `json:"provider"`
-	TokensUsed int    `json:"tokens_used"`
-	Model      string `json:"model"`
+	Response   string           `json:"response"`
+	Provider   string           `json:"provider"`
+	TokensUsed int              `json:"tokens_used"`
+	Model      string           `json:"model"`
+	Quota      *JarvisQuotaInfo `json:"quota,omitempty"`
+}
+
+// JarvisQuotaInfo — состояние дневной квоты запросов пользователя к Jarvis.
+type JarvisQuotaInfo struct {
+	Limit     int  `json:"limit"`
+	Used      int  `json:"used"`
+	Remaining int  `json:"remaining"`
+	Premium   bool `json:"premium"`
 }
 
 type ChatMessage struct {
@@ -146,6 +155,132 @@ func getCurrentTokenUsage() int {
 	tokenUsageMutex.Lock()
 	defer tokenUsageMutex.Unlock()
 	return tokenUsage
+}
+
+// --- Дневная квота запросов к Jarvis ---
+
+// jarvisEnvInt читает положительный int из env, иначе возвращает defaultVal.
+func jarvisEnvInt(name string, defaultVal int) int {
+	if s := os.Getenv(name); s != "" {
+		if v, err := strconv.Atoi(s); err == nil && v > 0 {
+			return v
+		}
+	}
+	return defaultVal
+}
+
+// jarvisDailyLimit — дневной лимит запросов: для premium JARVIS_DAILY_PREMIUM
+// (по умолчанию 100), для остальных JARVIS_DAILY_FREE (по умолчанию 3).
+func jarvisDailyLimit(isPremium bool) int {
+	if isPremium {
+		return jarvisEnvInt("JARVIS_DAILY_PREMIUM", 100)
+	}
+	return jarvisEnvInt("JARVIS_DAILY_FREE", 3)
+}
+
+// jarvisQuotaDay — текущий день в формате ключа квоты (YYYY-MM-DD).
+func jarvisQuotaDay() string {
+	return time.Now().Format("2006-01-02")
+}
+
+// jarvisQuotaEntry — in-memory счётчик запросов за конкретный день.
+type jarvisQuotaEntry struct {
+	day   string
+	count int
+}
+
+var (
+	jarvisQuotaMutex sync.Mutex
+	// Fallback-счётчики на случай недоступного Redis (сбрасываются по дате).
+	jarvisQuotaMem = make(map[uint]jarvisQuotaEntry)
+)
+
+// incrJarvisQuota увеличивает дневной счётчик запросов пользователя
+// и возвращает новое значение. Основное хранилище — Redis
+// (INCR jarvis:daily:{userID}:{YYYY-MM-DD} + EXPIRE 86400 при первом
+// инкременте); при недоступном Redis — in-memory fallback.
+func incrJarvisQuota(userID uint) int {
+	day := jarvisQuotaDay()
+
+	if redisClient != nil {
+		key := fmt.Sprintf("jarvis:daily:%d:%s", userID, day)
+		count, err := redisClient.Incr(ctx, key).Result()
+		if err == nil {
+			if count == 1 {
+				redisClient.Expire(ctx, key, 86400*time.Second)
+			}
+			return int(count)
+		}
+		log.Printf("[Jarvis] Redis quota incr failed, using in-memory fallback: %v", err)
+	}
+
+	jarvisQuotaMutex.Lock()
+	defer jarvisQuotaMutex.Unlock()
+	entry := jarvisQuotaMem[userID]
+	if entry.day != day {
+		entry = jarvisQuotaEntry{day: day, count: 0}
+	}
+	entry.count++
+	jarvisQuotaMem[userID] = entry
+	return entry.count
+}
+
+// getJarvisQuotaUsed возвращает текущее значение дневного счётчика
+// без его увеличения (для endpoint /api/jarvis/quota).
+func getJarvisQuotaUsed(userID uint) int {
+	day := jarvisQuotaDay()
+
+	if redisClient != nil {
+		key := fmt.Sprintf("jarvis:daily:%d:%s", userID, day)
+		val, err := redisClient.Get(ctx, key).Result()
+		if err == nil {
+			if count, convErr := strconv.Atoi(val); convErr == nil {
+				return count
+			}
+		}
+		return 0
+	}
+
+	jarvisQuotaMutex.Lock()
+	defer jarvisQuotaMutex.Unlock()
+	entry := jarvisQuotaMem[userID]
+	if entry.day != day {
+		return 0
+	}
+	return entry.count
+}
+
+// buildJarvisQuotaInfo собирает снимок квоты пользователя.
+func buildJarvisQuotaInfo(userID uint, used int) JarvisQuotaInfo {
+	premium := HasPremium(userID)
+	limit := jarvisDailyLimit(premium)
+	remaining := limit - used
+	if remaining < 0 {
+		remaining = 0
+	}
+	return JarvisQuotaInfo{
+		Limit:     limit,
+		Used:      used,
+		Remaining: remaining,
+		Premium:   premium,
+	}
+}
+
+// HandleJarvisQuota — GET /api/jarvis/quota: остаток дневных запросов.
+func HandleJarvisQuota(c *gin.Context) {
+	userIDVal, ok := c.Get("user_id")
+	if !ok || userIDVal == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userIDFloat, ok := userIDVal.(float64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user id"})
+		return
+	}
+	uid := uint(userIDFloat)
+
+	c.JSON(http.StatusOK, buildJarvisQuotaInfo(uid, getJarvisQuotaUsed(uid)))
 }
 
 func contains(s, substr string) bool {
@@ -309,6 +444,19 @@ func HandleJarvisChat(c *gin.Context) {
 	}
 	uid := uint(userIDFloat)
 
+	// Дневной лимит запросов: у premium пользователей он существенно выше.
+	quotaUsed := incrJarvisQuota(uid)
+	quota := buildJarvisQuotaInfo(uid, quotaUsed)
+	if quotaUsed > quota.Limit {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"error":   "quota_exceeded",
+			"limit":   quota.Limit,
+			"used":    quotaUsed,
+			"premium": quota.Premium,
+		})
+		return
+	}
+
 	var userSettings Settings
 	db.Where("user_id = ?", uid).First(&userSettings)
 
@@ -403,6 +551,7 @@ func HandleJarvisChat(c *gin.Context) {
 			Provider:   provider,
 			TokensUsed: response.Usage.TotalTokens,
 			Model:      model,
+			Quota:      &quota,
 		})
 		return
 	}

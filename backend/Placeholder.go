@@ -1093,6 +1093,17 @@ func getPremiumSubscriptionHandler(c *gin.Context) {
 	})
 }
 
+// checkoutBillingCycle определяет billing cycle для плана checkout.
+// SubscriptionPlan не хранит BillingCycle, поэтому ищем одноимённый
+// PremiumPlan по slug; если не найден — считаем план месячным.
+func checkoutBillingCycle(plan SubscriptionPlan) string {
+	var premiumPlan PremiumPlan
+	if db.Where("slug = ?", plan.Slug).First(&premiumPlan).Error == nil && premiumPlan.BillingCycle != "" {
+		return premiumPlan.BillingCycle
+	}
+	return "monthly"
+}
+
 func checkoutPremiumHandler(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid := uint(userID.(float64))
@@ -1194,6 +1205,51 @@ func checkoutPremiumHandler(c *gin.Context) {
 	}
 
 	if yookassaService == nil {
+		// Тестовый режим оплаты: активируем подписку сразу, без реального
+		// платежа через YooKassa (включается PAYMENTS_TEST_MODE=true).
+		if os.Getenv("PAYMENTS_TEST_MODE") == "true" {
+			now := time.Now()
+
+			// Длительность периода по billing cycle плана
+			// (monthly = +1 мес, quarterly = +3 мес, annual = +1 год).
+			var periodEnd time.Time
+			switch checkoutBillingCycle(plan) {
+			case "quarterly":
+				periodEnd = now.AddDate(0, 3, 0)
+			case "annual":
+				periodEnd = now.AddDate(1, 0, 0)
+			default: // monthly и неизвестные значения
+				periodEnd = now.AddDate(0, 1, 0)
+			}
+
+			db.Model(&transaction).Updates(map[string]interface{}{
+				"status":           "succeeded",
+				"payment_provider": "test",
+				"completed_at":     now,
+			})
+
+			sub := PremiumSubscription{
+				UserID:             uid,
+				PlanID:             uint(plan.ID),
+				Status:             "active",
+				CurrentPeriodStart: now,
+				CurrentPeriodEnd:   periodEnd,
+				AutoRenew:          false,
+			}
+			db.Create(&sub)
+			db.Model(&transaction).Update("subscription_id", sub.ID)
+
+			InvalidatePremiumCache(uid)
+
+			c.JSON(http.StatusOK, gin.H{
+				"payment_id": transaction.ID,
+				"status":     "test_mode",
+				"test_mode":  true,
+				"message":    "Тестовый платёж: подписка активирована",
+			})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"payment_id":       transaction.ID,
 			"confirmation_url": "",
@@ -1400,6 +1456,17 @@ func fetchYooKassaPayment(paymentID string) (*yookassaPaymentVerification, error
 }
 
 func yookassaWebhookHandler(c *gin.Context) {
+	// Защита общим секретом: если задан BILLING_WEBHOOK_TOKEN, требуем
+	// совпадающий заголовок X-Billing-Token. Не задан — пропускаем
+	// (обратная совместимость).
+	if webhookToken := os.Getenv("BILLING_WEBHOOK_TOKEN"); webhookToken != "" {
+		if c.GetHeader("X-Billing-Token") != webhookToken {
+			log.Printf("[Billing] Webhook rejected: missing or invalid X-Billing-Token")
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return
+		}
+	}
+
 	// Дополнительный слой защиты: IP-allowlist ЮKassa (feature-flag
 	// YOOKASSA_WEBHOOK_IP_CHECK, по умолчанию включён).
 	if !yookassaWebhookIPAllowed(c.ClientIP()) {

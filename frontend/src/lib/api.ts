@@ -265,11 +265,17 @@ export const premiumAPI = {
   checkout: (planId: number) =>
     request<{
       payment_id: string;
-      confirmation_url: string;
+      confirmation_url?: string;
+      status?: string;
+      test_mode?: boolean;
+      message?: string;
     }>('/premium/checkout', {
       method: 'POST',
       data: { plan_id: planId },
     }),
+
+  getQuota: () =>
+    request<JarvisQuota>('/jarvis/quota'),
     
   cancelSubscription: () =>
     request<{ status: string }>('/premium/cancel', {
@@ -1284,6 +1290,21 @@ export interface User {
   last_seen?: string;
   is_online?: boolean;
   is_premium?: boolean;
+  premium?: UserPremiumInfo;
+}
+
+export interface UserPremiumInfo {
+  active: boolean;
+  plan_name?: string;
+  tier?: string;
+  expires_at?: string;
+}
+
+export interface JarvisQuota {
+  limit: number;
+  used: number;
+  remaining: number;
+  premium: boolean;
 }
 
 export interface Story {
