@@ -345,7 +345,7 @@ type CollectionItem struct {
 
 // Gift System Handlers
 func sendGiftHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var req struct {
                 ReceiverID uint   `json:"receiver_id" binding:"required"`
@@ -400,7 +400,7 @@ func sendGiftHandler(c *gin.Context) {
 }
 
 func getReceivedGiftsHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var gifts []UserGiftItem
         db.Where("receiver_id = ?", userID).
@@ -413,7 +413,7 @@ func getReceivedGiftsHandler(c *gin.Context) {
 }
 
 func openGiftHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         giftID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid gift ID"})
@@ -436,7 +436,7 @@ func openGiftHandler(c *gin.Context) {
 
 // Trading System Handlers
 func createTradeHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var req struct {
                 ReceiverID    uint   `json:"receiver_id" binding:"required"`
@@ -534,7 +534,7 @@ func createTradeHandler(c *gin.Context) {
 }
 
 func getTradesHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         status := c.Query("status")
         
         query := db.Where("initiator_id = ? OR receiver_id = ?", userID, userID)
@@ -549,7 +549,7 @@ func getTradesHandler(c *gin.Context) {
 }
 
 func respondTradeHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         tradeID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid trade ID"})
@@ -621,7 +621,7 @@ func respondTradeHandler(c *gin.Context) {
 
 // Activity Feed Handlers
 func getActivityFeedHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
         
         var activities []ActivityFeed
@@ -635,7 +635,7 @@ func getActivityFeedHandler(c *gin.Context) {
 }
 
 func markActivityReadHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         activityID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid activity ID"})
@@ -647,14 +647,14 @@ func markActivityReadHandler(c *gin.Context) {
 }
 
 func markAllActivitiesReadHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         db.Model(&ActivityFeed{}).Where("user_id = ? AND is_read = ?", userID, false).Update("is_read", true)
         c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
 // Enhanced Friends Handlers
 func getBestFriendsHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var bestFriends []BestFriend
         db.Where("user_id = ?", userID).
@@ -667,7 +667,7 @@ func getBestFriendsHandler(c *gin.Context) {
 }
 
 func getFriendInteractionsHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var interactions []FriendInteraction
         db.Where("user_id = ?", userID).
@@ -716,7 +716,7 @@ func getEventHandler(c *gin.Context) {
 }
 
 func joinEventHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         eventID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event ID"})
@@ -773,7 +773,7 @@ func getEventLeaderboardHandler(c *gin.Context) {
 }
 
 func claimEventRewardHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         eventID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event ID"})
@@ -871,7 +871,7 @@ func getGuildClansHandler(c *gin.Context) {
 }
 
 func createClanHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var req struct {
                 GuildID     uint   `json:"guild_id" binding:"required"`
@@ -927,7 +927,7 @@ func createClanHandler(c *gin.Context) {
 }
 
 func joinClanHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         clanID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid clan ID"})
@@ -989,7 +989,7 @@ func getMiniGamesHandler(c *gin.Context) {
 }
 
 func startMiniGameHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         gameID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid game ID"})
@@ -1043,7 +1043,7 @@ func startMiniGameHandler(c *gin.Context) {
 }
 
 func completeMiniGameHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         sessionID, err := strconv.ParseUint(c.Param("session_id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
@@ -1111,7 +1111,7 @@ func getQuestChainsHandler(c *gin.Context) {
 }
 
 func getUserQuestsHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var progress []UserQuestProgress
         db.Where("user_id = ?", userID).
@@ -1122,7 +1122,7 @@ func getUserQuestsHandler(c *gin.Context) {
 }
 
 func startQuestChainHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         chainID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid quest chain ID"})
@@ -1183,7 +1183,7 @@ func getMentorsHandler(c *gin.Context) {
 }
 
 func requestMentorHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         mentorID, err := strconv.ParseUint(c.Param("mentor_id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid mentor ID"})
@@ -1223,7 +1223,7 @@ func requestMentorHandler(c *gin.Context) {
 }
 
 func getMentorshipHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var mentorship Mentorship
         if err := db.Where("(mentor_id = ? OR mentee_id = ?) AND status = ?", userID, userID, "active").
@@ -1265,7 +1265,7 @@ func getTrendingHandler(c *gin.Context) {
 }
 
 func getRecommendationsHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         contentType := c.Query("type")
         limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
         
@@ -1281,7 +1281,7 @@ func getRecommendationsHandler(c *gin.Context) {
 }
 
 func dismissRecommendationHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         recID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recommendation ID"})
@@ -1297,7 +1297,7 @@ func dismissRecommendationHandler(c *gin.Context) {
 
 // Collections Handlers
 func getCollectionsHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var collections []Collection
         db.Where("user_id = ?", userID).Order("updated_at DESC").Find(&collections)
@@ -1306,7 +1306,7 @@ func getCollectionsHandler(c *gin.Context) {
 }
 
 func createCollectionHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var req struct {
                 Name        string `json:"name" binding:"required"`
@@ -1338,7 +1338,7 @@ func createCollectionHandler(c *gin.Context) {
 }
 
 func addToCollectionHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         collectionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
@@ -1383,7 +1383,7 @@ func addToCollectionHandler(c *gin.Context) {
 }
 
 func getCollectionItemsHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         collectionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
@@ -1407,7 +1407,7 @@ func getCollectionItemsHandler(c *gin.Context) {
 }
 
 func removeFromCollectionHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         collectionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
@@ -1437,7 +1437,7 @@ func removeFromCollectionHandler(c *gin.Context) {
 }
 
 func deleteCollectionHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         collectionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})

@@ -110,7 +110,7 @@ func getFraudAlertHandler(c *gin.Context) {
 }
 
 func reviewFraudAlertHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         alertID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid alert ID"})
@@ -260,7 +260,7 @@ func getIPBlacklistHandler(c *gin.Context) {
 }
 
 func addIPBlacklistHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         
         var req struct {
                 IPAddress string     `json:"ip_address" binding:"required"`

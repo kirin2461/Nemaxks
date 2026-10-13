@@ -150,7 +150,7 @@ type UserBadge struct {
 }
 
 func getCurrencyHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
 
         var currency VirtualCurrency
         if err := db.Where("user_id = ?", userID).First(&currency).Error; err != nil {
@@ -185,7 +185,7 @@ func getShopItemsHandler(c *gin.Context) {
 }
 
 func purchaseItemHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         itemID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item ID"})
@@ -253,7 +253,7 @@ func purchaseItemHandler(c *gin.Context) {
 }
 
 func getInventoryHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
 
         var inventory []UserInventory
         db.Preload("Item").Where("user_id = ?", userID).Find(&inventory)
@@ -261,7 +261,7 @@ func getInventoryHandler(c *gin.Context) {
 }
 
 func equipItemHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         itemID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item ID"})
@@ -300,7 +300,7 @@ func equipItemHandler(c *gin.Context) {
 }
 
 func getChallengesHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         challengeType := c.Query("type")
 
         var challenges []Challenge
@@ -398,7 +398,7 @@ func addCurrency(userID uint, coins, gems int) {
 }
 
 func claimChallengeHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         challengeID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid challenge ID"})
@@ -420,7 +420,7 @@ func claimChallengeHandler(c *gin.Context) {
 }
 
 func getStreaksHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
 
         var streak UserStreak
         if err := db.Where("user_id = ?", userID).First(&streak).Error; err != nil {
@@ -565,7 +565,7 @@ func getCompetitionHandler(c *gin.Context) {
 }
 
 func joinCompetitionHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         competitionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid competition ID"})
@@ -634,7 +634,7 @@ func getProfileCustomizationHandler(c *gin.Context) {
         userIDParam := c.Param("user_id")
         var userID uint
         if userIDParam == "" || userIDParam == "me" {
-                userID = c.GetUint("user_id")
+                userID, _ = getUserIDFromContext(c)
         } else {
                 id, errParse := strconv.ParseUint(userIDParam, 10, 32)
                 if errParse != nil {
@@ -670,7 +670,7 @@ func getProfileCustomizationHandler(c *gin.Context) {
 }
 
 func updateProfileCustomizationHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
 
         var profile UserProfile
         if err := db.Where("user_id = ?", userID).First(&profile).Error; err != nil {
@@ -721,7 +721,7 @@ func getUserBadgesHandler(c *gin.Context) {
         userIDParam := c.Param("user_id")
         var userID uint
         if userIDParam == "" {
-                userID = c.GetUint("user_id")
+                userID, _ = getUserIDFromContext(c)
         } else {
                 id, errParse := strconv.ParseUint(userIDParam, 10, 32)
                 if errParse != nil {
@@ -914,7 +914,7 @@ func resetDailyChallenges() {
 }
 
 func getDailyRewardHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
 
         var streak UserStreak
         if err := db.Where("user_id = ?", userID).First(&streak).Error; err != nil {
@@ -966,7 +966,7 @@ func getStreakReward(day int) map[string]int {
 }
 
 func spinWheelHandler(c *gin.Context) {
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
 
         var currency VirtualCurrency
         if err := db.Where("user_id = ?", userID).First(&currency).Error; err != nil {

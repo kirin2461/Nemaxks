@@ -35,7 +35,7 @@ func licenseCheckMiddleware() gin.HandlerFunc {
 
 func requireLicenseMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID := c.GetUint("user_id")
+		userID, _ := getUserIDFromContext(c)
 		
 		if userID == 0 {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
@@ -59,7 +59,7 @@ func requireLicenseMiddleware() gin.HandlerFunc {
 
 func licenseStatusMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID := c.GetUint("user_id")
+		userID, _ := getUserIDFromContext(c)
 		
 		if userID > 0 {
 			license, err := GetUserLicense(userID)

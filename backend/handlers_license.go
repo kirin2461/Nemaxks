@@ -143,7 +143,7 @@ func isValidKeyFormat(key string) bool {
 }
 
 func activateLicenseHandler(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID, _ := getUserIDFromContext(c)
 
 	var req struct {
 		Key string `json:"key" binding:"required"`
@@ -167,7 +167,7 @@ func activateLicenseHandler(c *gin.Context) {
 }
 
 func getLicenseStatusHandler(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID, _ := getUserIDFromContext(c)
 
 	license, err := GetUserLicense(userID)
 	if err != nil {
@@ -209,7 +209,7 @@ func getAdminLicensesHandler(c *gin.Context) {
 }
 
 func generateLicenseHandler(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID, _ := getUserIDFromContext(c)
 
 	var req struct {
 		Type LicenseType `json:"type" binding:"required"`
@@ -229,7 +229,7 @@ func generateLicenseHandler(c *gin.Context) {
 }
 
 func generateBatchLicensesHandler(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID, _ := getUserIDFromContext(c)
 
 	var req struct {
 		Type  LicenseType `json:"type" binding:"required"`
@@ -306,7 +306,7 @@ func recordAdClickHandler(c *gin.Context) {
 }
 
 func createAdRequestHandler(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID, _ := getUserIDFromContext(c)
 
 	var req struct {
 		Type      AdRequestType `json:"type" binding:"required"`
@@ -339,7 +339,7 @@ func createAdRequestHandler(c *gin.Context) {
 }
 
 func getMyAdRequestsHandler(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID, _ := getUserIDFromContext(c)
 
 	var requests []AdRequest
 	db.Where("user_id = ?", userID).Order("created_at DESC").Find(&requests)
@@ -389,7 +389,7 @@ func getAdRequestHandler(c *gin.Context) {
 }
 
 func reviewAdRequestHandler(c *gin.Context) {
-	adminID := c.GetUint("user_id")
+	adminID, _ := getUserIDFromContext(c)
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request ID"})

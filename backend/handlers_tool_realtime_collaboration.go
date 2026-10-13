@@ -194,7 +194,7 @@ func handleRealtimeCollaboration(c *gin.Context) {
                 ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseInvalidFramePayloadData, "Invalid tool ID"))
                 return
         }
-        userID := c.GetUint("user_id")
+        userID, _ := getUserIDFromContext(c)
         username := c.GetString("username")
 
         session := GetOrCreateSession(uint(toolID))
