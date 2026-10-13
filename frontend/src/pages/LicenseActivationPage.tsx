@@ -265,7 +265,7 @@ export default function LicenseActivationPage() {
               <p className="text-accent text-xs sm:text-sm text-center">
                 Уже есть аккаунт с лицензией?{' '}
                 <button
-                  onClick={() => setLocation('/login')}
+                  onClick={() => setLocation('/auth')}
                   className="text-accent hover:underline font-medium"
                 >
                   Войти
