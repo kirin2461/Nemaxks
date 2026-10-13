@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { useLiveKit } from '@/contexts/LiveKitContext'
+import { useToast } from '@/components/Toast'
 
 interface VoiceUser {
   id: string
@@ -122,6 +123,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const { user } = useStore()
   const { subscribeToMessages, sendWebSocketMessage } = useNotifications()
   const livekit = useLiveKit()
+  const toast = useToast()
   const [state, setState] = useState<VoiceState>(initialState)
   const [voiceChannelUsers, setVoiceChannelUsers] = useState<VoiceChannelUsers>({})
   const [voiceMode, setVoiceMode] = useState<VoiceMode>('p2p')
@@ -1036,8 +1038,16 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
 
     } catch (error) {
       console.error('Failed to join voice channel:', error)
+      const errName = (error as any)?.name
+      const isMicError = errName === 'NotAllowedError' || errName === 'NotFoundError' || errName === 'NotReadableError'
+      toast.error(
+        'Не удалось войти в голосовой канал',
+        isMicError
+          ? 'Нет доступа к микрофону. Разрешите использование микрофона в браузере и попробуйте снова.'
+          : 'Ошибка подключения к голосовому каналу. Попробуйте ещё раз.'
+      )
     }
-  }, [state.isConnected, state.channelId, state.isMuted, state.isDeafened, user, broadcastVoiceEvent, startVoiceActivityDetection, stopVoiceActivityDetection, closeAllPeerConnections, fetchExistingParticipants, createOffer, getICEServers])
+  }, [state.isConnected, state.channelId, state.isMuted, state.isDeafened, user, broadcastVoiceEvent, startVoiceActivityDetection, stopVoiceActivityDetection, closeAllPeerConnections, fetchExistingParticipants, createOffer, getICEServers, toast])
 
   const leaveChannel = useCallback(() => {
     const currentChannelId = state.channelId
