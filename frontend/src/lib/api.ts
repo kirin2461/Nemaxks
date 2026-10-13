@@ -2465,7 +2465,7 @@ export interface CreatedApiKey extends ApiKey {
 }
 
 export const apiKeysAPI = {
-  list: () => request<{ keys: ApiKey[] }>('/admin/api-keys'),
+  list: () => request<{ api_keys: ApiKey[]; total: number; page: number; limit: number }>('/admin/api-keys'),
   create: (data: { name: string; scopes?: string[]; expires_in_days?: number }) =>
     request<CreatedApiKey>('/admin/api-keys', { method: 'POST', data }),
   update: (id: number, data: { name?: string; scopes?: string[]; is_active?: boolean }) =>

@@ -136,7 +136,7 @@ export default function AdminPanel() {
             apiKeysAPI.list(),
             apiKeysAPI.stats(),
           ])
-          setApiKeys(keysData.keys)
+          setApiKeys(keysData.api_keys ?? [])
           setApiKeysStats(keyStatsData)
           setApiKeysError('')
           break
