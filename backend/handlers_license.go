@@ -219,6 +219,13 @@ func generateLicenseHandler(c *gin.Context) {
 		return
 	}
 
+	// Неизвестный тип ключа -> DurationDays=0 -> мгновенно истекшая лицензия.
+	// Отклоняем явно, чтобы не генерировать "битые" ключи.
+	if GetLicensePricing(req.Type) == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown license type. Valid: MONTHLY, QUARTERLY, YEARLY"})
+		return
+	}
+
 	license, err := CreateLicenseKey(req.Type, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate license"})
@@ -237,6 +244,11 @@ func generateBatchLicensesHandler(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if GetLicensePricing(req.Type) == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown license type. Valid: MONTHLY, QUARTERLY, YEARLY"})
 		return
 	}
 

@@ -342,6 +342,8 @@ func ActivateLicense(userID uint, key string) (*UserLicense, error) {
 	if hasExisting {
 		existingLicense.ExpiresAt = expiresAt
 		existingLicense.IsActive = true
+		existingLicense.Type = licenseKey.Type
+		existingLicense.KeyUsed = licenseKey.Key
 		db.Save(&existingLicense)
 		return &existingLicense, nil
 	}
@@ -353,6 +355,7 @@ func ActivateLicense(userID uint, key string) (*UserLicense, error) {
 		ActivatedAt:  now,
 		ExpiresAt:    expiresAt,
 		IsActive:     true,
+		KeyUsed:      licenseKey.Key,
 	}
 
 	if err := db.Create(userLicense).Error; err != nil {

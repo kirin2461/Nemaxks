@@ -66,7 +66,7 @@ export default function AdminPanel() {
   const [licenses, setLicenses] = useState<LicenseKey[]>([])
   const [licensesTotal, setLicensesTotal] = useState(0)
   const [licensePage, setLicensePage] = useState(1)
-  const [licenseType, setLicenseType] = useState('PREMIUM')
+  const [licenseType, setLicenseType] = useState('MONTHLY')
   const [licenseError, setLicenseError] = useState('')
   const [licenseGenerating, setLicenseGenerating] = useState(false)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
@@ -850,8 +850,9 @@ export default function AdminPanel() {
                       onChange={(e) => setLicenseType(e.target.value)}
                       className="input-field !w-auto px-3 py-2"
                     >
-                      <option value="PREMIUM">PREMIUM</option>
-                      <option value="BASIC">BASIC</option>
+                      <option value="MONTHLY">Месячная (30 дней)</option>
+                      <option value="QUARTERLY">Квартальная (90 дней)</option>
+                      <option value="YEARLY">Годовая (365 дней)</option>
                     </select>
                     <button
                       onClick={() => handleGenerateLicense(1)}
