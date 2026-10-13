@@ -268,10 +268,28 @@ func ActivateLicense(userID uint, key string) (*UserLicense, error) {
 
 		expiresAt := now.AddDate(0, 0, 25) // 25 дней Premium
 
+		// FK user_licenses.license_key_id -> license_keys.id требует строки
+		// для ключа. У пробного ключа её нет — создаём служебную запись
+		// (одну на весь сервер), иначе INSERT падает с SQLSTATE 23503.
+		var testKeyRow LicenseKey
+		if err := db.Where("key = ?", TestLicenseKey).First(&testKeyRow).Error; err != nil {
+			testKeyRow = LicenseKey{
+				Key:          TestLicenseKey,
+				Type:         LicenseYearly,
+				DurationDays: 25,
+				IsUsed:       true,
+				CreatedBy:    userID,
+			}
+			if err := db.Create(&testKeyRow).Error; err != nil {
+				return nil, err
+			}
+		}
+
 		// Проверяем существующую лицензию пользователя
 		var existingLicense UserLicense
 		if db.Where("user_id = ?", userID).First(&existingLicense).Error == nil {
 			// Обновляем существующую лицензию
+			existingLicense.LicenseKeyID = testKeyRow.ID
 			existingLicense.Type = LicenseYearly
 			existingLicense.ActivatedAt = now
 			existingLicense.ExpiresAt = expiresAt
@@ -285,12 +303,13 @@ func ActivateLicense(userID uint, key string) (*UserLicense, error) {
 
 		// Создаём новую лицензию
 		userLicense := &UserLicense{
-			UserID:      userID,
-			Type:        LicenseYearly, // Premium тип
-			ActivatedAt: now,
-			ExpiresAt:   expiresAt,
-			IsActive:    true,
-			KeyUsed:     TestLicenseKey,
+			UserID:       userID,
+			LicenseKeyID: testKeyRow.ID,
+			Type:         LicenseYearly, // Premium тип
+			ActivatedAt:  now,
+			ExpiresAt:    expiresAt,
+			IsActive:     true,
+			KeyUsed:      TestLicenseKey,
 		}
 		if err := db.Create(userLicense).Error; err != nil {
 			return nil, err
