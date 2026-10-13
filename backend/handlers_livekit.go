@@ -105,7 +105,9 @@ func getLiveKitTokenHandler(c *gin.Context) {
 
         c.JSON(http.StatusOK, LiveKitTokenResponse{
                 Token: token,
-                URL:   getEnv("LIVEKIT_URL", "ws://localhost:7880"),
+                // Клиентский URL может отличаться от внутреннего (docker-сеть):
+                // LIVEKIT_PUBLIC_URL — то, что видит браузер.
+                URL:   getEnv("LIVEKIT_PUBLIC_URL", getEnv("LIVEKIT_URL", "ws://localhost:7880")),
         })
 }
 
@@ -185,7 +187,7 @@ func getLiveKitStatusHandler(c *gin.Context) {
         
         c.JSON(http.StatusOK, gin.H{
                 "available": true,
-                "url":       os.Getenv("LIVEKIT_URL"),
+                "url":       getEnv("LIVEKIT_PUBLIC_URL", os.Getenv("LIVEKIT_URL")),
         })
 }
 

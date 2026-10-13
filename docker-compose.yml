@@ -83,6 +83,7 @@ services:
       LIVEKIT_URL: ${LIVEKIT_URL:-ws://livekit:7880}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-devsecret}
+      LIVEKIT_PUBLIC_URL: ${LIVEKIT_PUBLIC_URL:-}
       PORT: 8000
       GIN_MODE: ${GIN_MODE:-release}
       PAYMENTS_TEST_MODE: ${PAYMENTS_TEST_MODE:-false}
