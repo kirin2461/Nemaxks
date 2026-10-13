@@ -555,6 +555,15 @@ func HandleJarvisChat(c *gin.Context) {
 		})
 		return
 	}
+
+	// Все AI-провайдеры недоступны: честный fallback-ответ + актуальная квота,
+	// чтобы счётчик на фронте обновлялся даже при сбое провайдера.
+	c.JSON(http.StatusOK, JarvisResponse{
+		Response: "К сожалению, сэр, системы временно недоступны. Как всегда, сэр, я делаю всё возможное.",
+		Provider: "offline",
+		Model:    "none",
+		Quota:    &quota,
+	})
 }
 
 func HandleJarvisStatus(c *gin.Context) {

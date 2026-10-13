@@ -603,6 +603,7 @@ export default function JarvisPage() {
 
     } catch (error) {
       console.error('AI request failed:', error)
+      fetchQuota() // запрос всё равно расходует дневной лимит — обновляем счётчик
       
       const isRussian = messageContent.match(/[а-яА-ЯёЁ]/)
       
