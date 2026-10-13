@@ -1,0 +1,31 @@
+# Production-переопределения для VPS-деплоя.
+# Использование: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Что меняет:
+#  - postgres/redis/backend слушают только 127.0.0.1 (не торчат наружу)
+#  - frontend публикуется на 80 порту
+#  - healthcheck фронтенда через 127.0.0.1 (busybox wget не ходит на ::1)
+#  - LiveKit остаётся публичным (7880/7881 tcp, 7882 + 50000-50100 udp)
+
+services:
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  redis:
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  backend:
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  frontend:
+    ports:
+      - "80:5173"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

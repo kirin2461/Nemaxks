@@ -6,6 +6,7 @@ import (
         "fmt"
         "log"
         "os"
+        "strings"
         "sync"
         "time"
 
@@ -74,17 +75,32 @@ func init() {
 // InitRedis initializes the Redis client
 func InitRedis() error {
         redisURL := os.Getenv("REDIS_URL")
-        if redisURL == "" {
-                redisURL = "localhost:6379"
-        }
-
         redisPassword := os.Getenv("REDIS_PASSWORD")
 
-        redisClient = redis.NewClient(&redis.Options{
-                Addr:     redisURL,
-                Password: redisPassword,
-                DB:       0,
-        })
+        var opts *redis.Options
+        if strings.Contains(redisURL, "://") {
+                // Полный URL вида redis://:password@host:6379/0
+                parsed, err := redis.ParseURL(redisURL)
+                if err != nil {
+                        return fmt.Errorf("invalid REDIS_URL: %w", err)
+                }
+                opts = parsed
+                if opts.Password == "" {
+                        opts.Password = redisPassword
+                }
+        } else {
+                // Простой host:port
+                if redisURL == "" {
+                        redisURL = "localhost:6379"
+                }
+                opts = &redis.Options{
+                        Addr:     redisURL,
+                        Password: redisPassword,
+                        DB:       0,
+                }
+        }
+
+        redisClient = redis.NewClient(opts)
 
         // Test connection
         _, err := redisClient.Ping(ctx).Result()
