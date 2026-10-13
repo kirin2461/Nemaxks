@@ -725,8 +725,35 @@ func reorderChannelsHandler(c *gin.Context) {
 func GetVoiceChannelParticipants(c *gin.Context) {
         channelID := c.Param("channel_id")
 
-        // Use voiceRoster which is synchronized via WebSockets
+        // Основной источник — in-memory roster, синхронизируемый по WebSocket.
         participants := voiceRoster.GetParticipants(channelID)
+
+        // Fallback/merge: после рестарта бэкенда roster пуст, а Redis-presence
+        // живёт дальше — подтягиваем оттуда участников, которых нет в roster.
+        if ids, err := GetVoiceChannelUsers(channelID); err == nil {
+                seen := make(map[string]bool, len(participants))
+                for _, p := range participants {
+                        seen[p.UserID] = true
+                }
+                for _, id := range ids {
+                        if seen[id] {
+                                continue
+                        }
+                        var u User
+                        if err := db.Select("id", "username", "avatar").First(&u, id).Error; err == nil {
+                                avatar := ""
+                                if u.Avatar != nil {
+                                        avatar = *u.Avatar
+                                }
+                                participants = append(participants, &VoiceParticipant{
+                                        UserID:   id,
+                                        Username: u.Username,
+                                        Avatar:   avatar,
+                                })
+                        }
+                }
+        }
+
         c.JSON(http.StatusOK, participants)
 }
 
