@@ -99,10 +99,22 @@ func getPremiumInfoStruct(userID uint) *PremiumInfo {
 	now := time.Now()
 
 	var sub PremiumSubscription
-	if db.Preload("Plan").Where("user_id = ? AND status = ? AND current_period_end > ?", userID, "active", now).
+	if db.Where("user_id = ? AND status = ? AND current_period_end > ?", userID, "active", now).
 		Order("current_period_end DESC").First(&sub).Error == nil {
-		info.PlanName = sub.Plan.Name
-		info.Tier = sub.Plan.Tier
+		// PlanID исторически указывает на разные таблицы: checkout/webhook
+		// пишут ID SubscriptionPlan, trial/подарки — ID PremiumPlan.
+		// Денежный путь приоритетнее: сначала SubscriptionPlan.
+		var splan SubscriptionPlan
+		if db.First(&splan, sub.PlanID).Error == nil {
+			info.PlanName = splan.Name
+			info.Tier = splan.Slug
+		} else {
+			var pplan PremiumPlan
+			if db.First(&pplan, sub.PlanID).Error == nil {
+				info.PlanName = pplan.Name
+				info.Tier = pplan.Tier
+			}
+		}
 		expiresAt := sub.CurrentPeriodEnd
 		info.ExpiresAt = &expiresAt
 		return info

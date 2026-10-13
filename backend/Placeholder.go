@@ -1320,6 +1320,7 @@ func cancelPremiumHandler(c *gin.Context) {
 	})
 
 	go SendSubscriptionCancelled(uid, sub.CurrentPeriodEnd)
+	InvalidatePremiumCache(uid)
 
 	c.JSON(http.StatusOK, gin.H{"status": "cancelled", "ends_at": sub.CurrentPeriodEnd})
 }
@@ -1615,6 +1616,7 @@ func yookassaWebhookHandler(c *gin.Context) {
 		go grantReferralBonus(transaction.UserID, 7, "premium_subscription")
 		go activateBoostFromWebhook(transaction.ID)
 
+		InvalidatePremiumCache(transaction.UserID)
 		log.Printf("Premium subscription activated for user %d, plan %d", transaction.UserID, transaction.PlanID)
 	}
 

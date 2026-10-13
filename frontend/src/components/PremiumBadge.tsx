@@ -17,6 +17,7 @@ export function PremiumBadge({ planName, tier, active = true, className }: Premi
   const label = planName || 'Premium'
   const isVip =
     tier?.toLowerCase() === 'vip' ||
+    tier?.toLowerCase() === 'premium' ||
     /vip/i.test(planName ?? '')
 
   return (
