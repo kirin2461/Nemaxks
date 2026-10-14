@@ -972,6 +972,29 @@ export const telegramAPI = {
     }),
 };
 
+export const maxAPI = {
+  getLink: () =>
+    request<{
+      linked: boolean;
+      max_username?: string;
+      max_user_id?: number;
+      verified_at?: string;
+    }>("/max/link"),
+
+  createLink: () =>
+    request<{ code: string; bot_name: string; expires_in: number }>(
+      "/max/link",
+      {
+        method: "POST",
+      },
+    ),
+
+  unlinkMax: () =>
+    request<{ status: string }>("/max/link", {
+      method: "DELETE",
+    }),
+};
+
 export const notificationsAPI = {
   getNotifications: (page: number = 1, limit: number = 50) =>
     request<{ notifications: TelegramNotification[]; total: number }>(
