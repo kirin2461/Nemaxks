@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -53,8 +54,7 @@ func maxAPIRequest(method string, path string, body interface{}) (*http.Response
 // sendMaxMessage отправляет сообщение в чат MAX.
 func sendMaxMessage(chatID int64, text string) error {
 	if os.Getenv("MAX_BOT_TOKEN") == "" {
-		log.Println("MAX_BOT_TOKEN not set")
-		return nil
+		return errors.New("MAX_BOT_TOKEN not set")
 	}
 
 	payload := map[string]interface{}{
@@ -70,6 +70,7 @@ func sendMaxMessage(chatID int64, text string) error {
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		log.Printf("MAX API returned non-OK status: %s, body: %s", resp.Status, string(body))
+		return fmt.Errorf("max API: %s", resp.Status)
 	}
 	return nil
 }

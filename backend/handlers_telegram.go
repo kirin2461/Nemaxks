@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -253,8 +255,7 @@ func sendTelegramNotification(userID uint, content string) {
 func sendTelegramMessage(chatID int64, text string) error {
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if botToken == "" {
-		log.Println("TELEGRAM_BOT_TOKEN not set")
-		return nil
+		return errors.New("TELEGRAM_BOT_TOKEN not set")
 	}
 
 	apiURL := "https://api.telegram.org/bot" + botToken + "/sendMessage"
@@ -274,6 +275,7 @@ func sendTelegramMessage(chatID int64, text string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Telegram API returned non-OK status: %s", resp.Status)
+		return fmt.Errorf("telegram API: %s", resp.Status)
 	}
 	return nil
 }
