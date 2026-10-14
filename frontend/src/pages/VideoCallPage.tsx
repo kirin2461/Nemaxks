@@ -28,9 +28,11 @@ import { cn } from '@/lib/utils'
 import { useStore } from '@/lib/store'
 import { friendsAPI, callsAPI, type Friend, type CallHistoryItem } from '@/lib/api'
 import { AudioLevelIndicator, AudioLogsPanel, useAudioLogger } from '@/components/AudioLevelIndicator'
+import { showToast } from '@/components/Toast'
 
 type CallState = 'idle' | 'calling' | 'ringing' | 'connected' | 'ended'
 type VideoQuality = '720p' | '480p' | '360p' | '240p'
+type CallMode = 'audio' | 'video'
 
 interface CallParticipant {
   id: string
@@ -178,6 +180,18 @@ export default function VideoCallPage() {
   const iceServersPromiseRef = useRef<Promise<RTCIceServer[]> | null>(null)
   // id текущего DM-звонка в истории (POST /api/calls/dm/start → call_id)
   const dmCallIdRef = useRef<number | null>(null)
+  // Режим звонка: аудио (без камеры) или видео. Приходит из DM-шапки
+  // (?mode=audio или sessionStorage outgoingCallMode, выставляет DirectMessagesPage)
+  const [callMode] = useState<CallMode>(() => {
+    const params = new URLSearchParams(window.location.search)
+    const fromUrl = params.get('mode')
+    const fromSession = sessionStorage.getItem('outgoingCallMode')
+    return fromUrl === 'audio' || fromSession === 'audio' ? 'audio' : 'video'
+  })
+  // Дошёл ли звонок до 'connected' — для статуса completed|missed в истории DM
+  const wasConnectedRef = useRef(false)
+  // Таймаут ожидания ответа: если собеседник не взял трубку — завершаем как missed
+  const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Perfect negotiation (1:1): polite = (мой id > id собеседника).
   // Re-offer при восстановлении делает только impolite-сторона (меньший id).
@@ -355,6 +369,11 @@ export default function VideoCallPage() {
 
   useEffect(() => {
     if (callState === 'connected') {
+      wasConnectedRef.current = true
+      if (ringTimeoutRef.current) {
+        clearTimeout(ringTimeoutRef.current)
+        ringTimeoutRef.current = null
+      }
       durationIntervalRef.current = setInterval(() => {
         setCallDuration(prev => prev + 1)
       }, 1000)
@@ -515,6 +534,14 @@ export default function VideoCallPage() {
         cleanup()
         setTimeout(() => setCallState('idle'), 2000)
         break
+      case 'call-cancelled':
+        // Звонящий положил трубку до ответа — снимаем "Входящий звонок"
+        if (callStateRef.current === 'ringing' || callStateRef.current === 'calling') {
+          setCallState('ended')
+          cleanup()
+          setTimeout(() => setCallState('idle'), 1500)
+        }
+        break
       case 'mute-toggle':
         setRemoteMuted(message.isMuted)
         audioLogger.logInfo(`Remote participant ${message.isMuted ? 'muted' : 'unmuted'} their microphone`)
@@ -531,15 +558,15 @@ export default function VideoCallPage() {
     }
   }
 
-  const getMediaStream = async (quality: VideoQuality = '720p') => {
+  const getMediaStream = async (quality: VideoQuality = '720p', withVideo: boolean = true) => {
     const config = QUALITY_CONFIGS[quality]
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
+        video: withVideo ? {
           width: { ideal: config.width },
           height: { ideal: config.height },
           frameRate: { ideal: config.frameRate }
-        },
+        } : false,
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
@@ -552,6 +579,20 @@ export default function VideoCallPage() {
       return stream
     } catch (error) {
       console.error('Failed to get media stream:', error)
+      // getUserMedia недоступен вне secure context (HTTPS) — подсказываем дружелюбно
+      if (!navigator.mediaDevices?.getUserMedia) {
+        showToast({
+          type: 'warning',
+          title: 'Звонки требуют HTTPS',
+          message: 'Откройте сайт по защищённому соединению (https://)'
+        })
+      } else {
+        showToast({
+          type: 'error',
+          title: 'Нет доступа к камере/микрофону',
+          message: 'Разрешите доступ в настройках браузера и попробуйте снова'
+        })
+      }
       throw error
     }
   }
@@ -795,16 +836,35 @@ export default function VideoCallPage() {
 
   // Закрыть запись DM-звонка в истории (fire-and-forget: ошибка API не ломает UI).
   // Вызывается при любом завершении звонка — локальном (endCall) и удалённом (call-end).
+  // Передаём метаданные (kind/answered): backend по ним создаёт карточку звонка в DM
+  // со статусом completed|missed.
   const reportDmCallEnd = () => {
     const callId = dmCallIdRef.current
     dmCallIdRef.current = null
     if (callId == null) return
-    callsAPI.dmEnd(callId).catch(err => console.warn('[Calls] Failed to record DM call end:', err))
+    const answered = wasConnectedRef.current
+    const token = localStorage.getItem('token')
+    fetch(`/api/calls/dm/${callId}/end?kind=${callMode}&answered=${answered ? '1' : '0'}`, {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    }).catch(err => console.warn('[Calls] Failed to record DM call end:', err))
   }
 
   const startCall = async (friend: Friend) => {
     setSelectedFriend(friend)
     setCallState('calling')
+    wasConnectedRef.current = false
+
+    // Таймаут ожидания ответа: 45 секунд "Вызов...", затем завершаем как пропущенный
+    if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current)
+    ringTimeoutRef.current = setTimeout(() => {
+      ringTimeoutRef.current = null
+      if (callStateRef.current === 'calling') {
+        audioLogger.logInfo('No answer — ending call as missed')
+        showToast({ type: 'info', title: 'Нет ответа', message: 'Собеседник не ответил на звонок' })
+        endCall()
+      }
+    }, 45000)
 
     // Фиксируем DM-звонок в истории (fire-and-forget: ошибка API не ломает звонок)
     dmCallIdRef.current = null
@@ -822,9 +882,11 @@ export default function VideoCallPage() {
     try {
       // Ждём загрузки ICE-серверов (с TURN) ДО создания RTCPeerConnection
       const servers = await ensureIceServers()
-      const stream = await getMediaStream(targetQuality)
+      // В аудио-режиме камеру не запрашиваем вовсе
+      const stream = await getMediaStream(targetQuality, callMode === 'video')
       localStreamRef.current = stream
       setCurrentQuality(targetQuality)
+      setIsVideoOn(callMode === 'video')
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream
@@ -861,12 +923,14 @@ export default function VideoCallPage() {
       }))
     } catch (error) {
       console.error('Failed to start call:', error)
+      cleanup()
       setCallState('idle')
     }
   }
 
   const handleIncomingCall = async (message: any) => {
     setCallState('ringing')
+    wasConnectedRef.current = false
     const callerId = message.callerInfo?.id || message.fromUserId
     if (message.callerInfo) {
       setSelectedFriend(message.callerInfo)
@@ -898,7 +962,20 @@ export default function VideoCallPage() {
       // При glare-accept локальный поток уже получен в startCall — переиспользуем
       let stream = localStreamRef.current
       if (!stream) {
-        stream = await getMediaStream(targetQuality)
+        try {
+          stream = await getMediaStream(targetQuality, callMode === 'video')
+        } catch (mediaError) {
+          // Нет камеры (или аудиозвонок без неё): пробуем ответить аудио-only,
+          // чтобы звонок не падал целиком
+          if (callMode === 'video') {
+            console.warn('Falling back to audio-only answer:', mediaError)
+            showToast({ type: 'info', title: 'Камера недоступна', message: 'Звонок продолжится без видео' })
+            stream = await getMediaStream(targetQuality, false)
+            setIsVideoOn(false)
+          } else {
+            throw mediaError
+          }
+        }
         localStreamRef.current = stream
       }
       setCurrentQuality(targetQuality)
@@ -1021,9 +1098,14 @@ export default function VideoCallPage() {
       clearTimeout(disconnectGraceTimerRef.current)
       disconnectGraceTimerRef.current = null
     }
+    if (ringTimeoutRef.current) {
+      clearTimeout(ringTimeoutRef.current)
+      ringTimeoutRef.current = null
+    }
     setIsScreenSharing(false)
     setRemoteMuted(false)
     setRemoteVideoOff(false)
+    setRemoteVideoStream(null)
     audioLogger.logInfo('Call cleanup completed')
   }
 
@@ -1540,6 +1622,23 @@ export default function VideoCallPage() {
                 playsInline
                 className="w-full h-full object-cover"
               />
+
+              {/* Аудиозвонок / камера собеседника выключена: вместо чёрного экрана — аватар */}
+              {!remoteVideoStream && callState === 'connected' && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-nebula">
+                  <div className="w-28 h-28 rounded-full bg-gradient-brand glow flex items-center justify-center text-white text-4xl font-bold mb-4 overflow-hidden">
+                    {selectedFriend?.avatar ? (
+                      <img src={selectedFriend.avatar} alt={selectedFriend.username} className="w-full h-full object-cover" />
+                    ) : (
+                      selectedFriend?.username?.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <h2 className="text-xl font-bold tracking-tight">{selectedFriend?.username}</h2>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    {callMode === 'audio' ? 'Аудиозвонок' : 'Камера выключена'}
+                  </p>
+                </div>
+              )}
               
               {isScreenSharing && (
                 <video

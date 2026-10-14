@@ -46,6 +46,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { videosAPI, VideoWithAuthor, VideoChapter, VideoDetail, uploadAPI } from '@/lib/api'
+import { showToast } from '@/components/Toast'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 
@@ -94,6 +95,7 @@ export default function VideoPage() {
   const [selectedQuality, setSelectedQuality] = useState<'720p' | '1080p'>('720p')
   const [showQualityMenu, setShowQualityMenu] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [activeFilter, setActiveFilter] = useState<'all' | 'popular' | 'recent'>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -106,6 +108,15 @@ export default function VideoPage() {
   useEffect(() => {
     loadVideos()
   }, [selectedCategory])
+
+  // Диплинк: /video?watch=<id> (такие ссылки копируются кнопкой «Поделиться»)
+  useEffect(() => {
+    const watchId = new URLSearchParams(window.location.search).get('watch')
+    if (watchId && !isNaN(Number(watchId))) {
+      selectVideo(Number(watchId))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const loadVideos = async () => {
     try {
@@ -135,10 +146,15 @@ export default function VideoPage() {
       setDuration(detail.video.duration || 0)
       setCurrentTime(0)
       setIsPlaying(false)
+      // Бэкенд не отдаёт статус лайка/закладки — сбрасываем, чтобы не
+      // переносить состояние с предыдущего видео
+      setIsLiked(false)
+      setIsBookmarked(false)
       setViewMode('player')
       videosAPI.incrementView(videoId).catch(() => {})
     } catch (error) {
       console.error('Failed to load video:', error)
+      showToast({ type: 'error', title: 'Не удалось загрузить видео' })
     }
   }
 
@@ -224,6 +240,23 @@ export default function VideoPage() {
     }
   }
 
+  // «Поделиться»: копируем прямую ссылку на видео в буфер обмена
+  const handleShare = async () => {
+    if (!selectedVideo) return
+    const url = `${window.location.origin}/video?watch=${selectedVideo.video.id}`
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+        showToast({ type: 'success', title: 'Ссылка на видео скопирована' })
+      } else {
+        // clipboard API недоступен вне secure context (HTTP)
+        showToast({ type: 'warning', title: 'Копирование требует HTTPS', message: url })
+      }
+    } catch {
+      showToast({ type: 'error', title: 'Не удалось скопировать ссылку' })
+    }
+  }
+
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setCurrentTime(Math.floor(videoRef.current.currentTime))
@@ -253,10 +286,16 @@ export default function VideoPage() {
     return () => clearInterval(interval)
   }, [isPlaying, duration])
 
-  const filteredVideos = videos.filter(video =>
-    video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    video.author?.username?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredVideos = videos
+    .filter(video =>
+      video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      video.author?.username?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (activeFilter === 'popular') return b.views - a.views
+      if (activeFilter === 'recent') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      return 0
+    })
 
   const currentChapter = getCurrentChapter()
 
@@ -469,7 +508,10 @@ export default function VideoPage() {
                         <ThumbsUp className="w-5 h-5" />
                         <span>{video ? formatViews(video.likes + (isLiked ? 1 : 0)) : '0'}</span>
                       </button>
-                      <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/70 hover:bg-secondary transition-all hover:shadow-soft">
+                      <button
+                        onClick={handleShare}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/70 hover:bg-secondary transition-all hover:shadow-soft"
+                      >
                         <Share2 className="w-5 h-5" />
                         <span>Поделиться</span>
                       </button>
@@ -482,9 +524,6 @@ export default function VideoPage() {
                       >
                         <Bookmark className="w-5 h-5" />
                         <span>Сохранить</span>
-                      </button>
-                      <button className="p-2 rounded-full bg-secondary/70 hover:bg-secondary transition-all hover:shadow-soft">
-                        <MoreVertical className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -622,6 +661,13 @@ export default function VideoPage() {
                 {userMenuItems.map((item) => (
                   <button
                     key={item.id}
+                    onClick={() =>
+                      showToast({
+                        type: 'info',
+                        title: item.name,
+                        message: 'Этот раздел появится в одном из ближайших обновлений'
+                      })
+                    }
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left text-muted-foreground hover:bg-secondary hover:text-foreground"
                   >
                     {item.icon}
@@ -657,17 +703,22 @@ export default function VideoPage() {
             </div>
 
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
-              {['Все', 'Популярные', 'Недавние', 'По подписке'].map((filter) => (
+              {([
+                { id: 'all', label: 'Все' },
+                { id: 'popular', label: 'Популярные' },
+                { id: 'recent', label: 'Недавние' },
+              ] as const).map((filter) => (
                 <button
-                  key={filter}
+                  key={filter.id}
+                  onClick={() => setActiveFilter(filter.id)}
                   className={cn(
                     "px-4 py-1.5 rounded-full whitespace-nowrap text-sm font-medium transition-all",
-                    filter === 'Все'
+                    activeFilter === filter.id
                       ? "bg-gradient-brand text-white shadow-glow"
                       : "bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary"
                   )}
                 >
-                  {filter}
+                  {filter.label}
                 </button>
               ))}
             </div>
