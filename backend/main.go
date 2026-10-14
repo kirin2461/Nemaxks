@@ -714,6 +714,12 @@ func main() {
 	r.GET("/api/channels/:channel_id/tools", authMiddleware(), HandleGetChannelTools)
 	r.PUT("/api/channels/tools/:tool_id", authMiddleware(), HandleUpdateChannelTool)
 	r.DELETE("/api/channels/tools/:tool_id", authMiddleware(), HandleDeleteChannelTool)
+	r.GET("/api/channels/tools/:tool_id", authMiddleware(), HandleGetChannelTool)
+
+	// Tool Snapshots (version history)
+	r.GET("/api/channels/tools/:tool_id/snapshots", authMiddleware(), HandleGetToolSnapshots)
+	r.POST("/api/channels/tools/:tool_id/snapshots", authMiddleware(), HandleCreateToolSnapshot)
+	r.POST("/api/channels/tools/:tool_id/snapshots/:snapshot_id/restore", authMiddleware(), HandleRestoreToolSnapshot)
 
 	// Real-time Collaborative Editing (WebSocket)
 	r.GET("/ws/collab/:channel_id/:tool_id", handleRealtimeCollaboration)
