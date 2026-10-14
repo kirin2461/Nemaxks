@@ -362,6 +362,8 @@ func main() {
 	// Messages
 	r.GET("/api/channels/:channel_id/messages", authMiddleware(), getMessagesByChannelHandler)
 	r.POST("/api/channels/:channel_id/messages", authMiddleware(), createChannelMessageHandler)
+	r.GET("/api/channels/:channel_id/messages/:message_id/thread", authMiddleware(), getThreadRepliesHandler)
+	r.GET("/api/channels/:channel_id/permissions/me", authMiddleware(), getMyChannelPermissionsHandler)
 
 	// Voice Channel Participants
 	r.GET("/api/voice/channels/:channel_id/participants", authMiddleware(), GetVoiceChannelParticipants)
