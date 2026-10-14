@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Layout } from '@/components/Layout'
+import { useToast } from '@/components/Toast'
 import {
   Play,
   Pause,
@@ -53,6 +54,7 @@ const DEMO_MESSAGES: Message[] = [
 ]
 
 export default function VideoJarvisPage() {
+  const toast = useToast()
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [currentTime, _setCurrentTime] = useState(0)
@@ -375,7 +377,7 @@ export default function VideoJarvisPage() {
                       // Check file size (50 MB = 52428800 bytes)
                       const MAX_FILE_SIZE = 50 * 1024 * 1024;
                       if (file.size > MAX_FILE_SIZE) {
-                        alert('Размер файла превышает лимит 50 МБ');
+                        toast.error('Размер файла превышает лимит 50 МБ');
                       } else {
                         // You can add file upload logic here
                         console.log('File ready to upload:', file.name, file.size);

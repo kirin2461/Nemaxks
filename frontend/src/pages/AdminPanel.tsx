@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Layout } from '@/components/Layout'
 import { Avatar } from '@/components/Avatar'
 import { useStore } from '@/lib/store'
 import { adminAPI, adminLicenseAPI, apiKeysAPI, type AdminStats, type IPBan, type AbuseReport, type AuditLog, type User, type ForbiddenWord, type ForbiddenAttempt, type BillingStats, type BillingTransaction, type LicenseKey, type ApiKey, type ApiKeyStats, type CreatedApiKey } from '@/lib/api'
 import { ModerationPanel } from '@/components/admin/ModerationPanel'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { useToast } from '@/components/Toast'
 import {
   Users,
   Shield,
@@ -47,6 +49,12 @@ interface LicenseStats {
 
 export default function AdminPanel() {
   const { user } = useStore()
+  const toast = useToast()
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+  } | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [users, setUsers] = useState<User[]>([])
@@ -81,6 +89,13 @@ export default function AdminPanel() {
   const [createdKey, setCreatedKey] = useState<CreatedApiKey | null>(null)
   const [apiKeyCreating, setApiKeyCreating] = useState(false)
 
+  const loadSeqRef = useRef(0)
+
+  // При размонтировании инвалидируем все летящие запросы
+  useEffect(() => {
+    return () => { loadSeqRef.current++ }
+  }, [])
+
   useEffect(() => {
     loadData()
   }, [activeTab, licensePage])
@@ -91,39 +106,50 @@ export default function AdminPanel() {
       setLoading(false)
       return
     }
+    // Защита от гонки: устаревший ответ (после смены вкладки/размонтирования) не затирает состояние
+    const seq = ++loadSeqRef.current
+    const stale = () => seq !== loadSeqRef.current
     setLoading(true)
     try {
       switch (activeTab) {
         case 'dashboard':
           const statsData = await adminAPI.getStats()
+          if (stale()) return
           setStats(statsData)
           break
         case 'users':
           const usersData = await adminAPI.getUsers()
+          if (stale()) return
           setUsers(usersData.users)
           break
         case 'bans':
           const bansData = await adminAPI.getIPBans()
+          if (stale()) return
           setIPBans(bansData)
           break
         case 'reports':
           const reportsData = await adminAPI.getReports()
+          if (stale()) return
           setReports(reportsData)
           break
         case 'logs':
           const logsData = await adminAPI.getAuditLogs()
+          if (stale()) return
           setLogs(logsData.logs)
           break
         case 'filter':
           const wordsData = await adminAPI.getForbiddenWords()
+          if (stale()) return
           setForbiddenWords(wordsData)
           break
         case 'attempts':
           const attemptsData = await adminAPI.getForbiddenAttempts()
+          if (stale()) return
           setForbiddenAttempts(attemptsData.attempts)
           break
         case 'billing':
           const billingData = await adminAPI.getBillingStats()
+          if (stale()) return
           setBillingStats(billingData)
           break
         case 'licenses': {
@@ -131,6 +157,7 @@ export default function AdminPanel() {
             adminLicenseAPI.getAll(licensePage, 20),
             adminLicenseAPI.getStats(),
           ])
+          if (stale()) return
           setLicenses(licensesData.licenses)
           setLicensesTotal(licensesData.total)
           setLicenseStats(statsData)
@@ -142,6 +169,7 @@ export default function AdminPanel() {
             apiKeysAPI.list(),
             apiKeysAPI.stats(),
           ])
+          if (stale()) return
           setApiKeys(keysData.api_keys ?? [])
           setApiKeysStats(keyStatsData)
           setApiKeysError('')
@@ -149,11 +177,12 @@ export default function AdminPanel() {
         }
       }
     } catch (error) {
+      if (stale()) return
       console.error('Failed to load admin data:', error)
       if (activeTab === 'licenses') setLicenseError('Не удалось загрузить лицензии')
       if (activeTab === 'apikeys') setApiKeysError('Не удалось загрузить API-ключи')
     } finally {
-      setLoading(false)
+      if (!stale()) setLoading(false)
     }
   }
 
@@ -219,15 +248,21 @@ export default function AdminPanel() {
     }
   }
 
-  const handleRevokeApiKey = async (id: number) => {
-    if (!confirm('Отозвать этот API-ключ? Действие необратимо.')) return
-    try {
-      await apiKeysAPI.revoke(id)
-      loadData()
-    } catch (error) {
-      console.error('Failed to revoke API key:', error)
-      setApiKeysError('Ошибка отзыва API-ключа')
-    }
+  const handleRevokeApiKey = (id: number) => {
+    setConfirmAction({
+      title: 'Отзыв API-ключа',
+      message: 'Отозвать этот API-ключ? Действие необратимо.',
+      onConfirm: async () => {
+        try {
+          await apiKeysAPI.revoke(id)
+          loadData()
+          toast.success('API-ключ отозван')
+        } catch (error) {
+          console.error('Failed to revoke API key:', error)
+          setApiKeysError('Ошибка отзыва API-ключа')
+        }
+      }
+    })
   }
 
   const handleBanUser = async (userId: string, reason: string) => {
@@ -259,19 +294,26 @@ export default function AdminPanel() {
       loadData()
     } catch (error) {
       console.error('Failed to add forbidden word:', error)
-      alert('Failed to add word. It may already exist.')
+      toast.error('Не удалось добавить слово', 'Возможно, оно уже существует')
     }
   }
 
-  const handleDeleteForbiddenWord = async (wordId: string) => {
+  const handleDeleteForbiddenWord = (wordId: string) => {
     console.log('Deleting forbidden word:', wordId)
-    if (!confirm('Are you sure you want to delete this word?')) return
-    try {
-      await adminAPI.deleteForbiddenWord(wordId)
-      loadData()
-    } catch (error) {
-      console.error('Failed to delete forbidden word:', error)
-    }
+    setConfirmAction({
+      title: 'Удаление слова',
+      message: 'Удалить это слово из списка запрещённых?',
+      onConfirm: async () => {
+        try {
+          await adminAPI.deleteForbiddenWord(wordId)
+          loadData()
+          toast.success('Слово удалено')
+        } catch (error) {
+          console.error('Failed to delete forbidden word:', error)
+          toast.error('Не удалось удалить слово')
+        }
+      }
+    })
   }
 
   const handleUpdateForbiddenWord = async () => {
@@ -1122,6 +1164,17 @@ export default function AdminPanel() {
           </>
         )}
       </div>
+      <ConfirmDialog
+        isOpen={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => {
+          confirmAction?.onConfirm()
+          setConfirmAction(null)
+        }}
+        title={confirmAction?.title || ''}
+        message={confirmAction?.message || ''}
+        variant="danger"
+      />
     </Layout>
   )
 }

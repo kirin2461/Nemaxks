@@ -4,6 +4,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Hint } from '@/components/ui/hint';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { useToast } from '@/components/Toast';
 import { maxAPI, MaxLinkStatus } from '@/lib/api';
 import {
   MessageSquare,
@@ -31,6 +33,8 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
   const [token, setToken] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<'url' | 'secret' | null>(null);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (isOwnProfile) {
@@ -77,13 +81,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
   };
 
   const handleDisconnect = async () => {
-    if (
-      !confirm(
-        'Отключить бота MAX? Сообщения из MAX перестанут приходить в Nebula. История канала-моста сохранится.'
-      )
-    ) {
-      return;
-    }
+    setShowDisconnectConfirm(false);
     setDisconnecting(true);
     setError(null);
     try {
@@ -91,6 +89,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
       setStatus({ connected: false });
       setWebhookSet(null);
       setWarning(null);
+      toast.success('Бот MAX отключён');
     } catch (err) {
       console.error('Failed to disconnect MAX bot:', err);
       setError('Не удалось отключить бота. Попробуйте ещё раз.');
@@ -242,7 +241,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
             <Button
               variant="danger"
               size="sm"
-              onClick={handleDisconnect}
+              onClick={() => setShowDisconnectConfirm(true)}
               loading={disconnecting}
               className="w-full"
             >
@@ -320,6 +319,16 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
           </div>
         )}
       </CardContent>
+      <ConfirmDialog
+        isOpen={showDisconnectConfirm}
+        onClose={() => setShowDisconnectConfirm(false)}
+        onConfirm={handleDisconnect}
+        title="Отключение бота MAX"
+        message="Отключить бота MAX? Сообщения из MAX перестанут приходить в Nebula. История канала-моста сохранится."
+        confirmText="Отключить"
+        variant="danger"
+        loading={disconnecting}
+      />
     </Card>
   );
 }

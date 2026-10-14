@@ -8,6 +8,7 @@ import { Logo } from './Logo'
 import { PremiumBadge } from './PremiumBadge'
 import { NotificationCenter } from './NotificationCenter'
 import { BannerDisplay } from './BannerDisplay'
+import { useToast } from './Toast'
 import {
   Home,
   MessageSquare,
@@ -42,6 +43,7 @@ export function Layout({ children }: LayoutProps) {
   const { unreadCount } = useNotifications()
   const [location] = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const toast = useToast()
 
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator'
   const isSuperAdmin = user?.role === 'super_admin'
@@ -180,7 +182,7 @@ export function Layout({ children }: LayoutProps) {
                 className="p-1 hover:bg-accent rounded-md text-muted-foreground transition-colors z-50 relative" 
                 onClick={(e) => {
                   e.preventDefault();
-                  alert('Add functionality coming soon!');
+                  toast.info('Функция скоро появится!');
                 }}
                 title="Add New"
               >

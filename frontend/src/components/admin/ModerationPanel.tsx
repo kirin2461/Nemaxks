@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Avatar } from '@/components/Avatar'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { useToast } from '@/components/Toast'
 import { guildsAPI, moderationAPI, dmAccessAPI, type GuildMemberEntry, type GuildBanEntry, type GuildMuteEntry, type GuildShadowbanEntry, type DMAccessRequest } from '@/lib/api'
 import {
   Shield,
@@ -45,6 +47,12 @@ const subTabs: { id: SubTab; label: string; icon: React.ComponentType<{ classNam
 ]
 
 export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
+  const toast = useToast()
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+  } | null>(null)
   const [guilds, setGuilds] = useState<GuildOption[]>([])
   const [guildId, setGuildId] = useState<string>('')
   const [subTab, setSubTab] = useState<SubTab>('bans')
@@ -161,27 +169,33 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     }
   }
 
-  const handleRevokeSanction = async (entry: { user_id: number; username: string }) => {
+  const handleRevokeSanction = (entry: { user_id: number; username: string }) => {
     const labels: Record<string, string> = {
       bans: 'Разбанить',
       mutes: 'Снять мут',
       shadowbans: 'Снять шэдоубан',
     }
-    if (!confirm(`${labels[subTab]} пользователю ${entry.username}?`)) return
-    setError('')
-    try {
-      if (subTab === 'bans') {
-        await moderationAPI.unbanUser(guildId, entry.user_id)
-      } else if (subTab === 'mutes') {
-        await moderationAPI.unmuteUser(guildId, entry.user_id)
-      } else {
-        await moderationAPI.unshadowbanUser(guildId, entry.user_id)
+    setConfirmAction({
+      title: 'Снятие санкции',
+      message: `${labels[subTab]} пользователю ${entry.username}?`,
+      onConfirm: async () => {
+        setError('')
+        try {
+          if (subTab === 'bans') {
+            await moderationAPI.unbanUser(guildId, entry.user_id)
+          } else if (subTab === 'mutes') {
+            await moderationAPI.unmuteUser(guildId, entry.user_id)
+          } else {
+            await moderationAPI.unshadowbanUser(guildId, entry.user_id)
+          }
+          await loadSanctions()
+          toast.success('Санкция снята')
+        } catch (err) {
+          console.error('Failed to revoke sanction:', err)
+          setError(errorMessage(err, 'Не удалось снять санкцию'))
+        }
       }
-      await loadSanctions()
-    } catch (err) {
-      console.error('Failed to revoke sanction:', err)
-      setError(errorMessage(err, 'Не удалось снять санкцию'))
-    }
+    })
   }
 
   const handleRequestDmAccess = async () => {
@@ -202,28 +216,40 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     }
   }
 
-  const handleApprove = async (id: number) => {
-    if (!confirm('Одобрить запрос DM-доступа? Доступ будет выдан на 24 часа.')) return
-    setError('')
-    try {
-      await dmAccessAPI.approve(id)
-      await loadDmRequests()
-    } catch (err) {
-      console.error('Failed to approve DM access:', err)
-      setError(errorMessage(err, 'Не удалось одобрить запрос'))
-    }
+  const handleApprove = (id: number) => {
+    setConfirmAction({
+      title: 'Одобрение DM-доступа',
+      message: 'Одобрить запрос DM-доступа? Доступ будет выдан на 24 часа.',
+      onConfirm: async () => {
+        setError('')
+        try {
+          await dmAccessAPI.approve(id)
+          await loadDmRequests()
+          toast.success('Запрос одобрен')
+        } catch (err) {
+          console.error('Failed to approve DM access:', err)
+          setError(errorMessage(err, 'Не удалось одобрить запрос'))
+        }
+      }
+    })
   }
 
-  const handleRevoke = async (id: number) => {
-    if (!confirm('Отозвать DM-доступ?')) return
-    setError('')
-    try {
-      await dmAccessAPI.revoke(id)
-      await loadDmRequests()
-    } catch (err) {
-      console.error('Failed to revoke DM access:', err)
-      setError(errorMessage(err, 'Не удалось отозвать доступ'))
-    }
+  const handleRevoke = (id: number) => {
+    setConfirmAction({
+      title: 'Отзыв DM-доступа',
+      message: 'Отозвать DM-доступ?',
+      onConfirm: async () => {
+        setError('')
+        try {
+          await dmAccessAPI.revoke(id)
+          await loadDmRequests()
+          toast.success('DM-доступ отозван')
+        } catch (err) {
+          console.error('Failed to revoke DM access:', err)
+          setError(errorMessage(err, 'Не удалось отозвать доступ'))
+        }
+      }
+    })
   }
 
   const issueConfig: Record<string, { label: string; button: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -516,6 +542,17 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           </div>
         </>
       )}
+      <ConfirmDialog
+        isOpen={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => {
+          confirmAction?.onConfirm()
+          setConfirmAction(null)
+        }}
+        title={confirmAction?.title || ''}
+        message={confirmAction?.message || ''}
+        variant="danger"
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Layout } from '@/components/Layout'
 import { Avatar } from '@/components/Avatar'
 import { ContextMenu, useContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
@@ -28,6 +28,8 @@ import {
 
 import { useLocation } from 'wouter'
 import { useNotifications } from '@/contexts/NotificationContext'
+import { useToast } from '@/components/Toast'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 interface Friend {
   id: string
@@ -67,25 +69,40 @@ export default function FriendsPage() {
   void isSearching
 
   const friendContextMenu = useContextMenu()
+  const toast = useToast()
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+  } | null>(null)
+
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
   const loadFriends = async () => {
     setIsLoading(true)
     try {
       const friendsList = await friendsAPI.getFriends()
+      if (!mountedRef.current) return
       setFriends((friendsList || []).filter((f: Friend) => f.isFriend))
       setPendingRequests((friendsList || []).filter((f: Friend) => f.isPending))
     } catch (error) {
+      if (!mountedRef.current) return
       console.error('Failed to load friends:', error)
       setFriends([])
       setPendingRequests([])
     } finally {
-      setIsLoading(false)
+      if (mountedRef.current) setIsLoading(false)
     }
   }
 
   const loadBlockedUsers = async () => {
     try {
       const blocked = await friendsAPI.getBlockedUsers()
+      if (!mountedRef.current) return
       setBlockedUsers((blocked || []).map(b => ({
         id: String(b.user_id),
         username: b.username,
@@ -93,24 +110,29 @@ export default function FriendsPage() {
         created_at: b.created_at
       })))
     } catch (error) {
+      if (!mountedRef.current) return
       console.error('Failed to load blocked users:', error)
       setBlockedUsers([])
     }
   }
 
-  const loadAllUsers = async () => {
+  const loadAllUsers = async (signal?: AbortSignal) => {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/users/all', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal
       })
+      if (!mountedRef.current) return
       if (response.ok) {
         const users = await response.json()
+        if (!mountedRef.current) return
         setAllUsers(users || [])
       } else {
         setAllUsers([])
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'AbortError' || !mountedRef.current) return
       console.error('Failed to load all users:', error)
       setAllUsers([])
     }
@@ -118,9 +140,11 @@ export default function FriendsPage() {
 
   useEffect(() => {
     if (!isDemoMode) {
+      const controller = new AbortController()
       loadFriends()
-      loadAllUsers()
+      loadAllUsers(controller.signal)
       loadBlockedUsers()
+      return () => controller.abort()
     }
   }, [isDemoMode])
 
@@ -169,10 +193,10 @@ export default function FriendsPage() {
       setSearchResults([])
       // Reload friends and pending to show the request
       loadFriends()
-      alert('Запрос в друзья отправлен!')
+      toast.success('Запрос в друзья отправлен!')
     } catch (error: any) {
       console.error('Failed to send friend request:', error)
-      alert(error?.data?.error || 'Не удалось отправить запрос')
+      toast.error('Не удалось отправить запрос', error?.data?.error)
     }
   }
 
@@ -218,39 +242,51 @@ export default function FriendsPage() {
             reason: reason.trim()
           })
         })
-        alert('Жалоба отправлена. Спасибо!')
+        toast.success('Жалоба отправлена. Спасибо!')
       } catch (error) {
         console.error('Failed to report user:', error)
-        alert('Не удалось отправить жалобу')
+        toast.error('Не удалось отправить жалобу')
       }
     }
   }
 
-  const handleRemoveFriend = async (friendId: string) => {
-    if (confirm('Удалить друга?')) {
-      try {
-        await friendsAPI.removeFriend(friendId)
-        setFriends(friends.filter(f => f.id !== friendId))
-      } catch (error) {
-        console.error('Failed to remove friend:', error)
-      }
-    }
-  }
-
-  const handleBlockUser = async (friendId: string) => {
-    if (confirm('Заблокировать пользователя?')) {
-      try {
-        await friendsAPI.blockUser(Number(friendId))
-        const friend = friends.find(f => f.id === friendId)
-        if (friend) {
+  const handleRemoveFriend = (friendId: string) => {
+    setConfirmAction({
+      title: 'Удаление друга',
+      message: 'Удалить друга?',
+      onConfirm: async () => {
+        try {
+          await friendsAPI.removeFriend(friendId)
           setFriends(friends.filter(f => f.id !== friendId))
-          setBlockedUsers([...blockedUsers, friend])
+          toast.success('Друг удалён')
+        } catch (error) {
+          console.error('Failed to remove friend:', error)
+          toast.error('Не удалось удалить друга')
         }
-        loadBlockedUsers()
-      } catch (error) {
-        console.error('Failed to block user:', error)
       }
-    }
+    })
+  }
+
+  const handleBlockUser = (friendId: string) => {
+    setConfirmAction({
+      title: 'Блокировка пользователя',
+      message: 'Заблокировать пользователя?',
+      onConfirm: async () => {
+        try {
+          await friendsAPI.blockUser(Number(friendId))
+          const friend = friends.find(f => f.id === friendId)
+          if (friend) {
+            setFriends(friends.filter(f => f.id !== friendId))
+            setBlockedUsers([...blockedUsers, friend])
+          }
+          loadBlockedUsers()
+          toast.success('Пользователь заблокирован')
+        } catch (error) {
+          console.error('Failed to block user:', error)
+          toast.error('Не удалось заблокировать пользователя')
+        }
+      }
+    })
   }
 
   const handleUnblockUser = async (userId: string) => {
@@ -270,7 +306,7 @@ export default function FriendsPage() {
       setFriends([...friends, { ...request, isFriend: true, isPending: false }])
     } catch (error) {
       console.error('Failed to accept request:', error)
-      alert('Не удалось принять запрос')
+      toast.error('Не удалось принять запрос')
     }
   }
 
@@ -281,7 +317,7 @@ export default function FriendsPage() {
       setPendingRequests(pendingRequests.filter(r => r.request_id !== request.request_id))
     } catch (error) {
       console.error('Failed to decline request:', error)
-      alert('Не удалось отклонить запрос')
+      toast.error('Не удалось отклонить запрос')
     }
   }
 
@@ -292,7 +328,7 @@ export default function FriendsPage() {
       setPendingRequests(pendingRequests.filter(r => r.request_id !== request.request_id))
     } catch (error) {
       console.error('Failed to cancel friend request:', error)
-      alert('Не удалось отменить запрос')
+      toast.error('Не удалось отменить запрос')
     }
   }
 
@@ -708,6 +744,18 @@ export default function FriendsPage() {
         position={friendContextMenu.contextMenu.position}
         visible={friendContextMenu.contextMenu.visible}
         onClose={friendContextMenu.hideContextMenu}
+      />
+
+      <ConfirmDialog
+        isOpen={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => {
+          confirmAction?.onConfirm()
+          setConfirmAction(null)
+        }}
+        title={confirmAction?.title || ''}
+        message={confirmAction?.message || ''}
+        variant="danger"
       />
     </Layout>
   )

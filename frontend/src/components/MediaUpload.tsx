@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { X, Upload, Image, Video, Loader2 } from 'lucide-react';
+import { useToast } from './Toast';
 
 interface MediaFile {
   file: File;
@@ -86,6 +87,7 @@ export function MediaUpload({
   maxSizeMB = 10,
   compressionQuality = 0.8,
 }: MediaUploadProps) {
+  const toast = useToast();
   const [isCompressing, setIsCompressing] = useState(false);
   const [compressionStats, setCompressionStats] = useState<{
     original: number;
@@ -102,7 +104,7 @@ export function MediaUpload({
       const isVideo = file.type.startsWith('video/');
 
       if (!isImage && !isVideo) {
-        alert('Please select an image or video file');
+        toast.warning('Выберите файл изображения или видео');
         return;
       }
       
@@ -131,7 +133,7 @@ export function MediaUpload({
       } catch (error) {
         console.error('Error processing file:', error);
         if (error instanceof Error) {
-          alert(error.message);
+          toast.error(error.message);
         }
         setIsCompressing(false);
         return;

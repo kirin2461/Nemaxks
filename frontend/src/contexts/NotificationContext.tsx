@@ -86,11 +86,23 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     
     setNotifications(prev => [newNotification, ...prev].slice(0, 50))
     setToasts(prev => [newNotification, ...prev])
-    
-    const soundType = notification.type === 'call' ? 'call' : 
-                      notification.type === 'message' ? 'message' : 'system'
-    playNotificationSound(soundType)
-    
+
+    // Звук — только если вкладка скрыта ИЛИ чат с отправителем не открыт
+    const isMessage = notification.type === 'message'
+    let chatWithSenderOpen = false
+    if (isMessage && notification.userId && !document.hidden) {
+      const { pathname, search } = window.location
+      if (pathname === '/messages') {
+        const openUserId = new URLSearchParams(search).get('user')
+        chatWithSenderOpen = !!openUserId && String(openUserId) === String(notification.userId)
+      }
+    }
+    if (document.hidden || !chatWithSenderOpen) {
+      const soundType = notification.type === 'call' ? 'call' :
+                        isMessage ? 'message' : 'system'
+      playNotificationSound(soundType)
+    }
+
   }, [])
 
   const dismissToast = useCallback((id: string) => {
@@ -138,21 +150,26 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   useEffect(() => {
     if (!user?.id) return
-    
+
     const token = localStorage.getItem('token')
     if (!token) return
-    
+
+    const controller = new AbortController()
+    let cancelled = false
+
     const fetchNotifications = async () => {
       try {
         const response = await fetch('/api/notifications', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: controller.signal
         })
         if (response.ok) {
           const data = await response.json()
+          if (cancelled) return
           if (Array.isArray(data)) {
             const mappedNotifications: Notification[] = data.map((n: any) => ({
               id: String(n.id || crypto.randomUUID()),
-              type: n.type === 'new_message' ? 'message' : 
+              type: n.type === 'new_message' ? 'message' :
                     n.type === 'call' ? 'call' : 'system',
               title: n.title || n.type || 'Notification',
               message: n.message || n.content || '',
@@ -163,12 +180,17 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
             setNotifications(mappedNotifications)
           }
         }
-      } catch (e) {
+      } catch (e: any) {
+        if (e?.name === 'AbortError') return
         console.error('[NotificationContext] Failed to fetch notifications:', e)
       }
     }
-    
+
     fetchNotifications()
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
   }, [user?.id])
 
   useEffect(() => {

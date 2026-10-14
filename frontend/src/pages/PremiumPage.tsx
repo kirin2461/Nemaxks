@@ -4,6 +4,7 @@ import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { premiumAPI } from "@/lib/api";
 import { useStore } from "@/lib/store";
+import { useToast } from "@/components/Toast";
 import { 
   Crown, Check, Sparkles, Zap, Shield, Star, Gift, Users,
   Percent, Clock, ChevronDown, ChevronUp, X,
@@ -44,6 +45,7 @@ interface OrgPlan {
 
 export default function PremiumPage() {
   const { user, isAuthenticated, checkAuth } = useStore();
+  const toast = useToast();
   const [orgPlans, setOrgPlans] = useState<OrgPlan[]>([]);
   const [userPremium, setUserPremium] = useState<UserPremium | null>(null);
   const [loading, setLoading] = useState(true);
@@ -93,7 +95,7 @@ export default function PremiumPage() {
 
   const handlePurchase = async (planSlug: string) => {
     if (!isAuthenticated) {
-      alert("Войдите в аккаунт для покупки подписки");
+      toast.warning("Войдите в аккаунт для покупки подписки");
       return;
     }
     
@@ -120,11 +122,11 @@ export default function PremiumPage() {
           window.location.href = "/premium";
         }, 1500);
       } else if (data.message) {
-        alert(data.message);
+        toast.info(data.message);
       }
     } catch (error) {
       console.error("Failed to purchase:", error);
-      alert("Ошибка при оформлении подписки");
+      toast.error("Ошибка при оформлении подписки");
     } finally {
       setPurchasing(null);
     }
@@ -132,7 +134,7 @@ export default function PremiumPage() {
 
   const handleStartTrial = async () => {
     if (!isAuthenticated) {
-      alert("Войдите в аккаунт для активации пробного периода");
+      toast.warning("Войдите в аккаунт для активации пробного периода");
       return;
     }
     setStartingTrial(true);
@@ -143,13 +145,13 @@ export default function PremiumPage() {
       });
       const data = await response.json();
       if (data.error) {
-        alert(data.error);
+        toast.error(data.error);
       } else {
-        alert("Пробный период активирован! Наслаждайтесь 7 днями Premium бесплатно.");
+        toast.success("Пробный период активирован!", "Наслаждайтесь 7 днями Premium бесплатно");
         window.location.reload();
       }
     } catch (error) {
-      alert("Ошибка активации пробного периода");
+      toast.error("Ошибка активации пробного периода");
     } finally {
       setStartingTrial(false);
     }
@@ -157,7 +159,7 @@ export default function PremiumPage() {
 
   const handlePurchaseGift = async (planSlug: string) => {
     if (!giftRecipient) {
-      alert("Укажите получателя подарка");
+      toast.warning("Укажите получателя подарка");
       return;
     }
     setPurchasing(planSlug);
@@ -178,10 +180,10 @@ export default function PremiumPage() {
       if (data.confirmation_url) {
         window.location.href = data.confirmation_url;
       } else if (data.error) {
-        alert(data.error);
+        toast.error(data.error);
       }
     } catch (error) {
-      alert("Ошибка при покупке подарка");
+      toast.error("Ошибка при покупке подарка");
     } finally {
       setPurchasing(null);
       setShowGiftModal(false);
@@ -201,13 +203,13 @@ export default function PremiumPage() {
       });
       const data = await response.json();
       if (data.error) {
-        alert(data.error);
+        toast.error(data.error);
       } else {
-        alert(`Подарок активирован! План: ${data.plan}`);
+        toast.success("Подарок активирован!", `План: ${data.plan}`);
         window.location.reload();
       }
     } catch (error) {
-      alert("Ошибка активации подарка");
+      toast.error("Ошибка активации подарка");
     }
   };
 
@@ -397,7 +399,7 @@ export default function PremiumPage() {
                       )}
                       onClick={() => {
                         if (!isAuthenticated) {
-                          alert("Войдите в аккаунт");
+                          toast.warning("Войдите в аккаунт");
                           return;
                         }
                         if (isStart) {

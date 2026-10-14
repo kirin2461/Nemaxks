@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link } from 'wouter'
 import { Layout } from '@/components/Layout'
+import { useToast } from '@/components/Toast'
 import { premiumAPI, type JarvisQuota } from '@/lib/api'
 import {
   Send,
@@ -249,6 +250,7 @@ const QUICK_PROMPTS = [
 const API_BASE = (import.meta as any).env?.VITE_API_URL || ''
 
 export default function JarvisPage() {
+  const toast = useToast()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isListening, setIsListening] = useState(false)
@@ -809,7 +811,7 @@ export default function JarvisPage() {
 
   const startAlwaysListening = useCallback(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Распознавание речи не поддерживается в вашем браузере')
+      toast.warning('Распознавание речи не поддерживается в вашем браузере')
       return
     }
 
@@ -917,7 +919,7 @@ export default function JarvisPage() {
 
   const toggleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Распознавание речи не поддерживается в вашем браузере')
+      toast.warning('Распознавание речи не поддерживается в вашем браузере')
       return
     }
 
