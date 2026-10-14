@@ -473,6 +473,9 @@ export interface StoryPrivacyExcludedUser {
   avatar: string | null;
 }
 
+// Глобальный режим приватности историй (GET/PUT /stories/privacy)
+export type StoryPrivacyMode = "everyone" | "friends" | "friends_except";
+
 export const storiesAPI = {
   getStories: () => request<Story[]>("/stories"),
 
@@ -495,6 +498,16 @@ export const storiesAPI = {
   // Story privacy — список людей, от которых скрыты мои истории
   getExclusions: () =>
     request<StoryPrivacyExcludedUser[]>(`${STORY_PRIVACY_BASE}/exclusions`),
+
+  // Story privacy — глобальный режим приватности историй
+  getPrivacy: () =>
+    request<{ mode: StoryPrivacyMode }>(`${STORY_PRIVACY_BASE}`),
+
+  updatePrivacy: (mode: StoryPrivacyMode) =>
+    request<{ mode: StoryPrivacyMode }>(`${STORY_PRIVACY_BASE}`, {
+      method: "PUT",
+      data: { mode },
+    }),
 
   addExclusion: (userId: number | string) =>
     request<{ status?: string; id?: number }>(`${STORY_PRIVACY_BASE}/exclusions`, {
