@@ -190,7 +190,10 @@ export default function ProfilePage() {
             <div className="h-32 gradient-brand rounded-t-xl opacity-90" />
 
             <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-              <div className="flex items-end gap-3 sm:gap-6 -mt-12">
+              {/* relative z-10: без этого контент с отрицательным margin
+                  (-mt-12) уходит ПОД градиентный баннер — кнопка
+                  Edit Profile "проваливалась" за фон профиля */}
+              <div className="relative z-10 flex items-end gap-3 sm:gap-6 -mt-12">
                 <div className="relative">
                   <Avatar
                     src={displayUser?.avatar}
