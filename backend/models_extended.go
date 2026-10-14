@@ -252,6 +252,14 @@ type StoryView struct {
 	ViewedAt time.Time `json:"viewed_at"`
 }
 
+// StoryPrivacyExclusion — пользователь user_id скрывает свои истории от excluded_user_id
+type StoryPrivacyExclusion struct {
+	ID             uint      `gorm:"primaryKey" json:"id"`
+	UserID         uint      `gorm:"index:idx_story_priv,priority:1" json:"user_id"`
+	ExcludedUserID uint      `gorm:"index:idx_story_priv_excl;index" json:"excluded_user_id"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
 type Video struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
 	AuthorID    uint           `gorm:"index" json:"author_id"`

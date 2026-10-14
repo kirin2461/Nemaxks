@@ -442,6 +442,9 @@ func main() {
 	r.POST("/api/stories", authMiddleware(), createStoryHandler)
 	r.POST("/api/stories/:id/view", authMiddleware(), viewStoryHandler)
 	r.DELETE("/api/stories/:id", authMiddleware(), deleteStoryHandler)
+	r.GET("/api/stories/privacy/exclusions", authMiddleware(), getStoryExclusionsHandler)
+	r.POST("/api/stories/privacy/exclusions", authMiddleware(), addStoryExclusionHandler)
+	r.DELETE("/api/stories/privacy/exclusions/:user_id", authMiddleware(), removeStoryExclusionHandler)
 
 	// Videos
 	r.GET("/api/videos", getVideosHandler)

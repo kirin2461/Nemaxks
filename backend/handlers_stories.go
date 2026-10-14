@@ -12,9 +12,17 @@ import (
 )
 
 func getStoriesHandler(c *gin.Context) {
+        myID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
         var stories []Story
         now := time.Now()
-        if err := db.Where("expires_at > ?", now).Order("created_at DESC").Find(&stories).Error; err != nil {
+        if err := db.Where("expires_at > ?", now).
+                Where("user_id NOT IN (?)", db.Model(&StoryPrivacyExclusion{}).
+                        Select("user_id").Where("excluded_user_id = ?", myID)).
+                Order("created_at DESC").Find(&stories).Error; err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch stories"})
                 return
         }
@@ -57,14 +65,34 @@ func createStoryHandler(c *gin.Context) {
 }
 
 func viewStoryHandler(c *gin.Context) {
-        userID, _ := c.Get("user_id")
+        uid, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
         storyID, err := strconv.ParseUint(c.Param("id"), 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid story ID"})
                 return
         }
 
-        uid := uint(userID.(float64))
+        var story Story
+        if err := db.First(&story, storyID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Story not found"})
+                return
+        }
+
+        if story.UserID != uid {
+                var excluded int64
+                db.Model(&StoryPrivacyExclusion{}).
+                        Where("user_id = ? AND excluded_user_id = ?", story.UserID, uid).
+                        Count(&excluded)
+                if excluded > 0 {
+                        c.JSON(http.StatusForbidden, gin.H{"error": "Story is private"})
+                        return
+                }
+        }
+
         var existing StoryView
         if db.Where("story_id = ? AND viewer_id = ?", storyID, uid).First(&existing).RowsAffected == 0 {
                 view := StoryView{
@@ -95,6 +123,113 @@ func deleteStoryHandler(c *gin.Context) {
         }
 
         c.JSON(http.StatusOK, gin.H{"status": "deleted"})
+}
+
+// storyExclusionEntry — элемент списка исключений приватности историй
+type storyExclusionEntry struct {
+        ID       uint    `json:"id"`
+        Username string  `json:"username"`
+        Avatar   *string `json:"avatar"`
+}
+
+// getStoryExclusionsHandler — GET /api/stories/privacy/exclusions
+// Возвращает список пользователей, от которых я скрыл свои истории.
+func getStoryExclusionsHandler(c *gin.Context) {
+        myID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
+
+        entries := make([]storyExclusionEntry, 0)
+        if err := db.Table("story_privacy_exclusions AS spe").
+                Select("u.id, u.username, u.avatar").
+                Joins("JOIN users u ON u.id = spe.excluded_user_id").
+                Where("spe.user_id = ?", myID).
+                Order("spe.created_at ASC").
+                Scan(&entries).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exclusions"})
+                return
+        }
+        c.JSON(http.StatusOK, entries)
+}
+
+// addStoryExclusionHandler — POST /api/stories/privacy/exclusions {"user_id": uint}
+// Скрывает мои истории от указанного пользователя.
+func addStoryExclusionHandler(c *gin.Context) {
+        myID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
+
+        var req struct {
+                UserID uint `json:"user_id" binding:"required"`
+        }
+        if err := c.BindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+
+        if req.UserID == myID {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot exclude yourself"})
+                return
+        }
+
+        var user User
+        if err := db.Select("id", "username", "avatar").First(&user, req.UserID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+                return
+        }
+
+        var count int64
+        db.Model(&StoryPrivacyExclusion{}).
+                Where("user_id = ? AND excluded_user_id = ?", myID, req.UserID).
+                Count(&count)
+        if count > 0 {
+                c.JSON(http.StatusConflict, gin.H{"error": "User already excluded"})
+                return
+        }
+
+        exclusion := StoryPrivacyExclusion{
+                UserID:         myID,
+                ExcludedUserID: req.UserID,
+        }
+        if err := db.Create(&exclusion).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add exclusion"})
+                return
+        }
+
+        c.JSON(http.StatusCreated, storyExclusionEntry{
+                ID:       user.ID,
+                Username: user.Username,
+                Avatar:   user.Avatar,
+        })
+}
+
+// removeStoryExclusionHandler — DELETE /api/stories/privacy/exclusions/:user_id
+// Убирает пользователя из списка скрытия историй.
+func removeStoryExclusionHandler(c *gin.Context) {
+        myID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
+
+        excludedID, err := strconv.ParseUint(c.Param("user_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                return
+        }
+
+        result := db.Where("user_id = ? AND excluded_user_id = ?", myID, uint(excludedID)).
+                Delete(&StoryPrivacyExclusion{})
+        if result.RowsAffected == 0 {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Exclusion not found"})
+                return
+        }
+
+        c.JSON(http.StatusOK, gin.H{"status": "removed"})
 }
 
 func ratePostHandler(c *gin.Context) {
