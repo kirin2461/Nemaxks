@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Bell, Check, Trash2, Filter, Settings, ChevronDown, RefreshCw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { notificationsAPI, Notification, NotificationGroup, getNotificationTypeInfo, formatNotificationTime, NOTIFICATION_TYPES } from '../lib/notificationsApi'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { useToast } from '../components/Toast'
 
 export function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -11,8 +13,18 @@ export function NotificationsPage() {
   const [hasMore, setHasMore] = useState(true)
   const [selectedType, setSelectedType] = useState<string>('')
   const [showFilters, setShowFilters] = useState(false)
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false)
   const [unreadOnly, setUnreadOnly] = useState(false)
+  const toast = useToast()
   const navigate = useNavigate()
+
+  const loadSeqRef = React.useRef(0)
+  const mountedRef = React.useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
   useEffect(() => {
     loadNotifications(1)
@@ -20,9 +32,12 @@ export function NotificationsPage() {
   }, [selectedType, unreadOnly])
 
   const loadNotifications = async (pageNum: number) => {
+    const seq = ++loadSeqRef.current
     setLoading(true)
     try {
       const data = await notificationsAPI.getAll(pageNum, 20, selectedType || undefined, unreadOnly)
+      // Игнорируем устаревший ответ (фильтр/страница уже сменились или компонент размонтирован)
+      if (!mountedRef.current || seq !== loadSeqRef.current) return
       if (pageNum === 1) {
         setNotifications(data.notifications)
       } else {
@@ -31,15 +46,19 @@ export function NotificationsPage() {
       setPage(pageNum)
       setHasMore(data.has_more)
     } catch (err) {
+      if (!mountedRef.current || seq !== loadSeqRef.current) return
       console.error('Failed to load notifications:', err)
     } finally {
-      setLoading(false)
+      if (mountedRef.current && seq === loadSeqRef.current) {
+        setLoading(false)
+      }
     }
   }
 
   const loadGroups = async () => {
     try {
       const data = await notificationsAPI.getGroups()
+      if (!mountedRef.current) return
       setGroups(data.groups)
     } catch (err) {
       console.error('Failed to load groups:', err)
@@ -76,12 +95,14 @@ export function NotificationsPage() {
   }
 
   const handleDeleteAll = async () => {
-    if (!confirm('Удалить все уведомления?')) return
+    setShowDeleteAllConfirm(false)
     try {
       await notificationsAPI.deleteAll()
       setNotifications([])
+      toast.success('Все уведомления удалены')
     } catch (err) {
       console.error('Failed to delete all:', err)
+      toast.error('Не удалось удалить уведомления')
     }
   }
 
@@ -220,7 +241,7 @@ export function NotificationsPage() {
             )}
             {notifications.length > 0 && (
               <button
-                onClick={handleDeleteAll}
+                onClick={() => setShowDeleteAllConfirm(true)}
                 className="px-3 py-1.5 text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors flex items-center gap-1"
               >
                 <Trash2 className="w-4 h-4" />
@@ -336,6 +357,15 @@ export function NotificationsPage() {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        isOpen={showDeleteAllConfirm}
+        onClose={() => setShowDeleteAllConfirm(false)}
+        onConfirm={handleDeleteAll}
+        title="Удаление уведомлений"
+        message="Удалить все уведомления? Это действие нельзя отменить."
+        confirmText="Удалить"
+        variant="danger"
+      />
     </div>
   )
 }

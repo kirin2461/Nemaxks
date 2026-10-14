@@ -3,6 +3,8 @@ import { PenTool, BookOpen, Plus, Lock, Unlock, Trash2, X, Crown } from 'lucide-
 import { channelToolsAPI, type ChannelTool } from '@/lib/api'
 import { Whiteboard } from './Whiteboard'
 import { Notebook } from './Notebook'
+import { ConfirmDialog } from './ConfirmDialog'
+import { useToast } from './Toast'
 import { useStore } from '@/lib/store'
 
 interface ChannelToolsPanelProps {
@@ -17,6 +19,8 @@ export function ChannelToolsPanel({ channelId, userPlan = 'start' }: ChannelTool
   const [selectedTool, setSelectedTool] = useState<ChannelTool | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createType, setCreateType] = useState<'board' | 'notebook'>('board')
+  const [deleteToolId, setDeleteToolId] = useState<number | null>(null)
+  const toast = useToast()
   const [createTitle, setCreateTitle] = useState('')
   const [createError, setCreateError] = useState('')
 
@@ -77,15 +81,17 @@ export function ChannelToolsPanel({ channelId, userPlan = 'start' }: ChannelTool
   }
 
   const handleDelete = async (toolId: number) => {
-    if (!confirm('Delete this tool?')) return
+    setDeleteToolId(null)
     try {
       await channelToolsAPI.deleteTool(toolId)
       setTools(prev => prev.filter(t => t.id !== toolId))
       if (selectedTool?.id === toolId) {
         setSelectedTool(null)
       }
+      toast.success('Инструмент удалён')
     } catch (err) {
       console.error('Failed to delete:', err)
+      toast.error('Не удалось удалить инструмент')
     }
   }
 
@@ -179,7 +185,7 @@ export function ChannelToolsPanel({ channelId, userPlan = 'start' }: ChannelTool
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleDelete(tool.id)
+                      setDeleteToolId(tool.id)
                     }}
                     className="p-1 hover:bg-destructive/20 rounded text-destructive"
                   >
@@ -263,6 +269,15 @@ export function ChannelToolsPanel({ channelId, userPlan = 'start' }: ChannelTool
           </div>
         </div>
       )}
+      <ConfirmDialog
+        isOpen={deleteToolId !== null}
+        onClose={() => setDeleteToolId(null)}
+        onConfirm={() => deleteToolId !== null && handleDelete(deleteToolId)}
+        title="Удаление инструмента"
+        message="Удалить этот инструмент? Это действие нельзя отменить."
+        confirmText="Удалить"
+        variant="danger"
+      />
     </div>
   )
 }

@@ -3,6 +3,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { telegramAPI } from '@/lib/api';
 import { Hint } from '@/components/ui/hint';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { useToast } from '@/components/Toast';
 import { MessageCircle, Check, X, Copy, RefreshCw, Bell, BellOff } from 'lucide-react';
 
 interface TelegramLinkProps {
@@ -21,6 +23,8 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [expiresIn, setExpiresIn] = useState(0);
+  const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (isOwnProfile) {
@@ -65,7 +69,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
       setExpiresIn(result.expires_in);
     } catch (error) {
       console.error('Failed to create Telegram link:', error);
-      alert('Не удалось создать ссылку. Попробуйте ещё раз.');
+      toast.error('Не удалось создать ссылку. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
     }
@@ -73,18 +77,17 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
 
   const handleUnlink = async () => {
     console.log('Unlinking Telegram...');
-    if (!confirm('Вы уверены, что хотите отвязать Telegram-аккаунт?')) {
-      return;
-    }
+    setShowUnlinkConfirm(false);
     setLoading(true);
     try {
       await telegramAPI.unlinkTelegram();
       console.log('Telegram unlinked successfully');
       setLinkStatus({ linked: false });
       setNotificationsEnabled(false);
+      toast.success('Telegram-аккаунт отвязан');
     } catch (error) {
       console.error('Failed to unlink Telegram:', error);
-      alert('Не удалось отвязать аккаунт. Попробуйте ещё раз.');
+      toast.error('Не удалось отвязать аккаунт. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
     }
@@ -149,7 +152,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
             <Button
               variant="danger"
               size="sm"
-              onClick={handleUnlink}
+              onClick={() => setShowUnlinkConfirm(true)}
               disabled={loading}
               className="w-full"
             >
@@ -223,6 +226,16 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
           </div>
         )}
       </CardContent>
+      <ConfirmDialog
+        isOpen={showUnlinkConfirm}
+        onClose={() => setShowUnlinkConfirm(false)}
+        onConfirm={handleUnlink}
+        title="Отвязка Telegram"
+        message="Вы уверены, что хотите отвязать Telegram-аккаунт?"
+        confirmText="Отвязать"
+        variant="danger"
+        loading={loading}
+      />
     </Card>
   );
 }

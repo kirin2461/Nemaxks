@@ -7,6 +7,7 @@ import { Button } from '@/components/Button'
 import { Input, Textarea } from '@/components/Input'
 import { useStore } from '@/lib/store'
 import { userAPI, premiumAPI } from '@/lib/api'
+import { useToast } from '@/components/Toast'
 import { Heart, Crown, Sparkles, Check, ArrowLeft } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -24,6 +25,7 @@ export default function SupportPage() {
   const { userId } = useParams<{ userId: string }>()
   const [, navigate] = useLocation()
   const { user } = useStore()
+  const toast = useToast()
 
   const [creator, setCreator] = useState<any>(null)
   const [plans, setPlans] = useState<PremiumPlan[]>([])
@@ -66,7 +68,7 @@ export default function SupportPage() {
   const handleDonate = async () => {
     const amount = customAmount ? parseFloat(customAmount) : selectedAmount
     if (!amount || amount < 10) {
-      alert('Минимальная сумма доната: 10₽')
+      toast.warning('Минимальная сумма доната: 10₽')
       return
     }
 
@@ -76,13 +78,13 @@ export default function SupportPage() {
         amount,
         message: donationMessage,
       })
-      alert('Донат создан! Перенаправление на оплату...')
+      toast.success('Донат создан!', 'Перенаправление на оплату...')
       setDonationMessage('')
       setCustomAmount('')
       loadData()
     } catch (error) {
       console.error('Failed to donate:', error)
-      alert('Ошибка при создании доната')
+      toast.error('Ошибка при создании доната')
     } finally {
       setDonating(false)
     }

@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Layout } from '@/components/Layout'
 import { Avatar } from '@/components/Avatar'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { useToast } from '@/components/Toast'
 import { useStore } from '@/lib/store'
 import { 
   superAdminAPI, 
@@ -61,6 +63,12 @@ type TabType = 'dashboard' | 'users' | 'guilds' | 'moderation' | 'monitoring' | 
 
 export default function SuperAdminPage() {
   const { user } = useStore()
+  const toast = useToast()
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+  } | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>('dashboard')
   const [stats, setStats] = useState<SuperAdminStats | null>(null)
   const [users, setUsers] = useState<UserWithStatus[]>([])
@@ -86,53 +94,73 @@ export default function SuperAdminPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [tempPassword, setTempPassword] = useState<string | null>(null)
 
+  const loadSeqRef = useRef(0)
+
+  // При размонтировании инвалидируем все летящие запросы
+  useEffect(() => {
+    return () => { loadSeqRef.current++ }
+  }, [])
+
   useEffect(() => {
     loadData()
   }, [activeTab, usersPage, userSearch, roleFilter, statusFilter, guildsPage, guildSearch])
 
   const loadData = async () => {
+    // Защита от гонки: ответ устаревшего запроса не затирает актуальное состояние
+    const seq = ++loadSeqRef.current
+    const stale = () => seq !== loadSeqRef.current
     setLoading(true)
     try {
       switch (activeTab) {
         case 'dashboard':
           const statsData = await superAdminAPI.getStats()
+          if (stale()) return
           setStats(statsData)
           const statusData = await superAdminAPI.getServiceStatus()
+          if (stale()) return
           setServiceStatus(statusData)
           break
         case 'users':
           const usersData = await superAdminAPI.getUsers(usersPage, 20, userSearch, roleFilter, statusFilter)
+          if (stale()) return
           setUsers(usersData.users || [])
           setUsersTotal(usersData.total)
           break
         case 'guilds':
           const guildsData = await superAdminAPI.getGuilds(guildsPage, 20, guildSearch)
+          if (stale()) return
           setGuilds(guildsData.guilds || [])
           setGuildsTotal(guildsData.total)
           break
         case 'moderation':
           const reportsData = await adminAPI.getReports()
+          if (stale()) return
           setReports(reportsData || [])
           break
         case 'monitoring':
           const logsData = await superAdminAPI.getSecurityLogs(1, 50)
+          if (stale()) return
           setSecurityLogs(logsData.logs || [])
           const svcStatus = await superAdminAPI.getServiceStatus()
+          if (stale()) return
           setServiceStatus(svcStatus)
           break
         case 'jarvis':
           const jStats = await superAdminAPI.getJarvisStats()
+          if (stale()) return
           setJarvisStats(jStats)
           break
         case 'banners':
           const bannersData = await superAdminAPI.getBanners()
+          if (stale()) return
           setBanners(bannersData.banners || [])
           break
       }
     } catch (error) {
+      if (stale()) return
       console.error('Failed to load data:', error)
     } finally {
-      setLoading(false)
+      if (!stale()) setLoading(false)
     }
   }
 
@@ -188,17 +216,24 @@ export default function SuperAdminPage() {
     }
   }
 
-  const handleDeleteBanner = async (bannerId: number) => {
-    if (!confirm('Удалить это уведомление?')) return
-    setActionLoading(true)
-    try {
-      await superAdminAPI.deleteBanner(bannerId)
-      loadData()
-    } catch (error) {
-      console.error('Failed to delete banner:', error)
-    } finally {
-      setActionLoading(false)
-    }
+  const handleDeleteBanner = (bannerId: number) => {
+    setConfirmAction({
+      title: 'Удаление уведомления',
+      message: 'Удалить это уведомление?',
+      onConfirm: async () => {
+        setActionLoading(true)
+        try {
+          await superAdminAPI.deleteBanner(bannerId)
+          loadData()
+          toast.success('Уведомление удалено')
+        } catch (error) {
+          console.error('Failed to delete banner:', error)
+          toast.error('Не удалось удалить уведомление')
+        } finally {
+          setActionLoading(false)
+        }
+      }
+    })
   }
 
   const loadUserDetail = async (userId: number) => {
@@ -210,45 +245,66 @@ export default function SuperAdminPage() {
     }
   }
 
-  const handleResetPassword = async (userId: number) => {
-    if (!confirm('Are you sure you want to reset this user\'s password? This will log them out of all sessions.')) return
-    setActionLoading(true)
-    try {
-      const result = await superAdminAPI.resetPassword(userId)
-      setTempPassword(result.temp_password)
-      loadUserDetail(userId)
-    } catch (error) {
-      console.error('Failed to reset password:', error)
-    } finally {
-      setActionLoading(false)
-    }
+  const handleResetPassword = (userId: number) => {
+    setConfirmAction({
+      title: 'Сброс пароля',
+      message: 'Сбросить пароль пользователя? Это завершит все его сессии.',
+      onConfirm: async () => {
+        setActionLoading(true)
+        try {
+          const result = await superAdminAPI.resetPassword(userId)
+          setTempPassword(result.temp_password)
+          loadUserDetail(userId)
+          toast.success('Пароль сброшен')
+        } catch (error) {
+          console.error('Failed to reset password:', error)
+          toast.error('Не удалось сбросить пароль')
+        } finally {
+          setActionLoading(false)
+        }
+      }
+    })
   }
 
-  const handleChangeRole = async (userId: number, newRole: string) => {
-    if (!confirm(`Change user role to ${newRole}?`)) return
-    setActionLoading(true)
-    try {
-      await superAdminAPI.changeRole(userId, newRole)
-      loadData()
-      if (selectedUser) loadUserDetail(userId)
-    } catch (error) {
-      console.error('Failed to change role:', error)
-    } finally {
-      setActionLoading(false)
-    }
+  const handleChangeRole = (userId: number, newRole: string) => {
+    setConfirmAction({
+      title: 'Смена роли',
+      message: `Изменить роль пользователя на «${newRole}»?`,
+      onConfirm: async () => {
+        setActionLoading(true)
+        try {
+          await superAdminAPI.changeRole(userId, newRole)
+          loadData()
+          if (selectedUser) loadUserDetail(userId)
+          toast.success('Роль пользователя изменена')
+        } catch (error) {
+          console.error('Failed to change role:', error)
+          toast.error('Не удалось изменить роль')
+        } finally {
+          setActionLoading(false)
+        }
+      }
+    })
   }
 
-  const handleRevokeAllSessions = async (userId: number) => {
-    if (!confirm('Revoke all sessions for this user? They will be logged out everywhere.')) return
-    setActionLoading(true)
-    try {
-      await superAdminAPI.revokeAllSessions(userId)
-      loadUserDetail(userId)
-    } catch (error) {
-      console.error('Failed to revoke sessions:', error)
-    } finally {
-      setActionLoading(false)
-    }
+  const handleRevokeAllSessions = (userId: number) => {
+    setConfirmAction({
+      title: 'Отзыв сессий',
+      message: 'Отозвать все сессии пользователя? Он будет разлогинен на всех устройствах.',
+      onConfirm: async () => {
+        setActionLoading(true)
+        try {
+          await superAdminAPI.revokeAllSessions(userId)
+          loadUserDetail(userId)
+          toast.success('Все сессии отозваны')
+        } catch (error) {
+          console.error('Failed to revoke sessions:', error)
+          toast.error('Не удалось отозвать сессии')
+        } finally {
+          setActionLoading(false)
+        }
+      }
+    })
   }
 
   const handleBanUser = async (userId: number, reason: string) => {
@@ -291,17 +347,24 @@ export default function SuperAdminPage() {
     }
   }
 
-  const handleDeleteGuild = async (guildId: number, name: string) => {
-    if (!confirm(`Are you sure you want to permanently delete "${name}"? This cannot be undone.`)) return
-    setActionLoading(true)
-    try {
-      await superAdminAPI.deleteGuild(guildId)
-      loadData()
-    } catch (error) {
-      console.error('Failed to delete guild:', error)
-    } finally {
-      setActionLoading(false)
-    }
+  const handleDeleteGuild = (guildId: number, name: string) => {
+    setConfirmAction({
+      title: 'Удаление сервера',
+      message: `Удалить сервер «${name}» навсегда? Это действие нельзя отменить.`,
+      onConfirm: async () => {
+        setActionLoading(true)
+        try {
+          await superAdminAPI.deleteGuild(guildId)
+          loadData()
+          toast.success('Сервер удалён')
+        } catch (error) {
+          console.error('Failed to delete guild:', error)
+          toast.error('Не удалось удалить сервер')
+        } finally {
+          setActionLoading(false)
+        }
+      }
+    })
   }
 
   if (user?.role !== 'super_admin') {
@@ -1011,6 +1074,17 @@ export default function SuperAdminPage() {
           </>
         )}
       </div>
+      <ConfirmDialog
+        isOpen={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => {
+          confirmAction?.onConfirm()
+          setConfirmAction(null)
+        }}
+        title={confirmAction?.title || ''}
+        message={confirmAction?.message || ''}
+        variant="danger"
+      />
     </Layout>
   )
 }

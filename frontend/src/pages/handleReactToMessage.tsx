@@ -621,11 +621,9 @@ export default function MessagesPage() {
     fetchConversations()
   }
 
-  const handleDeleteConversation = async (userId: string) => {
-    if (!confirm('Delete this conversation? All messages will be permanently deleted.')) {
-      return
-    }
+  const [showDeleteConversationConfirm, setShowDeleteConversationConfirm] = useState<string | null>(null)
 
+  const handleDeleteConversation = async (userId: string) => {
     if (isDemoMode) {
       if (selectedUser?.id === userId) {
         setSelectedUser(null)
@@ -751,7 +749,7 @@ export default function MessagesPage() {
       {
         label: 'Delete',
         icon: <Trash2 className="w-4 h-4" />,
-        onClick: () => handleDeleteConversation(chatUser.id),
+        onClick: () => setShowDeleteConversationConfirm(chatUser.id),
         variant: 'danger' as const,
       },
     ]
@@ -1410,6 +1408,21 @@ export default function MessagesPage() {
         onConfirm={() => showDeleteConfirm && handleDeleteMessage(showDeleteConfirm)}
         title={t('messages.deleteTitle')}
         message={t('messages.deleteConfirm')}
+        confirmText={t('messages.confirmDelete')}
+        cancelText={t('messages.cancelDelete')}
+        variant="danger"
+      />
+      <ConfirmDialog
+        isOpen={!!showDeleteConversationConfirm}
+        onClose={() => setShowDeleteConversationConfirm(null)}
+        onConfirm={() => {
+          if (showDeleteConversationConfirm) {
+            handleDeleteConversation(showDeleteConversationConfirm)
+            setShowDeleteConversationConfirm(null)
+          }
+        }}
+        title={t('messages.deleteTitle')}
+        message="Удалить этот диалог? Все сообщения будут удалены безвозвратно."
         confirmText={t('messages.confirmDelete')}
         cancelText={t('messages.cancelDelete')}
         variant="danger"
