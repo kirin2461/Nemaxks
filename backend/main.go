@@ -359,6 +359,12 @@ func main() {
 	r.POST("/api/guild-mod/:guild_id/shadowban", authMiddleware(), RequireGuildPermission(PermBanMembers), shadowbanUserHandler)
 	r.DELETE("/api/guild-mod/:guild_id/shadowban/:user_id", authMiddleware(), RequireGuildPermission(PermBanMembers), unshadowbanUserHandler)
 
+	// Списки для панели модерации (Phase B)
+	r.GET("/api/guild-mod/:guild_id/members", authMiddleware(), RequireGuildPermission(PermKickMembers), listGuildMembersHandler)
+	r.GET("/api/guild-mod/:guild_id/bans", authMiddleware(), RequireGuildPermission(PermBanMembers), listGuildBansHandler)
+	r.GET("/api/guild-mod/:guild_id/mutes", authMiddleware(), RequireGuildPermission(PermKickMembers), listGuildMutesHandler)
+	r.GET("/api/guild-mod/:guild_id/shadowbans", authMiddleware(), RequireGuildPermission(PermBanMembers), listGuildShadowbansHandler)
+
 	// Channel CRUD
 	r.GET("/api/channels/:channel_id", authMiddleware(), getChannelHandler)
 	r.PUT("/api/channels/:channel_id", authMiddleware(), updateChannelHandler)

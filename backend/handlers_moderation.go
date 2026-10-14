@@ -215,6 +215,220 @@ func unshadowbanUserHandler(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{"status": "unshadowbanned", "removed": res.RowsAffected})
 }
 
+// ============================================================================
+// Moderation Panel: List Endpoints (Phase B)
+// ============================================================================
+
+// fetchUsersByIDs loads users by IDs and returns a map id -> User.
+func fetchUsersByIDs(ids []uint) map[uint]User {
+	result := make(map[uint]User)
+	if len(ids) == 0 {
+		return result
+	}
+	var users []User
+	if err := db.Where("id IN ?", ids).Find(&users).Error; err == nil {
+		for _, u := range users {
+			result[u.ID] = u
+		}
+	}
+	return result
+}
+
+// GET /api/guild-mod/:guild_id/members (PermKickMembers)
+// Участники гильдии, исключая забаненных.
+func listGuildMembersHandler(c *gin.Context) {
+	guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+		return
+	}
+
+	var memberships []GuildMember
+	if err := db.Where("guild_id = ? AND user_id NOT IN (?)",
+		uint(guildID),
+		db.Model(&GuildBan{}).Select("user_id").Where("guild_id = ?", uint(guildID)),
+	).Find(&memberships).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load members"})
+		return
+	}
+
+	ids := make([]uint, 0, len(memberships))
+	for _, m := range memberships {
+		ids = append(ids, m.UserID)
+	}
+	users := fetchUsersByIDs(ids)
+
+	type memberItem struct {
+		ID       uint      `json:"id"`
+		Username string    `json:"username"`
+		Avatar   *string   `json:"avatar"`
+		JoinedAt time.Time `json:"joined_at"`
+	}
+	members := make([]memberItem, 0, len(memberships))
+	for _, m := range memberships {
+		u := users[m.UserID]
+		members = append(members, memberItem{
+			ID:       m.UserID,
+			Username: u.Username,
+			Avatar:   u.Avatar,
+			JoinedAt: m.JoinedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"members": members})
+}
+
+// GET /api/guild-mod/:guild_id/bans (PermBanMembers)
+func listGuildBansHandler(c *gin.Context) {
+	guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+		return
+	}
+
+	var bans []GuildBan
+	if err := db.Where("guild_id = ?", uint(guildID)).Order("created_at DESC").Find(&bans).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load bans"})
+		return
+	}
+
+	ids := make([]uint, 0, len(bans)*2)
+	for _, b := range bans {
+		ids = append(ids, b.UserID, b.BannedBy)
+	}
+	users := fetchUsersByIDs(ids)
+
+	type banItem struct {
+		ID              uint      `json:"id"`
+		UserID          uint      `json:"user_id"`
+		Username        string    `json:"username"`
+		Avatar          *string   `json:"avatar"`
+		BannedBy        uint      `json:"banned_by"`
+		BannedByUsername string   `json:"banned_by_username"`
+		Reason          string    `json:"reason"`
+		CreatedAt       time.Time `json:"created_at"`
+	}
+	items := make([]banItem, 0, len(bans))
+	for _, b := range bans {
+		u := users[b.UserID]
+		by := users[b.BannedBy]
+		items = append(items, banItem{
+			ID:               b.ID,
+			UserID:           b.UserID,
+			Username:         u.Username,
+			Avatar:           u.Avatar,
+			BannedBy:         b.BannedBy,
+			BannedByUsername: by.Username,
+			Reason:           b.Reason,
+			CreatedAt:        b.CreatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"bans": items})
+}
+
+// GET /api/guild-mod/:guild_id/mutes (PermKickMembers)
+// Только активные муты (expires_at > now).
+func listGuildMutesHandler(c *gin.Context) {
+	guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+		return
+	}
+
+	var mutes []Mute
+	if err := db.Where("guild_id = ? AND expires_at > ?", uint(guildID), time.Now()).
+		Order("expires_at ASC").Find(&mutes).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load mutes"})
+		return
+	}
+
+	ids := make([]uint, 0, len(mutes)*2)
+	for _, m := range mutes {
+		ids = append(ids, m.UserID, m.MutedBy)
+	}
+	users := fetchUsersByIDs(ids)
+
+	type muteItem struct {
+		ID             uint      `json:"id"`
+		UserID         uint      `json:"user_id"`
+		Username       string    `json:"username"`
+		Avatar         *string   `json:"avatar"`
+		MutedBy        uint      `json:"muted_by"`
+		MutedByUsername string   `json:"muted_by_username"`
+		Reason         string    `json:"reason"`
+		ExpiresAt      time.Time `json:"expires_at"`
+		CreatedAt      time.Time `json:"created_at"`
+	}
+	items := make([]muteItem, 0, len(mutes))
+	for _, m := range mutes {
+		u := users[m.UserID]
+		by := users[m.MutedBy]
+		items = append(items, muteItem{
+			ID:              m.ID,
+			UserID:          m.UserID,
+			Username:        u.Username,
+			Avatar:          u.Avatar,
+			MutedBy:         m.MutedBy,
+			MutedByUsername: by.Username,
+			Reason:          m.Reason,
+			ExpiresAt:       m.ExpiresAt,
+			CreatedAt:       m.CreatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"mutes": items})
+}
+
+// GET /api/guild-mod/:guild_id/shadowbans (PermBanMembers)
+func listGuildShadowbansHandler(c *gin.Context) {
+	guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+		return
+	}
+
+	var sbs []Shadowban
+	if err := db.Where("guild_id = ?", uint(guildID)).Order("created_at DESC").Find(&sbs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load shadowbans"})
+		return
+	}
+
+	ids := make([]uint, 0, len(sbs)*2)
+	for _, s := range sbs {
+		ids = append(ids, s.UserID, s.ShadowbannedBy)
+	}
+	users := fetchUsersByIDs(ids)
+
+	type shadowbanItem struct {
+		ID                    uint      `json:"id"`
+		UserID                uint      `json:"user_id"`
+		Username              string    `json:"username"`
+		Avatar                *string   `json:"avatar"`
+		ShadowbannedBy        uint      `json:"shadowbanned_by"`
+		ShadowbannedByUsername string   `json:"shadowbanned_by_username"`
+		Reason                string    `json:"reason"`
+		CreatedAt             time.Time `json:"created_at"`
+	}
+	items := make([]shadowbanItem, 0, len(sbs))
+	for _, s := range sbs {
+		u := users[s.UserID]
+		by := users[s.ShadowbannedBy]
+		items = append(items, shadowbanItem{
+			ID:                     s.ID,
+			UserID:                 s.UserID,
+			Username:               u.Username,
+			Avatar:                 u.Avatar,
+			ShadowbannedBy:         s.ShadowbannedBy,
+			ShadowbannedByUsername: by.Username,
+			Reason:                 s.Reason,
+			CreatedAt:              s.CreatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"shadowbans": items})
+}
+
 // Jarvis Moderation System Handlers
 
 func getModerationCasesHandler(c *gin.Context) {
