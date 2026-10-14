@@ -59,6 +59,7 @@ const TermsPage = React.lazy(() => import('./pages/TermsPage'))
 const ContactPage = React.lazy(() => import('./pages/ContactPage'))
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'))
 const NotificationSettingsPage = React.lazy(() => import('./pages/NotificationSettingsPage'))
+const ToolEditorPage = React.lazy(() => import('./pages/ToolEditorPage'))
 
 // Loading component with skeleton animation
 function LoadingScreen() {
@@ -194,6 +195,12 @@ function App() {
                 <Route path="/channels">
                   <ProtectedRoute>
                     <ChannelsPage />
+                  </ProtectedRoute>
+                </Route>
+
+                <Route path="/tools/:tool_id">
+                  <ProtectedRoute>
+                    <ToolEditorPage />
                   </ProtectedRoute>
                 </Route>
 
