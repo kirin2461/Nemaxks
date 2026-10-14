@@ -124,7 +124,7 @@ func initDB() {
 		&AdminAccessPermission{}, &ConversationEncryption{}, &EncryptedDirectMessage{},
 		&ChannelCategory{}, &ChannelInvitation{}, &ChannelMember{}, &ChannelMessageReaction{},
 		&JarvisCommand{}, &JarvisContext{}, &JarvisReminder{}, &JarvisSession{},
-		&Story{}, &StoryView{}, &PostRating{}, &PostComment{}, &PostLike{}, &Subscription{}, &PostBookmark{},
+		&Story{}, &StoryView{}, &StoryPrivacyExclusion{}, &PostRating{}, &PostComment{}, &PostLike{}, &Subscription{}, &PostBookmark{},
 		&UserPresence{}, &TypingIndicator{}, &ReadReceipt{},
 		&IPBan{}, &AuditLog{}, &AbuseReport{},
 		&InviteLink{}, &UserNote{}, &FileAttachment{},
