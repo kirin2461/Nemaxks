@@ -77,6 +77,9 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      # Публичный адрес backend (webhook URL для MAX-ботов) и база MAX Bot API
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      MAX_API_BASE: ${MAX_API_BASE:-}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173}
       # LiveKit (проброс ключей; по умолчанию — devkey/devsecret из livekit.yaml)
