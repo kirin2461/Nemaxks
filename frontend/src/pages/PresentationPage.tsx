@@ -73,12 +73,12 @@ export default function PresentationPage() {
             </span>
           </div>
           <div className="flex gap-2 sm:gap-4">
-            <Link href="/activate">
+            <Link href="/auth">
               <button className="px-4 sm:px-6 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-sm sm:text-base whitespace-nowrap">
                 Войти
               </button>
             </Link>
-            <Link href="/activate">
+            <Link href="/auth?mode=register">
               <button className="px-4 sm:px-6 py-2 rounded-full bg-gradient-brand hover:brightness-110 hover:shadow-glow transition-all shadow-lg shadow-primary/25 text-sm sm:text-base whitespace-nowrap">
                 <span className="hidden sm:inline">Присоединиться</span>
                 <span className="sm:hidden">Join</span>
@@ -133,7 +133,7 @@ export default function PresentationPage() {
             transition={{ delay: 0.4 }}
             className="flex flex-col md:flex-row gap-4 justify-center"
           >
-            <Link href="/activate">
+            <Link href="/auth?mode=register">
               <button className="px-10 py-4 bg-gradient-brand rounded-2xl text-lg font-bold hover:scale-105 hover:shadow-glow transition-all shadow-xl shadow-primary/30 flex items-center justify-center gap-2 group">
                 Начать бесплатно
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

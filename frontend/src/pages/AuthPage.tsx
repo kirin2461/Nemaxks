@@ -5,7 +5,7 @@ import { Logo } from '@/components/Logo'
 import { Moon, Sun, Zap, Snowflake, Droplet, Waves, TreePine, Sunset, Cpu, Wind, QrCode, RefreshCw, Smartphone, Palette, Check, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { QRCodeSVG } from 'qrcode.react'
-import { Link } from 'wouter'
+import { Link, useSearch, useLocation } from 'wouter'
 
 type ThemeName = 'dark' | 'light' | 'cosmic' | 'nebula-winter' | 'glass' | 'midnight-ocean' | 'forest-night' | 'sunset-glow' | 'neon-tokyo' | 'arctic-aurora'
 type Language = 'ru' | 'en'
@@ -76,7 +76,18 @@ const translations = {
 }
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true)
+  const searchString = useSearch()
+  const [, setLocation] = useLocation()
+  const [isLogin, setIsLogin] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return new URLSearchParams(window.location.search).get('mode') !== 'register'
+  })
+
+  // Синхронизируем форму с query-параметром ?mode (например, ?mode=register)
+  useEffect(() => {
+    const mode = new URLSearchParams(searchString).get('mode')
+    setIsLogin(mode !== 'register')
+  }, [searchString])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [agreeToTerms, setAgreeToTerms] = useState(false)
@@ -535,8 +546,10 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => {
-                setIsLogin(!isLogin)
+                const next = !isLogin
+                setIsLogin(next)
                 setError('')
+                setLocation(next ? '/auth' : '/auth?mode=register', { replace: true })
               }}
               className="text-primary hover:text-accent font-medium transition-colors hover:underline relative z-50"
             >
