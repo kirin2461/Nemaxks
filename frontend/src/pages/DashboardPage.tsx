@@ -41,13 +41,21 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    loadStats()
+    const controller = new AbortController()
+    let cancelled = false
+    loadStats(controller.signal, () => cancelled)
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
   }, [isDemoMode])
 
-  const loadStats = async () => {
-    setIsLoading(true)
-    
+  const loadStats = async (signal?: AbortSignal, isCancelled?: () => boolean) => {
+    const cancelled = () => isCancelled?.() === true
+    if (!cancelled()) setIsLoading(true)
+
     if (isDemoMode) {
+      if (cancelled()) return
       setPlatformStats({
         totalUsers: 1234,
         onlineUsers: 89,
@@ -61,15 +69,18 @@ export default function DashboardPage() {
       setIsLoading(false)
       return
     }
-    
+
     try {
       const token = localStorage.getItem('token')
-      
+
       const statsResponse = await fetch('/api/stats/platform', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal
       })
+      if (cancelled()) return
       if (statsResponse.ok) {
         const data = await statsResponse.json()
+        if (cancelled()) return
         setPlatformStats(data)
       } else {
         setPlatformStats({
@@ -83,6 +94,7 @@ export default function DashboardPage() {
       }
 
       const friendsList = await friendsAPI.getFriends()
+      if (cancelled()) return
       if (friendsList) {
         setFriendsCount(friendsList.filter((f: any) => f.isFriend).length)
       } else {
@@ -90,13 +102,17 @@ export default function DashboardPage() {
       }
 
       const streamsResponse = await fetch('/api/streams/live', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal
       })
+      if (cancelled()) return
       if (streamsResponse.ok) {
         const streams = await streamsResponse.json()
+        if (cancelled()) return
         setLiveStreams(streams || [])
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'AbortError' || cancelled()) return
       console.error('Failed to load stats:', error)
       setPlatformStats({
         totalUsers: 1234,
@@ -108,7 +124,7 @@ export default function DashboardPage() {
       })
       setFriendsCount(4)
     } finally {
-      setIsLoading(false)
+      if (!cancelled()) setIsLoading(false)
     }
   }
 
@@ -268,7 +284,7 @@ export default function DashboardPage() {
                   <h2 className="text-xl font-bold">Активность платформы</h2>
                 </div>
                 <button 
-                  onClick={loadStats}
+                  onClick={() => loadStats()}
                   className="text-sm text-primary hover:text-accent transition-colors hover:underline"
                 >
                   Обновить

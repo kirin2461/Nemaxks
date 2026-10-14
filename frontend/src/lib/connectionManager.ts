@@ -31,6 +31,10 @@ class ConnectionManager {
   private isConnecting: boolean = false
   private shouldReconnect: boolean = true
   private preferredTransport: ConnectionType | null = null
+  // Поколение подключения: растёт при каждом connect()/disconnect().
+  // Позволяет прервать in-flight цепочку connect после unmount/повторного mount,
+  // чтобы устаревшие попытки не создавали новые сокеты и не затирали состояние.
+  private connectEpoch: number = 0
 
   private state: ConnectionState = {
     type: 'disconnected',
@@ -79,26 +83,36 @@ class ConnectionManager {
 
   async connect(token: string): Promise<void> {
     if (this.isConnecting) return
-    
+
+    const epoch = ++this.connectEpoch
+    const isStale = () => epoch !== this.connectEpoch || !this.shouldReconnect
+
     this.token = token
     this.shouldReconnect = true
     this.isConnecting = true
     this.setState({ reconnectAttempts: 0 })
 
-    const success = await this.tryWebSocket()
-    if (!success) {
-      console.log('[ConnectionManager] WebSocket failed, trying wstunnel...')
-      const wstunnelSuccess = await this.tryWSTunnel()
-      if (!wstunnelSuccess) {
-        console.log('[ConnectionManager] wstunnel failed, trying SSE...')
-        const sseSuccess = await this.trySSE()
-        if (!sseSuccess) {
-          this.startLongPolling()
+    try {
+      const success = await this.tryWebSocket()
+      if (isStale()) return
+      if (!success) {
+        console.log('[ConnectionManager] WebSocket failed, trying wstunnel...')
+        const wstunnelSuccess = await this.tryWSTunnel()
+        if (isStale()) return
+        if (!wstunnelSuccess) {
+          console.log('[ConnectionManager] wstunnel failed, trying SSE...')
+          const sseSuccess = await this.trySSE()
+          if (isStale()) return
+          if (!sseSuccess) {
+            this.startLongPolling()
+          }
         }
       }
+    } finally {
+      if (epoch === this.connectEpoch) {
+        this.isConnecting = false
+      }
     }
-    
-    this.isConnecting = false
   }
 
   private async tryWebSocket(): Promise<boolean> {
@@ -106,18 +120,26 @@ class ConnectionManager {
       try {
         console.log('[ConnectionManager] Trying WebSocket...')
         const wsUrlWithToken = `${this.wsUrl}?token=${this.token}`
-        this.ws = new WebSocket(wsUrlWithToken)
+        const ws = new WebSocket(wsUrlWithToken)
+        this.ws = ws
 
         const timeout = setTimeout(() => {
-          if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
+          if (ws.readyState !== WebSocket.OPEN) {
             console.log('[ConnectionManager] WebSocket timeout')
-            this.ws.close()
+            ws.close()
             resolve(false)
           }
         }, WEBSOCKET_TIMEOUT)
 
-        this.ws.onopen = () => {
+        ws.onopen = () => {
           clearTimeout(timeout)
+          // Сокет мог быть закрыт disconnect() во время подключения (unmount)
+          if (this.ws !== ws || !this.shouldReconnect) {
+            console.log('[ConnectionManager] WebSocket opened after disconnect, closing')
+            ws.close()
+            resolve(false)
+            return
+          }
           console.log('[ConnectionManager] WebSocket connected')
           this.setState({
             type: 'websocket',
@@ -128,7 +150,7 @@ class ConnectionManager {
           resolve(true)
         }
 
-        this.ws.onmessage = (event) => {
+        ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data)
             this.handleMessage(data)
@@ -137,17 +159,20 @@ class ConnectionManager {
           }
         }
 
-        this.ws.onerror = (error) => {
+        ws.onerror = (error) => {
           console.error('[ConnectionManager] WebSocket error:', error)
           clearTimeout(timeout)
         }
 
-        this.ws.onclose = () => {
+        ws.onclose = () => {
           console.log('[ConnectionManager] WebSocket closed')
           clearTimeout(timeout)
-          if (this.state.type === 'websocket') {
-            this.setState({ isConnected: false })
-            this.scheduleReconnect()
+          if (this.ws === ws) {
+            this.ws = null
+            if (this.state.type === 'websocket') {
+              this.setState({ isConnected: false })
+              this.scheduleReconnect()
+            }
           }
           resolve(false)
         }
@@ -163,18 +188,25 @@ class ConnectionManager {
       try {
         console.log('[ConnectionManager] Trying wstunnel (WebSocket over HTTPS/443)...')
         const wstunnelUrlWithToken = `${this.wstunnelUrl}?token=${this.token}`
-        this.ws = new WebSocket(wstunnelUrlWithToken)
+        const ws = new WebSocket(wstunnelUrlWithToken)
+        this.ws = ws
 
         const timeout = setTimeout(() => {
-          if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
+          if (ws.readyState !== WebSocket.OPEN) {
             console.log('[ConnectionManager] wstunnel timeout')
-            this.ws.close()
+            ws.close()
             resolve(false)
           }
         }, WSTUNNEL_TIMEOUT)
 
-        this.ws.onopen = () => {
+        ws.onopen = () => {
           clearTimeout(timeout)
+          if (this.ws !== ws || !this.shouldReconnect) {
+            console.log('[ConnectionManager] wstunnel opened after disconnect, closing')
+            ws.close()
+            resolve(false)
+            return
+          }
           console.log('[ConnectionManager] wstunnel connected successfully')
           this.preferredTransport = 'wstunnel'
           this.setState({
@@ -186,7 +218,7 @@ class ConnectionManager {
           resolve(true)
         }
 
-        this.ws.onmessage = (event) => {
+        ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data)
             this.handleMessage(data)
@@ -195,17 +227,20 @@ class ConnectionManager {
           }
         }
 
-        this.ws.onerror = (error) => {
+        ws.onerror = (error) => {
           console.error('[ConnectionManager] wstunnel error:', error)
           clearTimeout(timeout)
         }
 
-        this.ws.onclose = () => {
+        ws.onclose = () => {
           console.log('[ConnectionManager] wstunnel closed')
           clearTimeout(timeout)
-          if (this.state.type === 'wstunnel') {
-            this.setState({ isConnected: false })
-            this.scheduleReconnect()
+          if (this.ws === ws) {
+            this.ws = null
+            if (this.state.type === 'wstunnel') {
+              this.setState({ isConnected: false })
+              this.scheduleReconnect()
+            }
           }
           resolve(false)
         }
@@ -223,17 +258,24 @@ class ConnectionManager {
         const sseUrl = `${this.baseUrl}/api/sse/events?token=${encodeURIComponent(this.token || '')}`
         
         this.sse = new EventSource(sseUrl)
+        const sse = this.sse
 
         const timeout = setTimeout(() => {
-          if (this.sse && this.sse.readyState !== EventSource.OPEN) {
+          if (sse.readyState !== EventSource.OPEN) {
             console.log('[ConnectionManager] SSE timeout')
-            this.sse.close()
+            sse.close()
             resolve(false)
           }
         }, SSE_TIMEOUT)
 
-        this.sse.onopen = () => {
+        sse.onopen = () => {
           clearTimeout(timeout)
+          if (this.sse !== sse || !this.shouldReconnect) {
+            console.log('[ConnectionManager] SSE opened after disconnect, closing')
+            sse.close()
+            resolve(false)
+            return
+          }
           console.log('[ConnectionManager] SSE connected')
           this.setState({
             type: 'sse',
@@ -244,12 +286,12 @@ class ConnectionManager {
           resolve(true)
         }
 
-        this.sse.addEventListener('connected', (event: MessageEvent) => {
+        sse.addEventListener('connected', (event: MessageEvent) => {
           clearTimeout(timeout)
           console.log('[ConnectionManager] SSE connected event:', event.data)
         })
 
-        this.sse.addEventListener('message', (event: MessageEvent) => {
+        sse.addEventListener('message', (event: MessageEvent) => {
           try {
             const data = JSON.parse(event.data)
             this.handleMessage(data)
@@ -258,10 +300,10 @@ class ConnectionManager {
           }
         })
 
-        this.sse.onerror = (error) => {
+        sse.onerror = (error) => {
           console.error('[ConnectionManager] SSE error:', error)
           clearTimeout(timeout)
-          if (this.state.type === 'sse') {
+          if (this.sse === sse && this.state.type === 'sse') {
             this.setState({ isConnected: false })
             this.scheduleReconnect()
           }
@@ -364,6 +406,10 @@ class ConnectionManager {
   }
 
   disconnect(permanent: boolean = true) {
+    // Инвалидируем in-flight цепочку connect(), чтобы она не пересоздала соединение
+    this.connectEpoch++
+    this.isConnecting = false
+
     if (permanent) {
       this.shouldReconnect = false
     }
