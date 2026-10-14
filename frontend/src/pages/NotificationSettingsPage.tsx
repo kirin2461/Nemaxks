@@ -3,6 +3,7 @@ import { Bell, ArrowLeft, Save, Loader2, Volume2, Monitor, Mail, Moon, TestTube 
 import { useNavigate } from 'react-router-dom'
 import { notificationsAPI, NotificationPreferences, NOTIFICATION_TYPES } from '../lib/notificationsApi'
 import { useToast } from '../components/Toast'
+import { getSoundsEnabled, setSoundsEnabled, playNotificationSound } from '../lib/notificationSounds'
 
 export function NotificationSettingsPage() {
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null)
@@ -10,6 +11,8 @@ export function NotificationSettingsPage() {
   const [saving, setSaving] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
+  // Локальный переключатель звуков (на этом устройстве), localStorage, по умолчанию включён
+  const [localSounds, setLocalSounds] = useState<boolean>(() => getSoundsEnabled())
 
   useEffect(() => {
     loadPreferences()
@@ -119,6 +122,27 @@ export function NotificationSettingsPage() {
                 <Toggle
                   checked={prefs.sound_enabled}
                   onChange={v => updatePref('sound_enabled', v)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Volume2 className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-foreground">Звуковые уведомления (на этом устройстве)</p>
+                    <p className="text-muted-foreground text-sm">Короткий звук, когда вкладка скрыта или чат не открыт</p>
+                  </div>
+                </div>
+                <Toggle
+                  checked={localSounds}
+                  onChange={v => {
+                    setLocalSounds(v)
+                    setSoundsEnabled(v)
+                    if (v) {
+                      // Даём услышать звук сразу после включения
+                      setTimeout(() => playNotificationSound('message'), 50)
+                    }
+                  }}
                 />
               </div>
 
