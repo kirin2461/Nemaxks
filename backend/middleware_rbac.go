@@ -11,16 +11,27 @@ import (
 
 // hasGlobalRole checks if user is global admin or super_admin
 func hasGlobalRole(userID uint, requiredRole string) bool {
+	role := ""
 	var assignment GlobalRoleAssignment
-	if err := db.Where("user_id = ?", userID).First(&assignment).Error; err != nil {
-		return false
+	if err := db.Where("user_id = ?", userID).First(&assignment).Error; err == nil {
+		role = assignment.Role
+	} else {
+		// Fallback: легаси-админы платформы имеют User.Role без строки
+		// в GlobalRoleAssignment (согласуется с adminMiddleware, который
+		// проверяет User.Role). Без этого они получали 403 в
+		// RequireGuildPermission и DM access flow.
+		var user User
+		if err := db.First(&user, userID).Error; err != nil {
+			return false
+		}
+		role = user.Role
 	}
-	
+
 	if requiredRole == "admin" {
-		return assignment.Role == "admin" || assignment.Role == "super_admin"
+		return role == "admin" || role == "super_admin"
 	}
 	if requiredRole == "super_admin" {
-		return assignment.Role == "super_admin"
+		return role == "super_admin"
 	}
 	return false
 }
