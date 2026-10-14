@@ -518,9 +518,42 @@ func getTelegramWebhookHandler(c *gin.Context) {
 		}
 	} else if len(text) == 6 {
 		handleTelegramLink(chatID, telegramID, username, text)
+	} else if len(text) > 0 {
+		// Обычное сообщение — доставляем в канал-мост Nebula (B2).
+		handleTelegramBridgeMessage(chatID, telegramID, username, text)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+// handleTelegramBridgeMessage доставляет обычное (не командное) сообщение
+// из Telegram в канал-мост пользователя. Непривязанным аккаунтам
+// отправляется подсказка про /link.
+func handleTelegramBridgeMessage(chatID int64, telegramID int64, username string, text string) {
+	var link TelegramLink
+	if db.Where("telegram_id = ? AND is_verified = ?", telegramID, true).First(&link).RowsAffected == 0 {
+		sendTelegramMessage(chatID, `Чтобы получать сообщения в Nebula, привяжите аккаунт: /link <код>. Код — в настройках профиля Nebula.`)
+		return
+	}
+
+	meta, _ := json.Marshal(bridgeMeta{
+		ChatID:           chatID,
+		ExternalUsername: username,
+		OwnerUserID:      link.UserID,
+	})
+
+	channel, err := getOrCreateBridgeChannel(link.UserID, "telegram", string(meta))
+	if err != nil {
+		log.Printf("Bridge TG: не удалось получить канал-мост для user %d: %v", link.UserID, err)
+		sendTelegramMessage(chatID, `⚠️ Не удалось доставить сообщение в Nebula. Попробуйте позже.`)
+		return
+	}
+
+	label := "TG"
+	if username != "" {
+		label = "TG @" + username
+	}
+	deliverBridgeMessage(channel.ID, label, text)
 }
 
 func splitCommand(text string) []string {

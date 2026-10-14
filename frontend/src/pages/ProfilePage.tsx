@@ -8,6 +8,7 @@ import { PremiumBadge } from '@/components/PremiumBadge'
 import { Button } from '@/components/Button'
 import { Input, Textarea } from '@/components/Input'
 import { TelegramLink } from '@/components/TelegramLink'
+import { MaxLink } from '@/components/MaxLink'
 import { useStore } from '@/lib/store'
 import { userAPI, UserProfile, UserStats } from '@/lib/api'
 import { Edit, Save, X, Upload, UserPlus, UserMinus, Users, Crown, Heart, Share2 } from 'lucide-react'
@@ -426,6 +427,7 @@ export default function ProfilePage() {
             </Card>
 
             {isOwnProfile && <TelegramLink isOwnProfile={isOwnProfile} />}
+            {isOwnProfile && <MaxLink isOwnProfile={isOwnProfile} />}
           </div>
         </div>
       </div>

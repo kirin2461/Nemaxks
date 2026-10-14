@@ -85,6 +85,10 @@ type Channel struct {
         Type        string    `json:"type" gorm:"default:'text'"`
         Position    int       `json:"position" gorm:"default:0"`
         IsPrivate   bool      `json:"is_private" gorm:"default:false"`
+        // Мосты во внешние мессенджеры (Telegram/MAX)
+        IsBridge    bool      `json:"is_bridge" gorm:"default:false"`
+        BridgeType  string    `json:"bridge_type" gorm:"default:''"`                    // "telegram" | "max"
+        BridgeMeta  string    `json:"bridge_meta" gorm:"type:text;default:''"`          // JSON: {"chat_id":..., "external_username":..., "owner_user_id":...}
         CreatedAt   time.Time `json:"created_at"`
         UpdatedAt   time.Time `json:"updated_at"`
         Guild       Guild     `json:"guild,omitempty" gorm:"foreignKey:GuildID"`

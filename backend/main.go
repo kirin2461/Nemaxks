@@ -706,6 +706,15 @@ func main() {
 	r.POST("/api/notifications/test", authMiddleware(), sendTestNotificationHandler)
 	r.POST("/api/1470", getTelegramWebhookHandler)
 
+	// MAX Integration
+	r.GET("/api/max/link", authMiddleware(), getMaxLinkHandler)
+	r.POST("/api/max/link", authMiddleware(), createMaxLinkHandler)
+	r.DELETE("/api/max/link", authMiddleware(), unlinkMaxHandler)
+	r.POST("/api/max/webhook/setup", authMiddleware(), adminMiddleware(), setupMaxWebhookHandler)
+	r.GET("/api/max/webhook/info", authMiddleware(), adminMiddleware(), getMaxWebhookInfoHandler)
+	r.GET("/api/max/bot-info", authMiddleware(), adminMiddleware(), getMaxBotInfoHandler)
+	r.POST("/api/max/webhook", getMaxWebhookHandler)
+
 	// File uploads
 	r.POST("/api/upload", authMiddleware(), uploadFileHandler)
 	r.Static("/uploads", "./uploads")
