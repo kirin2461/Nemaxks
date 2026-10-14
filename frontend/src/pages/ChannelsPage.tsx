@@ -42,6 +42,8 @@ import {
   AtSign,
   Eye,
   MessageSquare,
+  MessageCircle,
+  Megaphone,
   Mic,
   MicOff,
   Video,
@@ -70,6 +72,15 @@ type ChannelMessage = {
   content: string
   created_at: string
   reactions?: MessageReaction[]
+  parent_id?: number | null
+  reply_count?: number
+}
+
+type MyChannelPermissions = {
+  can_post: boolean
+  can_manage: boolean
+  role: string
+  channel_type: string
 }
 
 export default function ChannelsPage() {
@@ -118,6 +129,11 @@ export default function ChannelsPage() {
   const [editingContent, setEditingContent] = useState('')
   const [unreadChannels, setUnreadChannels] = useState<Set<string>>(new Set())
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
+  const [myPerms, setMyPerms] = useState<MyChannelPermissions | null>(null)
+  const [openThread, setOpenThread] = useState<ChannelMessage | null>(null)
+  const [threadReplies, setThreadReplies] = useState<ChannelMessage[]>([])
+  const [threadInput, setThreadInput] = useState('')
+  const [threadLoading, setThreadLoading] = useState(false)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastTypingSentRef = useRef<number>(0)
   
@@ -140,19 +156,47 @@ export default function ChannelsPage() {
     if (data.type === 'channel-message') {
       const channelId = String(data.channel_id)
       const msg = data.message
-      
+      const parentId = msg && (msg.parent_id ?? msg.ParentID ?? null)
+
       if (selectedChannel && channelId === String(selectedChannel.id)) {
-        setMessages(prev => {
-          if (prev.some(m => String(m.id) === String(msg.id || msg.ID))) return prev
-          return [...prev, {
-            id: String(msg.id || msg.ID),
-            channel_id: String(msg.channel_id || msg.ChannelID),
-            author_id: String(msg.author_id || msg.AuthorID),
-            author: msg.author || msg.Author || { id: String(msg.author_id || msg.AuthorID), username: 'User', avatar: undefined },
-            content: msg.content || msg.Content,
-            created_at: msg.created_at || msg.CreatedAt
-          }]
-        })
+        if (parentId) {
+          // Ответ в треде: append в открытый тред или инкремент reply_count у родителя
+          if (openThread && String(openThread.id) === String(parentId)) {
+            setThreadReplies(prev => {
+              if (prev.some(m => String(m.id) === String(msg.id || msg.ID))) return prev
+              return [...prev, {
+                id: String(msg.id || msg.ID),
+                channel_id: String(msg.channel_id || msg.ChannelID),
+                author_id: String(msg.author_id || msg.AuthorID),
+                author: msg.author || msg.Author || { id: String(msg.author_id || msg.AuthorID), username: 'User', avatar: undefined },
+                content: msg.content || msg.Content,
+                created_at: msg.created_at || msg.CreatedAt,
+                parent_id: parentId,
+                reply_count: 0
+              }]
+            })
+          } else {
+            setMessages(prev => prev.map(m =>
+              String(m.id) === String(parentId)
+                ? { ...m, reply_count: (m.reply_count ?? 0) + 1 }
+                : m
+            ))
+          }
+        } else {
+          setMessages(prev => {
+            if (prev.some(m => String(m.id) === String(msg.id || msg.ID))) return prev
+            return [...prev, {
+              id: String(msg.id || msg.ID),
+              channel_id: String(msg.channel_id || msg.ChannelID),
+              author_id: String(msg.author_id || msg.AuthorID),
+              author: msg.author || msg.Author || { id: String(msg.author_id || msg.AuthorID), username: 'User', avatar: undefined },
+              content: msg.content || msg.Content,
+              created_at: msg.created_at || msg.CreatedAt,
+              parent_id: null,
+              reply_count: msg.reply_count ?? msg.ReplyCount ?? 0
+            }]
+          })
+        }
       } else {
         setUnreadChannels(prev => new Set(prev).add(channelId))
       }
@@ -226,7 +270,7 @@ export default function ChannelsPage() {
         }
       }))
     }
-  }, [selectedChannel, user?.id])
+  }, [selectedChannel, user?.id, openThread])
 
   useEffect(() => {
     const unsubscribe = subscribeToMessages(handleWebSocketMessage)
@@ -234,8 +278,15 @@ export default function ChannelsPage() {
   }, [subscribeToMessages, handleWebSocketMessage])
 
   useEffect(() => {
+    setOpenThread(null)
+    setThreadReplies([])
+    setThreadInput('')
+    setMyPerms(null)
     if (selectedChannel && selectedChannel.type !== 'voice') {
       loadChannelMessages(selectedChannel.id)
+      channelsAPI.getMyPermissions(selectedChannel.id)
+        .then((perms) => { if (perms) setMyPerms(perms) })
+        .catch(() => {})
       setUnreadChannels(prev => {
         const newSet = new Set(prev)
         newSet.delete(selectedChannel.id)
@@ -295,7 +346,9 @@ export default function ChannelsPage() {
           author: m.author || m.Author || { id: String(m.author_id || m.AuthorID), username: 'User', avatar: undefined },
           content: m.content || m.Content,
           created_at: m.created_at || m.CreatedAt,
-          reactions: m.reactions || m.Reactions || []
+          reactions: m.reactions || m.Reactions || [],
+          parent_id: m.parent_id ?? m.ParentID ?? null,
+          reply_count: m.reply_count ?? m.ReplyCount ?? 0
         })))
       }
     } catch (error) {
@@ -394,7 +447,7 @@ export default function ChannelsPage() {
     }
   }
 
-  const handleCreateChannel = async (channelData: { name: string; type: 'text' | 'voice'; isPrivate: boolean; template?: string }) => {
+  const handleCreateChannel = async (channelData: { name: string; type: 'text' | 'voice' | 'announcement'; isPrivate: boolean; template?: string }) => {
     if (!selectedGuild) return
     try {
       const newChannel = await channelsAPI.createChannel(
@@ -792,6 +845,81 @@ export default function ChannelsPage() {
     }
   }
 
+  const pluralComments = (n: number): string => {
+    const mod10 = n % 10
+    const mod100 = n % 100
+    if (mod10 === 1 && mod100 !== 11) return 'комментарий'
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'комментария'
+    return 'комментариев'
+  }
+
+  const handleOpenThread = async (message: ChannelMessage) => {
+    if (!selectedChannel) return
+    setOpenThread(message)
+    setThreadReplies([])
+    setThreadInput('')
+    setThreadLoading(true)
+    try {
+      const replies = await channelsAPI.getThread(selectedChannel.id, String(message.id))
+      if (replies) {
+        setThreadReplies(replies.map((m: any) => ({
+          id: String(m.id || m.ID),
+          channel_id: String(m.channel_id || m.ChannelID || selectedChannel.id),
+          author_id: String(m.author_id || m.AuthorID),
+          author: m.author || m.Author || { id: String(m.author_id || m.AuthorID), username: 'User', avatar: undefined },
+          content: m.content || m.Content,
+          created_at: m.created_at || m.CreatedAt,
+          reactions: m.reactions || m.Reactions || [],
+          parent_id: m.parent_id ?? m.ParentID ?? null,
+          reply_count: m.reply_count ?? m.ReplyCount ?? 0
+        })))
+      }
+    } catch (error) {
+      console.error('Failed to load thread:', error)
+    } finally {
+      setThreadLoading(false)
+    }
+  }
+
+  const handleSendThreadReply = async () => {
+    if (!threadInput.trim() || !selectedChannel || !openThread) return
+    const content = threadInput.trim()
+    const threadId = String(openThread.id)
+    setThreadInput('')
+
+    try {
+      const response = await channelsAPI.sendMessage(selectedChannel.id, content, Number(openThread.id)) as any
+      if (response) {
+        setThreadReplies(prev => {
+          if (prev.some(m => String(m.id) === String(response.id))) return prev
+          return [...prev, {
+            id: String(response.id),
+            channel_id: String(response.channel_id || selectedChannel.id),
+            author_id: String(response.author_id || response.user_id || user?.id),
+            author: response.author || response.user || { id: String(user?.id), username: user?.username || 'User', avatar: user?.avatar },
+            content: response.content,
+            created_at: response.created_at,
+            parent_id: Number(openThread.id),
+            reply_count: 0
+          }]
+        })
+        setMessages(prev => prev.map(m =>
+          String(m.id) === threadId
+            ? { ...m, reply_count: (m.reply_count ?? 0) + 1 }
+            : m
+        ))
+        setOpenThread(prev =>
+          prev && String(prev.id) === threadId
+            ? { ...prev, reply_count: (prev.reply_count ?? 0) + 1 }
+            : prev
+        )
+      }
+    } catch (error) {
+      console.error('Failed to send thread reply:', error)
+      setThreadInput(content)
+    }
+  }
+
   // Context menu items
   const getChannelContextMenuItems = (channel: any): ContextMenuItem[] => {
     const isGuildOwner = selectedGuild && user && String(selectedGuild.owner_id) === String(user.id)
@@ -918,7 +1046,8 @@ export default function ChannelsPage() {
     return acc
   }, {} as Record<string, any[]>) || {}
 
-  const filteredMessages = messages.filter(m => m.channel_id === selectedChannel?.id)
+  const isAnnouncementChannel = selectedChannel?.type === 'announcement'
+  const filteredMessages = messages.filter(m => m.channel_id === selectedChannel?.id && !m.parent_id)
 
   if (!selectedGuild || !selectedChannel) {
     return (
@@ -1132,6 +1261,8 @@ export default function ChannelsPage() {
                           return <Volume2 className={cn("w-4 h-4 flex-shrink-0", isVoiceConnected && "text-green-500")} />
                         case 'video':
                           return <Video className="w-4 h-4 flex-shrink-0" />
+                        case 'announcement':
+                          return <Megaphone className="w-4 h-4 flex-shrink-0" />
                         default:
                           return <Hash className="w-4 h-4 flex-shrink-0" />
                       }
@@ -1296,6 +1427,8 @@ export default function ChannelsPage() {
                         >
                           {channel.type === 'voice' ? (
                             <Volume2 className="w-4 h-4 flex-shrink-0" />
+                          ) : channel.type === 'announcement' ? (
+                            <Megaphone className="w-4 h-4 flex-shrink-0" />
                           ) : (
                             <Hash className="w-4 h-4 flex-shrink-0" />
                           )}
@@ -1334,6 +1467,8 @@ export default function ChannelsPage() {
             </button>
             {selectedChannel.type === 'voice' ? (
               <Volume2 className="hidden lg:block w-5 h-5 text-muted-foreground" />
+            ) : selectedChannel.type === 'announcement' ? (
+              <Megaphone className="hidden lg:block w-5 h-5 text-muted-foreground" />
             ) : (
               <Hash className="hidden lg:block w-5 h-5 text-muted-foreground" />
             )}
@@ -1384,9 +1519,15 @@ export default function ChannelsPage() {
                   filteredMessages.map((message) => (
                     <div
                       key={message.id}
-                      className="message-hoverable flex gap-3 px-3 py-2 rounded-xl -mx-3 group hover:bg-secondary/40 transition-colors"
+                      className={cn(
+                        "group",
+                        isAnnouncementChannel
+                          ? "rounded-xl border border-border/60 bg-card/60 px-4 py-3"
+                          : "message-hoverable -mx-3 rounded-xl hover:bg-secondary/40 transition-colors"
+                      )}
                       onContextMenu={(e) => messageContextMenu.showContextMenu(e, getMessageContextMenuItems(message))}
                     >
+                    <div className={cn("flex gap-3", !isAnnouncementChannel && "px-3 py-2")}>
                       <Avatar
                         src={message.author.avatar || undefined}
                         alt={message.author.username}
@@ -1489,6 +1630,21 @@ export default function ChannelsPage() {
                         </div>
                       )}
                     </div>
+
+                    {isAnnouncementChannel && editingMessageId !== message.id && (
+                      <div className="mt-2 ml-11">
+                        <button
+                          onClick={() => handleOpenThread(message)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/60 hover:bg-primary/15 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          {(message.reply_count ?? 0) > 0
+                            ? `${message.reply_count} ${pluralComments(message.reply_count ?? 0)}`
+                            : 'Комментировать'}
+                        </button>
+                      </div>
+                    )}
+                    </div>
                   ))
                 )}
               </div>
@@ -1516,6 +1672,13 @@ export default function ChannelsPage() {
 
               {/* Message Input */}
               <div className="p-4 border-t border-border/60 bg-card/70 backdrop-blur-xl shrink-0 sticky bottom-16 lg:bottom-0 z-10">
+                {isAnnouncementChannel && myPerms?.can_post === false ? (
+                  <div className="px-4 py-3 rounded-xl bg-secondary/50 border border-border/60 text-sm text-muted-foreground flex items-center gap-2">
+                    <Megaphone className="w-4 h-4 shrink-0" />
+                    Только администраторы могут публиковать в этом канале
+                  </div>
+                ) : (
+                <>
                 {replyingTo && (
                   <div className="mb-2 px-3 py-2 bg-primary/10 border-l-2 border-l-primary rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs">
@@ -1548,6 +1711,8 @@ export default function ChannelsPage() {
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
+                </>
+                )}
               </div>
             </>
           )}
@@ -1603,6 +1768,92 @@ export default function ChannelsPage() {
                   </div>
                 )
               })}
+            </div>
+          </div>
+        )}
+
+        {/* Thread Panel backdrop for mobile */}
+        {openThread && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/50 z-[55]"
+            onClick={() => setOpenThread(null)}
+          />
+        )}
+        {/* Thread Panel */}
+        {openThread && (
+          <div className="fixed inset-y-0 right-0 w-80 md:static md:w-80 bg-card/80 backdrop-blur-xl flex flex-col shrink-0 border-l border-border/60 z-[60] md:z-auto">
+            <div className="p-4 border-b border-border/60 flex items-center justify-between">
+              <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                Комментарии{typeof openThread.reply_count === 'number' && openThread.reply_count > 0 ? ` — ${openThread.reply_count}` : ''}
+              </h3>
+              <button
+                onClick={() => setOpenThread(null)}
+                className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Parent post */}
+            <div className="p-3 border-b border-border/60 bg-secondary/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Avatar
+                  src={openThread.author.avatar || undefined}
+                  alt={openThread.author.username}
+                  size="sm"
+                />
+                <span className="font-semibold text-sm truncate">{openThread.author.username}</span>
+                <span className="text-xs text-muted-foreground shrink-0">{formatTime(openThread.created_at)}</span>
+              </div>
+              <p className="text-sm whitespace-pre-wrap break-words">{openThread.content}</p>
+            </div>
+
+            {/* Replies list */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+              {threadLoading ? (
+                <p className="text-xs text-muted-foreground text-center py-4">Загрузка...</p>
+              ) : threadReplies.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">Пока нет комментариев. Будьте первым!</p>
+              ) : (
+                threadReplies.map((reply) => (
+                  <div key={reply.id} className="flex gap-2">
+                    <Avatar
+                      src={reply.author.avatar || undefined}
+                      alt={reply.author.username}
+                      size="sm"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold text-xs truncate">{reply.author.username}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0">{formatTime(reply.created_at)}</span>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap break-words">{reply.content}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Thread composer */}
+            <div className="p-3 border-t border-border/60 shrink-0">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={threadInput}
+                  onChange={(e) => setThreadInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendThreadReply()}
+                  placeholder="Комментарий..."
+                  className="w-full bg-card/60 backdrop-blur-sm border border-border rounded-xl py-2.5 px-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary/60 transition-all"
+                />
+                <button
+                  onClick={handleSendThreadReply}
+                  disabled={!threadInput.trim()}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-brand text-primary-foreground shadow-soft disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-glow transition-all"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         )}

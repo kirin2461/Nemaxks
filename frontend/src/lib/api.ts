@@ -988,7 +988,7 @@ export const channelsAPI = {
   createChannel: (
     guildId: string,
     name: string,
-    channelType: "text" | "voice",
+    channelType: "text" | "voice" | "announcement",
     description?: string,
   ) =>
     request<Channel>(`/guilds/channels/${guildId}`, {
@@ -999,11 +999,24 @@ export const channelsAPI = {
   getMessages: (channelId: string, limit = 50) =>
     request<ChannelMessage[]>(`/channels/${channelId}/messages?limit=${limit}`),
 
-  sendMessage: (channelId: string, content: string) =>
+  sendMessage: (channelId: string, content: string, parentId?: number) =>
     request<ChannelMessage>(`/channels/${channelId}/messages`, {
       method: "POST",
-      data: { content },
+      data: { content, ...(parentId ? { parent_id: parentId } : {}) },
     }),
+
+  getThread: (channelId: string, messageId: string) =>
+    request<ChannelMessage[]>(
+      `/channels/${channelId}/messages/${messageId}/thread`,
+    ),
+
+  getMyPermissions: (channelId: string) =>
+    request<{
+      can_post: boolean;
+      can_manage: boolean;
+      role: string;
+      channel_type: string;
+    }>(`/channels/${channelId}/permissions/me`),
 
   updateChannel: (
     channelId: string,
@@ -1234,7 +1247,7 @@ export interface Conversation {
 export interface Channel {
   id: string;
   name: string;
-  type: "text" | "voice";
+  type: "text" | "voice" | "announcement";
   category_id?: string;
   created_at: string;
   guild_id?: number;
@@ -1247,6 +1260,15 @@ export interface ChannelMessage {
   content: string;
   created_at: string;
   user?: User;
+  parent_id?: number | null;
+  reply_count?: number;
+}
+
+export interface ChannelPermissions {
+  can_post: boolean;
+  can_manage: boolean;
+  role: string;
+  channel_type: string;
 }
 
 export interface Settings {
