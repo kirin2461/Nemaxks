@@ -53,6 +53,13 @@ func createMessageHandler(c *gin.Context) {
 	// Sanitize content before storing
 	sanitizedContent := SanitizeMessageContent(req.Content)
 
+	// Тип сообщения выводится на сервере (клиенту нельзя доверять):
+	// голосовое — если приложена voice-запись, иначе обычный текст.
+	messageType := "text"
+	if req.VoiceURL != nil && *req.VoiceURL != "" {
+		messageType = "voice"
+	}
+
 	message := DirectMessage{
 		SenderID:        senderID,
 		ReceiverID:      uint(receiverID),
@@ -61,6 +68,7 @@ func createMessageHandler(c *gin.Context) {
 		ForwardedFromID: req.ForwardedFromID,
 		VoiceURL:        req.VoiceURL,
 		VoiceDuration:   req.VoiceDuration,
+		Type:            messageType,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}
@@ -88,6 +96,7 @@ func createMessageHandler(c *gin.Context) {
 		"created_at":   message.CreatedAt.Format(time.RFC3339),
 		"username":     sender.Username,
 		"sender_id":    senderID,
+		"message_type": message.Type,
 	}
 	if sender.Avatar != nil && *sender.Avatar != "" {
 		wsMessage["avatar"] = *sender.Avatar

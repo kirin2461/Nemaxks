@@ -219,6 +219,10 @@ type DirectMessage struct {
 	ForwardedFromID *uint          `gorm:"index" json:"forwarded_from_id"`
 	VoiceURL        *string        `json:"voice_url"`
 	VoiceDuration   int            `gorm:"default:0" json:"voice_duration"`
+	// Type — тип сообщения: "text" (default) | "voice" | "call".
+	// Для type="call" в Content лежит JSON с метаданными звонка:
+	// {"kind":"audio"|"video","duration_sec":N,"status":"completed"|"missed"}
+	Type            string         `gorm:"size:20;default:'text'" json:"type"`
 	IsPinned        bool           `gorm:"default:false" json:"is_pinned"`
 	CreatedAt       time.Time      `json:"created_at" gorm:"index:idx_direct_messages_conversation,priority:3,sort:desc"`
 	UpdatedAt       time.Time      `json:"updated_at"`

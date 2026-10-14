@@ -99,6 +99,8 @@ type Message struct {
         ChannelID uint      `json:"channel_id" gorm:"not null;index:idx_messages_channel_created,priority:1"`
         AuthorID  uint      `json:"author_id" gorm:"not null"`
         Content   string    `json:"content" gorm:"type:text"`
+        // Type — тип сообщения: "text" (default) | "voice" | "call" | "system"
+        Type      string    `json:"type" gorm:"size:20;default:'text'"`
         Edited    bool      `json:"edited" gorm:"default:false"`
         ParentID  *uint     `json:"parent_id,omitempty" gorm:"index"`
         ReplyCount int      `json:"reply_count" gorm:"default:0"`
