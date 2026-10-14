@@ -426,7 +426,7 @@ func main() {
 	r.GET("/api/connection/status", authMiddleware(), connectionStatusHandler)
 
 	// Posts
-	r.GET("/api/posts", getPostsHandler)
+	r.GET("/api/posts", optionalAuthMiddleware(), getPostsHandler)
 	r.POST("/api/posts", authMiddleware(), createPostHandler)
 	r.PUT("/api/posts/:id", authMiddleware(), updatePostHandler)
 	r.DELETE("/api/posts/:id", authMiddleware(), deletePostHandler)
@@ -477,6 +477,8 @@ func main() {
 	r.POST("/api/stories", authMiddleware(), createStoryHandler)
 	r.POST("/api/stories/:id/view", authMiddleware(), viewStoryHandler)
 	r.DELETE("/api/stories/:id", authMiddleware(), deleteStoryHandler)
+	r.GET("/api/stories/privacy", authMiddleware(), getStoryPrivacyHandler)
+	r.PUT("/api/stories/privacy", authMiddleware(), updateStoryPrivacyHandler)
 	r.GET("/api/stories/privacy/exclusions", authMiddleware(), getStoryExclusionsHandler)
 	r.POST("/api/stories/privacy/exclusions", authMiddleware(), addStoryExclusionHandler)
 	r.DELETE("/api/stories/privacy/exclusions/:user_id", authMiddleware(), removeStoryExclusionHandler)

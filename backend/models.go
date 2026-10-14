@@ -40,6 +40,10 @@ type User struct {
         BlockReason         string     `json:"block_reason,omitempty"`
         DeletionScheduledAt *time.Time `json:"deletion_scheduled_at,omitempty"`
         DeletionReason      string     `json:"deletion_reason,omitempty"`
+        // StoryPrivacyMode — глобальный режим приватности историй автора:
+        // "everyone" (дефолт, текущее поведение), "friends", "friends_except".
+        // Не отдаётся наружу в составе User (личная настройка) — читается через GET /api/stories/privacy.
+        StoryPrivacyMode    string     `json:"-" gorm:"size:20;default:'everyone'"`
 }
 
 // ToPublic converts User to a safe public representation
