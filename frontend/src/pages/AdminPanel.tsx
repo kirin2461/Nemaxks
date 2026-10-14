@@ -3,6 +3,7 @@ import { Layout } from '@/components/Layout'
 import { Avatar } from '@/components/Avatar'
 import { useStore } from '@/lib/store'
 import { adminAPI, adminLicenseAPI, apiKeysAPI, type AdminStats, type IPBan, type AbuseReport, type AuditLog, type User, type ForbiddenWord, type ForbiddenAttempt, type BillingStats, type BillingTransaction, type LicenseKey, type ApiKey, type ApiKeyStats, type CreatedApiKey } from '@/lib/api'
+import { ModerationPanel } from '@/components/admin/ModerationPanel'
 import {
   Users,
   Shield,
@@ -34,7 +35,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type TabType = 'dashboard' | 'users' | 'bans' | 'reports' | 'logs' | 'filter' | 'attempts' | 'billing' | 'licenses' | 'apikeys'
+type TabType = 'dashboard' | 'users' | 'bans' | 'reports' | 'logs' | 'filter' | 'attempts' | 'billing' | 'licenses' | 'apikeys' | 'moderation'
 
 interface LicenseStats {
   total_keys: number
@@ -85,6 +86,11 @@ export default function AdminPanel() {
   }, [activeTab, licensePage])
 
   const loadData = async () => {
+    // Вкладка «Модерация» управляет своей загрузкой самостоятельно
+    if (activeTab === 'moderation') {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       switch (activeTab) {
@@ -285,7 +291,7 @@ export default function AdminPanel() {
     }
   }
 
-  if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
+  if (!user || (user.role !== 'admin' && user.role !== 'moderator' && user.role !== 'super_admin')) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
@@ -306,6 +312,7 @@ export default function AdminPanel() {
     { id: 'dashboard' as TabType, label: 'Обзор', icon: Activity },
     { id: 'users' as TabType, label: 'Пользователи', icon: Users },
     { id: 'bans' as TabType, label: 'Баны IP', icon: Ban },
+    { id: 'moderation' as TabType, label: 'Модерация', icon: Shield },
     { id: 'reports' as TabType, label: 'Жалобы', icon: AlertTriangle },
     { id: 'filter' as TabType, label: 'Чёрный список', icon: Filter },
     { id: 'attempts' as TabType, label: 'Попытки', icon: AlertTriangle },
@@ -325,7 +332,7 @@ export default function AdminPanel() {
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/25 text-sm">
             <Shield className="w-4 h-4" />
-            {user.role === 'admin' ? 'Администратор' : 'Модератор'}
+            {user.role === 'super_admin' ? 'Супер-администратор' : user.role === 'admin' ? 'Администратор' : 'Модератор'}
           </div>
         </div>
 
@@ -471,6 +478,10 @@ export default function AdminPanel() {
                   )}
                 </div>
               </div>
+            )}
+
+            {activeTab === 'moderation' && (
+              <ModerationPanel isSuperAdmin={user.role === 'super_admin'} />
             )}
 
             {activeTab === 'reports' && (

@@ -1004,6 +1004,143 @@ export const guildsAPI = {
   getMembers: () => request<any[]>("/users/all"),
 };
 
+// Moderation API (guild sanctions + DM access)
+export interface GuildMemberEntry {
+  id: number;
+  username: string;
+  avatar?: string;
+  joined_at?: string;
+}
+
+export interface GuildBanEntry {
+  id: number;
+  user_id: number;
+  username: string;
+  avatar?: string;
+  banned_by: number;
+  banned_by_username: string;
+  reason: string;
+  created_at: string;
+}
+
+export interface GuildMuteEntry {
+  id: number;
+  user_id: number;
+  username: string;
+  avatar?: string;
+  muted_by: number;
+  muted_by_username: string;
+  reason: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface GuildShadowbanEntry {
+  id: number;
+  user_id: number;
+  username: string;
+  avatar?: string;
+  shadowbanned_by: number;
+  shadowbanned_by_username: string;
+  reason: string;
+  created_at: string;
+}
+
+export interface DMAccessRequest {
+  id: number;
+  requested_by: number;
+  approved_by?: number | null;
+  target_user_id: number;
+  reason: string;
+  status: string;
+  expires_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const moderationAPI = {
+  getGuildMembers: (guildId: string | number) =>
+    request<{ members: GuildMemberEntry[] }>(`/guild-mod/${guildId}/members`),
+
+  getBans: (guildId: string | number) =>
+    request<{ bans: GuildBanEntry[] }>(`/guild-mod/${guildId}/bans`),
+
+  getMutes: (guildId: string | number) =>
+    request<{ mutes: GuildMuteEntry[] }>(`/guild-mod/${guildId}/mutes`),
+
+  getShadowbans: (guildId: string | number) =>
+    request<{ shadowbans: GuildShadowbanEntry[] }>(
+      `/guild-mod/${guildId}/shadowbans`,
+    ),
+
+  banUser: (guildId: string | number, targetId: number, reason: string) =>
+    request<{ message: string }>(`/guild-mod/${guildId}/ban`, {
+      method: "POST",
+      data: { target_id: targetId, reason },
+    }),
+
+  unbanUser: (guildId: string | number, userId: number) =>
+    request<{ message: string }>(`/guild-mod/${guildId}/ban/${userId}`, {
+      method: "DELETE",
+    }),
+
+  muteUser: (
+    guildId: string | number,
+    targetId: number,
+    reason: string,
+    durationMinutes: number,
+  ) =>
+    request<{ message: string }>(`/guild-mod/${guildId}/mute`, {
+      method: "POST",
+      data: {
+        target_id: targetId,
+        reason,
+        duration_minutes: durationMinutes,
+      },
+    }),
+
+  unmuteUser: (guildId: string | number, userId: number) =>
+    request<{ message: string }>(`/guild-mod/${guildId}/mute/${userId}`, {
+      method: "DELETE",
+    }),
+
+  shadowbanUser: (guildId: string | number, targetId: number, reason: string) =>
+    request<{ message: string }>(`/guild-mod/${guildId}/shadowban`, {
+      method: "POST",
+      data: { target_id: targetId, reason },
+    }),
+
+  unshadowbanUser: (guildId: string | number, userId: number) =>
+    request<{ message: string }>(`/guild-mod/${guildId}/shadowban/${userId}`, {
+      method: "DELETE",
+    }),
+};
+
+// DM Access API
+export const dmAccessAPI = {
+  getRequests: (status?: string) =>
+    request<{ requests: DMAccessRequest[] }>(
+      `/admin/dm-access/requests${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+    ),
+
+  requestAccess: (targetUserId: number, reason: string) =>
+    request<{ id: number; status: string }>("/admin/dm-access/request", {
+      method: "POST",
+      data: { target_user_id: targetUserId, reason },
+    }),
+
+  approve: (id: number) =>
+    request<{ status: string; expires_at: string }>(
+      `/admin/dm-access/${id}/approve`,
+      { method: "POST" },
+    ),
+
+  revoke: (id: number) =>
+    request<{ status: string }>(`/admin/dm-access/${id}/revoke`, {
+      method: "POST",
+    }),
+};
+
 // Channels API
 export const channelsAPI = {
   getChannels: (guildId: string) =>
