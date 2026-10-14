@@ -462,6 +462,17 @@ export const groupDMAPI = {
 };
 
 // Stories API
+// Базовый префикс приватности историй. Если backend вынужденно ушёл на
+// /api/story-privacy/... (конфликт gin-роутов :id vs privacy) — поменять здесь одну строку.
+const STORY_PRIVACY_BASE = "/stories/privacy";
+
+// Пользователь, от которого я скрываю свои истории (ответ GET /stories/privacy/exclusions)
+export interface StoryPrivacyExcludedUser {
+  id: number;
+  username: string;
+  avatar: string | null;
+}
+
 export const storiesAPI = {
   getStories: () => request<Story[]>("/stories"),
 
@@ -478,6 +489,21 @@ export const storiesAPI = {
 
   deleteStory: (storyId: string) =>
     request<{ status: string }>(`/stories/${storyId}`, {
+      method: "DELETE",
+    }),
+
+  // Story privacy — список людей, от которых скрыты мои истории
+  getExclusions: () =>
+    request<StoryPrivacyExcludedUser[]>(`${STORY_PRIVACY_BASE}/exclusions`),
+
+  addExclusion: (userId: number | string) =>
+    request<{ status?: string; id?: number }>(`${STORY_PRIVACY_BASE}/exclusions`, {
+      method: "POST",
+      data: { user_id: Number(userId) },
+    }),
+
+  removeExclusion: (userId: number | string) =>
+    request<{ status: string }>(`${STORY_PRIVACY_BASE}/exclusions/${userId}`, {
       method: "DELETE",
     }),
 };
