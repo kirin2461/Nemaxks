@@ -1,0 +1,18 @@
+# Nebula — TLS-терминация (Caddy, авто-HTTPS Let's Encrypt/ZeroSSL).
+# Домены sslip.io резолвятся в IP 82.114.226.204 без покупки домена.
+
+# Основной HTTPS-доступ: secure context (getUserMedia для звонков, wss://).
+82.114.226.204.sslip.io {
+	reverse_proxy frontend:5173
+}
+
+# LiveKit через WSS — на HTTPS-странице браузер блокирует ws:// (mixed content).
+livekit.82.114.226.204.sslip.io {
+	reverse_proxy livekit:7880
+}
+
+# Обратная совместимость: старый доступ по IP через HTTP продолжает работать
+# (без secure context — звонки там недоступны, используйте HTTPS-адрес выше).
+:80 {
+	reverse_proxy frontend:5173
+}

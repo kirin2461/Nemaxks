@@ -22,7 +22,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nemaxks}"]
       interval: 10s
@@ -38,7 +38,7 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?required}", "ping"]
       interval: 10s
@@ -96,7 +96,7 @@ services:
     volumes:
       - uploads_data:/app/uploads
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/health"]
       interval: 30s
@@ -114,7 +114,29 @@ services:
     depends_on:
       - backend
     ports:
-      - "5173:5173"
+      - "127.0.0.1:8080:5173"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Caddy — TLS-терминация (авто-HTTPS через sslip.io-домены, см. Caddyfile)
+  caddy:
+    image: caddy:2-alpine
+    container_name: nemaxks-caddy
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - livekit
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
 
   # Frontend (DEVELOPMENT): vite dev server с hot reload.
   # Не собирает образ — монтирует исходники. Запуск: --profile dev
@@ -134,6 +156,8 @@ services:
       - dev
 
 volumes:
+  caddy_data:
+  caddy_config:
   postgres_data:
     driver: local
   redis_data:
