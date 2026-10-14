@@ -512,6 +512,7 @@ func main() {
 	r.PUT("/api/presence", authMiddleware(), updatePresenceHandler)
 	r.POST("/api/typing", authMiddleware(), sendTypingHandler)
 	r.POST("/api/messages/:id/read", authMiddleware(), markAsReadHandler)
+	r.POST("/api/messages/read-all/:user_id", authMiddleware(), markConversationReadHandler)
 
 	// Message Reactions
 	r.POST("/api/messages/:id/reactions", authMiddleware(), addReactionHandler)

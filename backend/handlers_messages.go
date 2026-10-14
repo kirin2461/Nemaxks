@@ -416,3 +416,39 @@ func getUserMessagesHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, messages)
 }
+
+// markConversationReadHandler помечает все входящие личные сообщения от
+// указанного пользователя как прочитанные. Без этого unread_count в
+// /api/messages/conversations никогда не сбрасывался — бейджи непрочитанных
+// "не уходили" после прочтения.
+func markConversationReadHandler(c *gin.Context) {
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	otherID, err := strconv.ParseUint(c.Param("user_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	result := db.Model(&DirectMessage{}).
+		Where("sender_id = ? AND receiver_id = ? AND read = ?", uint(otherID), userID, false).
+		Update("read", true)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark messages as read"})
+		return
+	}
+
+	// Уведомляем отправителя, что его сообщения прочитаны (для галочек)
+	if hub != nil && result.RowsAffected > 0 {
+		hub.sendToUser(strconv.FormatUint(otherID, 10), map[string]interface{}{
+			"type":      "messages-read",
+			"reader_id": userID,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "read", "marked": result.RowsAffected})
+}

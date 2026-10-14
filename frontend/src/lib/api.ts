@@ -367,6 +367,14 @@ export const messagesAPI = {
       },
     ),
 
+  markConversationRead: (userId: string) =>
+    request<{ status: string; marked: number }>(
+      `/messages/read-all/${encodePathSegment(userId)}`,
+      {
+        method: "POST",
+      },
+    ),
+
   updateMessage: (messageId: string, content: string) =>
     request<Message>(`/messages/update/${encodePathSegment(messageId)}`, {
       method: "PUT",

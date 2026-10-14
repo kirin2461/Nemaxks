@@ -140,6 +140,11 @@ export default function MessagesPage() {
             if (prev.some(m => m.id === newMsg.id)) return prev
             return [...prev, newMsg]
           })
+          // Диалог открыт — сразу помечаем сообщение прочитанным,
+          // чтобы бейдж непрочитанных не рос во время переписки
+          messagesAPI.markConversationRead(String(selectedUserRef.current.id))
+            .then(() => fetchConversations())
+            .catch(() => {})
         }
         fetchConversations()
         break
@@ -430,7 +435,13 @@ export default function MessagesPage() {
     try {
       setLoading(true)
       const msgs = await messagesAPI.getMessages(userId)
-      setMessages(msgs || [])
+      // API возвращает сообщения в порядке DESC (новые первыми) —
+      // разворачиваем, чтобы новые были ВНИЗУ, как во всех мессенджерах
+      setMessages((msgs || []).slice().reverse())
+      // Помечаем входящие сообщения прочитанными и сбрасываем бейдж
+      messagesAPI.markConversationRead(String(userId))
+        .then(() => fetchConversations())
+        .catch(() => {})
       // Use setTimeout to ensure DOM is updated before scrolling
       setTimeout(() => scrollToBottom('auto'), 50)
     } catch (error) {

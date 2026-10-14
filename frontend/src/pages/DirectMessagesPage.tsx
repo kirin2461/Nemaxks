@@ -51,8 +51,11 @@ const DirectMessagesPage: React.FC = () => {
         setLoading(true);
         const response = await messagesAPI.getMessages(userId, 50, 0);
         if (Array.isArray(response)) {
-          setMessages(response as DirectMessage[]);
+          // API отдаёт DESC (новые первыми) — разворачиваем, новые внизу
+          setMessages((response as DirectMessage[]).slice().reverse());
         }
+        // Помечаем входящие прочитанными (сброс бейджа непрочитанных)
+        messagesAPI.markConversationRead(userId).catch(() => {});
       } catch (error) {
         console.error("Failed to load messages:", error);
       } finally {
