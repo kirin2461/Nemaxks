@@ -331,6 +331,11 @@ func getPostsHandler(c *gin.Context) {
 	// Build query with conditions
 	query := db.Model(&Post{}).Preload("Author")
 
+	// Фильтр по глобальному режиму приватности автора (story_privacy_mode):
+	// посты автора с режимом friends/friends_except видны только его друзьям
+	// (с учётом списка исключений), everyone — всем.
+	query = applyAuthorPrivacyFilter(query, currentUserID, "posts.author_id")
+
 	// Apply tag filter
 	if tag != "" {
 		query = query.Where("tags LIKE ?", "%"+tag+"%")

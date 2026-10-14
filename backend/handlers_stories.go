@@ -9,7 +9,69 @@ import (
         "time"
 
         "github.com/gin-gonic/gin"
+        "gorm.io/gorm"
 )
+
+// Режимы приватности историй (глобальные, per-user — User.StoryPrivacyMode).
+const (
+        // StoryPrivacyEveryone — истории видят все, кроме исключённых (дефолт, текущее поведение).
+        StoryPrivacyEveryone = "everyone"
+        // StoryPrivacyFriends — истории видят только друзья автора.
+        StoryPrivacyFriends = "friends"
+        // StoryPrivacyFriendsExcept — истории видят только друзья, кроме исключённых.
+        StoryPrivacyFriendsExcept = "friends_except"
+)
+
+// isValidStoryPrivacyMode проверяет допустимость значения режима приватности.
+func isValidStoryPrivacyMode(mode string) bool {
+        switch mode {
+        case StoryPrivacyEveryone, StoryPrivacyFriends, StoryPrivacyFriendsExcept:
+                return true
+        }
+        return false
+}
+
+// applyAuthorPrivacyFilter ограничивает запрос записями, видимыми viewerID
+// с учётом глобального story_privacy_mode автора и списка исключений
+// (StoryPrivacyExclusion — глобальный per-user бан-лист).
+// authorColumn — колонка автора в основной таблице (например "stories.user_id"
+// или "posts.author_id"). Автор всегда видит свои записи.
+// viewerID == 0 (аноним) — видны только записи авторов с режимом everyone.
+func applyAuthorPrivacyFilter(query *gorm.DB, viewerID uint, authorColumn string) *gorm.DB {
+        // COALESCE нужен для строк, где колонка ещё NULL (дефолт — everyone).
+        modeExpr := fmt.Sprintf("COALESCE((SELECT story_privacy_mode FROM users WHERE users.id = %s), ?)", authorColumn)
+        excludedExpr := fmt.Sprintf("%s IN (SELECT user_id FROM story_privacy_exclusions WHERE excluded_user_id = ?)", authorColumn)
+        friendExpr := fmt.Sprintf("%s IN (SELECT friend_id FROM friends WHERE user_id = ? UNION SELECT user_id FROM friends WHERE friend_id = ?)", authorColumn)
+
+        if viewerID == 0 {
+                return query.Where(modeExpr+" = ?", StoryPrivacyEveryone, StoryPrivacyEveryone)
+        }
+
+        cond := fmt.Sprintf(
+                "%[1]s = ?"+ // автор видит свои записи всегда
+                        " OR ("+modeExpr+" = ? AND NOT ("+excludedExpr+"))"+ // everyone: все, кроме исключённых
+                        " OR ("+modeExpr+" = ? AND "+friendExpr+")"+ // friends: только друзья
+                        " OR ("+modeExpr+" = ? AND "+friendExpr+" AND NOT ("+excludedExpr+"))", // friends_except: друзья, кроме исключённых
+                authorColumn,
+        )
+        return query.Where(cond,
+                viewerID,
+                StoryPrivacyEveryone, StoryPrivacyEveryone, viewerID,
+                StoryPrivacyEveryone, StoryPrivacyFriends, viewerID, viewerID,
+                StoryPrivacyEveryone, StoryPrivacyFriendsExcept, viewerID, viewerID, viewerID,
+        )
+}
+
+// canViewUserStories проверяет, может ли viewerID смотреть истории автора authorID.
+func canViewUserStories(viewerID, authorID uint) bool {
+        if viewerID == authorID {
+                return true
+        }
+        var count int64
+        applyAuthorPrivacyFilter(db.Model(&Story{}).Where("user_id = ?", authorID), viewerID, "stories.user_id").
+                Count(&count)
+        return count > 0
+}
 
 func getStoriesHandler(c *gin.Context) {
         myID, ok := getUserIDFromContext(c)
@@ -19,10 +81,13 @@ func getStoriesHandler(c *gin.Context) {
         }
         var stories []Story
         now := time.Now()
-        if err := db.Where("expires_at > ?", now).
+        query := db.Where("expires_at > ?", now).
                 Where("user_id NOT IN (?)", db.Model(&StoryPrivacyExclusion{}).
                         Select("user_id").Where("excluded_user_id = ?", myID)).
-                Order("created_at DESC").Find(&stories).Error; err != nil {
+                Order("created_at DESC")
+        // Фильтр по глобальному режиму приватности автора (everyone/friends/friends_except)
+        query = applyAuthorPrivacyFilter(query, myID, "stories.user_id")
+        if err := query.Find(&stories).Error; err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch stories"})
                 return
         }
@@ -83,11 +148,7 @@ func viewStoryHandler(c *gin.Context) {
         }
 
         if story.UserID != uid {
-                var excluded int64
-                db.Model(&StoryPrivacyExclusion{}).
-                        Where("user_id = ? AND excluded_user_id = ?", story.UserID, uid).
-                        Count(&excluded)
-                if excluded > 0 {
+                if !canViewUserStories(uid, story.UserID) {
                         c.JSON(http.StatusForbidden, gin.H{"error": "Story is private"})
                         return
                 }
@@ -123,6 +184,57 @@ func deleteStoryHandler(c *gin.Context) {
         }
 
         c.JSON(http.StatusOK, gin.H{"status": "deleted"})
+}
+
+// getStoryPrivacyHandler — GET /api/stories/privacy
+// Возвращает текущий глобальный режим приватности историй пользователя.
+func getStoryPrivacyHandler(c *gin.Context) {
+        myID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
+
+        var user User
+        if err := db.Select("id", "story_privacy_mode").First(&user, myID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+                return
+        }
+
+        mode := user.StoryPrivacyMode
+        if !isValidStoryPrivacyMode(mode) {
+                mode = StoryPrivacyEveryone
+        }
+        c.JSON(http.StatusOK, gin.H{"mode": mode})
+}
+
+// updateStoryPrivacyHandler — PUT /api/stories/privacy {"mode": "everyone"|"friends"|"friends_except"}
+// Устанавливает глобальный режим приватности историй пользователя.
+func updateStoryPrivacyHandler(c *gin.Context) {
+        myID, ok := getUserIDFromContext(c)
+        if !ok {
+                c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+                return
+        }
+
+        var req struct {
+                Mode string `json:"mode" binding:"required"`
+        }
+        if err := c.BindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+                return
+        }
+        if !isValidStoryPrivacyMode(req.Mode) {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid privacy mode"})
+                return
+        }
+
+        if err := db.Model(&User{}).Where("id = ?", myID).Update("story_privacy_mode", req.Mode).Error; err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update privacy mode"})
+                return
+        }
+
+        c.JSON(http.StatusOK, gin.H{"mode": req.Mode})
 }
 
 // storyExclusionEntry — элемент списка исключений приватности историй

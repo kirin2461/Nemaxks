@@ -6,6 +6,8 @@ import { MediaUpload } from "@/components/MediaUpload";
 import { useStore } from "@/lib/store";
 import { postsAPI, uploadAPI, ratingsAPI } from "@/lib/api";
 import { StarRating } from "@/components/StarRating";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useToast } from "@/components/Toast";
 import {
   Heart,
   MessageCircle,
@@ -65,6 +67,7 @@ interface MediaFile {
 
 export default function FeedPage() {
   const { user, isAuthenticated } = useStore();
+  const toast = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -238,15 +241,26 @@ export default function FeedPage() {
     return () => feedRef.current?.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm("Удалить этот пост?")) return;
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
 
+  const handleDeletePost = (postId: string) => {
+    setDeletePostId(postId);
+  };
+
+  const confirmDeletePost = async () => {
+    if (!deletePostId || isDeletingPost) return;
+    setIsDeletingPost(true);
     try {
-      await postsAPI.deletePost(postId);
-      setPosts(posts.filter((p) => p.id !== postId));
+      await postsAPI.deletePost(deletePostId);
+      setPosts((prev) => prev.filter((p) => p.id !== deletePostId));
+      toast.success("Пост удалён");
     } catch (error) {
       console.error("Failed to delete post:", error);
-      alert("Не удалось удалить пост. Попробуйте ещё раз.");
+      toast.error("Не удалось удалить пост. Попробуйте ещё раз.");
+    } finally {
+      setIsDeletingPost(false);
+      setDeletePostId(null);
     }
   };
 
@@ -303,7 +317,7 @@ export default function FeedPage() {
       setCommentText("");
     } catch (error) {
       console.error("Failed to add comment:", error);
-      alert("Не удалось добавить комментарий");
+      toast.error("Не удалось добавить комментарий");
     }
   };
 
@@ -336,7 +350,7 @@ export default function FeedPage() {
 
   const handleSubscribe = async (authorId: string) => {
     if (!isAuthenticated) {
-      alert("Войдите, чтобы подписаться");
+      toast.warning("Войдите, чтобы подписаться");
       return;
     }
     if (authorId === user?.id?.toString()) return;
@@ -378,7 +392,7 @@ export default function FeedPage() {
       handleCloseEdit();
     } catch (error) {
       console.error("Failed to update post:", error);
-      alert("Не удалось обновить пост");
+      toast.error("Не удалось обновить пост");
     }
   };
 
@@ -410,7 +424,7 @@ export default function FeedPage() {
           mediaType = selectedMedia.type;
         } catch (uploadErr) {
           console.error("Failed to upload media:", uploadErr);
-          alert("Не удалось загрузить медиа файл. Попробуйте ещё раз.");
+          toast.error("Не удалось загрузить медиа файл. Попробуйте ещё раз.");
           setIsUploading(false);
           return;
         }
@@ -453,7 +467,7 @@ export default function FeedPage() {
     } catch (err) {
       console.error("Failed to create post:", err);
       if (!isAuthenticated) {
-        alert("Войдите чтобы создавать посты");
+        toast.warning("Войдите, чтобы создавать посты");
       }
     } finally {
       setIsUploading(false);
@@ -1209,6 +1223,18 @@ export default function FeedPage() {
           <span>Ссылка скопирована!</span>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={deletePostId !== null}
+        onClose={() => setDeletePostId(null)}
+        onConfirm={() => { void confirmDeletePost(); }}
+        title="Удалить пост?"
+        message="Пост будет удалён без возможности восстановления."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="danger"
+        loading={isDeletingPost}
+      />
     </Layout>
   );
 }

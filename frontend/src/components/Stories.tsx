@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Avatar } from './Avatar'
-import { storiesAPI, uploadAPI, friendsAPI, type Story, type Friend, type StoryPrivacyExcludedUser } from '@/lib/api'
+import { storiesAPI, uploadAPI, friendsAPI, type Story, type Friend, type StoryPrivacyExcludedUser, type StoryPrivacyMode } from '@/lib/api'
 import { useStore } from '@/lib/store'
-import { Plus, X, Clock, ChevronLeft, ChevronRight, Pause, Play, Volume2, VolumeX, Image, Video, Trash2, Eye, EyeOff, Sparkles, AlertCircle, Settings } from 'lucide-react'
+import { Plus, X, Clock, ChevronLeft, ChevronRight, Pause, Play, Volume2, VolumeX, Image, Video, Trash2, Eye, EyeOff, Sparkles, AlertCircle, Settings, Globe, Users, UserMinus, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ConfirmDialog } from './ConfirmDialog'
+import { useToast } from './Toast'
 
 interface StoriesProps {
   className?: string
@@ -49,16 +51,21 @@ interface MediaItem {
 
 export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) {
   const { user, isDemoMode } = useStore()
+  const toast = useToast()
   const [stories, setStories] = useState<Story[]>([])
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0)
   const [showViewer, setShowViewer] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
+  const [privacyMode, setPrivacyMode] = useState<StoryPrivacyMode>('everyone')
+  const [privacyModeSaving, setPrivacyModeSaving] = useState(false)
   const [privacyFriends, setPrivacyFriends] = useState<Friend[]>([])
   const [privacyExclusions, setPrivacyExclusions] = useState<StoryPrivacyExcludedUser[]>([])
   const [privacyLoading, setPrivacyLoading] = useState(false)
   const [privacyError, setPrivacyError] = useState<string | null>(null)
   const [privacyBusyIds, setPrivacyBusyIds] = useState<number[]>([])
+  const [storyToDelete, setStoryToDelete] = useState<string | null>(null)
+  const [isDeletingStory, setIsDeletingStory] = useState(false)
   const [newStoryContent, setNewStoryContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [storyMedia, setStoryMedia] = useState<MediaItem[]>([])
@@ -200,16 +207,26 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
     setUploadError(null)
   }
 
-  const handleDeleteStory = async (storyId: string) => {
-    if (!confirm('Удалить эту историю?')) return
+  const handleDeleteStory = (storyId: string) => {
+    setStoryToDelete(storyId)
+  }
+
+  const confirmDeleteStory = async () => {
+    if (!storyToDelete || isDeletingStory) return
+    setIsDeletingStory(true)
     try {
-      await storiesAPI.deleteStory(storyId)
+      await storiesAPI.deleteStory(storyToDelete)
+      toast.success('История удалена')
       loadStories()
       if (showViewer) {
         closeViewer()
       }
     } catch (error) {
       console.error('Failed to delete story:', error)
+      toast.error('Не удалось удалить историю')
+    } finally {
+      setIsDeletingStory(false)
+      setStoryToDelete(null)
     }
   }
 
@@ -351,12 +368,14 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
     setPrivacyError(null)
     setPrivacyLoading(true)
     try {
-      const [friends, exclusions] = await Promise.all([
+      const [friends, exclusions, privacy] = await Promise.all([
         friendsAPI.getFriends(),
         storiesAPI.getExclusions(),
+        storiesAPI.getPrivacy(),
       ])
       setPrivacyFriends(Array.isArray(friends) ? friends : [])
       setPrivacyExclusions(Array.isArray(exclusions) ? exclusions : [])
+      setPrivacyMode(privacy?.mode ?? 'everyone')
     } catch (error) {
       console.error('Failed to load story privacy data:', error)
       setPrivacyError('Не удалось загрузить настройки приватности')
@@ -419,6 +438,31 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
 
   const excludedIds = new Set(privacyExclusions.map(e => e.id))
   const visibleFriends = privacyFriends.filter(f => !excludedIds.has(Number(f.id)))
+
+  // Оптимистичная смена режима приватности с откатом при ошибке
+  const handlePrivacyModeChange = async (mode: StoryPrivacyMode) => {
+    if (privacyModeSaving || mode === privacyMode) return
+    const previous = privacyMode
+    setPrivacyError(null)
+    setPrivacyMode(mode)
+    setPrivacyModeSaving(true)
+    try {
+      await storiesAPI.updatePrivacy(mode)
+      toast.success('Настройки приватности обновлены')
+    } catch (error) {
+      console.error('Failed to update story privacy mode:', error)
+      setPrivacyMode(previous)
+      setPrivacyError('Не удалось сохранить режим приватности')
+    } finally {
+      setPrivacyModeSaving(false)
+    }
+  }
+
+  const privacyModeOptions: { value: StoryPrivacyMode; title: string; description: string; icon: typeof Globe }[] = [
+    { value: 'everyone', title: 'Все', description: 'Истории видят все пользователи, кроме скрытых', icon: Globe },
+    { value: 'friends', title: 'Только друзья', description: 'Истории видят только ваши друзья', icon: Users },
+    { value: 'friends_except', title: 'Друзья, кроме выбранных', description: 'Все друзья, кроме людей из списка скрытых', icon: UserMinus },
+  ]
 
   return (
     <>
@@ -875,52 +919,98 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
               ) : (
                 <>
                   <div>
-                    <p className="text-sm text-muted-foreground font-medium mb-2">Скрыто от: {privacyExclusions.length}</p>
-                    {privacyExclusions.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Ваши истории видят все</p>
-                    ) : (
-                      <div className="space-y-1">
-                        {privacyExclusions.map((excluded) => (
-                          <div key={excluded.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
-                            <Avatar size="sm" alt={excluded.username} src={excluded.avatar ?? undefined} userId={String(excluded.id)} />
-                            <span className="flex-1 text-sm font-medium text-foreground truncate">{excluded.username}</span>
-                            <button
-                              onClick={() => { void handleRemoveExclusion(excluded) }}
-                              disabled={isPrivacyBusy(excluded.id)}
-                              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {isPrivacyBusy(excluded.id) ? 'Удаление...' : 'Убрать'}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <p className="text-sm text-muted-foreground font-medium mb-2">Кто видит ваши истории</p>
+                    <div className="space-y-2">
+                      {privacyModeOptions.map((option) => {
+                        const OptionIcon = option.icon
+                        const isActive = privacyMode === option.value
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => { void handlePrivacyModeChange(option.value) }}
+                            disabled={privacyModeSaving}
+                            aria-pressed={isActive}
+                            className={cn(
+                              'w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all disabled:opacity-60 disabled:cursor-not-allowed',
+                              isActive
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary/40 hover:bg-white/5'
+                            )}
+                          >
+                            <div className={cn(
+                              'w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
+                              isActive ? 'bg-gradient-brand text-white' : 'bg-muted text-muted-foreground'
+                            )}>
+                              <OptionIcon className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground">{option.title}</p>
+                              <p className="text-xs text-muted-foreground">{option.description}</p>
+                            </div>
+                            {isActive && <Check className="w-5 h-5 text-primary flex-shrink-0" />}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
 
-                  <div className="border-t border-border pt-4">
-                    <p className="text-sm text-muted-foreground font-medium mb-2">Друзья</p>
-                    {visibleFriends.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        {privacyFriends.length === 0 ? 'У вас пока нет друзей' : 'Все друзья уже в списке скрытых'}
-                      </p>
-                    ) : (
-                      <div className="space-y-1">
-                        {visibleFriends.map((friend) => (
-                          <div key={friend.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
-                            <Avatar size="sm" alt={friend.username} src={friend.avatar} userId={String(friend.id)} />
-                            <span className="flex-1 text-sm font-medium text-foreground truncate">{friend.username}</span>
-                            <button
-                              onClick={() => { void handleAddExclusion(friend) }}
-                              disabled={isPrivacyBusy(Number(friend.id))}
-                              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted text-muted-foreground hover:bg-red-500/20 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {isPrivacyBusy(Number(friend.id)) ? 'Скрываем...' : 'Скрыть'}
-                            </button>
+                  {privacyMode === 'friends' ? (
+                    <p className="text-sm text-muted-foreground border-t border-border pt-4">
+                      В режиме «Только друзья» ваши истории видят все ваши друзья. Список скрытых
+                      используется в режимах «Все» и «Друзья, кроме выбранных».
+                    </p>
+                  ) : (
+                    <>
+                      <div className="border-t border-border pt-4">
+                        <p className="text-sm text-muted-foreground font-medium mb-2">Скрыто от: {privacyExclusions.length}</p>
+                        {privacyExclusions.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Никто не скрыт</p>
+                        ) : (
+                          <div className="space-y-1">
+                            {privacyExclusions.map((excluded) => (
+                              <div key={excluded.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
+                                <Avatar size="sm" alt={excluded.username} src={excluded.avatar ?? undefined} userId={String(excluded.id)} />
+                                <span className="flex-1 text-sm font-medium text-foreground truncate">{excluded.username}</span>
+                                <button
+                                  onClick={() => { void handleRemoveExclusion(excluded) }}
+                                  disabled={isPrivacyBusy(excluded.id)}
+                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {isPrivacyBusy(excluded.id) ? 'Удаление...' : 'Убрать'}
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
-                    )}
-                  </div>
+
+                      <div className="border-t border-border pt-4">
+                        <p className="text-sm text-muted-foreground font-medium mb-2">Друзья</p>
+                        {visibleFriends.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            {privacyFriends.length === 0 ? 'У вас пока нет друзей' : 'Все друзья уже в списке скрытых'}
+                          </p>
+                        ) : (
+                          <div className="space-y-1">
+                            {visibleFriends.map((friend) => (
+                              <div key={friend.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
+                                <Avatar size="sm" alt={friend.username} src={friend.avatar} userId={String(friend.id)} />
+                                <span className="flex-1 text-sm font-medium text-foreground truncate">{friend.username}</span>
+                                <button
+                                  onClick={() => { void handleAddExclusion(friend) }}
+                                  disabled={isPrivacyBusy(Number(friend.id))}
+                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted text-muted-foreground hover:bg-red-500/20 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {isPrivacyBusy(Number(friend.id)) ? 'Скрываем...' : 'Скрыть'}
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -937,6 +1027,18 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
         </div>,
         document.body
       )}
+
+      <ConfirmDialog
+        isOpen={storyToDelete !== null}
+        onClose={() => setStoryToDelete(null)}
+        onConfirm={() => { void confirmDeleteStory() }}
+        title="Удалить историю?"
+        message="История будет удалена без возможности восстановления."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="danger"
+        loading={isDeletingStory}
+      />
     </>
   )
 }
