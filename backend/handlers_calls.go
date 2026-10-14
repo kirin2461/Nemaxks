@@ -1,6 +1,7 @@
 package main
 
 import (
+        "encoding/json"
         "fmt"
         "net/http"
         "strconv"
@@ -81,6 +82,10 @@ func startDMCallHandler(c *gin.Context) {
 
 // endDMCallHandler ends a DM call. Only a participant of the call may end it.
 // POST /api/calls/dm/:call_id/end -> {"success": true}
+// Опционально принимает JSON {"kind":"audio"|"video","answered":bool}
+// (или query-параметры kind/answered) — метаданные для карточки звонка в DM.
+// При первом (идемпотентном) завершении создаётся системное сообщение
+// type="call" в личной переписке участников — история звонков прямо в диалоге.
 func endDMCallHandler(c *gin.Context) {
         userID, ok := getUserIDFromContext(c)
         if !ok {
@@ -92,6 +97,27 @@ func endDMCallHandler(c *gin.Context) {
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid call ID"})
                 return
+        }
+
+        // Метаданные завершения (тело опционально — старые клиенты шлют пустой POST)
+        var meta struct {
+                Kind     string `json:"kind"`
+                Answered *bool  `json:"answered"`
+        }
+        if c.Request.Body != nil && c.Request.ContentLength != 0 {
+                _ = c.ShouldBindJSON(&meta) // ошибки тела не критичны
+        }
+        if meta.Kind == "" {
+                meta.Kind = c.Query("kind")
+        }
+        if meta.Kind != "audio" && meta.Kind != "video" {
+                meta.Kind = "video"
+        }
+        if meta.Answered == nil {
+                if raw := c.Query("answered"); raw != "" {
+                        v := raw == "1" || raw == "true"
+                        meta.Answered = &v
+                }
         }
 
         var call Call
@@ -114,14 +140,21 @@ func endDMCallHandler(c *gin.Context) {
         }
 
         now := time.Now()
+        // Идемпотентность: системное сообщение создаёт только тот запрос,
+        // который реально перевёл звонок ongoing -> ended.
+        transitioned := false
         if call.Status == "ongoing" {
-                if err := db.Model(&call).Updates(map[string]interface{}{
-                        "status":   "ended",
-                        "ended_at": now,
-                }).Error; err != nil {
+                res := db.Model(&Call{}).
+                        Where("id = ? AND status = ?", call.ID, "ongoing").
+                        Updates(map[string]interface{}{
+                                "status":   "ended",
+                                "ended_at": now,
+                        })
+                if res.Error != nil {
                         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to end call"})
                         return
                 }
+                transitioned = res.RowsAffected == 1
         }
 
         if err := db.Model(&CallParticipant{}).
@@ -130,7 +163,94 @@ func endDMCallHandler(c *gin.Context) {
                 fmt.Printf("Failed to mark DM call participants left: %v\n", err)
         }
 
+        if transitioned {
+                createDMCallSystemMessage(call.ID, userID, meta.Kind, meta.Answered, call.StartedAt, now)
+        }
+
         c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+// createDMCallSystemMessage создаёт системное сообщение о завершённом DM-звонке
+// в переписке участников и рассылает его обоим по WebSocket.
+// Ошибки только логируются — завершение звонка не должно падать из-за истории.
+func createDMCallSystemMessage(callID, endedBy uint, kind string, answered *bool, startedAt, endedAt time.Time) {
+        // Найти собеседника (второго участника звонка)
+        var participants []CallParticipant
+        if err := db.Where("call_id = ?", callID).Find(&participants).Error; err != nil || len(participants) == 0 {
+                fmt.Printf("Failed to load DM call participants for system message: %v\n", err)
+                return
+        }
+        peerID := uint(0)
+        for _, p := range participants {
+                if p.UserID != endedBy {
+                        peerID = p.UserID
+                        break
+                }
+        }
+        if peerID == 0 {
+                return
+        }
+
+        durationSec := int64(endedAt.Sub(startedAt).Seconds())
+        if durationSec < 0 {
+                durationSec = 0
+        }
+
+        // "missed", если собеседник так и не ответил; иначе "completed".
+        // Если клиент не передал answered — эвристика по длительности.
+        status := "completed"
+        if answered != nil {
+                if !*answered {
+                        status = "missed"
+                }
+        } else if durationSec < 5 {
+                status = "missed"
+        }
+
+        metaJSON, _ := json.Marshal(map[string]interface{}{
+                "kind":         kind,
+                "duration_sec": durationSec,
+                "status":       status,
+        })
+
+        message := DirectMessage{
+                SenderID:   endedBy,
+                ReceiverID: peerID,
+                Content:    string(metaJSON),
+                Type:       "call",
+                Read:       true, // системная карточка не должна раздувать счётчик непрочитанных
+                CreatedAt:  endedAt,
+                UpdatedAt:  endedAt,
+        }
+        if err := db.Create(&message).Error; err != nil {
+                fmt.Printf("Failed to create DM call system message: %v\n", err)
+                return
+        }
+
+        var sender User
+        db.First(&sender, endedBy)
+
+        payload := map[string]interface{}{
+                "type":         "direct_message",
+                "id":           message.ID,
+                "content":      message.Content,
+                "message_type": "call",
+                "fromUserId":   strconv.FormatUint(uint64(endedBy), 10),
+                "from_user_id": strconv.FormatUint(uint64(endedBy), 10),
+                "toUserId":     strconv.FormatUint(uint64(peerID), 10),
+                "to_user_id":   strconv.FormatUint(uint64(peerID), 10),
+                "createdAt":    message.CreatedAt.Format(time.RFC3339),
+                "created_at":   message.CreatedAt.Format(time.RFC3339),
+                "username":     sender.Username,
+                "sender_id":    endedBy,
+        }
+        if sender.Avatar != nil && *sender.Avatar != "" {
+                payload["avatar"] = *sender.Avatar
+        }
+        if hub != nil {
+                hub.sendToUser(strconv.FormatUint(uint64(peerID), 10), payload)
+                hub.sendToUser(strconv.FormatUint(uint64(endedBy), 10), payload)
+        }
 }
 
 // getCallHistoryHandler returns calls where the current user is a participant.
