@@ -2519,4 +2519,33 @@ export const adminAdsAPI = {
   deleteSystemAd: (id: number) => request<{ success: boolean }>(`/admin/ads/system/${id}`, { method: 'DELETE' }),
 };
 
+// Call History API (Phase D)
+// Контракт бэкенда: POST /api/calls/dm/start {peer_id} -> {call_id},
+// POST /api/calls/dm/:call_id/end -> {success}, GET /api/calls/history?limit=N.
+export interface CallHistoryParticipant {
+  id: number;
+  username: string;
+  avatar: string | null;
+}
+
+export interface CallHistoryItem {
+  id: number;
+  type: 'dm' | 'voice_channel';
+  channel_id: number;
+  channel_name: string | null;
+  status: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_sec: number;
+  participants: CallHistoryParticipant[];
+}
+
+export const callsAPI = {
+  getHistory: (limit = 50) => request<CallHistoryItem[]>(`/calls/history?limit=${limit}`),
+  dmStart: (peerId: number | string) =>
+    request<{ call_id: number }>('/calls/dm/start', { method: 'POST', data: { peer_id: Number(peerId) } }),
+  dmEnd: (callId: number) =>
+    request<{ success: boolean }>(`/calls/dm/${callId}/end`, { method: 'POST' }),
+};
+
 export { APIError };
