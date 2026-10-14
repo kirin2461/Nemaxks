@@ -204,6 +204,13 @@ func createChannelMessageHandler(c *gin.Context) {
 		"message":    messageResponse,
 	}
 
+	// Мосты: ответы пользователя в канале-мосте пересылаем во внешний
+	// мессенджер (асинхронно; сообщения самого бота не пересылаются).
+	if channel.IsBridge {
+		ch := channel
+		go forwardBridgeReply(&ch, userID, sanitizedContent)
+	}
+
 	c.JSON(http.StatusCreated, messageResponse)
 }
 

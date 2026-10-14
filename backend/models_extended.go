@@ -581,6 +581,19 @@ type TelegramNotification struct {
 	CreatedAt      time.Time `json:"created_at"`
 }
 
+// MAX Integration (мессенджер MAX, platform-api.max.ru)
+type MaxLink struct {
+	ID          uint       `gorm:"primaryKey" json:"id"`
+	UserID      uint       `gorm:"uniqueIndex" json:"user_id"`
+	MaxUserID   int64      `gorm:"index" json:"max_user_id"`
+	MaxUsername string     `json:"max_username"`
+	ChatID      int64      `json:"chat_id"`
+	LinkCode    string     `gorm:"index" json:"link_code"`
+	IsVerified  bool       `gorm:"default:false" json:"is_verified"`
+	CreatedAt   time.Time  `json:"created_at"`
+	VerifiedAt  *time.Time `json:"verified_at"`
+}
+
 // User Referrals
 type UserReferral struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`

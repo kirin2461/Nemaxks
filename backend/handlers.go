@@ -132,6 +132,7 @@ func initDB() {
 		&UserSettings{}, &QRLoginSession{},
 		&ForbiddenWord{}, &ForbiddenAttempt{},
 		&TelegramLink{}, &TelegramNotification{},
+		&MaxLink{},
 		&Notification{}, &NotificationPreferences{},
 		&UserReferral{}, &ReferralUse{},
 		&Video{}, &VideoChapter{}, &VideoLike{}, &VideoBookmark{},
@@ -159,6 +160,7 @@ func initDB() {
 
 	initDefaultForbiddenWords()
 	ensureGlobalGuild()
+	ensureBridgeInfrastructure()
 	seedPremiumPlans()
 	initOrgBillingSeeds()
 }
