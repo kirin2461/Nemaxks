@@ -1035,17 +1035,25 @@ func HandleDeleteChannelTool(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
+// getUserPlan определяет тарифный уровень пользователя по реальной системе
+// premium_subscriptions + premium_plans (tier: basic/pro/vip).
+// Маппинг на уровни фич: нет подписки → "start"; basic/pro → "pro"; vip → "premium".
 func getUserPlan(userID uint) string {
-        var subscription struct {
-                PlanSlug string
+        var result struct {
+                Tier string
         }
-        err := db.Table("unified_subscriptions").
-                Where("user_id = ? AND is_active = true", userID).
-                Select("plan_slug").
-                First(&subscription).Error
+        err := db.Table("premium_subscriptions").
+                Select("premium_plans.tier").
+                Joins("JOIN premium_plans ON premium_plans.id = premium_subscriptions.plan_id").
+                Where("premium_subscriptions.user_id = ? AND premium_subscriptions.status IN ('active','trialing') AND premium_subscriptions.current_period_end > ?", userID, time.Now()).
+                Order("premium_plans.id DESC").
+                First(&result).Error
 
-        if err != nil || subscription.PlanSlug == "" {
+        if err != nil || result.Tier == "" {
                 return "start"
         }
-        return subscription.PlanSlug
+        if result.Tier == "vip" {
+                return "premium"
+        }
+        return "pro"
 }
