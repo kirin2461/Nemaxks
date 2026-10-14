@@ -241,6 +241,13 @@ func registerHandler(c *gin.Context) {
 		return
 	}
 
+	// Антифрод: IP velocity, device fingerprint, bot-паттерны username.
+	// При блокировке ответ уже записан внутри.
+	if checkRegistrationAbuse(c, req.Username) {
+		log.Printf("Register blocked by anti-fraud: username=%s IP=%s", req.Username, c.ClientIP())
+		return
+	}
+
 	// Password policy: минимум 8 символов, хотя бы одна буква и одна цифра
 	if err := validatePasswordPolicy(req.Password); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -295,6 +302,9 @@ func registerHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
+
+	// Антифрод: аудит регистрации и применение флагов (риск-скор, алерты).
+	finalizeRegistrationGuards(c, user.ID, req.Username)
 
 	// Auto-add new user to the global guild's general channel
 	var globalGuild Guild
