@@ -11,7 +11,8 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { useVoice } from '@/contexts/VoiceContext'
-import { guildsAPI, channelsAPI, presenceAPI, messagesAPI } from '@/lib/api'
+import { guildsAPI, channelsAPI, presenceAPI, messagesAPI, toolsAPI, type ChannelTool } from '@/lib/api'
+import { useLocation } from 'wouter'
 import { formatTime } from '@/lib/utils'
 import {
   Hash,
@@ -47,7 +48,10 @@ import {
   Mic,
   MicOff,
   Video,
-  Circle
+  Circle,
+  Presentation,
+  FileText,
+  LayoutGrid
 } from 'lucide-react'
 
 type Guild = {
@@ -130,6 +134,13 @@ export default function ChannelsPage() {
   const [unreadChannels, setUnreadChannels] = useState<Set<string>>(new Set())
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
   const [myPerms, setMyPerms] = useState<MyChannelPermissions | null>(null)
+  const [showToolsPanel, setShowToolsPanel] = useState(false)
+  const [channelTools, setChannelTools] = useState<ChannelTool[]>([])
+  const [toolsLoading, setToolsLoading] = useState(false)
+  const [newToolTitle, setNewToolTitle] = useState('')
+  const [newToolType, setNewToolType] = useState<'board' | 'notebook'>('board')
+  const [toolCreating, setToolCreating] = useState(false)
+  const [, navigate] = useLocation()
   const [openThread, setOpenThread] = useState<ChannelMessage | null>(null)
   const [threadReplies, setThreadReplies] = useState<ChannelMessage[]>([])
   const [threadInput, setThreadInput] = useState('')
@@ -282,6 +293,7 @@ export default function ChannelsPage() {
     setThreadReplies([])
     setThreadInput('')
     setMyPerms(null)
+    setShowToolsPanel(false)
     if (selectedChannel && selectedChannel.type !== 'voice') {
       loadChannelMessages(selectedChannel.id)
       channelsAPI.getMyPermissions(selectedChannel.id)
@@ -1011,6 +1023,64 @@ export default function ChannelsPage() {
     setShowInviteModal(true)
   }
 
+  // --- Инструменты канала (доски/блокноты) ---
+  const loadChannelTools = useCallback(async (channelId: string) => {
+    setToolsLoading(true)
+    try {
+      const tools = await toolsAPI.list(channelId)
+      setChannelTools(tools)
+    } catch (error) {
+      console.error('Failed to load channel tools:', error)
+    } finally {
+      setToolsLoading(false)
+    }
+  }, [])
+
+  const handleOpenToolsPanel = () => {
+    const next = !showToolsPanel
+    setShowToolsPanel(next)
+    if (next && selectedChannel) {
+      loadChannelTools(selectedChannel.id)
+    }
+  }
+
+  const handleCreateTool = async () => {
+    if (!selectedChannel || !newToolTitle.trim() || toolCreating) return
+    setToolCreating(true)
+    try {
+      const tool = await toolsAPI.create(selectedChannel.id, newToolType, newToolTitle.trim())
+      setChannelTools(prev => [tool, ...prev])
+      setNewToolTitle('')
+      navigate(`/tools/${tool.id}`)
+    } catch (error) {
+      console.error('Failed to create tool:', error)
+    } finally {
+      setToolCreating(false)
+    }
+  }
+
+  const handleDeleteTool = (tool: ChannelTool) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Удалить инструмент',
+      message: `Вы уверены, что хотите удалить ${tool.tool_type === 'board' ? 'доску' : 'блокнот'} "${tool.title}"? Всё содержимое будет удалено безвозвратно.`,
+      confirmText: 'Удалить',
+      variant: 'danger',
+      onConfirm: async () => {
+        setDeleteLoading(true)
+        try {
+          await toolsAPI.delete(tool.id)
+          setChannelTools(prev => prev.filter(t => t.id !== tool.id))
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }))
+        } catch (error) {
+          console.error('Failed to delete tool:', error)
+        } finally {
+          setDeleteLoading(false)
+        }
+      }
+    })
+  }
+
   const getGuildContextMenuItems = (guild: any): ContextMenuItem[] => {
     return [
       {
@@ -1477,6 +1547,13 @@ export default function ChannelsPage() {
             </div>
             <div className="flex items-center gap-1 md:gap-2">
               <button
+                onClick={handleOpenToolsPanel}
+                className={`p-2 rounded-lg transition-colors ${showToolsPanel ? 'bg-primary/20 text-primary' : 'hover:bg-primary/10 text-muted-foreground hover:text-foreground'}`}
+                title="Инструменты"
+              >
+                <Presentation className="w-5 h-5" />
+              </button>
+              <button
                 onClick={handleOpenChannelSettings}
                 className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors"
                 title="Настройки канала"
@@ -1768,6 +1845,135 @@ export default function ChannelsPage() {
                   </div>
                 )
               })}
+            </div>
+          </div>
+        )}
+
+        {/* Tools Panel backdrop for mobile */}
+        {showToolsPanel && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/50 z-[55]"
+            onClick={() => setShowToolsPanel(false)}
+          />
+        )}
+        {/* Tools Panel */}
+        {showToolsPanel && (
+          <div className="fixed inset-y-0 right-0 w-72 md:static md:w-72 bg-card/80 backdrop-blur-xl flex flex-col shrink-0 border-l border-border/60 z-[60] md:z-auto">
+            <div className="p-4 border-b border-border/60 flex items-center justify-between shrink-0">
+              <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <Presentation className="w-4 h-4" />
+                Инструменты — {channelTools.length}
+              </h3>
+              <button onClick={() => setShowToolsPanel(false)} className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Create tool form */}
+            <div className="p-3 border-b border-border/60 space-y-2 shrink-0">
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setNewToolType('board')}
+                  className={cn(
+                    "flex-1 px-2 py-1.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors border",
+                    newToolType === 'board'
+                      ? 'bg-primary/15 border-primary/50 text-foreground'
+                      : 'bg-secondary/50 border-border/60 text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  Доска
+                </button>
+                <button
+                  onClick={() => setNewToolType('notebook')}
+                  className={cn(
+                    "flex-1 px-2 py-1.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors border",
+                    newToolType === 'notebook'
+                      ? 'bg-primary/15 border-primary/50 text-foreground'
+                      : 'bg-secondary/50 border-border/60 text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Блокнот
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={newToolTitle}
+                  onChange={(e) => setNewToolTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateTool()}
+                  placeholder={newToolType === 'board' ? 'Название доски...' : 'Название блокнота...'}
+                  className="w-full bg-card/60 border border-border rounded-lg py-2 px-3 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                />
+                <button
+                  onClick={handleCreateTool}
+                  disabled={!newToolTitle.trim() || toolCreating}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-gradient-brand text-primary-foreground shadow-soft disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-glow transition-all"
+                  title="Создать"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Tools list */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
+              {toolsLoading ? (
+                <p className="text-xs text-muted-foreground text-center py-6">Загрузка...</p>
+              ) : channelTools.length === 0 ? (
+                <div className="text-center py-8 px-3">
+                  <Presentation className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+                  <p className="text-xs text-muted-foreground">В этом канале пока нет досок или блокнотов</p>
+                </div>
+              ) : (
+                channelTools.map((tool) => {
+                  const isOwner = user && String(tool.owner_id) === String(user.id)
+                  return (
+                    <div
+                      key={tool.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigate(`/tools/${tool.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') navigate(`/tools/${tool.id}`)
+                      }}
+                      className="w-full rounded-xl bg-secondary/40 border border-border/60 p-3 hover:border-primary/40 hover:bg-primary/10 transition-colors cursor-pointer group text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                          tool.tool_type === 'board' ? 'bg-primary/15 text-primary' : 'bg-accent/15 text-accent'
+                        )}>
+                          {tool.tool_type === 'board' ? (
+                            <LayoutGrid className="w-4 h-4" />
+                          ) : (
+                            <FileText className="w-4 h-4" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{tool.title}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {tool.tool_type === 'board' ? 'Доска' : 'Блокнот'}
+                          </p>
+                        </div>
+                        {isOwner && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteTool(tool)
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-red-500/15 text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                            title="Удалить"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
         )}

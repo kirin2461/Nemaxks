@@ -2711,4 +2711,92 @@ export const callsAPI = {
     request<{ success: boolean }>(`/calls/dm/${callId}/end`, { method: 'POST' }),
 };
 
+// Channel Tools API (Phase E)
+// Контракт бэкенда: GET/POST /api/channels/:channel_id/tools,
+// GET/PUT/DELETE /api/channels/tools/:tool_id,
+// POST /api/collab/sync, GET /api/collab/users/:channel_id/:tool_id,
+// GET/POST /api/channels/tools/:tool_id/snapshots,
+// POST /api/channels/tools/:tool_id/snapshots/:snapshot_id/restore.
+// (переиспользуется интерфейс ChannelTool, объявленный выше рядом с channelToolsAPI)
+
+export interface ToolSnapshotInfo {
+  id: number;
+  tool_id?: number;
+  name: string;
+  description: string;
+  change_type: string;
+  user_id: number;
+  username?: string;
+  created_at: string;
+}
+
+export interface CollabUser {
+  user_id: number;
+  username: string;
+  last_seen?: number;
+}
+
+export interface CollabSyncResponse {
+  state?: Record<string, { value: any; lamport: number; user_id: number; deleted: boolean }>;
+  acked?: string[];
+  applied?: number;
+  message?: string;
+}
+
+export const toolsAPI = {
+  list: (channelId: string | number) =>
+    request<ChannelTool[]>(`/channels/${encodePathSegment(String(channelId))}/tools`)
+      .then((res) => (Array.isArray(res) ? res : (res as any)?.tools ?? [])),
+
+  get: (toolId: string | number) =>
+    request<ChannelTool>(`/channels/tools/${encodePathSegment(String(toolId))}`),
+
+  create: (channelId: string | number, type: 'board' | 'notebook', title: string) =>
+    request<ChannelTool>(`/channels/${encodePathSegment(String(channelId))}/tools`, {
+      method: 'POST',
+      data: { type, title },
+    }),
+
+  update: (toolId: string | number, data: { title?: string; content?: string; visible_to?: string }) =>
+    request<ChannelTool>(`/channels/tools/${encodePathSegment(String(toolId))}`, {
+      method: 'PUT',
+      data,
+    }),
+
+  delete: (toolId: string | number) =>
+    request<{ message?: string }>(`/channels/tools/${encodePathSegment(String(toolId))}`, {
+      method: 'DELETE',
+    }),
+};
+
+export const collabAPI = {
+  sync: (toolId: string | number, ops: unknown[]) =>
+    request<CollabSyncResponse>('/collab/sync', {
+      method: 'POST',
+      data: { tool_id: Number(toolId), ops },
+    }),
+
+  users: (channelId: string | number, toolId: string | number) =>
+    request<CollabUser[]>(
+      `/collab/users/${encodePathSegment(String(channelId))}/${encodePathSegment(String(toolId))}`,
+    ).then((res) => (Array.isArray(res) ? res : (res as any)?.users ?? [])),
+
+  listSnapshots: (toolId: string | number) =>
+    request<{ snapshots: ToolSnapshotInfo[] } | ToolSnapshotInfo[]>(
+      `/channels/tools/${encodePathSegment(String(toolId))}/snapshots`,
+    ).then((res) => (Array.isArray(res) ? res : res?.snapshots ?? [])),
+
+  createSnapshot: (toolId: string | number, name: string, description: string) =>
+    request<{ id: number }>(`/channels/tools/${encodePathSegment(String(toolId))}/snapshots`, {
+      method: 'POST',
+      data: { name, description },
+    }),
+
+  restoreSnapshot: (toolId: string | number, snapshotId: string | number) =>
+    request<{ status: string }>(
+      `/channels/tools/${encodePathSegment(String(toolId))}/snapshots/${encodePathSegment(String(snapshotId))}/restore`,
+      { method: 'POST' },
+    ),
+};
+
 export { APIError };
