@@ -85,7 +85,8 @@ type BotWebhookDelivery struct {
 // Calls
 type Call struct {
 	ID        uint       `gorm:"primaryKey" json:"id"`
-	ChannelID uint       `gorm:"index" json:"channel_id"`
+	ChannelID uint       `gorm:"index" json:"channel_id"` // 0 для DM-звонков
+	Type      string     `gorm:"size:20;default:'voice_channel'" json:"type"` // voice_channel | dm
 	Status    string     `json:"status"` // ongoing, ended
 	StartedAt time.Time  `json:"started_at"`
 	EndedAt   *time.Time `json:"ended_at"`

@@ -5,6 +5,7 @@ import (
         "net/http"
         "os"
         "strconv"
+        "time"
 
         "github.com/gin-gonic/gin"
 )
@@ -96,6 +97,9 @@ func getLiveKitTokenHandler(c *gin.Context) {
                 fmt.Printf("Failed to add user to Redis voice channel: %v\n", err)
         }
 
+        // Record call history (log errors only, never fail token issuance)
+        recordVoiceCallJoin(userID, uint(channelIDUint))
+
         // Publish join event
         PublishVoiceEvent("join", map[string]interface{}{
                 "user_id":    userIDStr,
@@ -133,6 +137,9 @@ func leaveLiveKitRoomHandler(c *gin.Context) {
         if err := RemoveUserFromVoiceChannel(userIDStr, channelID); err != nil {
                 fmt.Printf("Failed to remove user from Redis voice channel: %v\n", err)
         }
+
+        // Record call history (log errors only, never fail leave flow)
+        recordVoiceCallLeave(userID, channelID)
 
         // Publish leave event
         PublishVoiceEvent("leave", map[string]interface{}{
@@ -205,6 +212,74 @@ func getEnv(key, defaultValue string) string {
 const (
         PermissionVoiceConnect int64 = 1 << 20
 )
+
+// recordVoiceCallJoin finds or creates an ongoing voice_channel Call for the
+// channel and records the user as a participant. Errors are only logged —
+// the join/token flow must never fail because of call-history recording.
+func recordVoiceCallJoin(userID, channelID uint) {
+        var call Call
+        err := db.Where("channel_id = ? AND type = ? AND status = ?", channelID, "voice_channel", "ongoing").First(&call).Error
+        if err != nil {
+                call = Call{
+                        ChannelID: channelID,
+                        Type:      "voice_channel",
+                        Status:    "ongoing",
+                        StartedAt: time.Now(),
+                }
+                if err := db.Create(&call).Error; err != nil {
+                        fmt.Printf("Failed to create voice call record: %v\n", err)
+                        return
+                }
+        }
+
+        var cnt int64
+        if err := db.Model(&CallParticipant{}).
+                Where("call_id = ? AND user_id = ? AND left_at IS NULL", call.ID, userID).
+                Count(&cnt).Error; err != nil {
+                fmt.Printf("Failed to count call participants: %v\n", err)
+                return
+        }
+        if cnt == 0 {
+                if err := db.Create(&CallParticipant{
+                        CallID:   call.ID,
+                        UserID:   userID,
+                        JoinedAt: time.Now(),
+                }).Error; err != nil {
+                        fmt.Printf("Failed to create call participant: %v\n", err)
+                }
+        }
+}
+
+// recordVoiceCallLeave marks the user as left in the ongoing voice_channel Call
+// of the channel and ends the call if the voice roster is now empty.
+// Errors are only logged — the leave flow must never fail because of this.
+func recordVoiceCallLeave(userID uint, channelID string) {
+        chID, err := strconv.ParseUint(channelID, 10, 32)
+        if err != nil {
+                return
+        }
+
+        var call Call
+        if err := db.Where("channel_id = ? AND type = ? AND status = ?", uint(chID), "voice_channel", "ongoing").First(&call).Error; err != nil {
+                return // no ongoing call recorded — nothing to do
+        }
+
+        now := time.Now()
+        if err := db.Model(&CallParticipant{}).
+                Where("call_id = ? AND user_id = ? AND left_at IS NULL", call.ID, userID).
+                Update("left_at", now).Error; err != nil {
+                fmt.Printf("Failed to mark call participant left: %v\n", err)
+        }
+
+        if len(voiceRoster.GetParticipants(channelID)) == 0 {
+                if err := db.Model(&call).Updates(map[string]interface{}{
+                        "status":   "ended",
+                        "ended_at": now,
+                }).Error; err != nil {
+                        fmt.Printf("Failed to end voice call record: %v\n", err)
+                }
+        }
+}
 
 // checkChannelVoicePermission checks if user has permission to join a voice channel
 func checkChannelVoicePermission(channelID, userID, guildID uint) bool {

@@ -373,6 +373,11 @@ func main() {
 	r.POST("/api/livekit/token", authMiddleware(), getLiveKitTokenHandler)
 	r.POST("/api/livekit/leave/:channel_id", authMiddleware(), leaveLiveKitRoomHandler)
 
+	// Call History
+	r.POST("/api/calls/dm/start", authMiddleware(), startDMCallHandler)
+	r.POST("/api/calls/dm/:call_id/end", authMiddleware(), endDMCallHandler)
+	r.GET("/api/calls/history", authMiddleware(), getCallHistoryHandler)
+
 	// RTC/WebRTC Configuration
 	r.GET("/api/rtc/ice-servers", authMiddleware(), getICEServersHandler)
 
