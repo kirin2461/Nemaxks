@@ -248,6 +248,23 @@ func main() {
 	serverReady = true
 	log.Println("All services initialized, server ready!")
 
+	// Audit retention & site snapshot scheduler (Phase B):
+	// первый прогон сразу после инициализации БД, далее — раз в 24 часа.
+	go func() {
+		if db == nil {
+			log.Println("[Scheduler] DB not configured, audit retention scheduler disabled")
+			return
+		}
+		CleanupOldAuditLogs()
+		CaptureSiteSnapshot()
+		t := time.NewTicker(24 * time.Hour)
+		defer t.Stop()
+		for range t.C {
+			CleanupOldAuditLogs()
+			CaptureSiteSnapshot()
+		}
+	}()
+
 	// Configure CORS with proper origin restrictions
 	corsConfig := cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -330,6 +347,15 @@ func main() {
 	// Channels
 	r.GET("/api/guilds/channels/:guild_id", authMiddleware(), getChannelsHandler)
 	r.POST("/api/guilds/channels/:guild_id", authMiddleware(), createChannelHandler)
+
+	// Guild Moderation (Phase B)
+	// ВАЖНО: префикс /api/guild-mod/ вместо /api/guilds/:guild_id/... —
+	// в gin wildcard :guild_id конфликтует со статичными сегментами view/channels
+	// и с :id в /api/guilds/:id/roles на том же уровне дерева роутов.
+	r.POST("/api/guild-mod/:guild_id/ban", authMiddleware(), RequireGuildPermission(PermBanMembers), banUserInGuildHandler)
+	r.DELETE("/api/guild-mod/:guild_id/ban/:user_id", authMiddleware(), RequireGuildPermission(PermBanMembers), unbanUserInGuildHandler)
+	r.POST("/api/guild-mod/:guild_id/mute", authMiddleware(), RequireGuildPermission(PermKickMembers), muteUserHandler)
+	r.POST("/api/guild-mod/:guild_id/shadowban", authMiddleware(), RequireGuildPermission(PermBanMembers), shadowbanUserHandler)
 
 	// Channel CRUD
 	r.GET("/api/channels/:channel_id", authMiddleware(), getChannelHandler)
@@ -587,6 +613,16 @@ func main() {
 	r.GET("/api/admin/reports", authMiddleware(), adminMiddleware(), getReportsHandler)
 	r.PUT("/api/admin/reports/:id", authMiddleware(), adminMiddleware(), updateReportHandler)
 	r.GET("/api/admin/audit-logs", authMiddleware(), adminMiddleware(), getAuditLogsHandler)
+
+	// DM Access sanctions (Phase B): guard admin/super_admin — внутри handlers
+	r.POST("/api/admin/dm-access/request", authMiddleware(), requestDMAccessHandler)
+	r.GET("/api/admin/dm-access/requests", authMiddleware(), listDMAccessRequestsHandler)
+	r.POST("/api/admin/dm-access/:id/approve", authMiddleware(), approveDMAccessHandler)
+	r.POST("/api/admin/dm-access/:id/revoke", authMiddleware(), revokeDMAccessHandler)
+
+	// Export (Phase B): permission check (manage_messages / global admin) — внутри handleExport
+	r.GET("/api/export/download", authMiddleware(), exportChatDownloadHandler)
+	r.GET("/api/export/storage", authMiddleware(), exportChatStorageHandler)
 
 	// User reports (public endpoint for authenticated users)
 	r.POST("/api/reports", authMiddleware(), createReportHandler)

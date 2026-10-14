@@ -81,9 +81,20 @@ func getThreadRepliesHandler(c *gin.Context) {
 		return
 	}
 
+	// Shadowban enforcement: replies shadowbanned-авторов видны только им самим
+	// и тем, у кого manage_messages.
+	repliesQuery := db.Preload("Author").Where("parent_id = ?", messageID)
+	if viewerID, ok := getUserIDFromContext(c); ok &&
+		!hasChannelPermission(viewerID, uint(channelID), channel.GuildID, "manage_messages") {
+		var shadowbannedIDs []uint
+		db.Model(&Shadowban{}).Where("guild_id = ?", channel.GuildID).Pluck("user_id", &shadowbannedIDs)
+		if len(shadowbannedIDs) > 0 {
+			repliesQuery = repliesQuery.Where("author_id NOT IN ? OR author_id = ?", shadowbannedIDs, viewerID)
+		}
+	}
+
 	var replies []Message
-	db.Preload("Author").
-		Where("parent_id = ?", messageID).
+	repliesQuery.
 		Order("created_at asc").
 		Limit(200).
 		Find(&replies)

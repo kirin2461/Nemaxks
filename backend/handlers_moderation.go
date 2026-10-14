@@ -60,6 +60,33 @@ func banUserInGuildHandler(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{"status": "banned"})
 }
 
+// unbanUserInGuildHandler removes a GuildBan record (does NOT re-add guild membership)
+func unbanUserInGuildHandler(c *gin.Context) {
+        guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+                return
+        }
+        targetID, err := strconv.ParseUint(c.Param("user_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                return
+        }
+        userIDRaw, _ := c.Get("user_id")
+        adminID, _ := extractUserID(userIDRaw)
+
+        res := db.Where("guild_id = ? AND user_id = ?", guildID, targetID).Delete(&GuildBan{})
+        if res.RowsAffected == 0 {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Ban not found"})
+                return
+        }
+
+        logExtendedAudit(adminID, "guild_unban", "user", strconv.FormatUint(targetID, 10),
+                fmt.Sprintf("guild:%d", guildID), "", c.ClientIP(), c.Request.UserAgent())
+
+        c.JSON(http.StatusOK, gin.H{"status": "unbanned"})
+}
+
 func muteUserHandler(c *gin.Context) {
         guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
         if err != nil {

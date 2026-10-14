@@ -148,6 +148,12 @@ func initDB() {
 		&ChannelTool{},
 		&GroupDM{}, &GroupDMParticipant{}, &GroupDMMessage{},
 		&ApiKey{},
+		// Phase B: RBAC & Moderation (без этих таблиц handlers падают в проде)
+		&GlobalRoleAssignment{},
+		&GuildBan{}, &Mute{}, &Shadowban{},
+		&DMAccessSanction{},
+		&ExtendedAuditLog{},
+		&ToolSnapshot{},
 	)
 	log.Println("DB connected")
 
@@ -643,6 +649,13 @@ func getChannelsHandler(c *gin.Context) {
 	var guild Guild
 	db.First(&guild, guildID)
 	isGuildOwner := guild.OwnerID == userID
+
+	// GuildBan enforcement: забаненный в гильдии не видит её каналы (owner — исключение)
+	var guildBan GuildBan
+	if !isGuildOwner && db.Where("guild_id = ? AND user_id = ?", guild.ID, userID).First(&guildBan).Error == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are banned from this server"})
+		return
+	}
 
 	var user User
 	db.First(&user, userID)

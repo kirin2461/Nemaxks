@@ -263,9 +263,12 @@ func getAuditLogsHandler(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
 	offset := (page - 1) * limit
 
-	var logs []AuditLog
+	// Читаем ExtendedAuditLog: все logExtendedAudit-вызовы (ban/mute/shadowban,
+	// dm-access, guild moderation) пишут именно туда. Старый AuditLog (logAudit)
+	// больше не является источником для админской выборки.
+	var logs []ExtendedAuditLog
 	var total int64
-	db.Model(&AuditLog{}).Count(&total)
+	db.Model(&ExtendedAuditLog{}).Count(&total)
 	db.Offset(offset).Limit(limit).Order("created_at DESC").Find(&logs)
 
 	c.JSON(http.StatusOK, gin.H{
