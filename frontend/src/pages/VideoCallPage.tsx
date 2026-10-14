@@ -20,11 +20,13 @@ import {
   SignalLow,
   Activity,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  PhoneCall,
+  Volume2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/lib/store'
-import { friendsAPI, type Friend } from '@/lib/api'
+import { friendsAPI, callsAPI, type Friend, type CallHistoryItem } from '@/lib/api'
 import { AudioLevelIndicator, AudioLogsPanel, useAudioLogger } from '@/components/AudioLevelIndicator'
 
 type CallState = 'idle' | 'calling' | 'ringing' | 'connected' | 'ended'
@@ -45,14 +47,6 @@ interface NetworkStats {
   bitrate: number
   packetLoss: number
   latency: number
-}
-
-interface CallHistoryItem {
-  id: string
-  username: string
-  type: 'incoming' | 'outgoing'
-  time: string
-  duration: string
 }
 
 const QUALITY_CONFIGS: Record<VideoQuality, { width: number; height: number; frameRate: number; bitrate: number }> = {
@@ -143,7 +137,8 @@ export default function VideoCallPage() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null)
   const [callDuration, setCallDuration] = useState(0)
   const [showSettings, setShowSettings] = useState(false)
-  const [callHistory] = useState<CallHistoryItem[]>([])
+  const [callHistory, setCallHistory] = useState<CallHistoryItem[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
   const [wsConnected, setWsConnected] = useState(false)
   const [remoteMuted, setRemoteMuted] = useState(false)
   const [remoteVideoOff, setRemoteVideoOff] = useState(false)
@@ -181,6 +176,8 @@ export default function VideoCallPage() {
   const disconnectGraceTimerRef = useRef<NodeJS.Timeout | null>(null)
   // Кэш промиса загрузки ICE-серверов (устраняет race: pc создаётся только после загрузки)
   const iceServersPromiseRef = useRef<Promise<RTCIceServer[]> | null>(null)
+  // id текущего DM-звонка в истории (POST /api/calls/dm/start → call_id)
+  const dmCallIdRef = useRef<number | null>(null)
 
   // Perfect negotiation (1:1): polite = (мой id > id собеседника).
   // Re-offer при восстановлении делает только impolite-сторона (меньший id).
@@ -340,6 +337,7 @@ export default function VideoCallPage() {
       console.log('[Call Debug] Received remote-call-end event:', event.detail)
       if (callState !== 'idle' && callState !== 'ended') {
         console.log('[Call Debug] Processing remote-call-end - ending call')
+        reportDmCallEnd()
         setCallState('ended')
         audioLogger.logInfo('Remote participant ended the call')
         cleanup()
@@ -385,6 +383,26 @@ export default function VideoCallPage() {
       setFriends([])
     }
   }
+
+  const loadCallHistory = async () => {
+    setHistoryLoading(true)
+    try {
+      const data = await callsAPI.getHistory(50)
+      setCallHistory(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Failed to load call history:', error)
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
+  // История подгружается на маунте и обновляется после завершения звонка
+  // (возврат в idle), чтобы свежая запись появилась без перезагрузки страницы
+  useEffect(() => {
+    if (callState === 'idle') {
+      loadCallHistory()
+    }
+  }, [callState])
 
   const connectWebSocket = () => {
     if (!user?.id) return
@@ -479,6 +497,7 @@ export default function VideoCallPage() {
         if (callStateRef.current !== 'idle' && callStateRef.current !== 'ended') {
           console.log('[Call Debug] Processing call-end - ending call')
           callEndSent.current = true
+          reportDmCallEnd()
           setCallState('ended')
           audioLogger.logInfo('Remote participant ended the call')
           cleanup()
@@ -491,6 +510,7 @@ export default function VideoCallPage() {
         }
         break
       case 'call-rejected':
+        reportDmCallEnd()
         setCallState('ended')
         cleanup()
         setTimeout(() => setCallState('idle'), 2000)
@@ -773,9 +793,31 @@ export default function VideoCallPage() {
     }
   }
 
+  // Закрыть запись DM-звонка в истории (fire-and-forget: ошибка API не ломает UI).
+  // Вызывается при любом завершении звонка — локальном (endCall) и удалённом (call-end).
+  const reportDmCallEnd = () => {
+    const callId = dmCallIdRef.current
+    dmCallIdRef.current = null
+    if (callId == null) return
+    callsAPI.dmEnd(callId).catch(err => console.warn('[Calls] Failed to record DM call end:', err))
+  }
+
   const startCall = async (friend: Friend) => {
     setSelectedFriend(friend)
     setCallState('calling')
+
+    // Фиксируем DM-звонок в истории (fire-and-forget: ошибка API не ломает звонок)
+    dmCallIdRef.current = null
+    callsAPI.dmStart(friend.id)
+      .then(r => {
+        // Звонок мог завершиться до ответа API — тогда сразу закрываем запись
+        if (callStateRef.current === 'ended' || callStateRef.current === 'idle') {
+          callsAPI.dmEnd(r.call_id).catch(err => console.warn('[Calls] Failed to record DM call end:', err))
+        } else {
+          dmCallIdRef.current = r.call_id
+        }
+      })
+      .catch(err => console.warn('[Calls] Failed to record DM call start:', err))
 
     try {
       // Ждём загрузки ICE-серверов (с TURN) ДО создания RTCPeerConnection
@@ -946,8 +988,9 @@ export default function VideoCallPage() {
   const endCall = () => {
     if (callState === 'ended' || callState === 'idle') return
     if (callEndSent.current) return
-    
+
     callEndSent.current = true
+    reportDmCallEnd()
     
     if (wsRef.current?.readyState === WebSocket.OPEN && selectedFriend?.id) {
       wsRef.current.send(JSON.stringify({
@@ -1197,6 +1240,22 @@ export default function VideoCallPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const formatCallDate = (iso: string) => {
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  // Собеседник в DM-звонке — участник, который не я (fallback: первый участник)
+  const getDmPeer = (call: CallHistoryItem) =>
+    call.participants.find(p => String(p.id) !== String(user?.id)) || call.participants[0]
+
   const getSignalIcon = () => {
     switch (networkStats.quality) {
       case 'excellent': return <SignalHigh className="w-4 h-4 text-green-500" />
@@ -1277,54 +1336,81 @@ export default function VideoCallPage() {
               </h2>
               <div className="space-y-3">
                 {callHistory.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">История звонков пуста</p>
+                  <p className="text-muted-foreground text-center py-8">
+                    {historyLoading ? 'Загрузка...' : 'История звонков пуста'}
+                  </p>
                 ) : (
-                  callHistory.map((call) => (
-                    <div
-                      key={call.id}
-                      className="p-4 rounded-xl bg-secondary/40 border border-border/50 flex items-center justify-between hover:bg-secondary/60 hover:border-primary/30 transition-all"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white font-bold">
-                          {call.username.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-medium">{call.username}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className={call.type === 'incoming' ? 'text-green-500' : 'text-primary'}>
-                              {call.type === 'incoming' ? '↙ Входящий' : '↗ Исходящий'}
-                            </span>
-                            <span>•</span>
-                            <span>{call.time}</span>
-                            <span>•</span>
-                            <span>{call.duration}</span>
+                  callHistory.map((call) => {
+                    const isDm = call.type === 'dm'
+                    const peer = isDm ? getDmPeer(call) : undefined
+                    const title = isDm
+                      ? (peer?.username || 'Личный звонок')
+                      : (call.channel_name || `Голосовой канал #${call.channel_id}`)
+                    const friend = peer
+                      ? friends.find(f => String(f.id) === String(peer.id))
+                      : undefined
+                    return (
+                      <div
+                        key={call.id}
+                        className="p-4 rounded-xl bg-secondary/40 border border-border/50 flex items-center justify-between hover:bg-secondary/60 hover:border-primary/30 transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            {isDm ? (
+                              <PhoneCall className="w-5 h-5 text-primary" />
+                            ) : (
+                              <Volume2 className="w-5 h-5 text-primary" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium">{title}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{formatCallDate(call.started_at)}</span>
+                              <span>•</span>
+                              {call.status === 'ongoing' ? (
+                                <span className="text-green-500">идёт</span>
+                              ) : (
+                                <span>{formatDuration(call.duration_sec)}</span>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        <div className="flex items-center gap-3">
+                          {call.participants.length > 0 && (
+                            <div className="flex -space-x-2">
+                              {call.participants.slice(0, 4).map((p) => (
+                                <div
+                                  key={p.id}
+                                  title={p.username}
+                                  className="w-8 h-8 rounded-full bg-gradient-brand border-2 border-background flex items-center justify-center text-white text-xs font-bold overflow-hidden"
+                                >
+                                  {p.avatar ? (
+                                    <img src={p.avatar} alt={p.username} className="w-full h-full object-cover" />
+                                  ) : (
+                                    p.username.charAt(0).toUpperCase()
+                                  )}
+                                </div>
+                              ))}
+                              {call.participants.length > 4 && (
+                                <div className="w-8 h-8 rounded-full bg-secondary border-2 border-background flex items-center justify-center text-xs text-muted-foreground">
+                                  +{call.participants.length - 4}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {isDm && friend && (
+                            <button
+                              onClick={() => startCall(friend)}
+                              className="p-2.5 rounded-full bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-green-500/30"
+                              title="Перезвонить"
+                            >
+                              <PhoneCall className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            const friend = friends.find(f => f.username === call.username)
-                            if (friend) startCall(friend)
-                          }}
-                          className="p-2.5 rounded-full bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-green-500/30"
-                          title="Перезвонить видео"
-                        >
-                          <Video className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            const friend = friends.find(f => f.username === call.username)
-                            if (friend) startCall(friend)
-                          }}
-                          className="p-2.5 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white transition-all hover:scale-105 hover:shadow-glow"
-                          title="Перезвонить аудио"
-                        >
-                          <Phone className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
             </div>
@@ -1388,6 +1474,12 @@ export default function VideoCallPage() {
                 <div className="bg-black/50 backdrop-blur-md border border-white/10 rounded-xl shadow-lg-brand px-3 py-2">
                   <span className="text-white text-sm font-mono">{formatDuration(callDuration)}</span>
                 </div>
+                {isScreenSharing && (
+                  <div className="bg-gradient-brand rounded-xl shadow-glow px-3 py-2 flex items-center gap-2 animate-pulse">
+                    <Monitor className="w-4 h-4 text-white" />
+                    <span className="text-white text-sm font-medium">Вы демонстрируете экран</span>
+                  </div>
+                )}
                 <div className="bg-black/50 backdrop-blur-md border border-white/10 rounded-xl shadow-lg-brand px-3 py-2 flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 text-xs">Вы:</span>
