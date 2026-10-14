@@ -44,6 +44,7 @@ type ToolSyncMessage struct {
         Type   string      `json:"type"` // "sync_state", "update", "cursor"
         ToolID uint        `json:"tool_id"`
         Update *ToolUpdate `json:"update,omitempty"`
+        Ops    []CRDTOp    `json:"ops,omitempty"`    // CRDT-операции (новый формат)
         State  interface{} `json:"state,omitempty"`  // Полное состояние
         Cursor *CursorPos  `json:"cursor,omitempty"` // Позиция курсора
 }
@@ -126,6 +127,44 @@ func (s *CollaborativeSession) BroadcastUpdate(update *ToolUpdate) {
                         // чанал полон, принимаю решение
                 }
         }
+}
+
+// BroadcastOps - рассылает CRDT-операции всем в сессии (top-level ops, контракт с фронтом)
+func (s *CollaborativeSession) BroadcastOps(ops []CRDTOp) {
+        s.Mutex.RLock()
+        connections := s.Connections
+        s.Mutex.RUnlock()
+
+        msg := ToolSyncMessage{
+                Type:   "update",
+                ToolID: s.ToolID,
+                Ops:    ops,
+        }
+
+        for _, conn := range connections {
+                select {
+                case conn.Chan <- msg:
+                default:
+                }
+        }
+}
+
+// MergeOpsToTool - применить CRDT-операции к содержимому инструмента и сохранить
+func MergeOpsToTool(toolID uint, ops []CRDTOp, userID uint) error {
+        var tool ChannelTool
+        if err := db.First(&tool, toolID).Error; err != nil {
+                return err
+        }
+        newContent, _ := ApplyCRDTOps(tool.Content, ops)
+        tool.Content = newContent
+        tool.UpdatedAt = GetCurrentTimestamp()
+        if err := db.Save(&tool).Error; err != nil {
+                return err
+        }
+        if err := SaveToolSnapshot(toolID, "", "", userID, "sync"); err != nil {
+                log.Printf("Failed to save sync snapshot for tool %d: %v", toolID, err)
+        }
+        return nil
 }
 
 // BroadcastCursor - рассылают курсоры
@@ -300,6 +339,14 @@ func handleRealtimeCollaboration(c *gin.Context) {
                 if err != nil {
                         break
                 }
+                if len(msg.Ops) > 0 {
+                        // CRDT-операции от клиента: merge в БД + broadcast остальным
+                        if err := MergeOpsToTool(uint(toolID), msg.Ops, userID); err != nil {
+                                log.Printf("WS collab: failed to merge ops for tool %d: %v", toolID, err)
+                                continue
+                        }
+                        session.BroadcastOps(msg.Ops)
+                }
                 if msg.Update != nil {
                         session.BroadcastUpdate(msg.Update)
                 }
@@ -332,7 +379,6 @@ func handleCollaborationSync(c *gin.Context) {
                 }
 
                 userID, _ := getUserIDFromContext(c)
-                username := c.GetString("username")
 
                 var tool ChannelTool
                 if err := db.First(&tool, req.ToolID).Error; err != nil {
@@ -354,14 +400,9 @@ func handleCollaborationSync(c *gin.Context) {
                 }
 
                 // Рассылаем применённые операции остальным участникам сессии
+                // (top-level ops — контракт с фронтендом)
                 session := GetOrCreateSession(req.ToolID)
-                session.BroadcastUpdate(&ToolUpdate{
-                        Type:      "sync",
-                        UserID:    userID,
-                        Username:  username,
-                        Data:      req.Ops,
-                        Timestamp: GetCurrentTimestamp(),
-                })
+                session.BroadcastOps(req.Ops)
 
                 // Текущее состояние elements для ответа
                 var doc CRDTDocument
