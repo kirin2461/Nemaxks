@@ -233,7 +233,14 @@ func forwardBridgeReply(channel *Channel, senderUserID uint, text string) {
 	case "telegram":
 		sendErr = sendTelegramMessage(meta.ChatID, text)
 	case "max":
-		sendErr = sendMaxMessage(meta.ChatID, text)
+		// Персональная модель: токен бота берём из MaxLink владельца канала.
+		var link MaxLink
+		if meta.OwnerUserID == 0 || db.Where("user_id = ?", meta.OwnerUserID).First(&link).RowsAffected == 0 || link.BotToken == "" {
+			log.Printf("Bridge: нет привязки MAX для владельца #%d (канал %d)", meta.OwnerUserID, channel.ID)
+			deliverBridgeMessage(channel.ID, "Мост", "⚠️ Не удалось доставить ответ: бот MAX не подключён. Подключите бота в настройках профиля (раздел «Интеграции»).")
+			return
+		}
+		sendErr = sendMaxMessage(link.BotToken, meta.ChatID, text)
 	default:
 		log.Printf("Bridge: неизвестный тип моста %q (канал %d)", channel.BridgeType, channel.ID)
 		return

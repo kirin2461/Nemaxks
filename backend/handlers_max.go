@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +11,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,17 +20,53 @@ import (
 
 // Интеграция с мессенджером MAX (https://platform-api.max.ru).
 //
-// Авторизация API — заголовком `Authorization: <MAX_BOT_TOKEN>` (НЕ query!).
-// Webhook: POST /api/max/webhook, секрет проверяется из заголовка
-// X-Max-Bot-Api-Secret или query-параметра ?secret= (env MAX_WEBHOOK_SECRET).
+// Персональная модель: каждый пользователь Nebula подключает СВОЕГО бота MAX
+// (POST /api/max/connect с токеном). Токен хранится в БД (MaxLink.BotToken)
+// и никогда не отдаётся в JSON (json:"-").
+//
+// Авторизация MAX API — заголовком `Authorization: <token>`.
+// Webhook: POST /api/max/webhook/:link_id, секрет проверяется из заголовка
+// X-Max-Bot-Api-Secret или query-параметра ?secret= против MaxLink.WebhookSecret.
+//
+// Env:
+//   MAX_API_BASE — база Bot API MAX (дефолт https://platform-api.max.ru).
+//   PUBLIC_URL   — публичный адрес backend'а для webhook (дефолт http://82.114.226.204).
 
-const maxAPIBase = "https://platform-api.max.ru"
+const (
+	defaultMaxAPIBase = "https://platform-api.max.ru"
+	defaultPublicURL  = "http://82.114.226.204"
+)
+
+// maxAPIBase возвращает базовый URL Bot API MAX.
+func maxAPIBase() string {
+	if base := strings.TrimRight(os.Getenv("MAX_API_BASE"), "/"); base != "" {
+		return base
+	}
+	return defaultMaxAPIBase
+}
+
+// publicURL возвращает публичный адрес backend'а (для webhook URL).
+func publicURL() string {
+	if u := strings.TrimRight(os.Getenv("PUBLIC_URL"), "/"); u != "" {
+		return u
+	}
+	return defaultPublicURL
+}
+
+// generateWebhookSecret генерирует 24 hex-символа для проверки webhook.
+func generateWebhookSecret() string {
+	b := make([]byte, 12)
+	if _, err := rand.Read(b); err != nil {
+		return generateSecurePassword()[:24]
+	}
+	return hex.EncodeToString(b)
+}
 
 // maxAPIRequest выполняет запрос к Bot API MAX с заголовком Authorization.
-func maxAPIRequest(method string, path string, body interface{}) (*http.Response, error) {
-	token := os.Getenv("MAX_BOT_TOKEN")
+// Токен передаётся параметром (персональный бот пользователя).
+func maxAPIRequest(method string, token string, path string, body interface{}) (*http.Response, error) {
 	if token == "" {
-		return nil, fmt.Errorf("MAX_BOT_TOKEN не задан")
+		return nil, fmt.Errorf("токен бота MAX не задан")
 	}
 
 	var reader io.Reader
@@ -38,7 +78,7 @@ func maxAPIRequest(method string, path string, body interface{}) (*http.Response
 		reader = bytes.NewBuffer(jsonBody)
 	}
 
-	req, err := http.NewRequest(method, maxAPIBase+path, reader)
+	req, err := http.NewRequest(method, maxAPIBase()+path, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -51,16 +91,16 @@ func maxAPIRequest(method string, path string, body interface{}) (*http.Response
 	return client.Do(req)
 }
 
-// sendMaxMessage отправляет сообщение в чат MAX.
-func sendMaxMessage(chatID int64, text string) error {
-	if os.Getenv("MAX_BOT_TOKEN") == "" {
-		return errors.New("MAX_BOT_TOKEN not set")
+// sendMaxMessage отправляет сообщение в чат MAX от имени бота пользователя.
+func sendMaxMessage(token string, chatID int64, text string) error {
+	if token == "" {
+		return errors.New("токен бота MAX не задан")
 	}
 
 	payload := map[string]interface{}{
 		"text": text,
 	}
-	resp, err := maxAPIRequest(http.MethodPost, fmt.Sprintf("/messages?chat_id=%d", chatID), payload)
+	resp, err := maxAPIRequest(http.MethodPost, token, fmt.Sprintf("/messages?chat_id=%d", chatID), payload)
 	if err != nil {
 		log.Printf("Failed to send MAX message: %v", err)
 		return err
@@ -75,227 +115,247 @@ func sendMaxMessage(chatID int64, text string) error {
 	return nil
 }
 
-// --- Привязка аккаунта (authMiddleware) ---
+// maxWebhookURL строит URL webhook для конкретной привязки (секрет в query).
+func maxWebhookURL(link *MaxLink) string {
+	return fmt.Sprintf("%s/api/max/webhook/%d?secret=%s", publicURL(), link.ID, link.WebhookSecret)
+}
 
+// --- Подключение персонального бота (authMiddleware) ---
+
+// connectMaxHandler обрабатывает POST /api/max/connect {bot_token}.
+// Валидирует токен через GET /me, upsert'ит MaxLink и пытается
+// автоматически установить webhook через POST /subscriptions.
+func connectMaxHandler(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := uint(userID.(float64))
+
+	var req struct {
+		BotToken string `json:"bot_token"`
+	}
+	if err := c.BindJSON(&req); err != nil || strings.TrimSpace(req.BotToken) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Укажите токен бота MAX"})
+		return
+	}
+	token := strings.TrimSpace(req.BotToken)
+
+	// Валидация токена: GET /me возвращает информацию о боте.
+	resp, err := maxAPIRequest(http.MethodGet, token, "/me", nil)
+	if err != nil {
+		log.Printf("MAX connect: ошибка сети при запросе /me: %v", err)
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Не удалось связаться с MAX. Проверьте подключение к интернету и попробуйте позже."})
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Токен не принят MAX: проверьте, что скопировали токен полностью и без лишних пробелов"})
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("MAX connect: /me вернул %s: %s", resp.Status, string(body))
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Токен не принят MAX (код %d). Попробуйте позже или создайте новый токен.", resp.StatusCode)})
+		return
+	}
+
+	var me struct {
+		Name     string `json:"name"`
+		Username string `json:"username"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&me); err != nil {
+		log.Printf("MAX connect: не удалось разобрать ответ /me: %v", err)
+		c.JSON(http.StatusBadGateway, gin.H{"error": "MAX вернул неожиданный ответ. Попробуйте позже."})
+		return
+	}
+
+	// Upsert MaxLink по user_id (идемпотентность: повторный connect обновляет запись).
+	var link MaxLink
+	err = db.Where("user_id = ?", uid).First(&link).Error
+	if err != nil {
+		link = MaxLink{
+			UserID:    uid,
+			CreatedAt: time.Now(),
+		}
+	}
+	link.BotToken = token
+	link.BotName = me.Name
+	link.BotUsername = me.Username
+	link.IsVerified = true
+	if link.WebhookSecret == "" {
+		link.WebhookSecret = generateWebhookSecret()
+	}
+	if link.ID == 0 {
+		if err := db.Create(&link).Error; err != nil {
+			log.Printf("MAX connect: не удалось сохранить привязку: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось сохранить подключение. Попробуйте позже."})
+			return
+		}
+	} else {
+		if err := db.Save(&link).Error; err != nil {
+			log.Printf("MAX connect: не удалось обновить привязку: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось сохранить подключение. Попробуйте позже."})
+			return
+		}
+	}
+
+	// Авто-установка webhook. Ошибка НЕ откатывает подключение:
+	// возвращаем webhook_set:false и warning с URL для ручной настройки.
+	webhookURL := maxWebhookURL(&link)
+	webhookSet := true
+	warning := ""
+
+	subPayload := map[string]interface{}{
+		"url":          webhookURL,
+		"update_types": []string{"message_created", "bot_started"},
+	}
+	subResp, err := maxAPIRequest(http.MethodPost, token, "/subscriptions", subPayload)
+	if err != nil {
+		log.Printf("MAX connect: ошибка сети при установке webhook: %v", err)
+		webhookSet = false
+		warning = "Не удалось связаться с MAX для автоматической настройки webhook."
+	} else {
+		defer subResp.Body.Close()
+		if subResp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(subResp.Body)
+			log.Printf("MAX connect: установка webhook отклонена (%s): %s", subResp.Status, string(body))
+			webhookSet = false
+			warning = "MAX отклонил адрес webhook (возможно, требуется HTTPS)."
+		}
+	}
+	if !webhookSet {
+		warning += " Укажите webhook вручную в кабинете бота MAX: " + webhookURL
+	}
+
+	response := gin.H{
+		"connected":    true,
+		"bot_name":     link.BotName,
+		"bot_username": link.BotUsername,
+		"webhook_url":  webhookURL,
+		"webhook_set":  webhookSet,
+	}
+	if warning != "" {
+		response["warning"] = warning
+	}
+	c.JSON(http.StatusOK, response)
+}
+
+// getMaxLinkHandler обрабатывает GET /api/max/link — статус подключения владельцу.
 func getMaxLinkHandler(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid := uint(userID.(float64))
 
 	var link MaxLink
-	if db.Where("user_id = ?", uid).First(&link).RowsAffected == 0 {
-		c.JSON(http.StatusOK, gin.H{
-			"linked": false,
-			"max":    nil,
-		})
+	if db.Where("user_id = ?", uid).First(&link).RowsAffected == 0 || link.BotToken == "" {
+		c.JSON(http.StatusOK, gin.H{"connected": false})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"linked":       link.IsVerified,
-		"max_username": link.MaxUsername,
-		"max_user_id":  link.MaxUserID,
-		"verified_at":  link.VerifiedAt,
-	})
+	response := gin.H{
+		"connected":      true,
+		"bot_name":       link.BotName,
+		"bot_username":   link.BotUsername,
+		"webhook_url":    maxWebhookURL(&link),
+		"webhook_secret": link.WebhookSecret, // владельцу — для ручной настройки в кабинете MAX
+	}
+
+	// Канал-мост bridge-max-<userID>, если уже создан.
+	var channel Channel
+	if db.Where("name = ? AND is_bridge = ? AND bridge_type = ?", fmt.Sprintf("bridge-max-%d", uid), true, "max").First(&channel).RowsAffected > 0 {
+		response["bridge_channel_id"] = channel.ID
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
-func createMaxLinkHandler(c *gin.Context) {
-	userID, _ := c.Get("user_id")
-	uid := uint(userID.(float64))
-
-	var existingLink MaxLink
-	if db.Where("user_id = ? AND is_verified = ?", uid, true).First(&existingLink).RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "MAX уже привязан"})
-		return
-	}
-
-	code := generateLinkCode()
-
-	link := MaxLink{
-		UserID:    uid,
-		LinkCode:  code,
-		CreatedAt: time.Now(),
-	}
-
-	db.Where("user_id = ?", uid).Delete(&MaxLink{})
-	db.Create(&link)
-
-	botName := os.Getenv("MAX_BOT_NAME")
-	if botName == "" {
-		botName = "Nemaks"
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"code":       code,
-		"bot_name":   botName,
-		"expires_in": 300,
-	})
-}
-
+// unlinkMaxHandler обрабатывает DELETE /api/max/link — отключение бота.
+// Best-effort удаление подписки в MAX, затем удаление MaxLink.
+// Канал-мост НЕ удаляется (история сообщений сохраняется).
 func unlinkMaxHandler(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid := uint(userID.(float64))
 
-	db.Where("user_id = ?", uid).Delete(&MaxLink{})
-
-	c.JSON(http.StatusOK, gin.H{"status": "unlinked"})
-}
-
-// --- Команды бота ---
-
-func handleMaxStart(chatID int64) {
-	message := `🎉 Добро пожаловать в Nemaks Bot!
-
-Я помогу вам получать сообщения и уведомления от платформы Nemaks прямо в MAX.
-
-Доступные команды:
-/link <код> — Привязать аккаунт Nemaks
-/unlink — Отвязать аккаунт
-/status — Проверить статус привязки
-/help — Показать справку
-
-Как привязать аккаунт:
-1. Откройте настройки в Nemaks
-2. Перейдите в раздел "MAX"
-3. Нажмите "Получить код"
-4. Отправьте команду: /link ВАШ_КОД`
-
-	sendMaxMessage(chatID, message)
-}
-
-func handleMaxHelp(chatID int64) {
-	message := `📖 Справка по командам:
-
-/start — Начать работу с ботом
-/link <код> — Привязать аккаунт Nemaks (код получите в настройках)
-/unlink — Отвязать аккаунт от MAX
-/status — Проверить статус привязки
-/help — Показать эту справку
-
-После привязки все ваши сообщения боту будут доставляться в Nebula, а ответы из Nebula — возвращаться сюда.
-
-Нужна помощь? Напишите в поддержку на платформе Nemaks.`
-
-	sendMaxMessage(chatID, message)
-}
-
-func handleMaxLink(chatID int64, maxUserID int64, username string, code string) {
-	if code == "" {
-		message := `❌ Ошибка: укажите код привязки.
-
-Использование: /link ВАШКОД
-
-Получите код в настройках Nemaks → MAX.`
-		sendMaxMessage(chatID, message)
-		return
-	}
-
 	var link MaxLink
-	if db.Where("link_code = ? AND is_verified = ?", code, false).First(&link).RowsAffected == 0 {
-		message := `❌ Ошибка: неверный или просроченный код.
-
-Получите новый код в настройках Nemaks → MAX.`
-		sendMaxMessage(chatID, message)
+	if db.Where("user_id = ?", uid).First(&link).RowsAffected == 0 {
+		c.JSON(http.StatusOK, gin.H{"status": "disconnected"})
 		return
 	}
 
-	if time.Since(link.CreatedAt) > 5*time.Minute {
-		db.Delete(&link)
-		message := `❌ Ошибка: код истёк.
-
-Получите новый код в настройках Nemaks → MAX.`
-		sendMaxMessage(chatID, message)
-		return
-	}
-
-	var existingLink MaxLink
-	if db.Where("max_user_id = ? AND is_verified = ?", maxUserID, true).First(&existingLink).RowsAffected > 0 {
-		message := `⚠️ Этот аккаунт MAX уже привязан к другому пользователю.
-
-Используйте /unlink чтобы отвязать его.`
-		sendMaxMessage(chatID, message)
-		return
-	}
-
-	now := time.Now()
-	link.MaxUserID = maxUserID
-	link.MaxUsername = username
-	link.ChatID = chatID
-	link.IsVerified = true
-	link.VerifiedAt = &now
-	db.Save(&link)
-
-	message := `✅ Аккаунт успешно привязан!
-
-Теперь ваши сообщения будут доставляться в Nebula, а ответы — возвращаться в MAX.
-
-Используйте /status для проверки статуса или /unlink для отвязки.`
-	sendMaxMessage(chatID, message)
-}
-
-func handleMaxUnlink(chatID int64, maxUserID int64) {
-	var link MaxLink
-	if db.Where("max_user_id = ? AND is_verified = ?", maxUserID, true).First(&link).RowsAffected == 0 {
-		message := `⚠️ Ваш MAX не привязан к аккаунту Nemaks.
-
-Используйте /link <код> для привязки.`
-		sendMaxMessage(chatID, message)
-		return
+	// Best-effort: удаляем webhook-подписку токеном пользователя.
+	if link.BotToken != "" {
+		webhookURL := maxWebhookURL(&link)
+		resp, err := maxAPIRequest(http.MethodDelete, link.BotToken, "/subscriptions?url="+webhookURL, nil)
+		if err != nil {
+			log.Printf("MAX unlink: не удалось удалить подписку для user %d: %v", uid, err)
+		} else {
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(resp.Body)
+				log.Printf("MAX unlink: удаление подписки вернуло %s: %s", resp.Status, string(body))
+			}
+		}
 	}
 
 	db.Delete(&link)
-
-	message := `✅ Аккаунт отвязан!
-
-Вы больше не будете получать сообщения от Nemaks.
-
-Чтобы снова привязать аккаунт, получите новый код в настройках.`
-	sendMaxMessage(chatID, message)
+	c.JSON(http.StatusOK, gin.H{"status": "disconnected"})
 }
 
-func handleMaxStatus(chatID int64, maxUserID int64) {
-	var link MaxLink
-	if db.Where("max_user_id = ? AND is_verified = ?", maxUserID, true).First(&link).RowsAffected == 0 {
-		message := `📊 Статус: не привязан
+// --- Команды бота (ответы от имени бота пользователя) ---
 
-Ваш MAX не привязан к аккаунту Nemaks.
+func handleMaxStart(token string, chatID int64) {
+	message := `🎉 Бот подключён к Nebula!
 
-Используйте /link <код> для привязки.`
-		sendMaxMessage(chatID, message)
-		return
+Все сообщения, которые вы отправите сюда, будут доставлены в ваш канал-мост в Nebula, а ответы из Nebula вернутся сюда.
+
+Доступные команды:
+/start — Начать работу с ботом
+/help — Показать справку
+/status — Проверить статус подключения`
+
+	if err := sendMaxMessage(token, chatID, message); err != nil {
+		log.Printf("MAX bot_started: не удалось отправить приветствие в чат %d: %v", chatID, err)
 	}
+}
 
+func handleMaxHelp(token string, chatID int64) {
+	message := `📖 Справка по командам:
+
+/start — Начать работу с ботом
+/help — Показать эту справку
+/status — Проверить статус подключения
+
+Просто напишите сообщение — оно появится в Nebula. Ответьте в канале-мосте Nebula — сообщение придёт сюда.
+
+Нужна помощь? Напишите в поддержку на платформе Nebula.`
+
+	if err := sendMaxMessage(token, chatID, message); err != nil {
+		log.Printf("MAX /help: не удалось отправить ответ в чат %d: %v", chatID, err)
+	}
+}
+
+func handleMaxStatus(token string, chatID int64, link *MaxLink) {
 	var user User
 	db.First(&user, link.UserID)
 
-	verifiedAt := ""
-	if link.VerifiedAt != nil {
-		verifiedAt = link.VerifiedAt.Format("02.01.2006 15:04")
+	botName := link.BotName
+	if botName == "" {
+		botName = "—"
 	}
 
-	message := `📊 Статус привязки:
+	message := `📊 Статус подключения:
 
-✅ Привязан
+✅ Бот подключён к Nebula
+🤖 Бот: ` + botName + `
 👤 Пользователь: ` + user.Username + `
-📅 Дата привязки: ` + verifiedAt + `
 
-Используйте /unlink для отвязки аккаунта.`
-	sendMaxMessage(chatID, message)
+Сообщения из этого чата доставляются в ваш канал-мост в Nebula.`
+
+	if err := sendMaxMessage(token, chatID, message); err != nil {
+		log.Printf("MAX /status: не удалось отправить ответ в чат %d: %v", chatID, err)
+	}
 }
 
-// handleMaxBridgeMessage доставляет обычное сообщение из MAX в канал-мост.
-func handleMaxBridgeMessage(chatID int64, maxUserID int64, name string, text string) {
-	var link MaxLink
-	if db.Where("max_user_id = ? AND is_verified = ?", maxUserID, true).First(&link).RowsAffected == 0 {
-		sendMaxMessage(chatID, `Чтобы получать сообщения в Nebula, привяжите аккаунт: /link <код>. Код — в настройках профиля Nebula.`)
-		return
-	}
-
-	// Обновляем chat_id, если MAX прислал другой (смена диалога).
-	if link.ChatID != chatID {
-		link.ChatID = chatID
-		db.Save(&link)
-	}
-
+// handleMaxBridgeMessage доставляет обычное сообщение из MAX в канал-мост владельца.
+func handleMaxBridgeMessage(link *MaxLink, chatID int64, name string, text string) {
 	meta, _ := json.Marshal(bridgeMeta{
 		ChatID:           chatID,
 		ExternalUsername: name,
@@ -305,7 +365,9 @@ func handleMaxBridgeMessage(chatID int64, maxUserID int64, name string, text str
 	channel, err := getOrCreateBridgeChannel(link.UserID, "max", string(meta))
 	if err != nil {
 		log.Printf("Bridge MAX: не удалось получить канал-мост для user %d: %v", link.UserID, err)
-		sendMaxMessage(chatID, `⚠️ Не удалось доставить сообщение в Nebula. Попробуйте позже.`)
+		if err := sendMaxMessage(link.BotToken, chatID, `⚠️ Не удалось доставить сообщение в Nebula. Попробуйте позже.`); err != nil {
+			log.Printf("Bridge MAX: не удалось отправить ошибку в чат %d: %v", chatID, err)
+		}
 		return
 	}
 
@@ -343,16 +405,31 @@ type maxUpdate struct {
 	} `json:"message"`
 }
 
-func getMaxWebhookHandler(c *gin.Context) {
-	// Security: если задан MAX_WEBHOOK_SECRET, принимаем его из заголовка
-	// X-Max-Bot-Api-Secret ИЛИ из query ?secret= (секрет в URL подписки
-	// надёжнее — MAX не всегда прокидывает произвольные заголовки).
-	if secret := os.Getenv("MAX_WEBHOOK_SECRET"); secret != "" {
-		if c.GetHeader("X-Max-Bot-Api-Secret") != secret && c.Query("secret") != secret {
-			log.Printf("MAX webhook rejected: invalid secret from %s", c.ClientIP())
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
-			return
-		}
+// maxWebhookHandler обрабатывает POST /api/max/webhook/:link_id.
+// Проверяет секрет (?secret= или X-Max-Bot-Api-Secret) против MaxLink.WebhookSecret.
+func maxWebhookHandler(c *gin.Context) {
+	linkID, err := strconv.ParseUint(c.Param("link_id"), 10, 64)
+	if err != nil || linkID == 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+		return
+	}
+
+	var link MaxLink
+	if db.First(&link, uint(linkID)).RowsAffected == 0 || link.BotToken == "" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+		return
+	}
+
+	// Секрет из заголовка или query (секрет в URL подписки надёжнее —
+	// MAX не всегда прокидывает произвольные заголовки).
+	secret := c.GetHeader("X-Max-Bot-Api-Secret")
+	if secret == "" {
+		secret = c.Query("secret")
+	}
+	if link.WebhookSecret == "" || secret != link.WebhookSecret {
+		log.Printf("MAX webhook rejected: invalid secret for link %d from %s", link.ID, c.ClientIP())
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+		return
 	}
 
 	rawBody, err := io.ReadAll(c.Request.Body)
@@ -375,13 +452,12 @@ func getMaxWebhookHandler(c *gin.Context) {
 			chatID = update.Message.Recipient.ChatID
 		}
 		if chatID != 0 {
-			handleMaxStart(chatID)
+			handleMaxStart(link.BotToken, chatID)
 		}
 
 	case "message_created":
 		text := update.Message.Body.Text
 		chatID := update.Message.Recipient.ChatID
-		maxUserID := update.Message.Sender.UserID
 		name := update.Message.Sender.Username
 		if name == "" {
 			name = update.Message.Sender.Name
@@ -395,132 +471,25 @@ func getMaxWebhookHandler(c *gin.Context) {
 		if len(text) > 0 && text[0] == '/' {
 			parts := splitCommand(text)
 			command := parts[0]
-			args := ""
-			if len(parts) > 1 {
-				args = parts[1]
-			}
 
 			switch command {
 			case "/start":
-				handleMaxStart(chatID)
+				handleMaxStart(link.BotToken, chatID)
 			case "/help":
-				handleMaxHelp(chatID)
-			case "/link":
-				handleMaxLink(chatID, maxUserID, name, args)
-			case "/unlink":
-				handleMaxUnlink(chatID, maxUserID)
+				handleMaxHelp(link.BotToken, chatID)
 			case "/status":
-				handleMaxStatus(chatID, maxUserID)
+				handleMaxStatus(link.BotToken, chatID, &link)
 			default:
-				sendMaxMessage(chatID, `❓ Неизвестная команда.
+				if err := sendMaxMessage(link.BotToken, chatID, `❓ Неизвестная команда.
 
-Используйте /help для просмотра доступных команд.`)
+Используйте /help для просмотра доступных команд.`); err != nil {
+					log.Printf("MAX webhook: не удалось ответить в чат %d: %v", chatID, err)
+				}
 			}
-		} else if len(text) == 6 {
-			handleMaxLink(chatID, maxUserID, name, text)
 		} else if len(text) > 0 {
-			handleMaxBridgeMessage(chatID, maxUserID, name, text)
+			handleMaxBridgeMessage(&link, chatID, name, text)
 		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
-}
-
-// --- Административные роуты ---
-
-func setupMaxWebhookHandler(c *gin.Context) {
-	if os.Getenv("MAX_BOT_TOKEN") == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "MAX_BOT_TOKEN not configured"})
-		return
-	}
-
-	var req struct {
-		URL string `json:"url"`
-	}
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	webhookURL := req.URL
-	if webhookURL == "" {
-		frontendURL := os.Getenv("FRONTEND_URL")
-		if frontendURL == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Укажите url или настройте FRONTEND_URL"})
-			return
-		}
-		webhookURL = frontendURL + "/api/max/webhook"
-	}
-
-	// Секрет вшиваем в URL подписки — MAX передаст его обратно как ?secret=.
-	if secret := os.Getenv("MAX_WEBHOOK_SECRET"); secret != "" {
-		webhookURL += "?secret=" + secret
-	} else {
-		log.Println("WARNING: MAX_WEBHOOK_SECRET not set — webhook endpoint is unauthenticated")
-	}
-
-	payload := map[string]interface{}{
-		"url":          webhookURL,
-		"update_types": []string{"message_created", "bot_started"},
-	}
-
-	resp, err := maxAPIRequest(http.MethodPost, "/subscriptions", payload)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to set webhook: " + err.Error()})
-		return
-	}
-	defer resp.Body.Close()
-
-	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
-
-	if resp.StatusCode != http.StatusOK {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "MAX API error", "details": result})
-		return
-	}
-
-	log.Printf("MAX webhook set to: %s", webhookURL)
-	c.JSON(http.StatusOK, gin.H{
-		"status":      "ok",
-		"webhook_url": webhookURL,
-		"result":      result,
-	})
-}
-
-func getMaxWebhookInfoHandler(c *gin.Context) {
-	if os.Getenv("MAX_BOT_TOKEN") == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "MAX_BOT_TOKEN not configured"})
-		return
-	}
-
-	resp, err := maxAPIRequest(http.MethodGet, "/subscriptions", nil)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get webhook info: " + err.Error()})
-		return
-	}
-	defer resp.Body.Close()
-
-	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
-
-	c.JSON(http.StatusOK, result)
-}
-
-func getMaxBotInfoHandler(c *gin.Context) {
-	if os.Getenv("MAX_BOT_TOKEN") == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "MAX_BOT_TOKEN not configured"})
-		return
-	}
-
-	resp, err := maxAPIRequest(http.MethodGet, "/me", nil)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get bot info: " + err.Error()})
-		return
-	}
-	defer resp.Body.Close()
-
-	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
-
-	c.JSON(http.StatusOK, result)
 }
