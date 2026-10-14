@@ -1441,7 +1441,10 @@ export interface Message {
   updated_at?: string;
   from_user?: User;
   to_user?: User;
-  message_type?: "text" | "voice" | "image" | "file";
+  message_type?: "text" | "voice" | "image" | "file" | "call";
+  // type — тип сообщения из истории DirectMessage: "text" | "voice" | "call"
+  // (для "call" в content лежит JSON {"kind","duration_sec","status"})
+  type?: string;
   voice_url?: string;
   voice_duration?: number;
   forwarded_from_id?: number;

@@ -6,6 +6,8 @@ import { Avatar } from '@/components/Avatar'
 import { OnlineIndicator } from '@/components/OnlineIndicator'
 import { ContextMenu, useContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
 import { NewMessageModal } from '@/components/NewMessageModal'
+import { CallCard, VoiceMessagePlayer } from '@/components/MessageList'
+import { useToast } from '@/components/Toast'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -34,14 +36,17 @@ import {
   Forward,
   Play,
   Pause,
+  Phone,
+  Video,
   Users
 } from 'lucide-react'
 
 
 export default function MessagesPage() {
   const { user, conversations, fetchConversations, isDemoMode } = useStore()
-  const { subscribeToMessages, sendWebSocketMessage, clearMessageNotificationsFromUser } = useNotifications()
+  const { subscribeToMessages, sendWebSocketMessage, clearMessageNotificationsFromUser, initiateCall } = useNotifications()
   const { t } = useLanguage()
+  const toast = useToast()
   const [location] = useLocation()
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -122,29 +127,41 @@ export default function MessagesPage() {
           console.warn('[Messages] Received message without ID, skipping')
           break
         }
-        if (selectedUserRef.current && 
-            (String(data.from_user_id) === String(selectedUserRef.current.id) ||
-             String(data.fromUserId) === String(selectedUserRef.current.id))) {
-          const newMsg: Message = {
-            id: String(data.id),
-            content: data.content || '',
-            sender_id: data.from_user_id || data.fromUserId,
-            receiver_id: user?.id || '',
-            created_at: data.created_at || new Date().toISOString(),
-            read: false,
-            voice_url: data.voice_url,
-            voice_duration: data.voice_duration,
-            reply_to_id: data.reply_to_id,
+        {
+          const fromId = String(data.from_user_id || data.fromUserId || '')
+          const toId = String(data.to_user_id || data.toUserId || '')
+          const peerId = selectedUserRef.current ? String(selectedUserRef.current.id) : null
+          // Сообщение относится к открытому диалогу, если оно от собеседника
+          // или это эхо собственного сообщения (например, системная карточка
+          // звонка, которую backend шлёт обоим участникам).
+          const belongsToOpenChat = peerId !== null &&
+            (fromId === peerId || (fromId === String(user?.id) && toId === peerId))
+          if (belongsToOpenChat) {
+            const newMsg: Message = {
+              id: String(data.id),
+              content: data.content || '',
+              sender_id: data.from_user_id || data.fromUserId,
+              receiver_id: toId || user?.id || '',
+              created_at: data.created_at || new Date().toISOString(),
+              read: false,
+              voice_url: data.voice_url,
+              voice_duration: data.voice_duration,
+              reply_to_id: data.reply_to_id,
+              type: data.message_type,
+              message_type: data.message_type,
+            }
+            setMessages(prev => {
+              if (prev.some(m => m.id === newMsg.id)) return prev
+              return [...prev, newMsg]
+            })
+            // Диалог открыт — сразу помечаем сообщение прочитанным,
+            // чтобы бейдж непрочитанных не рос во время переписки
+            if (fromId === peerId && peerId) {
+              messagesAPI.markConversationRead(peerId)
+                .then(() => fetchConversations())
+                .catch(() => {})
+            }
           }
-          setMessages(prev => {
-            if (prev.some(m => m.id === newMsg.id)) return prev
-            return [...prev, newMsg]
-          })
-          // Диалог открыт — сразу помечаем сообщение прочитанным,
-          // чтобы бейдж непрочитанных не рос во время переписки
-          messagesAPI.markConversationRead(String(selectedUserRef.current.id))
-            .then(() => fetchConversations())
-            .catch(() => {})
         }
         fetchConversations()
         break
@@ -232,7 +249,35 @@ export default function MessagesPage() {
     }
   }, [selectedUser, user])
 
+  // На старом HTTP-адресе браузер не выдаёт navigator.mediaDevices —
+  // подсказываем пользователю HTTPS-адрес, где звонки и голосовые работают.
+  const showHttpsHint = useCallback(() => {
+    toast.warning(
+      'Звонки и голосовые требуют HTTPS',
+      'Откройте https://82.114.226.204.sslip.io'
+    )
+  }, [toast])
+
+  const isMediaDevicesAvailable = () =>
+    typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
+
+  // Звонок собеседнику из шапки диалога. Режим (аудио/видео) передаётся
+  // на страницу звонка через sessionStorage — VideoCallPage читает outgoingCallMode.
+  const startCall = (mode: 'audio' | 'video') => {
+    if (!selectedUser) return
+    if (!isMediaDevicesAvailable()) {
+      showHttpsHint()
+      return
+    }
+    sessionStorage.setItem('outgoingCallMode', mode)
+    initiateCall(String(selectedUser.id), selectedUser.username)
+  }
+
   const startRecording = async () => {
+    if (!isMediaDevicesAvailable()) {
+      showHttpsHint()
+      return
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       audioStreamRef.current = stream
@@ -843,7 +888,11 @@ export default function MessagesPage() {
                       </span>
                     </div>
                     <p className={`text-sm truncate ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
-                      {conv.last_message.content}
+                      {conv.last_message.type === 'call' || conv.last_message.message_type === 'call'
+                        ? '📞 Звонок'
+                        : conv.last_message.voice_url
+                          ? '🎤 Голосовое сообщение'
+                          : conv.last_message.content}
                     </p>
                   </div>
                   {conv.unread_count > 0 && (
@@ -1000,6 +1049,20 @@ export default function MessagesPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => startCall('audio')}
+                      className="p-2 rounded-lg transition-colors hover:bg-accent/20 text-muted-foreground hover:text-primary"
+                      title="Аудиозвонок"
+                    >
+                      <Phone className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => startCall('video')}
+                      className="p-2 rounded-lg transition-colors hover:bg-accent/20 text-muted-foreground hover:text-primary"
+                      title="Видеозвонок"
+                    >
+                      <Video className="w-5 h-5" />
+                    </button>
+                    <button
                       onClick={() => setShowSearch(!showSearch)}
                       className={`p-2 rounded-lg transition-colors ${showSearch ? 'bg-primary/20 text-primary' : 'hover:bg-accent/20'}`}
                       title={t('messages.searchMessages')}
@@ -1079,6 +1142,24 @@ export default function MessagesPage() {
                 ) : (
                   messages.map((message, index) => {
                     const isSent = (message.sender_id || message.from_user_id) === user?.id
+                    const isCallCard = message.type === 'call' || message.message_type === 'call'
+
+                    // Системная карточка звонка — по центру, muted-стиль, без пузыря
+                    if (isCallCard) {
+                      return (
+                        <div
+                          key={message.id}
+                          ref={el => { if (el) messageRefs.current.set(message.id, el) }}
+                          className="flex justify-center animate-slide-in"
+                          style={{ animationDelay: `${index * 0.03}s` }}
+                        >
+                          <div className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl bg-secondary/40 border border-border/40 text-muted-foreground">
+                            <CallCard content={message.content} />
+                            <span className="text-[11px] text-muted-foreground/70">{formatTime(message.created_at)}</span>
+                          </div>
+                        </div>
+                      )
+                    }
 
                     return (
                       <div
@@ -1126,7 +1207,11 @@ export default function MessagesPage() {
                                   {repliedMessage ? (String(repliedMessage.sender_id) === String(user?.id) ? 'You' : selectedUser?.username) : 'Message'}
                                 </p>
                                 <p className={`text-xs truncate ${isSent ? 'text-primary-foreground/60' : 'text-muted-foreground/80'}`}>
-                                  {repliedMessage?.voice_url ? '🎤 Voice message' : (repliedMessage?.content || 'Message not found')}
+                                  {repliedMessage?.voice_url
+                                    ? '🎤 Voice message'
+                                    : repliedMessage?.type === 'call' || repliedMessage?.message_type === 'call'
+                                      ? '📞 Звонок'
+                                      : (repliedMessage?.content || 'Message not found')}
                                 </p>
                               </div>
                             )
@@ -1141,31 +1226,7 @@ export default function MessagesPage() {
 
                           {/* Voice message */}
                           {message.voice_url ? (
-                            <div className="flex items-center gap-2">
-                              <button 
-                                className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition"
-                                onClick={() => {
-                                  if (playingVoice === message.id) {
-                                    voiceAudioRef.current?.pause()
-                                    setPlayingVoice(null)
-                                  } else {
-                                    if (voiceAudioRef.current) {
-                                      voiceAudioRef.current.pause()
-                                    }
-                                    voiceAudioRef.current = new Audio(message.voice_url!)
-                                    voiceAudioRef.current.onended = () => setPlayingVoice(null)
-                                    voiceAudioRef.current.play()
-                                    setPlayingVoice(message.id)
-                                  }
-                                }}
-                              >
-                                {playingVoice === message.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                              </button>
-                              <div className="flex-1 h-1 bg-white/20 rounded-full">
-                                <div className={`h-full ${playingVoice === message.id ? 'w-1/2 animate-pulse' : 'w-0'} bg-white rounded-full transition-all`}></div>
-                              </div>
-                              <span className="text-xs">{formatRecordingTime(message.voice_duration || 0)}</span>
-                            </div>
+                            <VoiceMessagePlayer url={message.voice_url} duration={message.voice_duration} />
                           ) : (
                             <p className="whitespace-pre-wrap break-words">{message.content}</p>
                           )}
