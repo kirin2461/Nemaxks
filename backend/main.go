@@ -355,7 +355,9 @@ func main() {
 	r.POST("/api/guild-mod/:guild_id/ban", authMiddleware(), RequireGuildPermission(PermBanMembers), banUserInGuildHandler)
 	r.DELETE("/api/guild-mod/:guild_id/ban/:user_id", authMiddleware(), RequireGuildPermission(PermBanMembers), unbanUserInGuildHandler)
 	r.POST("/api/guild-mod/:guild_id/mute", authMiddleware(), RequireGuildPermission(PermKickMembers), muteUserHandler)
+	r.DELETE("/api/guild-mod/:guild_id/mute/:user_id", authMiddleware(), RequireGuildPermission(PermKickMembers), unmuteUserHandler)
 	r.POST("/api/guild-mod/:guild_id/shadowban", authMiddleware(), RequireGuildPermission(PermBanMembers), shadowbanUserHandler)
+	r.DELETE("/api/guild-mod/:guild_id/shadowban/:user_id", authMiddleware(), RequireGuildPermission(PermBanMembers), unshadowbanUserHandler)
 
 	// Channel CRUD
 	r.GET("/api/channels/:channel_id", authMiddleware(), getChannelHandler)

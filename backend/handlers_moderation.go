@@ -159,6 +159,62 @@ func shadowbanUserHandler(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{"status": "shadowbanned"})
 }
 
+// Unmute: снять активный мут с пользователя в гильдии
+func unmuteUserHandler(c *gin.Context) {
+        guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+                return
+        }
+        targetID, err := strconv.ParseUint(c.Param("user_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                return
+        }
+        userIDRaw, _ := c.Get("user_id")
+        adminID, _ := extractUserID(userIDRaw)
+
+        res := db.Where("guild_id = ? AND user_id = ? AND expires_at > ?", uint(guildID), uint(targetID), time.Now()).
+                Delete(&Mute{})
+        if res.Error != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unmute"})
+                return
+        }
+
+        logExtendedAudit(adminID, "guild_unmute", "user", strconv.FormatUint(targetID, 10),
+                fmt.Sprintf("guild:%d removed:%d", guildID, res.RowsAffected), "", c.ClientIP(), c.Request.UserAgent())
+
+        c.JSON(http.StatusOK, gin.H{"status": "unmuted", "removed": res.RowsAffected})
+}
+
+// Unshadowban: снять шэдоубан с пользователя в гильдии
+func unshadowbanUserHandler(c *gin.Context) {
+        guildID, err := strconv.ParseUint(c.Param("guild_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid guild ID"})
+                return
+        }
+        targetID, err := strconv.ParseUint(c.Param("user_id"), 10, 32)
+        if err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+                return
+        }
+        userIDRaw, _ := c.Get("user_id")
+        adminID, _ := extractUserID(userIDRaw)
+
+        res := db.Where("guild_id = ? AND user_id = ?", uint(guildID), uint(targetID)).
+                Delete(&Shadowban{})
+        if res.Error != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove shadowban"})
+                return
+        }
+
+        logExtendedAudit(adminID, "guild_unshadowban", "user", strconv.FormatUint(targetID, 10),
+                fmt.Sprintf("guild:%d removed:%d", guildID, res.RowsAffected), "", c.ClientIP(), c.Request.UserAgent())
+
+        c.JSON(http.StatusOK, gin.H{"status": "unshadowbanned", "removed": res.RowsAffected})
+}
+
 // Jarvis Moderation System Handlers
 
 func getModerationCasesHandler(c *gin.Context) {
