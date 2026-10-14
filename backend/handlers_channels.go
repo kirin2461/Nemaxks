@@ -1,6 +1,7 @@
 package main
 
 import (
+        "log"
         "net/http"
         "strconv"
         "time"
@@ -1049,7 +1050,12 @@ func getUserPlan(userID uint) string {
                 Order("premium_plans.id DESC").
                 First(&result).Error
 
-        if err != nil || result.Tier == "" {
+        if err != nil {
+                log.Printf("[getUserPlan] user %d: query error: %v", userID, err)
+                return "start"
+        }
+        log.Printf("[getUserPlan] user %d: tier=%q", userID, result.Tier)
+        if result.Tier == "" {
                 return "start"
         }
         if result.Tier == "vip" {
