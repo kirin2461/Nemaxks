@@ -296,8 +296,9 @@ func main() {
 	r.Use(HTTPSEnforcementMiddleware())
 
 	// Auth routes with rate limiting and account lockout to prevent brute force attacks
-	r.POST("/api/auth/register", AuthRateLimitMiddleware(), registerHandler)
-	r.POST("/api/auth/login", AuthRateLimitMiddleware(), AccountLockoutMiddleware(), loginHandler)
+	// fraudCheckMiddleware проверяет IP-blacklist и бан устройства до rate-limit и хендлера
+	r.POST("/api/auth/register", fraudCheckMiddleware(), AuthRateLimitMiddleware(), registerHandler)
+	r.POST("/api/auth/login", fraudCheckMiddleware(), AuthRateLimitMiddleware(), AccountLockoutMiddleware(), loginHandler)
 	r.POST("/api/auth/logout", authMiddleware(), logoutHandler)
 	r.GET("/api/auth/me", authMiddleware(), meHandler)
 	r.PUT("/api/users/me", authMiddleware(), updateMeHandler)

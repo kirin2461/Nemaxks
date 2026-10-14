@@ -95,6 +95,17 @@ type DeviceFingerprint struct {
 	User           User       `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
+// RegistrationEvent — аудит успешных регистраций для антифрод-анализа
+// (IP velocity, device fingerprint, bot-паттерны username).
+type RegistrationEvent struct {
+	ID                uint      `json:"id" gorm:"primaryKey"`
+	UserID            uint      `json:"user_id" gorm:"index"`
+	Username          string    `json:"username" gorm:"size:100;index"`
+	IPAddress         string    `json:"ip_address" gorm:"size:50;index"`
+	DeviceFingerprint string    `json:"device_fingerprint" gorm:"size:100;index"`
+	CreatedAt         time.Time `json:"created_at" gorm:"index"`
+}
+
 type MessageRateLimit struct {
 	ID             uint      `json:"id" gorm:"primaryKey"`
 	UserID         uint      `json:"user_id" gorm:"index"`
@@ -139,6 +150,7 @@ func initFraudModels() {
 		&SuspiciousActivity{},
 		&IPBlacklist{},
 		&DeviceFingerprint{},
+		&RegistrationEvent{},
 		&MessageRateLimit{},
 		&ImpersonationBan{},
 	)
