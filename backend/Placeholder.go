@@ -56,8 +56,9 @@ func getMessagesByChannelHandler(c *gin.Context) {
 	}
 
 	// Fetch messages with Preload to avoid N+1 queries
+	// Only top-level messages: thread replies are served via /thread endpoint
 	var messages []Message
-	query := db.Preload("Author").Where("channel_id = ?", channelID)
+	query := db.Preload("Author").Where("channel_id = ? AND parent_id IS NULL", channelID)
 	if beforeStr != "" {
 		beforeID, err := strconv.ParseUint(beforeStr, 10, 32)
 		if err == nil {
@@ -71,34 +72,9 @@ func getMessagesByChannelHandler(c *gin.Context) {
 		messages[i], messages[j] = messages[j], messages[i]
 	}
 
-	type MessageResponse struct {
-		ID        uint      `json:"id"`
-		ChannelID uint      `json:"channel_id"`
-		AuthorID  uint      `json:"author_id"`
-		Content   string    `json:"content"`
-		Edited    bool      `json:"edited"`
-		CreatedAt time.Time `json:"created_at"`
-		Author    struct {
-			ID       uint    `json:"id"`
-			Username string  `json:"username"`
-			Avatar   *string `json:"avatar"`
-		} `json:"author"`
-	}
-
-	result := make([]MessageResponse, 0, len(messages))
+	result := make([]channelMessageResponse, 0, len(messages))
 	for _, msg := range messages {
-		resp := MessageResponse{
-			ID:        msg.ID,
-			ChannelID: msg.ChannelID,
-			AuthorID:  msg.AuthorID,
-			Content:   msg.Content,
-			Edited:    msg.Edited,
-			CreatedAt: msg.CreatedAt,
-		}
-		resp.Author.ID = msg.Author.ID
-		resp.Author.Username = msg.Author.Username
-		resp.Author.Avatar = msg.Author.Avatar
-		result = append(result, resp)
+		result = append(result, toChannelMessageResponse(msg))
 	}
 
 	c.JSON(http.StatusOK, result)
@@ -110,14 +86,50 @@ func createChannelMessageHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
 		return
 	}
-	userID, _ := c.Get("user_id")
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+		return
+	}
 
 	var req struct {
-		Content string `json:"content" binding:"required"`
+		Content  string `json:"content" binding:"required"`
+		ParentID *uint  `json:"parent_id"`
 	}
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Load channel for type-specific posting rules
+	var channel Channel
+	if err := db.First(&channel, channelID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+		return
+	}
+
+	// Access check for private channels
+	if channel.IsPrivate && !hasChannelAccessSingle(userID, channel) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
+		return
+	}
+
+	// Announcement channels: only users with manage_messages can create top-level posts
+	if channel.Type == "announcement" && req.ParentID == nil {
+		if !hasChannelPermission(userID, uint(channelID), channel.GuildID, "manage_messages") {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Only admins can post in announcement channels"})
+			return
+		}
+	}
+
+	// Thread reply: parent must exist, belong to this channel and be a top-level message
+	if req.ParentID != nil {
+		var parent Message
+		if err := db.First(&parent, *req.ParentID).Error; err != nil ||
+			parent.ChannelID != uint(channelID) || parent.ParentID != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid parent message"})
+			return
+		}
 	}
 
 	// Sanitize content before storing
@@ -125,12 +137,19 @@ func createChannelMessageHandler(c *gin.Context) {
 
 	msg := Message{
 		ChannelID: uint(channelID),
-		AuthorID:  uint(userID.(float64)),
+		AuthorID:  userID,
 		Content:   sanitizedContent,
+		ParentID:  req.ParentID,
 	}
 	if err := db.Create(&msg).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create message"})
 		return
+	}
+
+	// Increment reply counter on the parent message
+	if req.ParentID != nil {
+		db.Model(&Message{}).Where("id = ?", *req.ParentID).
+			Update("reply_count", gorm.Expr("reply_count + 1"))
 	}
 
 	// Load author info for the response
@@ -138,11 +157,13 @@ func createChannelMessageHandler(c *gin.Context) {
 	db.First(&author, msg.AuthorID)
 
 	messageResponse := gin.H{
-		"id":         msg.ID,
-		"channel_id": msg.ChannelID,
-		"author_id":  msg.AuthorID,
-		"content":    msg.Content,
-		"created_at": msg.CreatedAt,
+		"id":          msg.ID,
+		"channel_id":  msg.ChannelID,
+		"author_id":   msg.AuthorID,
+		"content":     msg.Content,
+		"created_at":  msg.CreatedAt,
+		"parent_id":   msg.ParentID,
+		"reply_count": msg.ReplyCount,
 		"author": gin.H{
 			"id":       author.ID,
 			"username": author.Username,

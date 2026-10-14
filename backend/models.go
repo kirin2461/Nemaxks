@@ -96,6 +96,8 @@ type Message struct {
         AuthorID  uint      `json:"author_id" gorm:"not null"`
         Content   string    `json:"content" gorm:"type:text"`
         Edited    bool      `json:"edited" gorm:"default:false"`
+        ParentID  *uint     `json:"parent_id,omitempty" gorm:"index"`
+        ReplyCount int      `json:"reply_count" gorm:"default:0"`
         CreatedAt time.Time `json:"created_at" gorm:"index:idx_messages_channel_created,priority:2,sort:desc"`
         UpdatedAt time.Time `json:"updated_at"`
         Channel   Channel   `json:"channel,omitempty" gorm:"foreignKey:ChannelID"`
