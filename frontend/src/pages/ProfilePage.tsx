@@ -9,6 +9,7 @@ import { Button } from '@/components/Button'
 import { Input, Textarea } from '@/components/Input'
 import { TelegramLink } from '@/components/TelegramLink'
 import { MaxLink } from '@/components/MaxLink'
+import { Hint } from '@/components/ui/hint'
 import { useStore } from '@/lib/store'
 import { userAPI, UserProfile, UserStats } from '@/lib/api'
 import { Edit, Save, X, Upload, UserPlus, UserMinus, Users, Crown, Heart, Share2 } from 'lucide-react'
@@ -426,8 +427,16 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {isOwnProfile && <TelegramLink isOwnProfile={isOwnProfile} />}
-            {isOwnProfile && <MaxLink isOwnProfile={isOwnProfile} />}
+            {isOwnProfile && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold">Интеграции с мессенджерами</h2>
+                  <Hint text="Привяжите мессенджеры, чтобы получать и отправлять сообщения, не выходя из Nebula. Уведомления Telegram приходят от нашего бота, а для MAX вы подключаете своего собственного бота — сообщения из обоих мессенджеров собираются в каналы-мосты Nebula." />
+                </div>
+                <TelegramLink isOwnProfile={isOwnProfile} />
+                <MaxLink isOwnProfile={isOwnProfile} />
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { telegramAPI } from '@/lib/api';
+import { Hint } from '@/components/ui/hint';
 import { MessageCircle, Check, X, Copy, RefreshCw, Bell, BellOff } from 'lucide-react';
 
 interface TelegramLinkProps {
@@ -159,7 +160,8 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
         ) : linkCode ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Отправьте этот код боту @{botUsername} в Telegram:
+              Отправьте этот код боту @{botUsername} в Telegram:{' '}
+              <Hint text="Код привязки — одноразовая комбинация, которая связывает ваш аккаунт Telegram с Nebula. Откройте чат с нашим ботом в Telegram (кнопка ниже) и просто отправьте ему этот код. Код действует ограниченное время — если он истёк, сгенерируйте новый." />
             </p>
 
             <div className="flex items-center gap-2">
@@ -207,7 +209,8 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Привяжите Telegram-аккаунт, чтобы получать уведомления.
+              Привяжите Telegram-аккаунт, чтобы получать уведомления.{' '}
+              <Hint text="Зачем это нужно: после привязки Nebula сможет отправлять вам уведомления в Telegram — о новых сообщениях, звонках и событиях. Привязка делается через код, который вы отправляете нашему боту. Отвязать аккаунт можно в любой момент здесь же." />
             </p>
             <Button
               onClick={handleCreateLink}

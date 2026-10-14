@@ -972,24 +972,36 @@ export const telegramAPI = {
     }),
 };
 
+// Персональные MAX-боты: владение токеном = подтверждение привязки.
+// Токен бота никогда не возвращается в ответах API (на бэкенде json:"-").
+export interface MaxConnectResponse {
+  connected: boolean;
+  bot_name?: string;
+  bot_username?: string;
+  webhook_url?: string;
+  webhook_set: boolean;
+  warning?: string;
+}
+
+export interface MaxLinkStatus {
+  connected: boolean;
+  bot_name?: string;
+  bot_username?: string;
+  webhook_url?: string;
+  webhook_secret?: string;
+  bridge_channel_id?: number;
+}
+
 export const maxAPI = {
-  getLink: () =>
-    request<{
-      linked: boolean;
-      max_username?: string;
-      max_user_id?: number;
-      verified_at?: string;
-    }>("/max/link"),
+  connect: (bot_token: string) =>
+    request<MaxConnectResponse>("/max/connect", {
+      method: "POST",
+      data: { bot_token },
+    }),
 
-  createLink: () =>
-    request<{ code: string; bot_name: string; expires_in: number }>(
-      "/max/link",
-      {
-        method: "POST",
-      },
-    ),
+  getLink: () => request<MaxLinkStatus>("/max/link"),
 
-  unlinkMax: () =>
+  disconnect: () =>
     request<{ status: string }>("/max/link", {
       method: "DELETE",
     }),
