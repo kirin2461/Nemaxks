@@ -206,7 +206,7 @@ func recordDeviceFingerprint(userID uint, fingerprint string) {
 		device.LoginCount++
 		if device.UserID != userID {
 			activity := SuspiciousActivity{
-				UserID:            userID,
+				UserID:            &userID,
 				ActivityType:      "device_sharing",
 				Details:           `{"original_user": ` + string(rune(device.UserID)) + `}`,
 				RiskLevel:         "medium",

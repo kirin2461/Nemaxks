@@ -8,7 +8,7 @@ import (
 
 type FraudAlert struct {
 	ID              uint           `json:"id" gorm:"primaryKey"`
-	UserID          uint           `json:"user_id" gorm:"index"`
+	UserID          *uint          `json:"user_id" gorm:"index"` // nil = событие до создания пользователя (антифрод регистрации)
 	AlertType       string         `json:"alert_type" gorm:"size:50;index"` // spam, flood, phishing, impersonation, scam, suspicious
 	Severity        string         `json:"severity" gorm:"size:20"`          // low, medium, high, critical
 	Description     string         `json:"description" gorm:"size:1000"`
@@ -61,7 +61,7 @@ type UserRiskScore struct {
 
 type SuspiciousActivity struct {
 	ID            uint      `json:"id" gorm:"primaryKey"`
-	UserID        uint      `json:"user_id" gorm:"index"`
+	UserID        *uint     `json:"user_id" gorm:"index"` // nil = событие без привязанного пользователя (failed_login, регистрация)
 	ActivityType  string    `json:"activity_type" gorm:"size:50;index"` // message, dm, invite, login, registration
 	Details       string    `json:"details" gorm:"type:text"`           // JSON with activity details
 	RiskLevel     string    `json:"risk_level" gorm:"size:20"`          // low, medium, high

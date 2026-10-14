@@ -253,7 +253,7 @@ func (fd *FraudDetector) CreateAlert(userID uint, result DetectionResult, eviden
 	evidenceJSON, _ := json.Marshal(evidence)
 	
 	alert := FraudAlert{
-		UserID:            userID,
+		UserID:            &userID,
 		AlertType:         result.AlertType,
 		Severity:          result.Severity,
 		Description:       result.Description,

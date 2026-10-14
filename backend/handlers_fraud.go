@@ -142,8 +142,8 @@ func reviewFraudAlertHandler(c *gin.Context) {
         
         db.Save(&alert)
         
-        if req.ActionTaken != "" && req.ActionTaken != "none" {
-                fraudDetector.ExecuteAction(alert.UserID, req.ActionTaken, req.Notes)
+        if req.ActionTaken != "" && req.ActionTaken != "none" && alert.UserID != nil {
+                fraudDetector.ExecuteAction(*alert.UserID, req.ActionTaken, req.Notes)
         }
         
         c.JSON(http.StatusOK, alert)

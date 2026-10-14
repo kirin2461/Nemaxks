@@ -105,7 +105,7 @@ func countRecentUsernamesWithPrefix(prefix string, since time.Time) int64 {
 func createRegistrationAlert(alertType, severity, description string, evidence map[string]interface{}, sourceIP, deviceFP string) {
 	evidenceJSON, _ := json.Marshal(evidence)
 	alert := FraudAlert{
-		UserID:            0,
+		UserID:            nil,
 		AlertType:         alertType,
 		Severity:          severity,
 		Description:       description,
@@ -175,7 +175,7 @@ func checkRegistrationAbuse(c *gin.Context, username string) (blocked bool) {
 			},
 			clientIP, deviceFP,
 		)
-		db.Create(&SuspiciousActivity{
+		if err := db.Create(&SuspiciousActivity{
 			ActivityType:      "registration",
 			Details:           `{"reason": "ip_velocity", "registrations_1h": ` + strconv.FormatInt(ipCount, 10) + `}`,
 			RiskLevel:         "high",
@@ -183,7 +183,9 @@ func checkRegistrationAbuse(c *gin.Context, username string) (blocked bool) {
 			DeviceFingerprint: deviceFP,
 			UserAgent:         c.GetHeader("User-Agent"),
 			CreatedAt:         now,
-		})
+		}).Error; err != nil {
+			log.Printf("registration guard: failed to log suspicious activity: %v", err)
+		}
 		c.JSON(http.StatusTooManyRequests, gin.H{
 			"error": "Слишком много регистраций с вашего IP. Попробуйте позже.",
 		})
@@ -279,8 +281,8 @@ func finalizeRegistrationGuards(c *gin.Context, userID uint, username string) {
 	}
 
 	if flagged {
-		db.Create(&SuspiciousActivity{
-			UserID:            userID,
+		if err := db.Create(&SuspiciousActivity{
+			UserID:            &userID,
 			ActivityType:      "registration",
 			Details:           `{"bot_username": ` + strconv.FormatBool(c.GetBool(ctxFlagBotUsername)) + `, "fingerprint_suspect": ` + strconv.FormatBool(c.GetBool(ctxFlagFingerprintSuspect)) + `}`,
 			RiskLevel:         "medium",
@@ -288,6 +290,8 @@ func finalizeRegistrationGuards(c *gin.Context, userID uint, username string) {
 			DeviceFingerprint: deviceFP,
 			UserAgent:         c.GetHeader("User-Agent"),
 			CreatedAt:         now,
-		})
+		}).Error; err != nil {
+			log.Printf("registration guard: failed to log suspicious activity: %v", err)
+		}
 	}
 }
