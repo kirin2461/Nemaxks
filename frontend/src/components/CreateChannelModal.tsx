@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react'
-import { X, Hash, Volume2, Lock, Globe, BookOpen, Presentation, Code } from 'lucide-react'
+import { X, Hash, Volume2, Lock, Globe, BookOpen, Presentation, Code, Megaphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 
 interface CreateChannelModalProps {
   category?: string
   onClose: () => void
-  onCreate: (channel: { name: string; type: 'text' | 'voice'; isPrivate: boolean; template?: string }) => void
+  onCreate: (channel: { name: string; type: 'text' | 'voice' | 'announcement'; isPrivate: boolean; template?: string }) => void
 }
 
 export function CreateChannelModal({ category, onClose, onCreate }: CreateChannelModalProps) {
   const { t } = useTranslation()
   const [name, setName] = useState('')
-  const [type, setType] = useState<'text' | 'voice'>('text')
+  const [type, setType] = useState<'text' | 'voice' | 'announcement'>('text')
   const [isPrivate, setIsPrivate] = useState(true)
   const [templates, setTemplates] = useState<any[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
@@ -68,7 +68,7 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
         <form onSubmit={handleSubmit} className="p-4 space-y-4 max-h-[85vh] overflow-y-auto">
           <div>
             <label className="block text-sm font-medium mb-2">{t('channels.channelType')}</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setType('text')}
@@ -99,6 +99,22 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
                 <span className="font-medium">{t('channels.voiceChannel')}</span>
                 <span className="text-xs text-muted-foreground text-center">
                   {t('channels.voiceChannelDesc')}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setType('announcement')}
+                className={cn(
+                  'p-4 rounded-lg border transition-all flex flex-col items-center gap-2',
+                  type === 'announcement'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border hover:border-primary/50'
+                )}
+              >
+                <Megaphone className="w-8 h-8" />
+                <span className="font-medium">📢 Канал-лента</span>
+                <span className="text-xs text-muted-foreground text-center">
+                  Telegram-стиль: посты от админов, комментарии в тредах
                 </span>
               </button>
             </div>
@@ -150,7 +166,7 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
             <label className="block text-sm font-medium mb-2">{t('channels.channelName')}</label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {type === 'text' ? <Hash className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                {type === 'text' ? <Hash className="w-5 h-5" /> : type === 'announcement' ? <Megaphone className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </div>
               <input
                 type="text"
