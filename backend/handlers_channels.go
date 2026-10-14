@@ -1,7 +1,6 @@
 package main
 
 import (
-        "log"
         "net/http"
         "strconv"
         "time"
@@ -1043,19 +1042,12 @@ func getUserPlan(userID uint) string {
         var result struct {
                 Tier string
         }
-        err := db.Table("premium_subscriptions").
-                Select("premium_plans.tier").
-                Joins("JOIN premium_plans ON premium_plans.id = premium_subscriptions.plan_id").
-                Where("premium_subscriptions.user_id = ? AND premium_subscriptions.status IN ('active','trialing') AND premium_subscriptions.current_period_end > ?", userID, time.Now()).
-                Order("premium_plans.id DESC").
-                First(&result).Error
+        err := db.Raw(`SELECT pl.tier FROM premium_subscriptions ps
+                JOIN premium_plans pl ON pl.id = ps.plan_id
+                WHERE ps.user_id = ? AND ps.status IN ('active','trialing') AND ps.current_period_end > ?
+                ORDER BY pl.id DESC LIMIT 1`, userID, time.Now()).Scan(&result).Error
 
-        if err != nil {
-                log.Printf("[getUserPlan] user %d: query error: %v", userID, err)
-                return "start"
-        }
-        log.Printf("[getUserPlan] user %d: tier=%q", userID, result.Tier)
-        if result.Tier == "" {
+        if err != nil || result.Tier == "" {
                 return "start"
         }
         if result.Tier == "vip" {
