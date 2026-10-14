@@ -44,6 +44,34 @@ func requestDMAccessHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": sanction.ID, "status": "pending"})
 }
 
+// List DM Access Requests (Admin: свои, SuperAdmin: все; фильтр ?status=pending)
+func listDMAccessRequestsHandler(c *gin.Context) {
+	userIDRaw, _ := c.Get("user_id")
+	uid, _ := extractUserID(userIDRaw)
+
+	// Guard: Admin or SuperAdmin
+	if !hasGlobalRole(uid, "admin") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only admins can list DM access requests"})
+		return
+	}
+
+	query := db.Model(&DMAccessSanction{}).Order("created_at DESC")
+
+	// Обычный admin видит только свои запросы, super_admin — все
+	if !hasGlobalRole(uid, "super_admin") {
+		query = query.Where("requested_by = ?", uid)
+	}
+
+	if status := c.Query("status"); status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	var requests []DMAccessSanction
+	query.Find(&requests)
+
+	c.JSON(http.StatusOK, gin.H{"requests": requests})
+}
+
 // Approve DM Access (SuperAdmin only)
 func approveDMAccessHandler(c *gin.Context) {
 	userIDRaw, _ := c.Get("user_id")

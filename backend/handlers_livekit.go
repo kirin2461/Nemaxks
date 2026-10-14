@@ -69,6 +69,16 @@ func getLiveKitTokenHandler(c *gin.Context) {
                 return
         }
 
+        // GuildBan enforcement: забаненный не получает голосовой токен (owner — исключение)
+        var guildBan GuildBan
+        if err := db.Where("guild_id = ? AND user_id = ?", channel.GuildID, userID).First(&guildBan).Error; err == nil {
+                var guild Guild
+                if db.First(&guild, channel.GuildID).Error != nil || guild.OwnerID != userID {
+                        c.JSON(http.StatusForbidden, gin.H{"error": "You are banned from this server"})
+                        return
+                }
+        }
+
         // Check if user is member of the guild (mandatory access control)
         var guildMember GuildMember
         if err := db.Where("guild_id = ? AND user_id = ?", channel.GuildID, userID).First(&guildMember).Error; err != nil {

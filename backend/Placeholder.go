@@ -65,6 +65,18 @@ func getMessagesByChannelHandler(c *gin.Context) {
 			query = query.Where("id < ?", beforeID)
 		}
 	}
+
+	// Shadowban enforcement: сообщения shadowbanned-авторов видны только им самим
+	// и тем, у кого manage_messages (модераторы/владелец/глобальный админ).
+	if viewerID, ok := getUserIDFromContext(c); ok &&
+		!hasChannelPermission(viewerID, uint(channelID), channel.GuildID, "manage_messages") {
+		var shadowbannedIDs []uint
+		db.Model(&Shadowban{}).Where("guild_id = ?", channel.GuildID).Pluck("user_id", &shadowbannedIDs)
+		if len(shadowbannedIDs) > 0 {
+			query = query.Where("author_id NOT IN ? OR author_id = ?", shadowbannedIDs, viewerID)
+		}
+	}
+
 	query.Order("created_at desc").Limit(limit).Find(&messages)
 
 	// Reverse to ASC order for display
@@ -112,6 +124,20 @@ func createChannelMessageHandler(c *gin.Context) {
 	if channel.IsPrivate && !hasChannelAccessSingle(userID, channel) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "No access to this channel"})
 		return
+	}
+
+	// Mute enforcement: активный mute в гильдии блокирует отправку сообщений.
+	// Иммунитет: владелец гильдии / manage_messages (включая глобальных админов).
+	var activeMute Mute
+	if err := db.Where("guild_id = ? AND user_id = ? AND expires_at > ?",
+		channel.GuildID, userID, time.Now()).First(&activeMute).Error; err == nil {
+		if !hasChannelPermission(userID, uint(channelID), channel.GuildID, "manage_messages") {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error":      "You are muted in this server",
+				"expires_at": activeMute.ExpiresAt,
+			})
+			return
+		}
 	}
 
 	// Announcement channels: only users with manage_messages can create top-level posts
