@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { challengesAPI, streaksAPI, currencyAPI, Challenge, UserStreak, VirtualCurrency } from '../lib/api';
 import { Target, Flame, Gift, Check, Clock, Coins, Gem, Zap, Calendar } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 export default function ChallengesPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -64,49 +63,63 @@ export default function ChallengesPage() {
   };
 
   const tabs = [
-    { id: 'daily', label: 'Ежедневные', icon: <Calendar className="w-4 h-4" /> },
-    { id: 'weekly', label: 'Еженедельные', icon: <Target className="w-4 h-4" /> },
-    { id: 'special', label: 'Особые', icon: <Zap className="w-4 h-4" /> },
+    { id: 'daily', label: 'Ежедневные', icon: <Calendar className="w-4 h-4" strokeWidth={1.75} /> },
+    { id: 'weekly', label: 'Еженедельные', icon: <Target className="w-4 h-4" strokeWidth={1.75} /> },
+    { id: 'special', label: 'Особые', icon: <Zap className="w-4 h-4" strokeWidth={1.75} /> },
   ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-primary/40 border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-background p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-soft">
+          <div className="skeleton h-9 w-56 rounded-lg" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="skeleton h-36 rounded-xl" />
+            <div className="skeleton h-36 rounded-xl" />
+          </div>
+          {[0, 1, 2].map(i => (
+            <div key={i} className="skeleton h-24 rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-nebula p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto animate-rise-in">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <Target className="w-8 h-8 text-accent" />
-            <h1 className="text-3xl font-bold gradient-brand-text">Задания</h1>
+            <Target className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
+            <div>
+              <h1 className="text-2xl font-display font-bold text-graphite-900">Задания</h1>
+              <p className="text-sm text-muted-foreground">Ежедневные и еженедельные испытания</p>
+            </div>
           </div>
-          
+
           {currency && (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-accent/15 px-4 py-2 rounded-lg">
-                <Coins className="w-5 h-5 text-accent" />
-                <span className="text-accent font-semibold">{currency.coins}</span>
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground">
+                <Coins className="w-4 h-4 text-graphite-600" strokeWidth={1.75} />
+                <span className="font-mono">{currency.coins}</span>
               </div>
-              <div className="flex items-center gap-2 bg-primary/15 px-4 py-2 rounded-lg">
-                <Gem className="w-5 h-5 text-primary" />
-                <span className="text-primary font-semibold">{currency.gems}</span>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-sm font-medium text-emerald-800">
+                <Gem className="w-4 h-4" strokeWidth={1.75} />
+                <span className="font-mono">{currency.gems}</span>
               </div>
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="glass rounded-xl p-6 border border-accent/30">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="rounded-xl border border-border bg-card shadow-soft p-6 animate-rise-in" style={{ animationDelay: '40ms' }}>
             <div className="flex items-center gap-3 mb-4">
-              <Flame className="w-8 h-8 text-accent" />
+              <div className="h-11 w-11 rounded-xl bg-accent grid place-items-center">
+                <Flame className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
+              </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground">Серия входов</h3>
-                <p className="text-accent/80">{streak?.login_streak || 0} дней подряд</p>
+                <h3 className="text-lg font-semibold text-graphite-900">Серия входов</h3>
+                <p className="text-sm text-emerald-700 font-medium">{streak?.login_streak || 0} дней подряд</p>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -116,20 +129,20 @@ export default function ChallengesPage() {
               <button
                 onClick={handleClaimDaily}
                 disabled={claimedToday}
-                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all ${
+                className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97] ${
                   claimedToday
-                    ? 'bg-green-500/20 text-green-400 cursor-default'
-                    : 'bg-gradient-brand hover:brightness-110 text-white shadow-soft hover:shadow-glow'
+                    ? 'bg-success-soft text-emerald-800 cursor-default'
+                    : 'bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand'
                 }`}
               >
                 {claimedToday ? (
                   <>
-                    <Check className="w-4 h-4" />
+                    <Check className="w-4 h-4" strokeWidth={2} />
                     Получено
                   </>
                 ) : (
                   <>
-                    <Gift className="w-4 h-4" />
+                    <Gift className="w-4 h-4" strokeWidth={1.75} />
                     Забрать
                   </>
                 )}
@@ -137,49 +150,45 @@ export default function ChallengesPage() {
             </div>
           </div>
 
-          <div className="glass rounded-xl p-6 border border-primary/30">
+          <div className="rounded-xl border border-border bg-card shadow-soft p-6 animate-rise-in" style={{ animationDelay: '80ms' }}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center">
+              <div className="h-11 w-11 rounded-xl bg-secondary grid place-items-center text-xl">
                 🎰
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground">Колесо удачи</h3>
-                <p className="text-primary/80">Испытай удачу!</p>
+                <h3 className="text-lg font-semibold text-graphite-900">Колесо удачи</h3>
+                <p className="text-sm text-muted-foreground">Испытай удачу!</p>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground flex items-center gap-1">
-                Стоимость: <Coins className="w-4 h-4 text-accent" /> 25
+                Стоимость: <Coins className="w-4 h-4 text-graphite-600" strokeWidth={1.75} /> 25
               </div>
               <button
                 onClick={handleSpinWheel}
                 disabled={!currency || currency.coins < 25 || wheelSpinning}
-                className="px-4 py-2 rounded-lg font-medium bg-gradient-brand hover:brightness-110 text-white transition-all shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
               >
                 {wheelSpinning ? 'Крутится...' : 'Крутить'}
               </button>
             </div>
             {lastPrize && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-3 bg-green-500/20 rounded-lg text-center"
-              >
-                <p className="text-green-400 font-medium">🎉 {lastPrize.name}</p>
-              </motion.div>
+              <div className="mt-4 p-3 bg-success-soft rounded-lg text-center animate-scale-in">
+                <p className="text-emerald-800 font-medium text-sm">🎉 {lastPrize.name}</p>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-6 border-b border-border mb-6">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+              className={`flex items-center gap-2 pb-2.5 text-sm font-medium border-b-2 -mb-px transition-colors duration-150 ${
                 activeTab === tab.id
-                  ? 'bg-gradient-brand text-white shadow-soft'
-                  : 'bg-card/50 text-muted-foreground hover:bg-secondary'
+                  ? 'text-foreground border-primary'
+                  : 'text-muted-foreground border-transparent hover:text-foreground'
               }`}
             >
               {tab.icon}
@@ -188,75 +197,75 @@ export default function ChallengesPage() {
           ))}
         </div>
 
-        <div className="space-y-4">
-          {challenges.map((challenge) => (
-            <motion.div
+        <div className="space-y-4" key={activeTab}>
+          {challenges.map((challenge, index) => (
+            <div
               key={challenge.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className={`bg-card/55 backdrop-blur-xl rounded-xl p-4 border shadow-soft ${
-                challenge.is_completed ? 'border-green-500/50' : 'border-border/50'
+              className={`rounded-xl bg-card border shadow-soft p-4 transition-all duration-150 animate-rise-in ${
+                challenge.is_completed ? 'bg-accent/30 border-emerald-200' : 'border-border hover:shadow-elev'
               }`}
+              style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {challenge.is_completed ? (
-                      <Check className="w-5 h-5 text-green-400" />
+                      <Check className="w-5 h-5 text-emerald-600" strokeWidth={2} />
                     ) : (
-                      <Clock className="w-5 h-5 text-muted-foreground" />
+                      <Clock className="w-5 h-5 text-muted-foreground" strokeWidth={1.75} />
                     )}
-                    <h3 className="text-lg font-semibold text-foreground">
+                    <h3 className="text-base font-semibold text-graphite-900">
                       {challenge.name_ru || challenge.name}
                     </h3>
                   </div>
                   <p className="text-muted-foreground text-sm mb-3">
                     {challenge.description_ru || challenge.description}
                   </p>
-                  
-                  <div className="w-full bg-secondary rounded-full h-2 mb-2">
+
+                  <div className="w-full bg-graphite-200 rounded-full h-2 mb-2 overflow-hidden">
                     <div
-                      className={`h-2 rounded-full transition-all ${
-                        challenge.is_completed ? 'bg-green-500' : 'bg-gradient-brand'
+                      className={`h-2 rounded-full animate-bar-grow origin-left ${
+                        challenge.is_completed ? 'bg-emerald-600' : 'bg-primary'
                       }`}
                       style={{ width: `${Math.min(100, ((challenge.progress || 0) / challenge.target) * 100)}%` }}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground font-mono">
                     {challenge.progress || 0} / {challenge.target}
                   </p>
                 </div>
 
-                <div className="flex flex-col items-end gap-2 ml-4">
-                  <div className="flex items-center gap-2">
-                    {challenge.xp_reward > 0 && (
-                      <span className="text-sm text-primary flex items-center gap-1">
-                        <Zap className="w-4 h-4" /> {challenge.xp_reward} XP
-                      </span>
-                    )}
-                  </div>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  {challenge.xp_reward > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-medium">
+                      <Zap className="w-3.5 h-3.5" strokeWidth={1.75} /> {challenge.xp_reward} XP
+                    </span>
+                  )}
                   <div className="flex items-center gap-2">
                     {challenge.coin_reward > 0 && (
-                      <span className="text-sm text-accent flex items-center gap-1">
-                        <Coins className="w-4 h-4" /> {challenge.coin_reward}
+                      <span className="inline-flex items-center gap-1 rounded-full bg-secondary text-secondary-foreground px-2 py-0.5 text-xs font-medium">
+                        <Coins className="w-3.5 h-3.5 text-graphite-600" strokeWidth={1.75} /> {challenge.coin_reward}
                       </span>
                     )}
                     {challenge.gem_reward > 0 && (
-                      <span className="text-sm text-primary flex items-center gap-1">
-                        <Gem className="w-4 h-4" /> {challenge.gem_reward}
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-medium">
+                        <Gem className="w-3.5 h-3.5" strokeWidth={1.75} /> {challenge.gem_reward}
                       </span>
                     )}
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {challenges.length === 0 && (
-          <div className="text-center py-16">
-            <Target className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Нет доступных заданий</p>
+          <div className="rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center animate-rise-in">
+            <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+              <Target className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-lg font-semibold mt-4 text-graphite-900">Нет доступных заданий</h3>
+            <p className="text-sm text-muted-foreground max-w-[320px] mx-auto">Новые испытания скоро появятся</p>
           </div>
         )}
       </div>
