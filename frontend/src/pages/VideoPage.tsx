@@ -335,11 +335,11 @@ export default function VideoPage() {
 
     return (
       <Layout>
-        <div className="min-h-screen p-6">
+        <div className="min-h-screen bg-background p-6 animate-rise-in">
           <div className="max-w-7xl mx-auto">
             <button
               onClick={backToGrid}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors duration-150"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Назад к видео</span>
@@ -349,7 +349,7 @@ export default function VideoPage() {
               <div className="flex-1">
                 <div
                   ref={videoContainerRef}
-                  className="relative rounded-2xl overflow-hidden bg-black aspect-video group shadow-lg-brand"
+                  className="relative rounded-xl overflow-hidden bg-graphite-950 aspect-video group shadow-elev"
                 >
                   {video?.video_url ? (
                     <video
@@ -363,8 +363,8 @@ export default function VideoPage() {
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <Film className="w-24 h-24 text-muted-foreground/30 mx-auto mb-4" />
-                        <p className="text-muted-foreground">{video?.title || 'Select a video'}</p>
+                        <Film className="w-24 h-24 text-white/20 mx-auto mb-4" strokeWidth={1.5} />
+                        <p className="text-white/60 text-sm">{video?.title || 'Select a video'}</p>
                       </div>
                     </div>
                   )}
@@ -372,24 +372,24 @@ export default function VideoPage() {
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={handlePlay}
-                      className="w-20 h-20 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow transition-all hover:scale-110"
+                      className="h-16 w-16 rounded-full bg-white/95 text-graphite-900 flex items-center justify-center shadow-pop transition-all duration-150 hover:scale-105 animate-scale-in"
                     >
                       {isPlaying ? (
-                        <Pause className="w-10 h-10 text-white" />
+                        <Pause className="w-8 h-8" />
                       ) : (
-                        <Play className="w-10 h-10 text-white ml-1" />
+                        <Play className="w-8 h-8 ml-1" />
                       )}
                     </button>
                   </div>
 
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-graphite-950/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <div
                       ref={progressRef}
-                      className="h-1 bg-white/30 rounded-full cursor-pointer mb-4 relative"
+                      className="h-1 bg-white/25 rounded-full cursor-pointer mb-3 relative"
                       onClick={handleProgressClick}
                     >
                       <div
-                        className="absolute h-full bg-gradient-brand rounded-full"
+                        className="absolute h-full bg-emerald-400 rounded-full"
                         style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
                       />
                       {chapters.map((chapter) => (
@@ -403,13 +403,13 @@ export default function VideoPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <button onClick={handlePlay} className="text-white hover:text-primary transition-colors">
+                        <button onClick={handlePlay} className="text-white/90 hover:text-white transition-colors duration-150">
                           {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
                         </button>
-                        <button onClick={() => skipTime(-10)} className="text-white hover:text-primary transition-colors">
+                        <button onClick={() => skipTime(-10)} className="text-white/90 hover:text-white transition-colors duration-150">
                           <SkipBack className="w-5 h-5" />
                         </button>
-                        <button onClick={() => skipTime(10)} className="text-white hover:text-primary transition-colors">
+                        <button onClick={() => skipTime(10)} className="text-white/90 hover:text-white transition-colors duration-150">
                           <SkipForward className="w-5 h-5" />
                         </button>
                         <span className="text-white text-sm">
@@ -421,7 +421,7 @@ export default function VideoPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setIsMuted(!isMuted)}
-                            className="text-white hover:text-primary transition-colors"
+                            className="text-white/90 hover:text-white transition-colors duration-150"
                           >
                             {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                           </button>
@@ -444,19 +444,19 @@ export default function VideoPage() {
                         <div className="relative">
                           <button 
                             onClick={() => setShowQualityMenu(!showQualityMenu)}
-                            className="text-white hover:text-primary transition-colors flex items-center gap-1"
+                            className="text-white/90 hover:text-white transition-colors duration-150 flex items-center gap-1"
                           >
                             <Settings className="w-5 h-5" />
                             <span className="text-xs">{selectedQuality}</span>
                           </button>
                           {showQualityMenu && (
-                            <div className="absolute bottom-full right-0 mb-2 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden min-w-[120px] shadow-lg-brand">
+                            <div className="absolute bottom-full right-0 mb-2 bg-graphite-950/95 border border-white/10 rounded-xl overflow-hidden min-w-[120px] shadow-pop animate-pop-menu">
                               <button
                                 onClick={() => { setSelectedQuality('720p'); setShowQualityMenu(false) }}
-                                className="w-full px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center justify-between"
+                                className="w-full px-4 py-2 text-sm text-white/90 hover:bg-white/10 flex items-center justify-between transition-colors"
                               >
                                 <span>720p</span>
-                                {selectedQuality === '720p' && <Check className="w-4 h-4 text-primary" />}
+                                {selectedQuality === '720p' && <Check className="w-4 h-4 text-emerald-400" />}
                               </button>
                               <button
                                 onClick={() => {
@@ -467,20 +467,20 @@ export default function VideoPage() {
                                 }}
                                 disabled={!isPremium}
                                 className={cn(
-                                  "w-full px-4 py-2 text-sm flex items-center justify-between",
-                                  isPremium 
-                                    ? "text-foreground hover:bg-muted" 
-                                    : "text-white/50 cursor-not-allowed"
+                                  "w-full px-4 py-2 text-sm flex items-center justify-between transition-colors",
+                                  isPremium
+                                    ? "text-white/90 hover:bg-white/10"
+                                    : "text-white/40 cursor-not-allowed"
                                 )}
                               >
                                 <span className="flex items-center gap-2">
                                   1080p
                                   {!isPremium && <Lock className="w-3 h-3" />}
                                 </span>
-                                {selectedQuality === '1080p' && <Check className="w-4 h-4 text-primary" />}
+                                {selectedQuality === '1080p' && <Check className="w-4 h-4 text-emerald-400" />}
                               </button>
                               {!isPremium && (
-                                <div className="px-4 py-2 text-xs text-amber-400 border-t border-border flex items-center gap-1">
+                                <div className="px-4 py-2 text-xs text-amber-300 border-t border-white/10 flex items-center gap-1">
                                   <Crown className="w-3 h-3" />
                                   <span>Premium для 1080p</span>
                                 </div>
@@ -491,7 +491,7 @@ export default function VideoPage() {
                         
                         <button
                           onClick={toggleFullscreen}
-                          className="text-white hover:text-primary transition-colors"
+                          className="text-white/90 hover:text-white transition-colors duration-150"
                         >
                           {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
                         </button>
@@ -500,7 +500,7 @@ export default function VideoPage() {
                   </div>
 
                   {currentChapter && (
-                    <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-4 left-4 bg-graphite-950/70 border border-white/10 rounded-lg px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="flex items-center gap-2 text-white text-sm">
                         <BookOpen className="w-4 h-4" />
                         <span>{currentChapter.title}</span>
@@ -510,11 +510,11 @@ export default function VideoPage() {
                 </div>
 
                 <div className="mt-4">
-                  <h1 className="text-2xl font-bold tracking-tight">{video?.title}</h1>
+                  <h1 className="text-xl font-semibold font-display tracking-tight text-graphite-900">{video?.title}</h1>
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white font-bold">
+                        <div className="w-10 h-10 rounded-full bg-emerald-700 ring-1 ring-border flex items-center justify-center text-white font-semibold">
                           {author?.username?.[0]?.toUpperCase() || 'U'}
                         </div>
                         <div>
@@ -531,36 +531,36 @@ export default function VideoPage() {
                       <button
                         onClick={handleLike}
                         className={cn(
-                          "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
-                          isLiked ? "bg-gradient-brand text-white shadow-glow" : "bg-secondary/70 hover:bg-secondary"
+                          "flex items-center gap-2 px-4 h-9 rounded-full text-sm font-medium transition-all duration-150 ease-standard active:scale-[0.97]",
+                          isLiked ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground hover:bg-graphite-200"
                         )}
                       >
-                        <ThumbsUp className="w-5 h-5" />
+                        <ThumbsUp className={cn("w-4 h-4", isLiked && "fill-current animate-scale-in")} />
                         <span>{video ? formatViews(video.likes + (isLiked ? 1 : 0)) : '0'}</span>
                       </button>
                       <button
                         onClick={handleShare}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/70 hover:bg-secondary transition-all hover:shadow-soft"
+                        className="flex items-center gap-2 px-4 h-9 rounded-full bg-secondary text-secondary-foreground text-sm font-medium hover:bg-graphite-200 transition-all duration-150 ease-standard active:scale-[0.97]"
                       >
-                        <Share2 className="w-5 h-5" />
+                        <Share2 className="w-4 h-4" />
                         <span>Поделиться</span>
                       </button>
                       <button
                         onClick={handleBookmark}
                         className={cn(
-                          "flex items-center gap-2 px-4 py-2 rounded-full transition-colors",
-                          isBookmarked ? "bg-gradient-brand text-white shadow-glow" : "bg-secondary/70 hover:bg-secondary"
+                          "flex items-center gap-2 px-4 h-9 rounded-full text-sm font-medium transition-all duration-150 ease-standard active:scale-[0.97]",
+                          isBookmarked ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground hover:bg-graphite-200"
                         )}
                       >
-                        <Bookmark className="w-5 h-5" />
+                        <Bookmark className={cn("w-4 h-4", isBookmarked && "fill-current animate-scale-in")} />
                         <span>Сохранить</span>
                       </button>
                       {me && video && (Number(me.id) === video.author_id || me.role === 'admin' || me.role === 'super_admin') && (
                         <button
                           onClick={() => setShowDeleteDialog(true)}
-                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                          className="flex items-center gap-2 px-4 h-9 rounded-full bg-danger-soft hover:bg-destructive/15 text-destructive text-sm font-medium transition-all duration-150 active:scale-[0.97]"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 className="w-4 h-4" />
                           <span>Удалить</span>
                         </button>
                       )}
@@ -568,7 +568,7 @@ export default function VideoPage() {
                   </div>
 
                   {video?.description && (
-                    <div className="mt-4 p-4 glass rounded-xl">
+                    <div className="mt-4 p-4 bg-secondary rounded-xl text-sm">
                       <p className="text-sm whitespace-pre-wrap">{video.description}</p>
                       {video.tags && video.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-3">
@@ -604,14 +604,14 @@ export default function VideoPage() {
                               }
                             }}
                             className={cn(
-                              "flex items-center gap-4 p-3 rounded-xl transition-colors text-left",
+                              "flex items-center gap-4 p-3 rounded-xl transition-colors duration-150 text-left border",
                               currentChapter?.id === chapter.id
-                                ? "bg-primary/15 border border-primary/50 shadow-glow"
-                                : "bg-secondary/40 hover:bg-secondary/70 border border-transparent"
+                                ? "bg-accent border-emerald-200"
+                                : "bg-secondary/60 hover:bg-secondary border-transparent"
                             )}
                           >
-                            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
-                              <Clock className="w-5 h-5 text-primary" />
+                            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-accent">
+                              <Clock className="w-5 h-5 text-emerald-700" />
                             </div>
                             <div className="flex-1">
                               <p className="font-medium">{chapter.title}</p>
@@ -630,22 +630,23 @@ export default function VideoPage() {
                 )}
               </div>
 
-              <div className="w-80 hidden lg:block">
-                <h2 className="text-lg font-semibold mb-4">Похожие видео</h2>
-                <div className="space-y-3">
-                  {videos.filter(v => v.id !== video?.id).slice(0, 10).map((v) => (
+              <div className="w-[360px] shrink-0 hidden lg:block">
+                <h2 className="text-lg font-semibold font-display mb-4">Похожие видео</h2>
+                <div className="space-y-1">
+                  {videos.filter(v => v.id !== video?.id).slice(0, 10).map((v, vi) => (
                     <button
                       key={v.id}
                       onClick={() => selectVideo(v.id)}
-                      className="w-full flex gap-3 p-2 rounded-xl transition-all text-left hover:bg-secondary/60 hover:shadow-soft"
+                      className="w-full flex gap-3 p-2 rounded-xl transition-colors duration-150 text-left hover:bg-accent/60 animate-rise-in"
+                      style={{ animationDelay: `${Math.min(vi, 8) * 40}ms` }}
                     >
-                      <div className="w-32 h-20 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                      <div className="w-40 aspect-video rounded-lg bg-secondary flex items-center justify-center flex-shrink-0 overflow-hidden relative">
                         {v.thumbnail ? (
                           <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
                         ) : (
-                          <Film className="w-8 h-8 text-muted-foreground" />
+                          <Film className="w-8 h-8 text-graphite-400" />
                         )}
-                        <div className="absolute bottom-1 right-1 px-1 py-0.5 bg-black/80 rounded text-[10px] text-white">
+                        <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-graphite-950/70 rounded-md text-[11px] text-white">
                           {formatTime(v.duration)}
                         </div>
                       </div>
@@ -680,9 +681,9 @@ export default function VideoPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen flex">
+      <div className="min-h-screen bg-background flex animate-rise-in">
         <aside className={cn(
-          "hidden md:flex flex-col bg-card/50 backdrop-blur-md border-r border-border transition-all duration-300",
+          "hidden md:flex flex-col bg-card border-r border-border transition-all duration-300",
           sidebarCollapsed ? "w-20" : "w-60"
         )}>
           <div className="p-4">
@@ -692,14 +693,17 @@ export default function VideoPage() {
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left",
+                    "relative w-full flex items-center gap-3 h-9 px-3 rounded-lg text-sm transition-all duration-150 ease-standard text-left",
                     selectedCategory === cat.id
-                      ? "bg-gradient-brand text-white shadow-glow"
-                      : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
+                      ? "bg-accent text-accent-foreground font-medium"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
+                  {selectedCategory === cat.id && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary" />
+                  )}
                   {cat.icon}
-                  {!sidebarCollapsed && <span className="text-sm font-medium">{cat.name}</span>}
+                  {!sidebarCollapsed && <span>{cat.name}</span>}
                 </button>
               ))}
             </div>
@@ -718,10 +722,10 @@ export default function VideoPage() {
                         message: 'Этот раздел появится в одном из ближайших обновлений'
                       })
                     }
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    className="w-full flex items-center gap-3 h-9 px-3 rounded-lg text-sm transition-all duration-150 ease-standard text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   >
                     {item.icon}
-                    {!sidebarCollapsed && <span className="text-sm font-medium">{item.name}</span>}
+                    {!sidebarCollapsed && <span>{item.name}</span>}
                   </button>
                 ))}
               </div>
@@ -745,9 +749,9 @@ export default function VideoPage() {
               
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-brand text-white rounded-full hover:opacity-90 hover:shadow-glow transition-all font-medium"
+                className="inline-flex items-center gap-2 h-10 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 ease-standard"
               >
-                <Upload className="w-5 h-5" />
+                <Upload className="w-5 h-5" strokeWidth={1.75} />
                 <span>Загрузить</span>
               </button>
             </div>
@@ -762,10 +766,10 @@ export default function VideoPage() {
                   key={filter.id}
                   onClick={() => setActiveFilter(filter.id)}
                   className={cn(
-                    "px-4 py-1.5 rounded-full whitespace-nowrap text-sm font-medium transition-all",
+                    "h-8 px-3 rounded-md whitespace-nowrap text-sm transition-all duration-150 ease-standard",
                     activeFilter === filter.id
-                      ? "bg-gradient-brand text-white shadow-glow"
-                      : "bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      ? "bg-card text-foreground font-medium shadow-soft border border-border"
+                      : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-graphite-200"
                   )}
                 >
                   {filter.label}
@@ -774,49 +778,60 @@ export default function VideoPage() {
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div key={i} className="rounded-xl border border-border bg-card shadow-soft overflow-hidden">
+                    <div className="skeleton aspect-video rounded-none" />
+                    <div className="p-3 space-y-2">
+                      <div className="skeleton h-4 w-full" />
+                      <div className="skeleton h-3 w-2/3" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredVideos.length === 0 ? (
-              <div className="text-center py-20">
-                <Film className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-xl font-semibold mb-2">
+              <div className="text-center py-16 px-6 animate-rise-in">
+                <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto mb-4">
+                  <Film className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+                </div>
+                <h2 className="text-lg font-semibold mb-1">
                   {searchQuery ? 'Ничего не найдено' : 'Видео пока нет'}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-sm text-muted-foreground max-w-[320px] mx-auto">
                   {searchQuery ? 'Попробуйте изменить поисковый запрос' : 'Будьте первым, кто загрузит видео!'}
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredVideos.map((video) => (
+                {filteredVideos.map((video, videoIndex) => (
                   <button
                     key={video.id}
                     onClick={() => selectVideo(video.id)}
-                    className="group text-left rounded-2xl overflow-hidden glass hover:shadow-lg-brand transition-all"
+                    className="group text-left rounded-xl overflow-hidden border border-border bg-card shadow-soft hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 animate-rise-in"
+                    style={{ animationDelay: `${Math.min(videoIndex, 8) * 30}ms` }}
                   >
                     <div className="relative aspect-video bg-secondary overflow-hidden">
                       {video.thumbnail ? (
                         <img
                           src={video.thumbnail}
                           alt={video.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-secondary/50">
-                          <Film className="w-12 h-12 text-muted-foreground" />
+                        <div className="w-full h-full flex items-center justify-center bg-graphite-100">
+                          <Film className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100">
-                          <Play className="w-7 h-7 text-white ml-1" />
+                      <div className="absolute inset-0 bg-graphite-950/0 group-hover:bg-graphite-950/20 transition-colors flex items-center justify-center">
+                        <div className="w-14 h-14 rounded-full bg-white/95 text-graphite-900 shadow-pop flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100">
+                          <Play className="w-6 h-6 ml-1" />
                         </div>
                       </div>
-                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/80 rounded text-xs text-white font-medium">
+                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-graphite-950/70 rounded-md text-[11px] text-white font-medium">
                         {formatTime(video.duration)}
                       </div>
                       {video.quality === '1080p' && (
-                        <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded text-xs text-white font-bold flex items-center gap-1">
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-warning rounded-md text-[11px] text-white font-semibold flex items-center gap-1">
                           <Crown className="w-3 h-3" />
                           HD
                         </div>
@@ -824,7 +839,7 @@ export default function VideoPage() {
                     </div>
                     <div className="p-3">
                       <div className="flex gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-brand flex-shrink-0 flex items-center justify-center text-white text-sm font-bold">
+                        <div className="w-9 h-9 rounded-full bg-emerald-700 ring-1 ring-border flex-shrink-0 flex items-center justify-center text-white text-sm font-semibold">
                           {video.author?.username?.[0]?.toUpperCase() || 'U'}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1010,9 +1025,9 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { if (!uploading) { resetForm(); onClose(); } }} />
-      
-      <div className="relative w-full max-w-2xl glass-strong rounded-2xl overflow-hidden">
+      <div className="absolute inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft" onClick={() => { if (!uploading) { resetForm(); onClose(); } }} />
+
+      <div className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-pop overflow-hidden animate-scale-in">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="text-xl font-bold flex items-center gap-2 tracking-tight">
             <Upload className="w-6 h-6 text-primary" />
@@ -1031,10 +1046,10 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
           <div
             onClick={() => !uploading && videoInputRef.current?.click()}
             className={cn(
-              "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors",
+              "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors duration-150",
               videoFile
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50 hover:bg-secondary/50"
+                ? "border-emerald-300 bg-accent/40"
+                : "border-input hover:border-emerald-300 hover:bg-accent/40"
             )}
           >
             <input
@@ -1047,7 +1062,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
             />
             {videoFile ? (
               <div className="flex items-center justify-center gap-3">
-                <FileVideo className="w-10 h-10 text-primary" />
+                <FileVideo className="w-10 h-10 text-emerald-700" />
                 <div className="text-left">
                   <p className="font-medium">{videoFile.name}</p>
                   <p className="text-sm text-muted-foreground">
@@ -1057,7 +1072,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
               </div>
             ) : (
               <>
-                <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <Upload className="w-12 h-12 text-graphite-300 mx-auto mb-3" strokeWidth={1.5} />
                 <p className="font-medium">Нажмите для выбора видео</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   MP4, WebM, MOV до 500 МБ, макс. 120 мин
@@ -1112,10 +1127,10 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
             <div
               onClick={() => !uploading && thumbnailInputRef.current?.click()}
               className={cn(
-                "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors",
+                "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors duration-150",
                 thumbnailFile
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
+                  ? "border-emerald-300 bg-accent/40"
+                  : "border-input hover:border-emerald-300 hover:bg-accent/40"
               )}
             >
               <input
@@ -1128,7 +1143,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
               />
               {thumbnailFile ? (
                 <div className="flex items-center justify-center gap-3">
-                  <ImageIcon className="w-8 h-8 text-primary" />
+                  <ImageIcon className="w-8 h-8 text-emerald-700" />
                   <span className="font-medium">{thumbnailFile.name}</span>
                 </div>
               ) : (
@@ -1141,7 +1156,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
           </div>
 
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
+            <div className="p-3 bg-danger-soft border border-destructive/20 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
@@ -1154,7 +1169,7 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
               </div>
               <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-brand transition-all duration-300"
+                  className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -1166,14 +1181,14 @@ function UploadModal({ isOpen, onClose, onSuccess }: UploadModalProps) {
               type="button"
               onClick={() => { resetForm(); onClose(); }}
               disabled={uploading}
-              className="flex-1 px-4 py-2.5 bg-secondary/70 rounded-xl hover:bg-secondary transition-all disabled:opacity-50 font-medium"
+              className="flex-1 h-10 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:bg-graphite-200 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={uploading || !videoFile || !title.trim()}
-              className="flex-1 px-4 py-2.5 bg-gradient-brand text-white rounded-xl hover:opacity-90 hover:shadow-glow transition-all disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+              className="flex-1 h-10 bg-primary text-primary-foreground rounded-lg text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
             >
               {uploading ? (
                 <>

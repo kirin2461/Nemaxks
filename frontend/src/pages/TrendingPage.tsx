@@ -1,8 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { TrendingUp, Sparkles, Eye, Heart, MessageSquare, X } from 'lucide-react';
 import { trendingAPI, TrendingContent, UserRecommendation } from '../lib/api';
-import { formatDistanceToNow } from 'date-fns';
 
 type Recommendation = UserRecommendation;
 
@@ -28,41 +26,51 @@ export default function TrendingPage() {
 
   if (trendingLoading) {
     return (
-      <div className="min-h-screen bg-nebula flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
+      <div className="min-h-screen bg-background px-6 py-6">
+        <div className="max-w-[1440px] mx-auto space-y-4">
+          <div className="skeleton h-9 w-56" />
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-xl border border-border bg-card shadow-soft p-5 flex gap-4">
+              <div className="skeleton h-9 w-12" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton h-4 w-40" />
+                <div className="skeleton h-3 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-nebula text-foreground p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 rounded-xl bg-gradient-brand text-white shadow-glow">
-            <TrendingUp className="w-6 h-6" />
+    <div className="min-h-screen bg-background text-foreground px-6 py-6 animate-rise-in">
+      <div className="max-w-[1440px] mx-auto">
+        <div className="flex items-center gap-3 pt-0 pb-4 mb-4">
+          <div className="p-2 rounded-xl bg-primary text-primary-foreground shadow-soft">
+            <TrendingUp className="w-6 h-6" strokeWidth={1.75} />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            <span className="gradient-brand-text">В тренде</span> и для вас
+          <h1 className="text-2xl font-display font-bold tracking-tight text-graphite-900">
+            В тренде и для вас
           </h1>
         </div>
 
         {recommendations.length > 0 && (
           <div className="mb-10">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2 tracking-tight">
-              <Sparkles className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2 tracking-tight">
+              <Sparkles className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
               Рекомендовано вам
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
-              {recommendations.map((rec: Recommendation) => (
-                <motion.div
+              {recommendations.map((rec: Recommendation, index: number) => (
+                <div
                   key={rec.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="glass rounded-xl p-5 border border-primary/30 hover:shadow-glow transition-shadow"
+                  className="rounded-xl border border-border bg-card shadow-soft p-5 hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 animate-rise-in"
+                  style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs bg-primary/30 text-primary/80 px-2 py-0.5 rounded capitalize">
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800 capitalize">
                         {rec.content_type}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -71,7 +79,7 @@ export default function TrendingPage() {
                     </div>
                     <button
                       onClick={() => dismissMutation.mutate(rec.id)}
-                      className="p-1 text-muted-foreground hover:text-foreground hover:bg-secondary rounded"
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -80,69 +88,73 @@ export default function TrendingPage() {
                   <p className="text-xs text-muted-foreground">
                     ID контента: {rec.content_id}
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2 tracking-tight">
-          <TrendingUp className="w-5 h-5 text-accent" />
+        <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2 tracking-tight">
+          <TrendingUp className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
           Сейчас в тренде
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {trending.map((content: TrendingContent, index: number) => (
-            <motion.div
+            <div
               key={content.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="glass rounded-xl p-5"
+              className="rounded-xl border border-border bg-card shadow-soft p-5 hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 animate-rise-in"
+              style={{ animationDelay: `${Math.min(index, 10) * 25}ms` }}
             >
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold">
-                  #{index + 1}
+                <div
+                  className={`w-12 shrink-0 text-3xl font-display font-bold animate-count-flick ${
+                    index < 3 ? 'text-emerald-700' : 'text-graphite-300'
+                  }`}
+                >
+                  {index + 1}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs bg-secondary text-foreground px-2 py-0.5 rounded capitalize">
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground capitalize">
                       {content.content_type}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       Очки: {Math.round(content.score || 0)}
                     </span>
                   </div>
-                  <p className="text-foreground mb-3">
+                  <p className="text-sm font-medium text-foreground mb-3">
                     {content.content_type === 'post' && `Пост #${content.content_id}`}
                     {content.content_type === 'channel' && `Канал #${content.content_id}`}
                     {content.content_type === 'video' && `Видео #${content.content_id}`}
                   </p>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-4 h-4" strokeWidth={1.75} />
                       {(content.views || 0).toLocaleString()}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Heart className="w-4 h-4" />
+                      <Heart className="w-4 h-4" strokeWidth={1.75} />
                       {(content.likes || 0).toLocaleString()}
                     </div>
                     <div className="flex items-center gap-1">
-                      <MessageSquare className="w-4 h-4" />
+                      <MessageSquare className="w-4 h-4" strokeWidth={1.75} />
                       {(content.comments || 0).toLocaleString()}
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {trending.length === 0 && (
-          <div className="glass rounded-xl p-12 text-center">
-            <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Пока ничего нет в трендах</h3>
-            <p className="text-muted-foreground">
+          <div className="rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center animate-rise-in">
+            <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+              <TrendingUp className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-lg font-semibold mt-4 mb-1">Пока ничего нет в трендах</h3>
+            <p className="text-sm text-muted-foreground max-w-[320px] mx-auto">
               Здесь появится контент с высокой активностью
             </p>
           </div>
