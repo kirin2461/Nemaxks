@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { Link } from 'wouter'
-import { ArrowLeft, MessageCircle, Clock, HelpCircle, Ban, CreditCard, Users, AlertTriangle, Send } from 'lucide-react'
+import { ArrowLeft, Clock, HelpCircle, Ban, CreditCard, Users, AlertTriangle, Send } from 'lucide-react'
 
 type Lang = 'ru' | 'en' | 'zh'
 
 const content = {
   ru: {
+    eyebrow: 'Поддержка',
     title: 'Связаться с нами',
     subtitle: 'Мы всегда готовы помочь',
     telegram: {
@@ -44,6 +45,7 @@ const content = {
     footer: '© 2026 Nebula. Все права защищены.'
   },
   en: {
+    eyebrow: 'Support',
     title: 'Contact Us',
     subtitle: 'We are always ready to help',
     telegram: {
@@ -82,6 +84,7 @@ const content = {
     footer: '© 2026 Nebula. All rights reserved.'
   },
   zh: {
+    eyebrow: '支持',
     title: '联系我们',
     subtitle: '我们随时准备提供帮助',
     telegram: {
@@ -127,21 +130,22 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <nav className="fixed top-0 w-full z-40 bg-card/55 backdrop-blur-xl border-b border-border/60 p-4 shadow-soft">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
+      <nav className="sticky top-0 w-full z-40 bg-background/95 border-b border-border">
+        <div className="h-16 max-w-[1120px] mx-auto px-6 flex justify-between items-center">
           <Link href="/welcome">
-            <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="w-5 h-5" />
+            <button className="flex items-center gap-2 h-9 px-3 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150">
+              <ArrowLeft className="w-4 h-4" />
               <span>Назад</span>
             </button>
           </Link>
-          <div className="flex gap-2">
+          {/* Segmented language control */}
+          <div className="inline-flex p-1 rounded-lg bg-secondary gap-1">
             {(['ru', 'en', 'zh'] as Lang[]).map((l) => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-                  lang === l ? 'gradient-brand text-primary-foreground shadow-glow' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                className={`h-8 px-3 rounded-md text-xs font-medium transition-all duration-150 ${
+                  lang === l ? 'bg-card text-foreground shadow-soft' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {l.toUpperCase()}
@@ -151,79 +155,94 @@ export default function ContactPage() {
         </div>
       </nav>
 
-      <main className="pt-24 pb-16 px-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-2 gradient-brand-text">{t.title}</h1>
-            <p className="text-muted-foreground">{t.subtitle}</p>
+      <main className="py-12 sm:py-20 px-6">
+        <div className="max-w-[720px] mx-auto">
+          <div className="mb-12 animate-rise-in">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-3">
+              {t.eyebrow}
+            </p>
+            <h1 className="text-4xl font-display font-bold tracking-[-0.025em] text-graphite-900 mb-2 break-words">{t.title}</h1>
+            <p className="text-lg text-muted-foreground">{t.subtitle}</p>
           </div>
 
           <div className="space-y-6">
-            <a 
+            <a
               href={t.telegram.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="block glass rounded-xl shadow-soft p-6 hover:shadow-glow hover:border-primary/40 transition-all group"
+              className="block rounded-xl border border-border bg-card shadow-soft p-6 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 group animate-rise-in [animation-fill-mode:both]"
+              style={{ animationDelay: '60ms' }}
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 gradient-brand glow rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Send className="w-7 h-7 text-primary-foreground" />
+                <div className="h-14 w-14 rounded-xl bg-accent grid place-items-center shrink-0 group-hover:scale-110 transition-transform duration-150">
+                  <Send className="w-7 h-7 text-emerald-600" strokeWidth={1.75} />
                 </div>
                 <div>
-                  <p className="text-sm text-primary mb-1">{t.telegram.title}</p>
-                  <p className="text-2xl font-bold">{t.telegram.handle}</p>
+                  <p className="text-sm text-primary font-medium mb-1">{t.telegram.title}</p>
+                  <p className="text-2xl font-display font-bold text-graphite-900">{t.telegram.handle}</p>
                 </div>
               </div>
             </a>
 
-            <div className="glass rounded-xl shadow-soft p-6">
+            <div
+              className="rounded-xl border border-border bg-card shadow-soft p-6 animate-rise-in [animation-fill-mode:both]"
+              style={{ animationDelay: '120ms' }}
+            >
               <div className="flex items-center gap-3 mb-2">
-                <Clock className="w-5 h-5 text-primary" />
-                <p className="text-muted-foreground">{t.responseTime.title}</p>
+                <Clock className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
+                <p className="text-sm text-muted-foreground">{t.responseTime.title}</p>
               </div>
-              <p className="text-xl font-semibold">{t.responseTime.value}</p>
+              <p className="text-xl font-display font-bold text-graphite-900">{t.responseTime.value}</p>
             </div>
 
-            <div className="glass rounded-xl shadow-soft p-6">
-              <h3 className="text-lg font-semibold mb-4">{t.topics.title}</h3>
+            <div
+              className="rounded-xl border border-border bg-card shadow-soft p-6 animate-rise-in [animation-fill-mode:both]"
+              style={{ animationDelay: '180ms' }}
+            >
+              <h3 className="text-lg font-semibold text-graphite-900 mb-4">{t.topics.title}</h3>
               <div className="space-y-3">
                 {t.topics.items.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 text-foreground/80">
-                    <item.icon className="w-5 h-5 text-primary" />
-                    <span>{item.text}</span>
+                  <div key={i} className="flex items-center gap-3 text-graphite-700">
+                    <item.icon className="w-5 h-5 text-emerald-600 shrink-0" strokeWidth={1.75} />
+                    <span className="text-sm">{item.text}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-amber-500/10 backdrop-blur-xl border border-amber-500/30 rounded-xl shadow-soft p-6">
-              <h3 className="text-lg font-semibold mb-3 text-amber-400">{t.banAppeal.title}</h3>
-              <p className="text-foreground/80 mb-3">{t.banAppeal.description}</p>
-              <ul className="space-y-2 mb-4">
+            <div
+              className="bg-warning-soft border border-warning/30 rounded-xl p-6 animate-rise-in [animation-fill-mode:both]"
+              style={{ animationDelay: '240ms' }}
+            >
+              <h3 className="text-lg font-semibold mb-3 text-[hsl(32_95%_30%)]">{t.banAppeal.title}</h3>
+              <p className="text-sm text-graphite-700 mb-3">{t.banAppeal.description}</p>
+              <ul className="space-y-2 mb-4 list-disc pl-5">
                 {t.banAppeal.items.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-foreground/80">
-                    <span className="text-amber-400">•</span>
-                    <span>{item}</span>
+                  <li key={i} className="text-sm text-graphite-700">
+                    {item}
                   </li>
                 ))}
               </ul>
-              <p className="text-sm text-amber-400/80">{t.banAppeal.note}</p>
+              <p className="text-xs font-medium text-[hsl(32_95%_30%)]">{t.banAppeal.note}</p>
             </div>
 
-            <div className="glass rounded-xl shadow-soft p-6">
+            <div
+              className="rounded-xl border border-border bg-card shadow-soft p-6 animate-rise-in [animation-fill-mode:both]"
+              style={{ animationDelay: '300ms' }}
+            >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-primary" />
+                <div className="h-10 w-10 rounded-xl bg-accent grid place-items-center shrink-0">
+                  <Users className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t.superAdmin.title}</p>
-                  <p className="font-semibold">{t.superAdmin.handle}</p>
+                  <p className="font-semibold text-graphite-900">{t.superAdmin.handle}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="text-center mt-12 text-muted-foreground">
+          <div className="text-center mt-12 text-xs text-graphite-400 font-mono">
             {t.footer}
           </div>
         </div>

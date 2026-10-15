@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Layout } from '@/components/Layout'
 import { referralAPI } from '@/lib/api'
 import { QRCodeSVG } from 'qrcode.react'
-import { Copy, Check, Users, Link2, QrCode, Share2 } from 'lucide-react'
+import { Copy, Check, Users, Link2, QrCode, Share2, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface InvitedUser {
@@ -87,7 +87,7 @@ export default function InvitePage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-600" />
         </div>
       </Layout>
     )
@@ -95,76 +95,92 @@ export default function InvitePage() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-2xl mx-auto space-y-6">
+      <div className="p-6 max-w-2xl mx-auto space-y-6 animate-rise-in">
         <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 rounded-xl bg-primary/20">
-            <Users className="w-6 h-6 text-primary" />
+          <div className="h-12 w-12 rounded-xl bg-accent grid place-items-center">
+            <Users className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Пригласить <span className="gradient-brand-text">друзей</span></h1>
-            <p className="text-muted-foreground">Делись ссылкой и приглашай друзей в Nebula</p>
+            <h1 className="text-2xl font-display font-bold tracking-[-0.015em] text-graphite-900">
+              Пригласить <span className="text-primary">друзей</span>
+            </h1>
+            <p className="text-sm text-muted-foreground">Делись ссылкой и приглашай друзей в Nebula</p>
           </div>
         </div>
 
-        <div className="glass rounded-xl shadow-soft p-6 space-y-6">
+        <div className="rounded-xl border border-border bg-card shadow-soft p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Твоя реферальная ссылка</h2>
+              <h2 className="text-lg font-semibold text-graphite-900">Твоя реферальная ссылка</h2>
               <p className="text-sm text-muted-foreground">Поделись этой ссылкой с друзьями</p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold gradient-brand-text">{inviteCount}</div>
+              <div className="text-3xl font-display font-extrabold tracking-[-0.02em] text-graphite-900">{inviteCount}</div>
               <div className="text-xs text-muted-foreground">приглашено</div>
             </div>
           </div>
 
           <div className="flex gap-2">
-            <div className="flex-1 bg-secondary/50 border border-border/50 rounded-lg px-4 py-3 font-mono text-sm truncate">
+            <div className="flex-1 bg-graphite-100 border border-border rounded-lg px-4 py-3 font-mono text-sm text-graphite-700 truncate">
               {getInviteLink()}
             </div>
             <button
               onClick={copyLink}
+              title="Скопировать"
               className={cn(
-                "btn-secondary p-3 transition-all",
-                copied && "bg-green-500/20 text-green-500"
+                "h-[46px] w-[46px] shrink-0 grid place-items-center rounded-lg border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 active:scale-[0.97] transition-all duration-150",
+                copied && "bg-success-soft border-emerald-200 text-emerald-700"
               )}
             >
               {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
             </button>
             <button
               onClick={() => setShowQR(!showQR)}
+              title="QR-код"
               className={cn(
-                "btn-secondary p-3",
-                showQR && "bg-primary/20 text-primary"
+                "h-[46px] w-[46px] shrink-0 grid place-items-center rounded-lg border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 active:scale-[0.97] transition-all duration-150",
+                showQR && "bg-accent border-emerald-200 text-accent-foreground"
               )}
             >
               <QrCode className="w-5 h-5" />
             </button>
             {'share' in navigator && (
-              <button onClick={shareLink} className="btn-secondary p-3">
+              <button
+                onClick={shareLink}
+                title="Поделиться"
+                className="h-[46px] w-[46px] shrink-0 grid place-items-center rounded-lg border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 active:scale-[0.97] transition-all duration-150"
+              >
                 <Share2 className="w-5 h-5" />
               </button>
             )}
           </div>
 
           {showQR && (
-            <div className="flex justify-center p-6 bg-white rounded-xl">
-              <QRCodeSVG
-                value={getInviteLink()}
-                size={200}
-                level="H"
-                includeMargin
-              />
+            <div className="flex justify-center animate-scale-in">
+              <div className="p-4 bg-card rounded-xl border border-border shadow-soft">
+                <QRCodeSVG
+                  value={getInviteLink()}
+                  size={200}
+                  level="H"
+                  includeMargin
+                />
+              </div>
             </div>
           )}
 
           <div className="flex gap-2 pt-2">
-            <button onClick={copyLink} className="gradient-brand text-primary-foreground rounded-lg px-4 py-2 font-medium shadow-soft hover:brightness-110 hover:shadow-glow active:scale-[0.98] transition-all flex-1 flex items-center justify-center gap-2">
+            <button
+              onClick={copyLink}
+              className="flex-1 h-10 px-4 inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150"
+            >
               <Link2 className="w-4 h-4" />
               Скопировать ссылку
             </button>
             {'share' in navigator && (
-              <button onClick={shareLink} className="btn-secondary flex-1 flex items-center justify-center gap-2">
+              <button
+                onClick={shareLink}
+                className="flex-1 h-10 px-4 inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 active:scale-[0.97] transition-all duration-150"
+              >
                 <Share2 className="w-4 h-4" />
                 Поделиться
               </button>
@@ -173,15 +189,16 @@ export default function InvitePage() {
         </div>
 
         {invitedUsers.length > 0 && (
-          <div className="glass rounded-xl shadow-soft p-6">
-            <h2 className="text-lg font-semibold mb-4">Приглашённые друзья</h2>
-            <div className="space-y-3">
-              {invitedUsers.map((user) => (
+          <div className="rounded-xl border border-border bg-card shadow-soft p-6">
+            <h2 className="text-lg font-semibold text-graphite-900 mb-4">Приглашённые друзья</h2>
+            <div className="space-y-2">
+              {invitedUsers.map((user, i) => (
                 <div
                   key={user.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/40 border border-border/40"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border animate-rise-in [animation-fill-mode:both]"
+                  style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}
                 >
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-emerald-700 ring-1 ring-border flex items-center justify-center shrink-0 overflow-hidden">
                     {user.avatar ? (
                       <img
                         src={user.avatar}
@@ -189,13 +206,13 @@ export default function InvitePage() {
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
-                      <span className="text-lg font-bold text-primary">
+                      <span className="text-sm font-semibold text-white">
                         {user.username.charAt(0).toUpperCase()}
                       </span>
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="font-medium">{user.username}</div>
+                    <div className="text-sm font-medium text-foreground">{user.username}</div>
                     <div className="text-xs text-muted-foreground">
                       {formatDate(user.invited_at)}
                     </div>
@@ -206,19 +223,19 @@ export default function InvitePage() {
           </div>
         )}
 
-        <div className="glass rounded-xl shadow-soft p-6 bg-gradient-to-br from-primary/10 to-accent/5">
-          <h3 className="font-semibold mb-2">Как это работает?</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+        <div className="rounded-xl border border-border bg-card shadow-soft p-6">
+          <h3 className="font-semibold text-graphite-900 mb-3">Как это работает?</h3>
+          <ul className="space-y-2.5 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
-              <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs mt-0.5">1</span>
+              <span className="w-5 h-5 rounded-full bg-accent text-emerald-700 flex items-center justify-center text-xs font-medium mt-0.5 shrink-0">1</span>
               Поделись своей ссылкой или QR-кодом с друзьями
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs mt-0.5">2</span>
+              <span className="w-5 h-5 rounded-full bg-accent text-emerald-700 flex items-center justify-center text-xs font-medium mt-0.5 shrink-0">2</span>
               Друг переходит по ссылке и регистрируется
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs mt-0.5">3</span>
+              <span className="w-5 h-5 rounded-full bg-accent text-emerald-700 flex items-center justify-center text-xs font-medium mt-0.5 shrink-0">3</span>
               Вы автоматически становитесь друзьями
             </li>
           </ul>

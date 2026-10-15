@@ -3,7 +3,7 @@ import { useRoute, useLocation } from 'wouter'
 import { referralAPI } from '@/lib/api'
 import { useStore } from '@/lib/store'
 import { Logo } from '@/components/Logo'
-import { UserPlus, Check, AlertCircle, LogIn } from 'lucide-react'
+import { UserPlus, Check, AlertCircle, LogIn, Loader2 } from 'lucide-react'
 
 export default function JoinPage() {
   const [, params] = useRoute('/join/:code')
@@ -61,57 +61,63 @@ export default function JoinPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-nebula">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      <div className="min-h-screen grid place-items-center bg-background">
+        <Loader2 className="w-10 h-10 animate-spin text-emerald-600" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-nebula p-4">
-      <div className="glass-strong rounded-xl p-8 max-w-md w-full text-center space-y-6 animate-slide-in">
-        <Logo className="mx-auto" />
+    <div className="min-h-screen grid place-items-center bg-background p-4">
+      <div className="rounded-xl border border-border bg-card shadow-soft p-8 max-w-[420px] w-full text-center space-y-6 animate-scale-in [animation-duration:240ms]">
+        <Logo className="mx-auto w-fit" />
 
         {error ? (
           <>
-            <div className="w-16 h-16 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center mx-auto">
-              <AlertCircle className="w-8 h-8 text-red-400" />
+            <div className="rounded-lg bg-danger-soft border border-destructive/20 p-4 flex items-center gap-3 text-left">
+              <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+              <p className="text-sm text-destructive">{error}</p>
             </div>
-            <h1 className="text-2xl font-bold">Ошибка</h1>
-            <p className="text-muted-foreground">{error}</p>
-            <button onClick={() => setLocation('/auth')} className="w-full py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50">
+            <button
+              onClick={() => setLocation('/auth')}
+              className="w-full h-12 px-6 inline-flex items-center justify-center gap-2 rounded-lg text-base font-medium bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 disabled:pointer-events-none disabled:opacity-50"
+            >
               Перейти к авторизации
             </button>
           </>
         ) : success ? (
           <>
-            <div className="w-16 h-16 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto glow">
-              <Check className="w-8 h-8 text-accent" />
+            <div className="w-16 h-16 rounded-full bg-accent grid place-items-center mx-auto animate-scale-in">
+              <Check className="w-8 h-8 text-emerald-600" />
             </div>
-            <h1 className="text-2xl font-bold">Добро пожаловать!</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-display font-bold tracking-[-0.015em] text-graphite-900">Добро пожаловать!</h1>
+            <p className="text-sm text-muted-foreground">
               Вы присоединились по приглашению {inviter?.username}. Вы теперь друзья!
             </p>
           </>
         ) : (
           <>
-            <div className="w-20 h-20 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center mx-auto glow overflow-hidden">
-              {inviter?.avatar ? (
-                <img
-                  src={inviter.avatar}
-                  alt={inviter.username}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <UserPlus className="w-10 h-10 text-primary" />
-              )}
+            <div className="relative w-20 h-20 mx-auto">
+              {/* pulse-ring once on mount */}
+              <span className="absolute inset-0 rounded-full bg-emerald-500/40 animate-pulse-ring [animation-iteration-count:1]" />
+              <div className="relative w-20 h-20 rounded-full bg-emerald-700 ring-1 ring-border grid place-items-center overflow-hidden">
+                {inviter?.avatar ? (
+                  <img
+                    src={inviter.avatar}
+                    alt={inviter.username}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <UserPlus className="w-9 h-9 text-white" strokeWidth={1.75} />
+                )}
+              </div>
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold mb-2 gradient-brand-text">Приглашение в Nebula</h1>
-              <p className="text-muted-foreground">
-                <span className="font-semibold text-primary">{inviter?.username}</span> приглашает вас присоединиться к Nebula
+              <p className="text-sm text-muted-foreground mb-1">
+                <span className="font-semibold text-primary">{inviter?.username}</span> приглашает вас в
               </p>
+              <h1 className="text-xl font-display font-bold tracking-[-0.01em] text-graphite-900">Nebula</h1>
             </div>
 
             <div className="space-y-3">
@@ -119,10 +125,10 @@ export default function JoinPage() {
                 <button
                   onClick={handleJoin}
                   disabled={joining}
-                  className="w-full py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full h-12 px-6 inline-flex items-center justify-center gap-2 rounded-lg text-base font-medium bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 disabled:pointer-events-none disabled:opacity-50"
                 >
                   {joining ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <>
                       <UserPlus className="w-5 h-5" />
@@ -134,7 +140,7 @@ export default function JoinPage() {
                 <>
                   <button
                     onClick={handleJoin}
-                    className="w-full py-3 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full h-12 px-6 inline-flex items-center justify-center gap-2 rounded-lg text-base font-medium bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150"
                   >
                     <LogIn className="w-5 h-5" />
                     Войти и присоединиться
@@ -147,9 +153,9 @@ export default function JoinPage() {
             </div>
 
             <div className="pt-4 border-t border-border">
-              <h3 className="font-medium mb-2">Что такое Nebula?</h3>
+              <h3 className="text-sm font-medium text-graphite-900 mb-2">Что такое Nebula?</h3>
               <p className="text-sm text-muted-foreground">
-                Современная платформа для общения с друзьями, голосовыми и видео звонками, 
+                Современная платформа для общения с друзьями, голосовыми и видео звонками,
                 AI-ассистентом и многим другим.
               </p>
             </div>
