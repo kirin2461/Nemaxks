@@ -1015,60 +1015,68 @@ export default function JarvisPage() {
 
   return (
     <Layout>
+      {/* Streaming caret blink (admin-jarvis.md §5) — новая утилита, steps(1) */}
+      <style>{`@keyframes caret-blink { 0%, 49% { opacity: 1 } 50%, 100% { opacity: 0 } } .caret-blink { animation: caret-blink 1s steps(1) infinite } @media (prefers-reduced-motion: reduce) { .caret-blink { animation: none } }`}</style>
       <div className="h-screen flex">
-        <div className="flex-1 flex flex-col">
-          <div className="p-4 border-b border-border glass">
+        <div className="flex-1 flex flex-col max-w-[760px] mx-auto w-full">
+          <div className="px-4 py-3 border-b border-border bg-card">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <div className={cn(
-                  'w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500',
-                  jarvisStatus === 'Ready' && 'bg-gradient-brand glow',
-                  jarvisStatus === 'Listening' && 'bg-gradient-to-br from-accent to-emerald-400 animate-pulse glow',
-                  jarvisStatus === 'Thinking' && 'bg-gradient-to-br from-yellow-400 to-orange-500 animate-spin-slow',
-                  jarvisStatus === 'Speaking' && 'bg-gradient-to-br from-primary to-accent pulse-call'
+                  'relative w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300',
+                  jarvisStatus === 'Ready' && 'bg-emerald-700',
+                  jarvisStatus === 'Listening' && 'bg-emerald-700',
+                  jarvisStatus === 'Thinking' && 'bg-graphite-800',
+                  jarvisStatus === 'Speaking' && 'bg-emerald-700'
                 )}>
-                  <Sparkles className="w-6 h-6 text-white" />
+                  {(jarvisStatus === 'Listening' || jarvisStatus === 'Speaking') && (
+                    <span className="absolute inset-0 rounded-xl bg-emerald-500/40 animate-pulse-ring" />
+                  )}
+                  <Sparkles className="relative w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold">J.A.R.V.I.S.</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg font-display font-bold text-graphite-900">J.A.R.V.I.S.</h1>
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">AI</span>
+                  </div>
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
                     <span className={cn(
                       'w-2 h-2 rounded-full',
-                      jarvisStatus === 'Ready' && 'bg-accent',
-                      jarvisStatus === 'Listening' && 'bg-accent animate-pulse',
-                      jarvisStatus === 'Thinking' && 'bg-yellow-400 animate-pulse',
-                      jarvisStatus === 'Speaking' && 'bg-primary animate-pulse'
+                      jarvisStatus === 'Ready' && 'bg-emerald-500',
+                      jarvisStatus === 'Listening' && 'bg-emerald-500',
+                      jarvisStatus === 'Thinking' && 'bg-idle',
+                      jarvisStatus === 'Speaking' && 'bg-emerald-500'
                     )} />
                     {jarvisStatus}
                     {aiStatus && (
-                      <span className="text-xs ml-2 px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/25">
-                        {aiStatus.active_provider === 'deepseek' && <Zap className="w-3 h-3 inline mr-1" />}
-                        {aiStatus.active_provider === 'huggingface' && <Activity className="w-3 h-3 inline mr-1" />}
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground ml-1">
+                        {aiStatus.active_provider === 'deepseek' && <Zap className="w-3 h-3" />}
+                        {aiStatus.active_provider === 'huggingface' && <Activity className="w-3 h-3" />}
                         {aiStatus.active_provider || 'offline'}
                       </span>
                     )}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={toggleAlwaysListening}
                   className={cn(
-                    "p-2 rounded-lg transition-colors flex items-center gap-1",
-                    alwaysListening 
-                      ? "bg-accent/15 text-accent hover:bg-accent/25" 
-                      : "hover:bg-primary/10"
+                    "h-10 px-2 rounded-lg transition-all duration-150 flex items-center gap-1",
+                    alwaysListening
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                   title={alwaysListening ? "Отключить постоянное прослушивание" : "Включить постоянное прослушивание"}
                 >
-                  <Radio className={cn("w-5 h-5", alwaysListening && "animate-pulse")} />
+                  <Radio className="w-5 h-5" />
                   {alwaysListening && <span className="text-xs font-medium">LIVE</span>}
                 </button>
                 <button
                   onClick={toggleMute}
                   className={cn(
-                    "p-2 rounded-lg hover:bg-primary/10 transition-colors",
-                    isMuted && "text-red-400"
+                    "h-10 w-10 rounded-lg inline-flex items-center justify-center transition-colors duration-150",
+                    isMuted ? "text-destructive hover:bg-danger-soft" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                   title={isMuted ? "Включить звук" : "Выключить звук"}
                 >
@@ -1076,23 +1084,23 @@ export default function JarvisPage() {
                 </button>
                 <button
                   onClick={() => fetchAiStatus()}
-                  className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
+                  className="h-10 w-10 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
                   title="Обновить статус"
                 >
                   <History className="w-5 h-5" />
                 </button>
                 <button
                   onClick={clearChat}
-                  className="p-2 rounded-lg hover:bg-red-500/15 hover:text-red-400 transition-colors"
+                  className="h-10 w-10 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-danger-soft hover:text-destructive transition-colors duration-150"
                   title="Очистить чат"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
-                <button 
+                <button
                   onClick={() => setShowSettings(!showSettings)}
                   className={cn(
-                    "p-2 rounded-lg transition-colors",
-                    showSettings ? "bg-primary/15 text-primary" : "hover:bg-primary/10"
+                    "h-10 w-10 rounded-lg inline-flex items-center justify-center transition-colors duration-150",
+                    showSettings ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                   title="Настройки"
                 >
@@ -1102,17 +1110,17 @@ export default function JarvisPage() {
             </div>
 
             {alwaysListening && (
-              <div className="mt-3 p-2 rounded-lg bg-accent/10 border border-accent/25">
-                <div className="flex items-center gap-2 text-sm text-accent">
-                  <Radio className="w-4 h-4 animate-pulse" />
+              <div className="mt-3 p-2 rounded-lg bg-success-soft border border-emerald-200 animate-fade-in-soft">
+                <div className="flex items-center gap-2 text-sm text-emerald-800">
+                  <Radio className="w-4 h-4" />
                   <span className="font-medium">Режим постоянного прослушивания активен</span>
                   {awaitingCommand && (
-                    <span className="ml-2 px-2 py-0.5 bg-accent/15 rounded-full text-xs">
+                    <span className="ml-2 px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs">
                       Ожидаю команду...
                     </span>
                   )}
                   {pendingAction.type === 'message' && pendingAction.contact && (
-                    <span className="ml-2 px-2 py-0.5 bg-primary/15 text-primary rounded-full text-xs">
+                    <span className="ml-2 px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs">
                       Сообщение для: {pendingAction.contact}
                     </span>
                   )}
@@ -1126,14 +1134,14 @@ export default function JarvisPage() {
             {aiStatus && (
               <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  <span className={cn('w-2 h-2 rounded-full', aiStatus.deepseek_available ? 'bg-accent' : 'bg-red-400')} />
+                  <span className={cn('w-2 h-2 rounded-full', aiStatus.deepseek_available ? 'bg-emerald-500' : 'bg-destructive')} />
                   DeepSeek
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={cn('w-2 h-2 rounded-full', aiStatus.huggingface_available ? 'bg-accent' : 'bg-red-400')} />
+                  <span className={cn('w-2 h-2 rounded-full', aiStatus.huggingface_available ? 'bg-emerald-500' : 'bg-destructive')} />
                   HuggingFace
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto font-mono">
                   Токены: {aiStatus.tokens_used?.toLocaleString()} / {aiStatus.token_limit?.toLocaleString()}
                 </div>
               </div>
@@ -1141,12 +1149,12 @@ export default function JarvisPage() {
 
             {quota && (
               <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full glass border border-primary/20">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-card border border-border">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Запросов сегодня: {quota.used}/{quota.limit}</span>
                 </div>
                 {quota.premium && (
-                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/25">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-800">
                     <Crown className="w-3 h-3" />
                     Premium: расширенный лимит ({quota.limit}/день)
                   </span>
@@ -1155,41 +1163,41 @@ export default function JarvisPage() {
             )}
 
             {showSettings && (
-              <div className="mt-4 p-4 rounded-xl glass">
+              <div className="mt-4 p-4 rounded-xl border border-border bg-card shadow-soft animate-scale-in">
                 <h3 className="font-semibold mb-4">Настройки J.A.R.V.I.S.</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">Голосовые ответы</p>
+                      <p className="font-medium text-sm">Голосовые ответы</p>
                       <p className="text-xs text-muted-foreground">Озвучивать ответы Jarvis</p>
                     </div>
                     <button
                       onClick={toggleMute}
                       className={cn(
-                        "w-12 h-6 rounded-full transition-colors relative",
-                        isMuted ? "bg-muted" : "bg-primary"
+                        "w-12 h-6 rounded-full transition-colors duration-150 relative",
+                        isMuted ? "bg-graphite-300" : "bg-primary"
                       )}
                     >
                       <div className={cn(
-                        "w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all",
+                        "w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all duration-150 shadow-soft",
                         isMuted ? "left-0.5" : "left-6"
                       )} />
                     </button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">Постоянное прослушивание</p>
+                      <p className="font-medium text-sm">Постоянное прослушивание</p>
                       <p className="text-xs text-muted-foreground">Активация по слову "Джарвис"</p>
                     </div>
                     <button
                       onClick={toggleAlwaysListening}
                       className={cn(
-                        "w-12 h-6 rounded-full transition-colors relative",
-                        !alwaysListening ? "bg-muted" : "bg-accent"
+                        "w-12 h-6 rounded-full transition-colors duration-150 relative",
+                        !alwaysListening ? "bg-graphite-300" : "bg-primary"
                       )}
                     >
                       <div className={cn(
-                        "w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all",
+                        "w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all duration-150 shadow-soft",
                         !alwaysListening ? "left-0.5" : "left-6"
                       )} />
                     </button>
@@ -1205,14 +1213,14 @@ export default function JarvisPage() {
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
             {showCapabilities && messages.length <= 1 && (
-              <div className="animate-fade-in">
+              <div className="animate-rise-in">
                 <div className="text-center mb-8">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-brand flex items-center justify-center glow">
-                    <Bot className="w-12 h-12 text-white" />
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-700 flex items-center justify-center shadow-soft">
+                    <Bot className="w-8 h-8 text-white" strokeWidth={1.5} />
                   </div>
-                  <h2 className="text-2xl font-bold mb-2 gradient-brand-text">К вашим услугам, сэр</h2>
+                  <h2 className="text-xl font-display font-bold text-graphite-900 mb-2">К вашим услугам, сэр</h2>
                   <p className="text-muted-foreground">Выберите возможность или просто произнесите запрос</p>
                 </div>
 
@@ -1221,12 +1229,12 @@ export default function JarvisPage() {
                     <button
                       key={cap.id}
                       onClick={() => handleSendMessage(cap.examples[0])}
-                      className="glass rounded-xl p-4 text-left hover:border-accent/50 hover:shadow-glow transition-all hover:scale-105"
+                      className="rounded-xl border border-border bg-card p-4 text-left shadow-soft hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-accent/15 border border-accent/25 flex items-center justify-center mb-3 text-accent">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center mb-3 text-emerald-800">
                         {cap.icon}
                       </div>
-                      <h3 className="font-semibold mb-1">{cap.name}</h3>
+                      <h3 className="font-semibold text-sm mb-1">{cap.name}</h3>
                       <p className="text-sm text-muted-foreground">{cap.description}</p>
                     </button>
                   ))}
@@ -1237,7 +1245,7 @@ export default function JarvisPage() {
                     <button
                       key={i}
                       onClick={() => handleSendMessage(prompt)}
-                      className="px-4 py-2 rounded-full glass text-sm hover:border-primary/50 hover:bg-primary/10 transition-all"
+                      className="px-3 py-1.5 rounded-full border border-border bg-card text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150"
                     >
                       {prompt}
                     </button>
@@ -1250,65 +1258,69 @@ export default function JarvisPage() {
               <div
                 key={message.id}
                 className={cn(
-                  'flex gap-3 animate-slide-in',
-                  message.type === 'user' && 'flex-row-reverse'
+                  'flex gap-2.5',
+                  message.type === 'user' ? 'flex-row-reverse animate-msg-send' : 'animate-msg-receive'
                 )}
               >
                 <div className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center shrink-0',
-                  message.type === 'jarvis' 
-                    ? 'bg-gradient-brand glow' 
-                    : 'bg-card border border-border'
+                  'w-9 h-9 rounded-xl flex items-center justify-center shrink-0',
+                  message.type === 'jarvis'
+                    ? 'bg-emerald-700'
+                    : 'bg-card border border-border text-muted-foreground'
                 )}>
                   {message.type === 'jarvis' ? (
-                    <Sparkles className="w-5 h-5 text-white" />
+                    <Sparkles className="w-4 h-4 text-white" />
                   ) : (
-                    <User className="w-5 h-5" />
+                    <User className="w-4 h-4" />
                   )}
                 </div>
                 <div className={cn(
-                  'max-w-[80%] rounded-2xl p-4',
-                  message.type === 'jarvis' 
-                    ? 'glass' 
-                    : 'bg-gradient-brand text-primary-foreground shadow-soft'
+                  'max-w-[80%] rounded-2xl px-3.5 py-2 text-[15px] leading-6 shadow-soft',
+                  message.type === 'jarvis'
+                    ? 'bg-card border border-border border-l-2 border-l-emerald-600 rounded-bl-[6px]'
+                    : 'bg-primary text-primary-foreground rounded-br-[6px]'
                 )}>
                   {message.isLoading ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 py-1">
                       <div className="flex gap-1">
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <div className="w-2 h-2 rounded-full bg-emerald-600 animate-typing-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-2 h-2 rounded-full bg-emerald-600 animate-typing-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-2 h-2 rounded-full bg-emerald-600 animate-typing-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
-                      <span className="text-sm text-muted-foreground">Обрабатываю ваш запрос, сэр...</span>
+                      <span className="text-sm text-muted-foreground">Обрабатываю ваш запрос, сэр</span>
+                      <span className="inline-block w-2 h-4 bg-emerald-600 caret-blink" />
                     </div>
                   ) : (
                     <>
-                      <p className="whitespace-pre-wrap">{message.content}</p>
                       {message.type === 'jarvis' && (
-                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/30">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600 inline-block mr-1.5 -mt-0.5" />
+                      )}
+                      <span className="whitespace-pre-wrap">{message.content}</span>
+                      {message.type === 'jarvis' && (
+                        <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border">
                           <button
                             onClick={() => copyMessage(message.content)}
-                            className="p-1.5 rounded hover:bg-primary/10 transition-colors"
+                            className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
                             title="Копировать"
                           >
                             <Copy className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => regenerateResponse(message.id)}
-                            className="p-1.5 rounded hover:bg-primary/10 transition-colors"
+                            className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
                             title="Перегенерировать"
                           >
                             <RefreshCw className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => speakText(message.content)}
-                            className="p-1.5 rounded hover:bg-primary/10 transition-colors"
+                            className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
                             title="Прочитать вслух"
                           >
                             <Volume2 className="w-4 h-4" />
                           </button>
                           {message.provider && (
-                            <span className="ml-auto text-xs text-muted-foreground">
+                            <span className="ml-auto text-xs text-muted-foreground font-mono">
                               via {message.provider}
                             </span>
                           )}
@@ -1324,18 +1336,18 @@ export default function JarvisPage() {
 
           {quotaExceeded && !quota?.premium && (
             <div className="px-4 pt-4">
-              <div className="glass rounded-xl p-5 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 text-center animate-fade-in">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 flex items-center justify-center glow">
+              <div className="rounded-xl border border-warning/30 bg-warning-soft p-5 text-center animate-rise-in">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-warning flex items-center justify-center">
                   <Crown className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="font-semibold text-lg mb-1">Лимит бесплатных запросов исчерпан</h3>
+                <h3 className="font-semibold text-lg mb-1 text-graphite-900">Лимит бесплатных запросов исчерпан</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   Вы использовали {quota?.used ?? 0} из {quota?.limit ?? 0} запросов сегодня.
                   С Nebula Premium лимит расширяется до 100 запросов в день.
                 </p>
                 <Link
                   href="/premium"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl gradient-brand text-primary-foreground font-medium hover:brightness-110 transition-all shadow-glow"
+                  className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150"
                 >
                   <Crown className="w-4 h-4" />
                   Перейти на Premium
@@ -1344,15 +1356,15 @@ export default function JarvisPage() {
             </div>
           )}
 
-          <div className="p-4 border-t border-border glass">
+          <div className="p-4 border-t border-border bg-card">
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleVoiceInput}
                 className={cn(
-                  'p-3 rounded-full transition-all',
-                  isListening 
-                    ? 'bg-red-500 text-white animate-pulse' 
-                    : 'glass hover:border-accent/50 hover:text-accent'
+                  'h-10 w-10 rounded-full inline-flex items-center justify-center transition-all duration-150 active:scale-[0.97]',
+                  isListening
+                    ? 'bg-destructive text-destructive-foreground'
+                    : 'border border-input bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200'
                 )}
                 title={isListening ? "Остановить прослушивание" : "Голосовой ввод"}
               >
@@ -1370,12 +1382,12 @@ export default function JarvisPage() {
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={!inputMessage.trim()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg
-                            bg-gradient-brand text-primary-foreground
-                            disabled:opacity-50 disabled:cursor-not-allowed
-                            hover:shadow-glow transition-all"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-lg inline-flex items-center justify-center
+                            bg-primary text-primary-foreground shadow-soft
+                            disabled:opacity-50 disabled:pointer-events-none
+                            hover:bg-emerald-800 active:scale-[0.97] transition-all duration-150"
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4" />
                 </button>
               </div>
             </div>

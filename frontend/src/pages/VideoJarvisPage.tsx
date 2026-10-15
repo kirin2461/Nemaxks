@@ -156,25 +156,25 @@ export default function VideoJarvisPage() {
   return (
     <Layout>
       <div className={cn(
-        'min-h-screen bg-nebula stars-cosmic flex',
+        'min-h-screen bg-background flex',
         jarvisFocusMode && 'jarvis-focus-mode'
       )}>
         <audio ref={audioRef} style={{ display: 'none' }} />
-        
+
         {/* Main Content Area */}
         <div className={cn(
-          'flex-1 p-6 transition-all duration-500',
+          'flex-1 p-6 transition-all duration-300',
           jarvisFocusMode && 'opacity-30 scale-95'
         )}>
           {/* Video Header */}
-          <div className="mb-6 animate-fade-in">
+          <div className="mb-6 animate-rise-in">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold gradient-brand-text mb-2">
+                <h1 className="text-2xl font-display font-bold text-graphite-900 mb-2">
                   Продвинутые паттерны React и производительность
                 </h1>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 font-mono">
                     <Clock className="w-4 h-4" />
                     {formatTime(duration)}
                   </span>
@@ -183,7 +183,7 @@ export default function VideoJarvisPage() {
                   {jarvisStatus !== 'Ready' && (
                     <>
                       <span>•</span>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/15 text-accent border border-accent/25 animate-pulse">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                         <Sparkles className="w-3 h-3" />
                         AI {jarvisStatus}...
                       </span>
@@ -196,33 +196,33 @@ export default function VideoJarvisPage() {
                   setJarvisFocusMode(!jarvisFocusMode)
                   playJarvisAudio('system_diagnostic')
                 }}
-                className="inline-flex items-center justify-center px-4 py-2 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 disabled:opacity-50"
               >
-                <Zap className="w-4 h-4 mr-2" />
+                <Zap className="w-4 h-4" />
                 {jarvisFocusMode ? 'Выйти из' : 'Jarvis'} фокуса
               </button>
             </div>
           </div>
 
           {/* Video Player */}
-          <div className="glass rounded-2xl overflow-hidden shadow-glow mb-6 animate-slide-in">
-            <div className="relative bg-black aspect-video">
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/10">
+          <div className="rounded-xl border border-border bg-card overflow-hidden shadow-soft mb-6 animate-rise-in">
+            <div className="relative bg-graphite-950 aspect-video">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-brand flex items-center justify-center glow">
+                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-emerald-600 flex items-center justify-center">
                     <Play className="w-12 h-12 text-white" />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">скоро</p>
-                  <p className="text-foreground/90 text-lg font-medium">Видеоплеер</p>
-                  <p className="text-muted-foreground text-sm">Демо-режим — интеграция видео в разработке</p>
+                  <p className="text-xs text-graphite-400 mt-1">скоро</p>
+                  <p className="text-white/90 text-lg font-medium">Видеоплеер</p>
+                  <p className="text-graphite-400 text-sm">Демо-режим — интеграция видео в разработке</p>
                 </div>
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+              <div className="absolute bottom-0 left-0 right-0 bg-graphite-950/80 p-4">
                 <div className="mb-4">
                   <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-primary to-accent transition-all"
+                      className="h-full bg-emerald-500 transition-all duration-150"
                       style={{ width: `${(currentTime / duration) * 100}%` }}
                     />
                   </div>
@@ -232,29 +232,29 @@ export default function VideoJarvisPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setIsPlaying(!isPlaying)}
-                      className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors duration-150"
                     >
                       {isPlaying ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white" />}
                     </button>
                     <button
                       onClick={() => setIsMuted(!isMuted)}
-                      className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors duration-150"
                     >
                       {isMuted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
                     </button>
-                    <span className="text-white text-sm font-medium">
+                    <span className="text-white text-sm font-medium font-mono">
                       {formatTime(currentTime)} / {formatTime(duration)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="inline-flex items-center px-3 py-1.5 rounded-lg gradient-brand text-primary-foreground text-sm font-medium shadow-soft hover:brightness-110 transition-all pulse-call" onClick={() => playJarvisAudio('welcome_sir')}>
-                      <Sparkles className="w-4 h-4 mr-1" />
+                    <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 active:scale-[0.97] transition-all duration-150" onClick={() => playJarvisAudio('welcome_sir')}>
+                      <Sparkles className="w-4 h-4" />
                       Спросить Jarvis об этом моменте
                     </button>
-                    <button className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+                    <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors duration-150">
                       <Settings className="w-5 h-5 text-white" />
                     </button>
-                    <button className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+                    <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors duration-150">
                       <Maximize className="w-5 h-5 text-white" />
                     </button>
                   </div>
@@ -264,21 +264,21 @@ export default function VideoJarvisPage() {
           </div>
 
           {/* AI Chapters Bar */}
-          <div className="animate-slide-in" style={{ animationDelay: '0.2s' }}>
+          <div className="animate-rise-in" style={{ animationDelay: '80ms' }}>
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
+              <Sparkles className="w-5 h-5 text-emerald-600" />
               Главы, созданные AI
             </h3>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {DEMO_CHAPTERS.map((chapter, index) => (
                 <div
                   key={chapter.id}
-                  className="glass rounded-xl px-4 py-3 min-w-[200px] animate-slide-in hover:border-accent/40 transition-colors"
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                  className="rounded-xl border border-border bg-card shadow-soft px-4 py-3 min-w-[200px] animate-rise-in hover:border-graphite-300 transition-colors duration-150"
+                  style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-semibold text-foreground">{chapter.title}</span>
-                    <span className="text-xs text-accent">{formatTime(chapter.timestamp)}</span>
+                    <span className="text-xs font-mono text-primary">{formatTime(chapter.timestamp)}</span>
                   </div>
                   {chapter.summary && (
                     <p className="text-xs text-muted-foreground line-clamp-1">{chapter.summary}</p>
@@ -292,47 +292,50 @@ export default function VideoJarvisPage() {
         {/* Jarvis AI Panel */}
         {jarvisPanelOpen && (
           <aside className={cn(
-            'w-96 flex flex-col border-l border-border glass slide-in-right',
+            'w-[360px] flex flex-col border-l border-border bg-card animate-slide-in-right',
             jarvisFocusMode && 'opacity-100 scale-100'
           )}>
-            <div className="p-6 border-b border-border/30">
-              <div className="flex items-center gap-4 mb-4">
-                <div 
-                  className="w-16 h-16 rounded-full bg-gradient-brand flex items-center justify-center glow cursor-pointer"
+            <div className="px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-9 h-9 rounded-xl bg-emerald-700 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-150"
                   onClick={() => playJarvisAudio('rebooted')}
                 >
-                  <Sparkles className="w-8 h-8 text-white" />
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold gradient-brand-text">Jarvis AI</h2>
-                  <div className="inline-flex px-2.5 py-0.5 rounded-full text-xs mt-1 bg-accent/15 text-accent border border-accent/25">
+                  <h2 className="text-lg font-display font-bold text-graphite-900">Jarvis AI</h2>
+                  <div className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium mt-0.5 bg-emerald-100 text-emerald-800">
                     {jarvisStatus}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background">
               {messages.map((message, index) => (
                 <div
                   key={message.id}
                   className={cn(
-                    'rounded-2xl px-4 py-2 max-w-[85%] break-words animate-slide-in',
-                    message.type === 'user' ? 'bg-gradient-brand text-primary-foreground ml-auto shadow-soft' : 'glass mr-auto'
+                    'rounded-2xl px-3.5 py-2 max-w-[85%] break-words text-[15px] leading-6 shadow-soft',
+                    message.type === 'user'
+                      ? 'bg-primary text-primary-foreground ml-auto rounded-br-[6px] animate-msg-send'
+                      : 'bg-card border border-border border-l-2 border-l-emerald-600 mr-auto rounded-bl-[6px] animate-msg-receive'
                   )}
-                  style={{ animationDelay: `${index * 0.05}s` }}
+                  style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
                 >
                   {message.isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded-full bg-accent/40 animate-pulse" />
-                      <div className="h-4 w-32 rounded bg-accent/20 animate-pulse" />
+                    <div className="flex items-center gap-1 py-1">
+                      <div className="w-2 h-2 rounded-full bg-emerald-600 animate-typing-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 rounded-full bg-emerald-600 animate-typing-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 rounded-full bg-emerald-600 animate-typing-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   ) : (
                     <>
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       <span className={cn(
-                        'text-xs mt-1 block',
-                        message.type === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground/70'
+                        'text-[11px] mt-1 block font-mono',
+                        message.type === 'user' ? 'text-emerald-100/80' : 'text-muted-foreground'
                       )}>
                         {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
@@ -343,7 +346,7 @@ export default function VideoJarvisPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-4 border-t border-border/30 space-y-3">
+            <div className="p-4 border-t border-border space-y-3 bg-card">
               <div className="flex flex-wrap gap-2">
                 {quickActions.map((action) => {
                   const Icon = action.icon
@@ -351,7 +354,7 @@ export default function VideoJarvisPage() {
                     <button
                       key={action.label}
                       onClick={action.action}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs glass hover:bg-accent/15 hover:text-accent transition-colors"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150"
                     >
                       <Icon className="w-3 h-3" />
                       {action.label}
@@ -360,7 +363,7 @@ export default function VideoJarvisPage() {
                 })}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <input
                   type="text"
                   value={inputMessage}
@@ -388,13 +391,13 @@ export default function VideoJarvisPage() {
                   id="file-upload"
                   accept="*"
                 />
-                <label htmlFor="file-upload" className="cursor-pointer text-accent hover:text-accent/80 text-sm mt-2 inline-block">
-                  📎 Прикрепить файл (макс. 50 МБ)
+                <label htmlFor="file-upload" className="cursor-pointer text-primary underline-offset-4 hover:underline text-xs whitespace-nowrap">
+                  📎 Прикрепить (макс. 50 МБ)
                 </label>
                 <button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim()}
-                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg gradient-brand text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all disabled:opacity-50 !px-4"
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none shrink-0"
                 >
                   <Send className="w-4 h-4" />
                 </button>

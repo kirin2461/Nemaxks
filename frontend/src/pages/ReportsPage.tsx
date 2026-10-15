@@ -43,10 +43,10 @@ const priorities = [
 ]
 
 const statusLabels: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  pending: { label: 'Ожидает', color: 'text-yellow-400', icon: Clock },
+  pending: { label: 'Ожидает', color: 'text-warning', icon: Clock },
   in_progress: { label: 'В работе', color: 'text-primary', icon: Clock },
-  resolved: { label: 'Решено', color: 'text-accent', icon: CheckCircle },
-  rejected: { label: 'Отклонено', color: 'text-red-400', icon: XCircle },
+  resolved: { label: 'Решено', color: 'text-emerald-700', icon: CheckCircle },
+  rejected: { label: 'Отклонено', color: 'text-destructive', icon: XCircle },
   cancelled: { label: 'Отменено', color: 'text-muted-foreground', icon: XCircle },
 }
 
@@ -120,26 +120,26 @@ export default function ReportsPage() {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto p-4 md:p-6">
-        <h1 className="text-2xl font-bold mb-6 gradient-brand-text">Обращения</h1>
-        
-        <div className="flex gap-2 mb-6">
+      <div className="max-w-3xl mx-auto px-4 py-4 md:px-6 md:py-6 animate-rise-in">
+        <h1 className="text-2xl font-display font-bold text-graphite-900 mb-6">Обращения</h1>
+
+        <div className="inline-flex p-1 rounded-lg bg-secondary gap-1 mb-6">
           <button
             onClick={() => setActiveTab('new')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-              activeTab === 'new' 
-                ? 'gradient-brand text-primary-foreground shadow-soft' 
-                : 'glass text-muted-foreground hover:bg-primary/10 hover:text-foreground'
+            className={`h-8 px-3 rounded-md text-sm transition-all duration-150 ${
+              activeTab === 'new'
+                ? 'bg-card text-foreground shadow-soft font-medium'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Новое обращение
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-              activeTab === 'history' 
-                ? 'gradient-brand text-primary-foreground shadow-soft' 
-                : 'glass text-muted-foreground hover:bg-primary/10 hover:text-foreground'
+            className={`h-8 px-3 rounded-md text-sm transition-all duration-150 ${
+              activeTab === 'history'
+                ? 'bg-card text-foreground shadow-soft font-medium'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Мои обращения
@@ -147,8 +147,8 @@ export default function ReportsPage() {
         </div>
 
         {message && (
-          <div className={`p-4 rounded-lg mb-4 flex items-center gap-2 ${
-            message.type === 'success' ? 'bg-accent/15 text-accent border border-accent/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'
+          <div className={`p-4 rounded-xl mb-4 flex items-center gap-2 border animate-toast-in ${
+            message.type === 'success' ? 'bg-success-soft text-emerald-800 border-emerald-200' : 'bg-danger-soft text-destructive border-destructive/30'
           }`}>
             {message.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
             {message.text}
@@ -156,9 +156,9 @@ export default function ReportsPage() {
         )}
 
         {activeTab === 'new' ? (
-          <form onSubmit={handleSubmit} className="glass rounded-xl p-6 space-y-4 shadow-soft">
+          <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-6 space-y-4 shadow-soft">
             <div>
-              <label className="block text-sm font-medium mb-2">Категория *</label>
+              <label className="block text-sm font-medium mb-1.5">Категория *</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {categories.map(cat => {
                   const Icon = cat.icon
@@ -167,13 +167,13 @@ export default function ReportsPage() {
                       key={cat.value}
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
-                      className={`p-3 rounded-lg border text-left flex items-center gap-3 transition-colors ${
+                      className={`p-3 rounded-lg border text-left flex items-center gap-3 transition-all duration-150 ${
                         formData.category === cat.value
-                          ? 'border-primary bg-primary/15 shadow-soft'
-                          : 'border-border bg-background/40 hover:border-primary/50 hover:bg-primary/5'
+                          ? 'border-primary bg-accent text-accent-foreground shadow-soft'
+                          : 'border-border bg-card hover:border-emerald-200 hover:bg-accent'
                       }`}
                     >
-                      <Icon className="w-5 h-5 text-primary" />
+                      <Icon className="w-5 h-5 text-emerald-700" />
                       <span className="text-sm">{cat.label}</span>
                     </button>
                   )
@@ -182,7 +182,7 @@ export default function ReportsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Тема *</label>
+              <label className="block text-sm font-medium mb-1.5">Тема *</label>
               <input
                 type="text"
                 value={formData.subject}
@@ -194,7 +194,7 @@ export default function ReportsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Описание</label>
+              <label className="block text-sm font-medium mb-1.5">Описание</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -205,17 +205,17 @@ export default function ReportsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Приоритет</label>
-              <div className="flex gap-2">
+              <label className="block text-sm font-medium mb-1.5">Приоритет</label>
+              <div className="inline-flex p-1 rounded-lg bg-secondary gap-1">
                 {priorities.map(p => (
                   <button
                     key={p.value}
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, priority: p.value }))}
-                    className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                    className={`h-8 px-3 rounded-md text-sm transition-all duration-150 ${
                       formData.priority === p.value
-                        ? 'gradient-brand text-primary-foreground shadow-soft'
-                        : 'bg-background/60 border border-border text-muted-foreground hover:bg-primary/10 hover:text-foreground'
+                        ? 'bg-card text-foreground shadow-soft font-medium'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {p.label}
@@ -227,7 +227,7 @@ export default function ReportsPage() {
             <button
               type="submit"
               disabled={submitting || !formData.category || !formData.subject}
-              className="w-full py-3 gradient-brand text-primary-foreground rounded-lg font-medium flex items-center justify-center gap-2 shadow-soft hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-full h-12 px-6 rounded-lg bg-primary text-primary-foreground text-base font-medium flex items-center justify-center gap-2 shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none transition-all duration-150"
             >
               <Send className="w-5 h-5" />
               {submitting ? 'Отправка...' : 'Отправить обращение'}
@@ -236,11 +236,17 @@ export default function ReportsPage() {
         ) : (
           <div className="space-y-3">
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Загрузка...</div>
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="skeleton h-16 rounded-xl" />
+                ))}
+              </div>
             ) : requests.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>У вас пока нет обращений</p>
+              <div className="text-center py-16 px-6 animate-rise-in">
+                <div className="h-20 w-20 mx-auto rounded-2xl bg-secondary grid place-items-center">
+                  <FileText className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+                </div>
+                <p className="text-lg font-semibold mt-4">У вас пока нет обращений</p>
               </div>
             ) : (
               requests.map(request => {
@@ -250,33 +256,33 @@ export default function ReportsPage() {
                 const isExpanded = expandedId === request.id
                 
                 return (
-                  <div key={request.id} className="glass rounded-xl overflow-hidden shadow-soft">
-                    <div 
-                      className="p-4 flex items-center gap-4 cursor-pointer hover:bg-primary/5 transition-colors"
+                  <div key={request.id} className="rounded-xl border border-border bg-card overflow-hidden shadow-soft animate-rise-in">
+                    <div
+                      className="px-4 py-3 flex items-center gap-4 cursor-pointer hover:bg-accent/40 transition-colors duration-150"
                       onClick={() => setExpandedId(isExpanded ? null : request.id)}
                     >
-                      <CategoryIcon className="w-5 h-5 text-primary flex-shrink-0" />
+                      <CategoryIcon className="w-5 h-5 text-emerald-700 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium truncate">{request.subject}</h3>
-                        <p className="text-sm text-muted-foreground">
+                        <h3 className="font-medium text-sm truncate">{request.subject}</h3>
+                        <p className="text-xs text-muted-foreground">
                           {new Date(request.created_at).toLocaleDateString('ru-RU')}
                         </p>
                       </div>
-                      <div className={`flex items-center gap-1 ${status.color}`}>
-                        <StatusIcon className="w-4 h-4" />
-                        <span className="text-sm">{status.label}</span>
+                      <div className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-secondary ${status.color}`}>
+                        <StatusIcon className="w-3.5 h-3.5" />
+                        <span>{status.label}</span>
                       </div>
-                      {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      {isExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
                     </div>
-                    
+
                     {isExpanded && (
-                      <div className="px-4 pb-4 border-t border-border pt-4">
+                      <div className="px-4 pb-4 border-t border-border pt-4 animate-fade-in-soft">
                         <p className="text-sm text-muted-foreground mb-3">
                           {request.description || 'Без описания'}
                         </p>
                         {request.admin_notes && (
-                          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mt-3">
-                            <p className="text-sm font-medium mb-1">Ответ администратора:</p>
+                          <div className="bg-accent border border-emerald-200 rounded-lg p-3 mt-3">
+                            <p className="text-sm font-medium mb-1 text-accent-foreground">Ответ администратора:</p>
                             <p className="text-sm">{request.admin_notes}</p>
                           </div>
                         )}
@@ -286,7 +292,7 @@ export default function ReportsPage() {
                               e.stopPropagation()
                               handleCancel(request.id)
                             }}
-                            className="mt-3 text-sm text-red-400 hover:text-red-300"
+                            className="mt-3 text-sm text-destructive hover:underline underline-offset-4"
                           >
                             Отменить обращение
                           </button>
