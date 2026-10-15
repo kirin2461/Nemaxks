@@ -371,9 +371,11 @@ export default function SuperAdminPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Доступ запрещён</h2>
+          <div className="text-center animate-rise-in">
+            <div className="h-20 w-20 mx-auto rounded-2xl bg-secondary grid place-items-center mb-4">
+              <Shield className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-2xl font-display font-bold text-graphite-900 mb-2">Доступ запрещён</h2>
             <p className="text-muted-foreground">Требуются права супер-администратора</p>
           </div>
         </div>
@@ -393,22 +395,22 @@ export default function SuperAdminPage() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-[1440px] mx-auto px-6 py-6 animate-rise-in">
         <div className="flex items-center gap-3 mb-6">
-          <Crown className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-bold gradient-brand-text">Панель супер-администратора</h1>
+          <Crown className="w-7 h-7 text-emerald-700" />
+          <h1 className="text-2xl font-display font-bold text-graphite-900">Панель супер-администратора</h1>
         </div>
 
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-4 mb-6 border-b border-border overflow-x-auto">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setSelectedUser(null) }}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200",
+                "flex items-center gap-2 pb-2.5 -mb-px whitespace-nowrap text-sm font-medium border-b-2 transition-colors duration-150",
                 activeTab === tab.id
-                  ? "gradient-brand text-primary-foreground shadow-soft"
-                  : "glass text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+                  ? "text-foreground border-primary"
+                  : "text-muted-foreground border-transparent hover:text-foreground"
               )}
             >
               <tab.icon className="w-4 h-4" />
@@ -418,8 +420,15 @@ export default function SuperAdminPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground" />
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="skeleton h-24 rounded-xl" />
+              ))}
+            </div>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="skeleton h-14 rounded-lg" />
+            ))}
           </div>
         ) : (
           <>
@@ -439,7 +448,7 @@ export default function SuperAdminPage() {
                 </div>
 
                 {serviceStatus && (
-                  <div className="glass rounded-xl p-6 shadow-soft">
+                  <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                       <Server className="w-5 h-5" /> Статус сервисов
                     </h3>
@@ -491,20 +500,20 @@ export default function SuperAdminPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 glass rounded-xl overflow-hidden">
+                  <div className="lg:col-span-2 rounded-xl border border-border bg-card shadow-none overflow-hidden">
                     <table className="w-full">
-                      <thead className="bg-primary/10 text-muted-foreground">
+                      <thead className="bg-secondary/60 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                         <tr>
-                          <th className="text-left p-3">Пользователь</th>
-                          <th className="text-left p-3">Роль</th>
-                          <th className="text-left p-3">Статус</th>
-                          <th className="text-left p-3">Действия</th>
+                          <th className="text-left px-4 py-3">Пользователь</th>
+                          <th className="text-left px-4 py-3">Роль</th>
+                          <th className="text-left px-4 py-3">Статус</th>
+                          <th className="text-left px-4 py-3">Действия</th>
                         </tr>
                       </thead>
                       <tbody>
                         {users.map(u => (
-                          <tr key={u.id} className="border-t border-border hover:bg-primary/5 transition-colors">
-                            <td className="p-3">
+                          <tr key={u.id} className="border-t border-border hover:bg-accent/40 transition-colors duration-150">
+                            <td className="px-4 py-3 text-sm">
                               <div className="flex items-center gap-3">
                                 <Avatar alt={u.username} src={u.avatar} size="sm" />
                                 <div>
@@ -513,18 +522,18 @@ export default function SuperAdminPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="p-3">
+                            <td className="px-4 py-3 text-sm">
                               <RoleBadge role={u.role} />
                             </td>
-                            <td className="p-3">
+                            <td className="px-4 py-3 text-sm">
                               <div className="flex items-center gap-2">
                                 {u.is_banned ? (
-                                  <span className="text-red-400 text-sm flex items-center gap-1">
-                                    <Ban className="w-3 h-3" /> Заблокирован
+                                  <span className="text-destructive text-sm flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-destructive" /> Заблокирован
                                   </span>
                                 ) : (
-                                  <span className="text-accent text-sm flex items-center gap-1">
-                                    <CheckCircle className="w-3 h-3" /> Активен
+                                  <span className="text-emerald-700 text-sm flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-600" /> Активен
                                   </span>
                                 )}
                                 {u.has_2fa && (
@@ -532,10 +541,10 @@ export default function SuperAdminPage() {
                                 )}
                               </div>
                             </td>
-                            <td className="p-3">
+                            <td className="px-4 py-3 text-sm">
                               <button
                                 onClick={() => loadUserDetail(u.id)}
-                                className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+                                className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
                                 title="Подробнее"
                               >
                                 <Eye className="w-4 h-4" />
@@ -545,7 +554,7 @@ export default function SuperAdminPage() {
                         ))}
                       </tbody>
                     </table>
-                    <div className="p-3 flex justify-between items-center border-t border-border">
+                    <div className="px-4 py-3 flex justify-between items-center border-t border-border">
                       <span className="text-sm text-muted-foreground">
                         Page {usersPage} of {Math.ceil(usersTotal / 20)}
                       </span>
@@ -553,14 +562,14 @@ export default function SuperAdminPage() {
                         <button
                           onClick={() => setUsersPage(p => Math.max(1, p - 1))}
                           disabled={usersPage <= 1}
-                          className="px-3 py-1 glass rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors"
+                          className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-medium hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors duration-150"
                         >
                           Prev
                         </button>
                         <button
                           onClick={() => setUsersPage(p => p + 1)}
                           disabled={usersPage >= Math.ceil(usersTotal / 20)}
-                          className="px-3 py-1 glass rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors"
+                          className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-medium hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors duration-150"
                         >
                           Next
                         </button>
@@ -569,7 +578,7 @@ export default function SuperAdminPage() {
                   </div>
 
                   {selectedUser && (
-                    <div className="glass rounded-xl p-4 space-y-4 shadow-soft">
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-4 shadow-soft animate-slide-in-right">
                       <div className="flex items-center gap-3">
                         <Avatar alt={selectedUser.user.username} src={selectedUser.user.avatar} size="lg" />
                         <div>
@@ -579,16 +588,16 @@ export default function SuperAdminPage() {
                       </div>
 
                       <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="bg-primary/10 border border-primary/15 p-2 rounded-lg">
-                          <div className="text-lg font-bold">{selectedUser.stats.posts}</div>
+                        <div className="bg-secondary p-2 rounded-lg">
+                          <div className="text-lg font-display font-bold text-graphite-900">{selectedUser.stats.posts}</div>
                           <div className="text-xs text-muted-foreground">Посты</div>
                         </div>
-                        <div className="bg-primary/10 border border-primary/15 p-2 rounded-lg">
-                          <div className="text-lg font-bold">{selectedUser.stats.messages}</div>
+                        <div className="bg-secondary p-2 rounded-lg">
+                          <div className="text-lg font-display font-bold text-graphite-900">{selectedUser.stats.messages}</div>
                           <div className="text-xs text-muted-foreground">Сообщения</div>
                         </div>
-                        <div className="bg-primary/10 border border-primary/15 p-2 rounded-lg">
-                          <div className="text-lg font-bold">{selectedUser.stats.guilds}</div>
+                        <div className="bg-secondary p-2 rounded-lg">
+                          <div className="text-lg font-display font-bold text-graphite-900">{selectedUser.stats.guilds}</div>
                           <div className="text-xs text-muted-foreground">Серверы</div>
                         </div>
                       </div>
@@ -608,62 +617,63 @@ export default function SuperAdminPage() {
                         </select>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="rounded-xl border border-destructive/30 bg-danger-soft/40 p-3 space-y-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-destructive">Опасная зона</p>
                         <button
                           onClick={() => handleResetPassword(Number(selectedUser.user.id))}
                           disabled={actionLoading}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/25 rounded-lg transition-colors"
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-warning/40 bg-card text-warning text-sm font-medium hover:bg-warning-soft active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
                         >
                           <Key className="w-4 h-4" /> Сбросить пароль
                         </button>
                         {tempPassword && (
-                          <div className="p-2 bg-background/40 border border-border rounded-lg flex items-center justify-between">
-                            <code className="text-sm">{tempPassword}</code>
+                          <div className="p-2 bg-graphite-100 border border-border rounded-lg flex items-center justify-between">
+                            <code className="text-sm font-mono">{tempPassword}</code>
                             <button
                               onClick={() => { navigator.clipboard.writeText(tempPassword); setTempPassword(null) }}
-                              className="p-1 hover:bg-background rounded"
+                              className="p-1 rounded hover:bg-secondary text-muted-foreground"
                             >
                               <Copy className="w-4 h-4" />
                             </button>
                           </div>
                         )}
+
+                        <button
+                          onClick={() => handleRevokeAllSessions(Number(selectedUser.user.id))}
+                          disabled={actionLoading}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-warning/40 bg-card text-warning text-sm font-medium hover:bg-warning-soft active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
+                        >
+                          <LogOut className="w-4 h-4" /> Завершить все сессии
+                        </button>
+
+                        {selectedUser.is_banned ? (
+                          <button
+                            onClick={() => handleUnbanUser(Number(selectedUser.user.id))}
+                            disabled={actionLoading}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-emerald-300 bg-card text-emerald-700 text-sm font-medium hover:bg-success-soft active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
+                          >
+                            <Unlock className="w-4 h-4" /> Разблокировать
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              const reason = prompt('Причина бана:')
+                              if (reason) handleBanUser(Number(selectedUser.user.id), reason)
+                            }}
+                            disabled={actionLoading}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-destructive/40 bg-card text-destructive text-sm font-medium hover:bg-danger-soft active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
+                          >
+                            <Ban className="w-4 h-4" /> Заблокировать
+                          </button>
+                        )}
                       </div>
-
-                      <button
-                        onClick={() => handleRevokeAllSessions(Number(selectedUser.user.id))}
-                        disabled={actionLoading}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-500/15 text-orange-400 border border-orange-500/30 hover:bg-orange-500/25 rounded-lg transition-colors"
-                      >
-                        <LogOut className="w-4 h-4" /> Завершить все сессии
-                      </button>
-
-                      {selectedUser.is_banned ? (
-                        <button
-                          onClick={() => handleUnbanUser(Number(selectedUser.user.id))}
-                          disabled={actionLoading}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25 rounded-lg transition-colors"
-                        >
-                          <Unlock className="w-4 h-4" /> Разблокировать
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            const reason = prompt('Причина бана:')
-                            if (reason) handleBanUser(Number(selectedUser.user.id), reason)
-                          }}
-                          disabled={actionLoading}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25 rounded-lg transition-colors"
-                        >
-                          <Ban className="w-4 h-4" /> Заблокировать
-                        </button>
-                      )}
 
                       {selectedUser.sessions.length > 0 && (
                         <div>
                           <h4 className="font-medium mb-2">Активные сессии ({selectedUser.sessions.length})</h4>
                           <div className="space-y-1 max-h-32 overflow-y-auto">
                             {selectedUser.sessions.map(s => (
-                              <div key={s.id} className="text-xs bg-background/40 border border-border p-2 rounded-lg flex justify-between">
+                              <div key={s.id} className="text-xs bg-graphite-100 border border-border p-2 rounded-lg flex justify-between">
                                 <span>{s.device_info || 'Неизвестно'}</span>
                                 <span className="text-muted-foreground">{s.ip_address}</span>
                               </div>
@@ -690,24 +700,24 @@ export default function SuperAdminPage() {
                   />
                 </div>
 
-                <div className="glass rounded-xl overflow-hidden">
+                <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                   <table className="w-full">
-                    <thead className="bg-primary/10 text-muted-foreground">
+                    <thead className="bg-secondary/60 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                       <tr>
-                        <th className="text-left p-3">Сервер</th>
-                        <th className="text-left p-3">Владелец</th>
-                        <th className="text-left p-3">Участники</th>
-                        <th className="text-left p-3">Каналы</th>
-                        <th className="text-left p-3">Сообщения</th>
-                        <th className="text-left p-3">Действия</th>
+                        <th className="text-left px-4 py-3">Сервер</th>
+                        <th className="text-left px-4 py-3">Владелец</th>
+                        <th className="text-left px-4 py-3">Участники</th>
+                        <th className="text-left px-4 py-3">Каналы</th>
+                        <th className="text-left px-4 py-3">Сообщения</th>
+                        <th className="text-left px-4 py-3">Действия</th>
                       </tr>
                     </thead>
                     <tbody>
                       {guilds.map(g => (
-                        <tr key={g.id} className="border-t border-border hover:bg-primary/5 transition-colors">
-                          <td className="p-3">
+                        <tr key={g.id} className="border-t border-border hover:bg-accent/40 transition-colors duration-150">
+                          <td className="px-4 py-3 text-sm">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-primary/15 text-primary rounded-lg flex items-center justify-center overflow-hidden">
+                              <div className="w-10 h-10 bg-secondary text-graphite-600 rounded-lg flex items-center justify-center overflow-hidden">
                                 {g.icon ? (
                                   <img src={g.icon} alt="" className="w-full h-full object-cover rounded-lg" />
                                 ) : (
@@ -716,28 +726,28 @@ export default function SuperAdminPage() {
                               </div>
                               <div>
                                 <div className="font-medium">{g.name}</div>
-                                <div className="text-xs text-muted-foreground">ID: {g.id}</div>
+                                <div className="text-xs text-muted-foreground font-mono">ID: {g.id}</div>
                               </div>
                             </div>
                           </td>
-                          <td className="p-3">
+                          <td className="px-4 py-3 text-sm">
                             {g.owner?.username || `User #${g.owner_id}`}
                           </td>
-                          <td className="p-3">{g.member_count}</td>
-                          <td className="p-3">{g.channel_count}</td>
-                          <td className="p-3">{g.message_count}</td>
-                          <td className="p-3">
+                          <td className="px-4 py-3 text-sm font-mono">{g.member_count}</td>
+                          <td className="px-4 py-3 text-sm font-mono">{g.channel_count}</td>
+                          <td className="px-4 py-3 text-sm font-mono">{g.message_count}</td>
+                          <td className="px-4 py-3 text-sm">
                             <div className="flex gap-1">
                               <button
                                 onClick={() => handleTransferGuild(g.id)}
-                                className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+                                className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
                                 title="Передать владение"
                               >
                                 <Crown className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteGuild(g.id, g.name)}
-                                className="p-2 hover:bg-red-500/15 rounded-lg text-red-400 transition-colors"
+                                className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-destructive hover:bg-danger-soft transition-colors duration-150"
                                 title="Удалить сервер"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -748,7 +758,7 @@ export default function SuperAdminPage() {
                       ))}
                     </tbody>
                   </table>
-                  <div className="p-3 flex justify-between items-center border-t border-border">
+                  <div className="px-4 py-3 flex justify-between items-center border-t border-border">
                     <span className="text-sm text-muted-foreground">
                       Total: {guildsTotal} guilds
                     </span>
@@ -756,14 +766,14 @@ export default function SuperAdminPage() {
                       <button
                         onClick={() => setGuildsPage(p => Math.max(1, p - 1))}
                         disabled={guildsPage <= 1}
-                        className="px-3 py-1 glass rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors"
+                        className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-medium hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors duration-150"
                       >
                         Prev
                       </button>
                       <button
                         onClick={() => setGuildsPage(p => p + 1)}
                         disabled={guildsPage >= Math.ceil(guildsTotal / 20)}
-                        className="px-3 py-1 glass rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors"
+                        className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-medium hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors duration-150"
                       >
                         Next
                       </button>
@@ -778,39 +788,39 @@ export default function SuperAdminPage() {
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" /> Ожидающие жалобы
                 </h2>
-                <div className="glass rounded-xl overflow-hidden">
+                <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                   {reports.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
                       Нет ожидающих жалоб
                     </div>
                   ) : (
                     <table className="w-full">
-                      <thead className="bg-primary/10 text-muted-foreground">
+                      <thead className="bg-secondary/60 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                         <tr>
-                          <th className="text-left p-3">Автор жалобы</th>
-                          <th className="text-left p-3">Тип</th>
-                          <th className="text-left p-3">Причина</th>
-                          <th className="text-left p-3">Статус</th>
-                          <th className="text-left p-3">Дата</th>
+                          <th className="text-left px-4 py-3">Автор жалобы</th>
+                          <th className="text-left px-4 py-3">Тип</th>
+                          <th className="text-left px-4 py-3">Причина</th>
+                          <th className="text-left px-4 py-3">Статус</th>
+                          <th className="text-left px-4 py-3">Дата</th>
                         </tr>
                       </thead>
                       <tbody>
                         {reports.map(r => (
-                          <tr key={r.id} className="border-t border-border">
-                            <td className="p-3">{r.reporter_id}</td>
-                            <td className="p-3">{r.target_type}</td>
-                            <td className="p-3">{r.reason}</td>
-                            <td className="p-3">
+                          <tr key={r.id} className="border-t border-border hover:bg-accent/40 transition-colors duration-150">
+                            <td className="px-4 py-3 text-sm font-mono">{r.reporter_id}</td>
+                            <td className="px-4 py-3 text-sm">{r.target_type}</td>
+                            <td className="px-4 py-3 text-sm">{r.reason}</td>
+                            <td className="px-4 py-3 text-sm">
                               <span className={cn(
-                                "px-2 py-1 rounded-full text-xs",
-                                r.status === 'pending' && "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25",
-                                r.status === 'resolved' && "bg-accent/15 text-accent border border-accent/25",
-                                r.status === 'rejected' && "bg-red-500/15 text-red-400 border border-red-500/25"
+                                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                                r.status === 'pending' && "bg-warning-soft text-[hsl(32_95%_30%)]",
+                                r.status === 'resolved' && "bg-success-soft text-emerald-800",
+                                r.status === 'rejected' && "bg-danger-soft text-destructive"
                               )}>
                                 {r.status}
                               </span>
                             </td>
-                            <td className="p-3 text-sm text-muted-foreground">
+                            <td className="px-4 py-3 text-sm text-muted-foreground font-mono">
                               {format(new Date(r.created_at), 'MMM d, yyyy')}
                             </td>
                           </tr>
@@ -825,7 +835,7 @@ export default function SuperAdminPage() {
             {activeTab === 'monitoring' && (
               <div className="space-y-6">
                 {serviceStatus && (
-                  <div className="glass rounded-xl p-6 shadow-soft">
+                  <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                       <Server className="w-5 h-5" /> Статус сервисов
                     </h3>
@@ -837,30 +847,30 @@ export default function SuperAdminPage() {
                   </div>
                 )}
 
-                <div className="glass rounded-xl p-6 shadow-soft">
+                <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <FileText className="w-5 h-5" /> Security Logs
                   </h3>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {securityLogs.map(log => (
-                      <div key={log.id} className="flex items-center justify-between p-3 bg-background/40 border border-border rounded-lg hover:bg-primary/5 transition-colors">
+                      <div key={log.id} className="flex items-center justify-between p-3 bg-graphite-100 border border-border rounded-lg hover:bg-accent/40 transition-colors duration-150">
                         <div className="flex items-center gap-3">
                           <span className={cn(
                             "w-2 h-2 rounded-full",
-                            log.action.includes('fail') ? "bg-red-400" :
-                            log.action.includes('ban') ? "bg-orange-400" :
-                            "bg-primary"
+                            log.action.includes('fail') ? "bg-destructive" :
+                            log.action.includes('ban') ? "bg-warning" :
+                            "bg-emerald-600"
                           )} />
                           <div>
-                            <div className="font-medium">{log.action}</div>
+                            <div className="font-medium text-sm font-mono">{log.action}</div>
                             <div className="text-xs text-muted-foreground">
                               {log.target}
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm">{log.ip_address}</div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-sm font-mono">{log.ip_address}</div>
+                          <div className="text-xs text-muted-foreground font-mono">
                             {format(new Date(log.created_at), 'MMM d, HH:mm')}
                           </div>
                         </div>
@@ -878,18 +888,18 @@ export default function SuperAdminPage() {
                   <StatCard icon={Clock} label="Запросы сегодня" value={jarvisStats.today_requests} color="blue" />
                 </div>
 
-                <div className="glass rounded-xl p-6 shadow-soft">
+                <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
                   <h3 className="text-lg font-semibold mb-4">Топ пользователей JARVIS</h3>
                   <div className="space-y-2">
                     {(jarvisStats.top_users || []).map((u, i) => (
-                      <div key={u.user_id} className="flex items-center justify-between p-3 bg-background/40 border border-border rounded-lg hover:bg-primary/5 transition-colors">
+                      <div key={u.user_id} className="flex items-center justify-between p-3 bg-graphite-100 border border-border rounded-lg hover:bg-accent/40 transition-colors duration-150">
                         <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 bg-gradient-brand text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
+                          <span className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
                             {i + 1}
                           </span>
-                          <span className="font-medium">{u.username}</span>
+                          <span className="font-medium text-sm">{u.username}</span>
                         </div>
-                        <span className="text-muted-foreground">{u.requests} requests</span>
+                        <span className="text-muted-foreground font-mono text-sm">{u.requests} requests</span>
                       </div>
                     ))}
                   </div>
@@ -907,14 +917,14 @@ export default function SuperAdminPage() {
                       setShowBannerForm(true)
                       setEditingBanner(null)
                     }}
-                    className="flex items-center gap-2 px-4 py-2 gradient-brand text-primary-foreground rounded-lg shadow-soft hover:brightness-110 transition-all"
+                    className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150"
                   >
                     <Plus className="w-4 h-4" /> Создать уведомление
                   </button>
                 </div>
 
                 {(showBannerForm || editingBanner) && (
-                  <div className="glass rounded-xl p-6">
+                  <div className="rounded-xl border border-border bg-card p-6 shadow-soft animate-rise-in">
                     <h3 className="text-lg font-semibold mb-4">
                       {editingBanner ? 'Редактировать уведомление' : 'Новое уведомление'}
                     </h3>
@@ -967,7 +977,7 @@ export default function SuperAdminPage() {
                         <button
                           onClick={editingBanner ? handleUpdateBanner : handleCreateBanner}
                           disabled={actionLoading || !bannerForm.title || !bannerForm.message}
-                          className="px-4 py-2 gradient-brand text-primary-foreground rounded-lg shadow-soft hover:brightness-110 disabled:opacity-50 transition-all"
+                          className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none transition-all duration-150"
                         >
                           {editingBanner ? 'Сохранить' : 'Создать'}
                         </button>
@@ -977,7 +987,7 @@ export default function SuperAdminPage() {
                             setEditingBanner(null)
                             setBannerForm({ title: '', message: '', type: 'info', expires_at: '' })
                           }}
-                          className="px-4 py-2 border border-border rounded-lg hover:bg-primary/10 transition-colors"
+                          className="h-10 px-4 rounded-lg border border-input bg-card text-sm font-medium hover:bg-accent hover:text-accent-foreground active:scale-[0.97] transition-all duration-150"
                         >
                           Отмена
                         </button>
@@ -988,33 +998,35 @@ export default function SuperAdminPage() {
 
                 <div className="space-y-4">
                   {banners.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>Нет уведомлений</p>
+                    <div className="text-center py-16 px-6 animate-rise-in">
+                      <div className="h-20 w-20 mx-auto rounded-2xl bg-secondary grid place-items-center mb-4">
+                        <Bell className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+                      </div>
+                      <p className="text-lg font-semibold">Нет уведомлений</p>
                     </div>
                   ) : (
                     banners.map(banner => (
                       <div
                         key={banner.id}
                         className={cn(
-                          "glass rounded-xl p-4 border-l-4",
-                          banner.type === 'info' && "border-blue-500",
-                          banner.type === 'success' && "border-green-500",
-                          banner.type === 'warning' && "border-yellow-500",
-                          banner.type === 'error' && "border-red-500",
+                          "rounded-xl border border-border bg-card shadow-soft p-4 border-l-4",
+                          banner.type === 'info' && "border-l-graphite-400",
+                          banner.type === 'success' && "border-l-emerald-600",
+                          banner.type === 'warning' && "border-l-warning",
+                          banner.type === 'error' && "border-l-destructive",
                           !banner.is_active && "opacity-50"
                         )}
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              {banner.type === 'info' && <Info className="w-4 h-4 text-primary" />}
-                              {banner.type === 'success' && <CheckCircle className="w-4 h-4 text-accent" />}
-                              {banner.type === 'warning' && <AlertTriangle className="w-4 h-4 text-yellow-400" />}
-                              {banner.type === 'error' && <AlertCircle className="w-4 h-4 text-red-400" />}
+                              {banner.type === 'info' && <Info className="w-4 h-4 text-graphite-500" />}
+                              {banner.type === 'success' && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                              {banner.type === 'warning' && <AlertTriangle className="w-4 h-4 text-warning" />}
+                              {banner.type === 'error' && <AlertCircle className="w-4 h-4 text-destructive" />}
                               <h4 className="font-semibold">{banner.title}</h4>
                               {!banner.is_active && (
-                                <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">Неактивно</span>
+                                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-secondary text-muted-foreground">Неактивно</span>
                               )}
                             </div>
                             <p className="text-muted-foreground">{banner.message}</p>
@@ -1031,10 +1043,10 @@ export default function SuperAdminPage() {
                               onClick={() => handleToggleBanner(banner)}
                               disabled={actionLoading}
                               className={cn(
-                                "p-2 rounded-lg transition-colors",
-                                banner.is_active 
-                                  ? "bg-accent/15 text-accent hover:bg-accent/25"
-                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                "h-8 w-8 rounded-lg inline-flex items-center justify-center transition-colors duration-150",
+                                banner.is_active
+                                  ? "text-emerald-700 hover:bg-success-soft"
+                                  : "text-muted-foreground hover:bg-secondary"
                               )}
                               title={banner.is_active ? 'Деактивировать' : 'Активировать'}
                             >
@@ -1050,7 +1062,7 @@ export default function SuperAdminPage() {
                                   expires_at: banner.expires_at ? banner.expires_at.slice(0, 16) : ''
                                 })
                               }}
-                              className="p-2 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
+                              className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
                               title="Редактировать"
                             >
                               <Edit className="w-4 h-4" />
@@ -1058,7 +1070,7 @@ export default function SuperAdminPage() {
                             <button
                               onClick={() => handleDeleteBanner(banner.id)}
                               disabled={actionLoading}
-                              className="p-2 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors"
+                              className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-destructive hover:bg-danger-soft transition-colors duration-150"
                               title="Удалить"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1091,25 +1103,25 @@ export default function SuperAdminPage() {
 
 function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number; color: string }) {
   const colors: Record<string, string> = {
-    blue: 'bg-primary/15 text-primary',
-    green: 'bg-accent/15 text-accent',
-    purple: 'bg-primary/15 text-primary',
-    yellow: 'bg-yellow-500/15 text-yellow-400',
-    cyan: 'bg-accent/15 text-accent',
-    indigo: 'bg-primary/15 text-primary',
-    orange: 'bg-orange-500/15 text-orange-400',
-    red: 'bg-red-500/15 text-red-400',
+    blue: 'bg-secondary text-graphite-600',
+    green: 'bg-success-soft text-emerald-700',
+    purple: 'bg-secondary text-graphite-600',
+    yellow: 'bg-warning-soft text-warning',
+    cyan: 'bg-success-soft text-emerald-700',
+    indigo: 'bg-secondary text-graphite-600',
+    orange: 'bg-warning-soft text-warning',
+    red: 'bg-danger-soft text-destructive',
   }
-  
+
   return (
-    <div className="glass p-4 rounded-xl shadow-soft">
+    <div className="rounded-xl border border-border bg-card p-5 shadow-soft animate-count-flick">
       <div className="flex items-center gap-3">
-        <div className={cn("p-2 rounded-lg", colors[color])}>
+        <div className={cn("h-10 w-10 rounded-lg grid place-items-center", colors[color])}>
           <Icon className="w-5 h-5" />
         </div>
         <div>
-          <div className="text-2xl font-bold">{value.toLocaleString()}</div>
-          <div className="text-sm text-muted-foreground">{label}</div>
+          <div className="text-2xl font-display font-bold text-graphite-900">{value.toLocaleString()}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</div>
         </div>
       </div>
     </div>
@@ -1118,20 +1130,26 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
 
 function ServiceStatusBadge({ name, status }: { name: string; status: string }) {
   const isConnected = status === 'connected' || status === 'configured'
-  
+
   return (
     <div className={cn(
-      "p-4 rounded-lg flex items-center gap-3",
-      isConnected ? "bg-accent/10 border border-accent/25" : "bg-red-500/10 border border-red-500/25"
+      "p-4 rounded-lg border flex items-center gap-3",
+      isConnected ? "bg-success-soft border-emerald-200" : "bg-danger-soft border-destructive/30"
     )}>
+      <span className="relative flex h-2.5 w-2.5">
+        {!isConnected && (
+          <span className="absolute inline-flex h-full w-full rounded-full bg-destructive animate-pulse-ring" />
+        )}
+        <span className={cn("relative inline-flex h-2.5 w-2.5 rounded-full", isConnected ? "bg-emerald-600" : "bg-destructive")} />
+      </span>
       {isConnected ? (
-        <Wifi className="w-5 h-5 text-accent" />
+        <Wifi className="w-5 h-5 text-emerald-700" />
       ) : (
-        <WifiOff className="w-5 h-5 text-red-400" />
+        <WifiOff className="w-5 h-5 text-destructive" />
       )}
       <div>
-        <div className="font-medium">{name}</div>
-        <div className={cn("text-sm", isConnected ? "text-accent" : "text-red-400")}>
+        <div className="font-medium text-sm">{name}</div>
+        <div className={cn("text-xs font-mono", isConnected ? "text-emerald-700" : "text-destructive")}>
           {status}
         </div>
       </div>
@@ -1141,14 +1159,14 @@ function ServiceStatusBadge({ name, status }: { name: string; status: string }) 
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    user: 'bg-muted text-muted-foreground',
-    moderator: 'bg-accent/15 text-accent border border-accent/25',
-    admin: 'bg-primary/15 text-primary border border-primary/25',
-    super_admin: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25',
+    user: 'bg-secondary text-secondary-foreground',
+    moderator: 'bg-emerald-100 text-emerald-800',
+    admin: 'bg-emerald-100 text-emerald-800',
+    super_admin: 'bg-warning-soft text-[hsl(32_95%_30%)]',
   }
-  
+
   return (
-    <span className={cn("px-2 py-1 rounded-full text-xs font-medium", colors[role] || colors.user)}>
+    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", colors[role] || colors.user)}>
       {role}
     </span>
   )

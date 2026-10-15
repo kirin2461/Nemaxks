@@ -336,14 +336,16 @@ export default function AdminPanel() {
   if (!user || (user.role !== 'admin' && user.role !== 'moderator' && user.role !== 'super_admin')) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="glass-strong rounded-xl p-8 max-w-md text-center">
-            <Shield className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h1 className="text-2xl font-bold mb-4">Доступ запрещён</h1>
+        <div className="flex items-center justify-center min-h-screen bg-background">
+          <div className="rounded-2xl border border-border bg-card p-8 shadow-pop max-w-md text-center animate-scale-in">
+            <div className="h-20 w-20 mx-auto rounded-2xl bg-secondary grid place-items-center mb-4">
+              <Shield className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+            </div>
+            <h1 className="text-2xl font-display font-bold text-graphite-900 mb-4">Доступ запрещён</h1>
             <p className="text-muted-foreground mb-6">
               У вас нет прав для доступа к панели администратора.
             </p>
-            <a href="/" className="text-primary hover:text-primary/80">Вернуться на главную</a>
+            <a href="/" className="text-primary underline-offset-4 hover:underline">Вернуться на главную</a>
           </div>
         </div>
       </Layout>
@@ -366,28 +368,28 @@ export default function AdminPanel() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="px-6 py-6 max-w-[1440px] mx-auto animate-rise-in">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold gradient-brand-text">Панель администратора</h1>
+            <h1 className="text-2xl font-display font-bold text-graphite-900">Панель администратора</h1>
             <p className="text-muted-foreground mt-1">Управление платформой и модерация</p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/25 text-sm">
-            <Shield className="w-4 h-4" />
+          <div className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">
+            <Shield className="w-3.5 h-3.5" />
             {user.role === 'super_admin' ? 'Супер-администратор' : user.role === 'admin' ? 'Администратор' : 'Модератор'}
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-6 border-b border-border pb-4">
+        <div className="flex gap-4 mb-6 border-b border-border overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200',
+                'flex items-center gap-2 pb-2.5 -mb-px whitespace-nowrap text-sm font-medium border-b-2 transition-colors duration-150',
                 activeTab === tab.id
-                  ? 'gradient-brand text-primary-foreground shadow-soft'
-                  : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
+                  ? 'text-foreground border-primary'
+                  : 'text-muted-foreground border-transparent hover:text-foreground'
               )}
             >
               <tab.icon className="w-4 h-4" />
@@ -397,8 +399,15 @@ export default function AdminPanel() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="loading-spinner" />
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="skeleton h-28 rounded-xl" />
+              ))}
+            </div>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="skeleton h-14 rounded-lg" />
+            ))}
           </div>
         ) : (
           <>
@@ -408,49 +417,49 @@ export default function AdminPanel() {
                   title="Пользователи"
                   value={stats.users}
                   icon={Users}
-                  color="text-blue-500"
+                  color="text-graphite-600"
                 />
                 <StatCard
                   title="Онлайн"
                   value={stats.online_users}
                   icon={Globe}
-                  color="text-green-500"
+                  color="text-emerald-600"
                 />
                 <StatCard
                   title="Сообщения"
                   value={stats.messages}
                   icon={MessageSquare}
-                  color="text-purple-500"
+                  color="text-graphite-600"
                 />
                 <StatCard
                   title="Посты"
                   value={stats.posts}
                   icon={TrendingUp}
-                  color="text-orange-500"
+                  color="text-graphite-600"
                 />
                 <StatCard
                   title="Сообщества"
                   value={stats.guilds}
                   icon={Server}
-                  color="text-cyan-500"
+                  color="text-graphite-600"
                 />
                 <StatCard
                   title="Активные баны"
                   value={stats.active_bans}
                   icon={Ban}
-                  color="text-red-500"
+                  color="text-destructive"
                 />
                 <StatCard
                   title="Ожидающие жалобы"
                   value={stats.pending_reports}
                   icon={AlertTriangle}
-                  color="text-yellow-500"
+                  color={stats.pending_reports > 0 ? 'text-warning' : 'text-graphite-600'}
                 />
               </div>
             )}
 
             {activeTab === 'users' && (
-              <div className="glass rounded-xl">
+              <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                 <div className="p-4 border-b border-border">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -467,26 +476,26 @@ export default function AdminPanel() {
                   {users
                     .filter(u => u.username.toLowerCase().includes(searchQuery.toLowerCase()))
                     .map((u) => (
-                      <div key={u.id} className="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors">
+                      <div key={u.id} className="flex items-center justify-between px-4 py-3 hover:bg-accent/40 transition-colors duration-150">
                         <div className="flex items-center gap-3">
                           <Avatar alt={u.username} size="md" />
                           <div>
-                            <p className="font-medium">{u.username}</p>
+                            <p className="font-medium text-sm">{u.username}</p>
                             <p className="text-sm text-muted-foreground">{u.email}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={cn(
-                            'px-2 py-1 rounded-full text-xs',
-                            u.role === 'admin' ? 'bg-primary/15 text-primary border border-primary/25' :
-                            u.role === 'moderator' ? 'bg-accent/15 text-accent border border-accent/25' :
-                            'bg-muted text-muted-foreground'
+                            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                            u.role === 'admin' ? 'bg-emerald-100 text-emerald-800' :
+                            u.role === 'moderator' ? 'bg-secondary text-secondary-foreground' :
+                            'bg-secondary text-muted-foreground'
                           )}>
                             {u.role || 'user'}
                           </span>
                           <button
                             onClick={() => handleBanUser(u.id, 'Действие администратора')}
-                            className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
+                            className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-destructive hover:bg-danger-soft transition-colors duration-150"
                           >
                             <Ban className="w-4 h-4" />
                           </button>
@@ -498,7 +507,7 @@ export default function AdminPanel() {
             )}
 
             {activeTab === 'bans' && (
-              <div className="glass rounded-xl">
+              <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                 <div className="divide-y divide-border">
                   {ipBans.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
@@ -527,7 +536,7 @@ export default function AdminPanel() {
             )}
 
             {activeTab === 'reports' && (
-              <div className="glass rounded-xl">
+              <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                 <div className="divide-y divide-border">
                   {reports.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
@@ -540,10 +549,10 @@ export default function AdminPanel() {
                           <div>
                             <div className="flex items-center gap-2 mb-2">
                               <span className={cn(
-                                'px-2 py-0.5 rounded-full text-xs',
-                                report.status === 'pending' ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25' :
-                                report.status === 'resolved' ? 'bg-accent/15 text-accent border border-accent/25' :
-                                'bg-red-500/15 text-red-400 border border-red-500/25'
+                                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                                report.status === 'pending' ? 'bg-warning-soft text-[hsl(32_95%_30%)]' :
+                                report.status === 'resolved' ? 'bg-success-soft text-emerald-800' :
+                                'bg-danger-soft text-destructive'
                               )}>
                                 {report.status}
                               </span>
@@ -557,13 +566,13 @@ export default function AdminPanel() {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleResolveReport(report.id, 'resolved')}
-                                className="p-2 rounded-lg hover:bg-green-500/10 text-green-500"
+                                className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-emerald-700 hover:bg-success-soft transition-colors duration-150"
                               >
                                 <CheckCircle className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleResolveReport(report.id, 'rejected')}
-                                className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
+                                className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-destructive hover:bg-danger-soft transition-colors duration-150"
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -578,7 +587,7 @@ export default function AdminPanel() {
             )}
 
             {activeTab === 'logs' && (
-              <div className="glass rounded-xl">
+              <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                 <div className="divide-y divide-border">
                   {logs.map((log) => (
                     <div key={log.id} className="p-4 flex items-center gap-4">
@@ -633,7 +642,7 @@ export default function AdminPanel() {
                     </label>
                     <button
                       onClick={handleAddForbiddenWord}
-                      className="px-4 py-2 rounded-lg gradient-brand text-primary-foreground shadow-soft hover:brightness-110 flex items-center gap-2 transition-all"
+                      className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] inline-flex items-center gap-2 transition-all duration-150"
                     >
                       <Plus className="w-4 h-4" />
                       Добавить
@@ -641,7 +650,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div className="glass rounded-xl">
+                <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                   <div className="divide-y divide-border">
                     {forbiddenWords.length === 0 ? (
                       <div className="p-8 text-center text-muted-foreground">
@@ -649,7 +658,7 @@ export default function AdminPanel() {
                       </div>
                     ) : (
                       forbiddenWords.map((word) => (
-                        <div key={word.id} className="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors">
+                        <div key={word.id} className="flex items-center justify-between px-4 py-3 hover:bg-accent/40 transition-colors duration-150">
                           {editingWord?.id === word.id ? (
                             <div className="flex-1 flex items-center gap-3">
                               <input
@@ -672,13 +681,13 @@ export default function AdminPanel() {
                               </select>
                               <button
                                 onClick={handleUpdateForbiddenWord}
-                                className="p-2 rounded-lg hover:bg-green-500/10 text-green-500"
+                                className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-emerald-700 hover:bg-success-soft transition-colors duration-150"
                               >
                                 <Save className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => setEditingWord(null)}
-                                className="p-2 rounded-lg hover:bg-muted text-muted-foreground"
+                                className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors duration-150"
                               >
                                 <X className="w-4 h-4" />
                               </button>
@@ -686,19 +695,19 @@ export default function AdminPanel() {
                           ) : (
                             <>
                               <div className="flex items-center gap-3">
-                                <span className="font-mono bg-muted/70 px-2 py-1 rounded-lg border border-border">{word.word}</span>
+                                <span className="font-mono text-xs bg-graphite-100 px-2 py-1 rounded-lg border border-border">{word.word}</span>
                                 <span className={cn(
-                                  'px-2 py-0.5 rounded-full text-xs',
-                                  word.category === 'criminal' ? 'bg-red-500/15 text-red-400 border border-red-500/25' :
-                                  word.category === 'violence' ? 'bg-orange-500/15 text-orange-400 border border-orange-500/25' :
-                                  word.category === 'spam' ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25' :
-                                  word.category === 'fraud' ? 'bg-primary/15 text-primary border border-primary/25' :
-                                  'bg-muted text-muted-foreground'
+                                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                                  word.category === 'criminal' ? 'bg-danger-soft text-destructive' :
+                                  word.category === 'violence' ? 'bg-danger-soft text-destructive' :
+                                  word.category === 'spam' ? 'bg-warning-soft text-[hsl(32_95%_30%)]' :
+                                  word.category === 'fraud' ? 'bg-warning-soft text-[hsl(32_95%_30%)]' :
+                                  'bg-secondary text-secondary-foreground'
                                 )}>
                                   {word.category}
                                 </span>
                                 {word.is_regex && (
-                                  <span className="px-2 py-0.5 rounded-full text-xs bg-accent/15 text-accent border border-accent/25">
+                                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">
                                     regex
                                   </span>
                                 )}
@@ -706,13 +715,13 @@ export default function AdminPanel() {
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => setEditingWord(word)}
-                                  className="p-2 rounded-lg hover:bg-muted text-muted-foreground"
+                                  className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteForbiddenWord(word.id)}
-                                  className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
+                                  className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-destructive hover:bg-danger-soft transition-colors duration-150"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -728,7 +737,7 @@ export default function AdminPanel() {
             )}
 
             {activeTab === 'attempts' && (
-              <div className="glass rounded-xl">
+              <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                 <div className="divide-y divide-border">
                   {forbiddenAttempts.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
@@ -743,17 +752,17 @@ export default function AdminPanel() {
                               <span className="text-sm text-muted-foreground">
                                 Пользователь #{attempt.user_id}
                               </span>
-                              <span className="px-2 py-0.5 rounded-full text-xs bg-red-500/15 text-red-400 border border-red-500/25">
+                              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-danger-soft text-destructive">
                                 {attempt.context}
                               </span>
                             </div>
-                            <p className="text-sm bg-muted p-2 rounded font-mono break-all">
+                            <p className="text-sm bg-graphite-100 p-2 rounded-lg font-mono break-all">
                               {attempt.attempted_content.length > 200
                                 ? attempt.attempted_content.substring(0, 200) + '...'
                                 : attempt.attempted_content}
                             </p>
                             <p className="text-xs text-muted-foreground mt-2">
-                              Совпадения: <span className="text-red-400">{attempt.matched_words}</span>
+                              Совпадения: <span className="text-destructive">{attempt.matched_words}</span>
                             </p>
                           </div>
                           <div className="text-right text-sm text-muted-foreground ml-4">
@@ -774,53 +783,53 @@ export default function AdminPanel() {
                     title="Активные подписки"
                     value={billingStats.active_subscriptions}
                     icon={CreditCard}
-                    color="text-purple-500"
+                    color="text-graphite-600"
                   />
                   <StatCard
                     title="Доход за месяц"
                     value={billingStats.monthly_revenue}
                     icon={DollarSign}
-                    color="text-green-500"
+                    color="text-emerald-600"
                   />
                   <StatCard
                     title="Общий доход"
                     value={billingStats.total_revenue}
                     icon={TrendingUp}
-                    color="text-blue-500"
+                    color="text-graphite-600"
                   />
-                  <div className="glass rounded-xl p-6 shadow-soft">
+                  <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-muted-foreground">Отток</span>
-                      <RefreshCw className="w-5 h-5 text-orange-500" />
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Отток</span>
+                      <RefreshCw className="w-5 h-5 text-warning" />
                     </div>
-                    <p className="text-3xl font-bold">{billingStats.churn_rate.toFixed(1)}%</p>
+                    <p className="text-3xl font-display font-bold text-graphite-900">{billingStats.churn_rate.toFixed(1)}%</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="glass rounded-xl p-6 shadow-soft">
+                  <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4">Статистика за месяц</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Новых подписок</span>
-                        <span className="font-medium text-green-500">+{billingStats.new_subscriptions}</span>
+                        <span className="font-medium text-emerald-700">+{billingStats.new_subscriptions}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Отменено</span>
-                        <span className="font-medium text-red-500">-{billingStats.cancelled_subscriptions}</span>
+                        <span className="font-medium text-destructive">-{billingStats.cancelled_subscriptions}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Нетто</span>
-                        <span className={cn("font-medium", billingStats.new_subscriptions - billingStats.cancelled_subscriptions >= 0 ? "text-green-500" : "text-red-500")}>
+                        <span className={cn("font-medium", billingStats.new_subscriptions - billingStats.cancelled_subscriptions >= 0 ? "text-emerald-700" : "text-destructive")}>
                           {billingStats.new_subscriptions - billingStats.cancelled_subscriptions >= 0 ? '+' : ''}{billingStats.new_subscriptions - billingStats.cancelled_subscriptions}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="glass rounded-xl p-6 shadow-soft">
+                  <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
                     <h3 className="text-lg font-semibold mb-4">MRR</h3>
-                    <div className="text-4xl font-bold gradient-brand-text">
+                    <div className="text-3xl font-display font-bold text-graphite-900">
                       {billingStats.monthly_revenue.toLocaleString()} ₽
                     </div>
                     <p className="text-muted-foreground mt-2">
@@ -829,7 +838,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div className="glass rounded-xl">
+                <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                   <div className="p-4 border-b border-border">
                     <h3 className="font-semibold">Последние транзакции</h3>
                   </div>
@@ -844,14 +853,14 @@ export default function AdminPanel() {
                           <div className="flex items-center gap-3">
                             <div className={cn(
                               "w-10 h-10 rounded-full flex items-center justify-center",
-                              tx.status === 'succeeded' ? "bg-accent/15" : tx.status === 'pending' ? "bg-yellow-500/15" : "bg-red-500/15"
+                              tx.status === 'succeeded' ? "bg-success-soft" : tx.status === 'pending' ? "bg-warning-soft" : "bg-danger-soft"
                             )}>
                               {tx.status === 'succeeded' ? (
-                                <CheckCircle className="w-5 h-5 text-green-500" />
+                                <CheckCircle className="w-5 h-5 text-emerald-600" />
                               ) : tx.status === 'pending' ? (
-                                <Clock className="w-5 h-5 text-yellow-500" />
+                                <Clock className="w-5 h-5 text-warning" />
                               ) : (
-                                <XCircle className="w-5 h-5 text-red-500" />
+                                <XCircle className="w-5 h-5 text-destructive" />
                               )}
                             </div>
                             <div>
@@ -865,7 +874,7 @@ export default function AdminPanel() {
                             <p className="font-semibold">{tx.amount_rub.toLocaleString()} ₽</p>
                             <p className={cn(
                               "text-sm",
-                              tx.status === 'succeeded' ? "text-green-500" : tx.status === 'pending' ? "text-yellow-500" : "text-red-500"
+                              tx.status === 'succeeded' ? "text-emerald-700" : tx.status === 'pending' ? "text-warning" : "text-destructive"
                             )}>
                               {tx.status === 'succeeded' ? 'Успешно' : tx.status === 'pending' ? 'Ожидание' : 'Ошибка'}
                             </p>
@@ -880,22 +889,22 @@ export default function AdminPanel() {
             {activeTab === 'licenses' && (
               <div className="space-y-6">
                 {licenseError && (
-                  <div className="p-4 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                  <div className="p-4 bg-danger-soft border border-destructive/30 rounded-xl text-destructive text-sm">
                     {licenseError}
                   </div>
                 )}
 
                 {licenseStats && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <StatCard title="Всего ключей" value={licenseStats.total_keys} icon={KeyRound} color="text-blue-500" />
-                    <StatCard title="Использовано" value={licenseStats.used_keys} icon={CheckCircle} color="text-green-500" />
-                    <StatCard title="Свободно" value={licenseStats.unused_keys} icon={Clock} color="text-yellow-500" />
-                    <StatCard title="Активаций" value={licenseStats.active_users} icon={Users} color="text-purple-500" />
-                    <StatCard title="Выручка (₽)" value={licenseStats.revenue_rub} icon={DollarSign} color="text-orange-500" />
+                    <StatCard title="Всего ключей" value={licenseStats.total_keys} icon={KeyRound} color="text-graphite-600" />
+                    <StatCard title="Использовано" value={licenseStats.used_keys} icon={CheckCircle} color="text-emerald-600" />
+                    <StatCard title="Свободно" value={licenseStats.unused_keys} icon={Clock} color="text-warning" />
+                    <StatCard title="Активаций" value={licenseStats.active_users} icon={Users} color="text-graphite-600" />
+                    <StatCard title="Выручка (₽)" value={licenseStats.revenue_rub} icon={DollarSign} color="text-emerald-600" />
                   </div>
                 )}
 
-                <div className="glass rounded-xl p-4">
+                <div className="rounded-xl border border-border bg-card p-4 shadow-none">
                   <h3 className="font-medium mb-4">Генерация ключей</h3>
                   <div className="flex flex-wrap gap-3">
                     <select
@@ -910,7 +919,7 @@ export default function AdminPanel() {
                     <button
                       onClick={() => handleGenerateLicense(1)}
                       disabled={licenseGenerating}
-                      className="px-4 py-2 rounded-lg gradient-brand text-primary-foreground shadow-soft hover:brightness-110 flex items-center gap-2 transition-all disabled:opacity-50"
+                      className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] inline-flex items-center gap-2 transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
                     >
                       <Plus className="w-4 h-4" />
                       Сгенерировать
@@ -918,7 +927,7 @@ export default function AdminPanel() {
                     <button
                       onClick={() => handleGenerateLicense(10)}
                       disabled={licenseGenerating}
-                      className="px-4 py-2 rounded-lg bg-primary/15 text-primary border border-primary/25 hover:bg-primary/25 flex items-center gap-2 transition-all disabled:opacity-50"
+                      className="h-10 px-4 rounded-lg border border-input bg-card text-foreground text-sm font-medium hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 active:scale-[0.97] inline-flex items-center gap-2 transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
                     >
                       <Plus className="w-4 h-4" />
                       10 шт
@@ -926,7 +935,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div className="glass rounded-xl">
+                <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                   <div className="divide-y divide-border">
                     {licenses.length === 0 ? (
                       <div className="p-8 text-center text-muted-foreground">
@@ -934,35 +943,35 @@ export default function AdminPanel() {
                       </div>
                     ) : (
                       licenses.map((lic) => (
-                        <div key={lic.id} className="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors">
+                        <div key={lic.id} className="flex items-center justify-between px-4 py-3 hover:bg-accent/40 transition-colors duration-150">
                           <div className="flex items-center gap-3 min-w-0">
-                            <span className="font-mono text-sm bg-muted/70 px-2 py-1 rounded-lg border border-border truncate">
+                            <span className="font-mono text-xs bg-graphite-100 px-2 py-1 rounded-lg border border-border truncate">
                               {lic.key}
                             </span>
                             <button
                               onClick={() => copyToClipboard(lic.key)}
-                              className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                              className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
                               title="Скопировать"
                             >
                               {copiedKey === lic.key ? (
-                                <Check className="w-4 h-4 text-green-500" />
+                                <Check className="w-4 h-4 text-emerald-600" />
                               ) : (
                                 <Copy className="w-4 h-4" />
                               )}
                             </button>
                           </div>
                           <div className="flex items-center gap-3 flex-shrink-0">
-                            <span className="px-2 py-0.5 rounded-full text-xs bg-primary/15 text-primary border border-primary/25">
+                            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground">
                               {lic.type}
                             </span>
-                            <span className="text-sm text-muted-foreground w-16 text-right">
+                            <span className="text-sm text-muted-foreground font-mono w-16 text-right">
                               {lic.duration_days} дн.
                             </span>
                             <span className={cn(
-                              'px-2 py-0.5 rounded-full text-xs',
+                              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
                               lic.is_used
-                                ? 'bg-muted text-muted-foreground'
-                                : 'bg-accent/15 text-accent border border-accent/25'
+                                ? 'bg-secondary text-muted-foreground'
+                                : 'bg-emerald-100 text-emerald-800'
                             )}>
                               {lic.is_used ? 'Использован' : 'Свободен'}
                             </span>
@@ -974,7 +983,7 @@ export default function AdminPanel() {
                       ))
                     )}
                   </div>
-                  <div className="flex items-center justify-between p-4 border-t border-border">
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-border">
                     <span className="text-sm text-muted-foreground">
                       Страница {licensePage} из {Math.max(1, Math.ceil(licensesTotal / 20))} (всего {licensesTotal})
                     </span>
@@ -982,14 +991,14 @@ export default function AdminPanel() {
                       <button
                         onClick={() => setLicensePage((p) => Math.max(1, p - 1))}
                         disabled={licensePage <= 1}
-                        className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-medium hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors duration-150"
                       >
                         Назад
                       </button>
                       <button
                         onClick={() => setLicensePage((p) => p + 1)}
                         disabled={licensePage * 20 >= licensesTotal}
-                        className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-medium hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:pointer-events-none transition-colors duration-150"
                       >
                         Вперёд
                       </button>
@@ -1002,20 +1011,20 @@ export default function AdminPanel() {
             {activeTab === 'apikeys' && (
               <div className="space-y-6">
                 {apiKeysError && (
-                  <div className="p-4 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                  <div className="p-4 bg-danger-soft border border-destructive/30 rounded-xl text-destructive text-sm">
                     {apiKeysError}
                   </div>
                 )}
 
                 {apiKeysStats && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <StatCard title="Всего ключей" value={apiKeysStats.total} icon={KeySquare} color="text-blue-500" />
-                    <StatCard title="Активных" value={apiKeysStats.active} icon={CheckCircle} color="text-green-500" />
-                    <StatCard title="Использовано за 24ч" value={apiKeysStats.used_last_24h} icon={Activity} color="text-purple-500" />
+                    <StatCard title="Всего ключей" value={apiKeysStats.total} icon={KeySquare} color="text-graphite-600" />
+                    <StatCard title="Активных" value={apiKeysStats.active} icon={CheckCircle} color="text-emerald-600" />
+                    <StatCard title="Использовано за 24ч" value={apiKeysStats.used_last_24h} icon={Activity} color="text-graphite-600" />
                   </div>
                 )}
 
-                <div className="glass rounded-xl p-4">
+                <div className="rounded-xl border border-border bg-card p-4 shadow-none">
                   <h3 className="font-medium mb-4">Создать API-ключ</h3>
                   <div className="flex flex-wrap gap-3 items-center">
                     <input
@@ -1063,7 +1072,7 @@ export default function AdminPanel() {
                     <button
                       onClick={handleCreateApiKey}
                       disabled={apiKeyCreating || !newKeyName.trim()}
-                      className="px-4 py-2 rounded-lg gradient-brand text-primary-foreground shadow-soft hover:brightness-110 flex items-center gap-2 transition-all disabled:opacity-50"
+                      className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] inline-flex items-center gap-2 transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
                     >
                       <Plus className="w-4 h-4" />
                       Создать
@@ -1072,31 +1081,31 @@ export default function AdminPanel() {
                 </div>
 
                 {createdKey && (
-                  <div className="glass rounded-xl p-4 border border-yellow-500/40 bg-yellow-500/5">
+                  <div className="rounded-xl border border-warning/30 bg-warning-soft p-4 shadow-none animate-rise-in">
                     <div className="flex items-center gap-2 mb-3">
-                      <AlertTriangle className="w-5 h-5 text-yellow-400" />
-                      <h3 className="font-medium text-yellow-400">
+                      <AlertTriangle className="w-5 h-5 text-warning" />
+                      <h3 className="font-medium text-[hsl(32_95%_30%)]">
                         Сохраните ключ — он показывается один раз
                       </h3>
                     </div>
                     <div className="flex items-center gap-3">
-                      <code className="flex-1 font-mono text-sm bg-background/60 px-3 py-2 rounded-lg border border-border break-all">
+                      <code className="flex-1 font-mono text-sm bg-card px-3 py-2 rounded-lg border border-border break-all">
                         {createdKey.key}
                       </code>
                       <button
                         onClick={() => copyToClipboard(createdKey.key)}
-                        className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors flex-shrink-0"
+                        className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150 flex-shrink-0"
                         title="Скопировать"
                       >
                         {copiedKey === createdKey.key ? (
-                          <Check className="w-4 h-4 text-green-500" />
+                          <Check className="w-4 h-4 text-emerald-600" />
                         ) : (
                           <Copy className="w-4 h-4" />
                         )}
                       </button>
                       <button
                         onClick={() => setCreatedKey(null)}
-                        className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors flex-shrink-0"
+                        className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150 flex-shrink-0"
                         title="Скрыть"
                       >
                         <X className="w-4 h-4" />
@@ -1105,7 +1114,7 @@ export default function AdminPanel() {
                   </div>
                 )}
 
-                <div className="glass rounded-xl">
+                <div className="rounded-xl border border-border bg-card shadow-none overflow-hidden">
                   <div className="divide-y divide-border">
                     {apiKeys.length === 0 ? (
                       <div className="p-8 text-center text-muted-foreground">
@@ -1113,17 +1122,17 @@ export default function AdminPanel() {
                       </div>
                     ) : (
                       apiKeys.map((key) => (
-                        <div key={key.id} className="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors">
+                        <div key={key.id} className="flex items-center justify-between px-4 py-3 hover:bg-accent/40 transition-colors duration-150">
                           <div className="flex items-center gap-3 min-w-0">
                             <div>
-                              <p className="font-medium">{key.name}</p>
-                              <p className="text-sm text-muted-foreground font-mono">{key.prefix}…</p>
+                              <p className="font-medium text-sm">{key.name}</p>
+                              <p className="text-xs text-muted-foreground font-mono">{key.prefix}…</p>
                             </div>
                             <div className="flex gap-1">
                               {(key.scopes || []).map((scope) => (
                                 <span
                                   key={scope}
-                                  className="px-2 py-0.5 rounded-full text-xs bg-accent/15 text-accent border border-accent/25"
+                                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground"
                                 >
                                   {scope}
                                 </span>
@@ -1131,16 +1140,16 @@ export default function AdminPanel() {
                             </div>
                           </div>
                           <div className="flex items-center gap-3 flex-shrink-0">
-                            <span className="text-sm text-muted-foreground hidden md:block">
+                            <span className="text-xs text-muted-foreground font-mono hidden md:block">
                               {key.last_used_at ? new Date(key.last_used_at).toLocaleString() : '—'}
                             </span>
                             <button
                               onClick={() => handleToggleApiKey(key)}
                               className={cn(
-                                'px-2 py-0.5 rounded-full text-xs border transition-colors',
+                                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors duration-150',
                                 key.is_active
-                                  ? 'bg-green-500/15 text-green-400 border-green-500/25 hover:bg-green-500/25'
-                                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                                  ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                                  : 'bg-secondary text-muted-foreground hover:bg-graphite-200'
                               )}
                               title={key.is_active ? 'Деактивировать' : 'Активировать'}
                             >
@@ -1148,7 +1157,7 @@ export default function AdminPanel() {
                             </button>
                             <button
                               onClick={() => handleRevokeApiKey(key.id)}
-                              className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
+                              className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-destructive hover:bg-danger-soft transition-colors duration-150"
                               title="Отозвать ключ"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1191,12 +1200,12 @@ function StatCard({
   color: string
 }) {
   return (
-    <div className="glass rounded-xl p-6 shadow-soft">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-soft animate-count-flick">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-muted-foreground">{title}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</span>
         <Icon className={cn('w-5 h-5', color)} />
       </div>
-      <p className="text-3xl font-bold">{value.toLocaleString()}</p>
+      <p className="text-3xl font-display font-bold text-graphite-900">{value.toLocaleString()}</p>
     </div>
   )
 }

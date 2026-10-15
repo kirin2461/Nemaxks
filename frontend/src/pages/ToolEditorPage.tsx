@@ -600,9 +600,10 @@ export default function ToolEditorPage() {
     return (
       <Layout>
         <div className="h-full flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground animate-pulse">Загрузка инструмента...</p>
+          <div className="w-full max-w-md space-y-3 px-6">
+            <div className="skeleton h-10 rounded-lg" />
+            <div className="skeleton h-64 rounded-xl" />
+            <div className="skeleton h-10 rounded-lg" />
           </div>
         </div>
       </Layout>
@@ -613,14 +614,14 @@ export default function ToolEditorPage() {
     return (
       <Layout>
         <div className="h-full flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-              <Presentation className="w-10 h-10 text-primary/70" />
+          <div className="text-center animate-rise-in">
+            <div className="h-20 w-20 mx-auto mb-4 rounded-2xl bg-secondary grid place-items-center">
+              <Presentation className="w-10 h-10 text-graphite-300" strokeWidth={1.5} />
             </div>
-            <h2 className="text-xl font-semibold tracking-tight mb-2">{loadError || 'Инструмент не найден'}</h2>
+            <h2 className="text-xl font-display font-semibold text-graphite-900 mb-2">{loadError || 'Инструмент не найден'}</h2>
             <button
               onClick={() => navigate('/channels')}
-              className="mt-4 px-6 py-2 rounded-xl bg-gradient-brand text-primary-foreground shadow-soft hover:shadow-glow transition-all inline-flex items-center gap-2"
+              className="mt-4 h-10 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 inline-flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               К каналам
@@ -638,34 +639,34 @@ export default function ToolEditorPage() {
   return (
     <Layout>
       <div className="h-full flex flex-col min-h-0">
-        {/* Header */}
-        <div className="p-3 md:p-4 border-b border-border/60 bg-card/70 backdrop-blur-xl flex items-center gap-2 md:gap-3 shrink-0">
+        {/* Header — IDE toolbar */}
+        <div className="h-12 px-3 md:px-4 border-b border-border bg-card flex items-center gap-2 md:gap-3 shrink-0">
           <button
             onClick={() => navigate('/channels')}
-            className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors"
+            className="h-8 w-8 rounded-lg inline-flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150"
             title="Назад к каналам"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           {isBoard ? (
-            <Presentation className="w-5 h-5 text-primary hidden sm:block" />
+            <Presentation className="w-5 h-5 text-emerald-700 hidden sm:block" />
           ) : (
-            <FileText className="w-5 h-5 text-primary hidden sm:block" />
+            <FileText className="w-5 h-5 text-emerald-700 hidden sm:block" />
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold tracking-tight truncate text-sm md:text-base">{tool.title}</h2>
-            <p className="text-xs text-muted-foreground">{isBoard ? 'Доска' : 'Блокнот'}</p>
+            <h2 className="font-semibold truncate text-sm">{tool.title}</h2>
+            <p className="text-[11px] text-muted-foreground">{isBoard ? 'Доска' : 'Блокнот'}</p>
           </div>
           <div className="flex items-center gap-1 md:gap-3">
             {/* Индикатор соединения */}
             <div
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-secondary/50"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-secondary"
               title={connected ? 'Подключено' : 'Нет соединения'}
             >
               <span
                 className={cn(
                   'w-2.5 h-2.5 rounded-full',
-                  connected ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.7)]' : 'bg-red-500 animate-pulse',
+                  connected ? 'bg-emerald-500' : 'bg-destructive',
                 )}
               />
               <span className="text-xs text-muted-foreground hidden md:inline">
@@ -674,18 +675,18 @@ export default function ToolEditorPage() {
             </div>
             {/* Онлайн-пользователи */}
             <div
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-secondary/50"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-secondary"
               title={onlineUsers.length > 0 ? `Онлайн: ${onlineUsers.map((u) => u.username).join(', ')}` : 'Никого нет онлайн'}
             >
               <Users className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{onlineUsers.length}</span>
+              <span className="text-xs text-muted-foreground font-mono">{onlineUsers.length}</span>
             </div>
             {/* История версий */}
             <button
               onClick={handleOpenHistory}
               className={cn(
-                'p-2 rounded-lg transition-colors',
-                showHistory ? 'bg-primary/20 text-primary' : 'hover:bg-primary/10 text-muted-foreground hover:text-foreground',
+                'h-8 w-8 rounded-lg inline-flex items-center justify-center transition-colors duration-150',
+                showHistory ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
               )}
               title="История версий"
             >
@@ -696,7 +697,7 @@ export default function ToolEditorPage() {
 
         {/* Офлайн-баннер */}
         {(!connected || queueCount > 0) && (
-          <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 flex items-center gap-2 text-sm text-amber-500 shrink-0">
+          <div className="px-4 py-2 bg-warning-soft border-b border-warning/30 flex items-center gap-2 text-sm text-[hsl(32_95%_30%)] shrink-0">
             <WifiOff className="w-4 h-4 shrink-0" />
             <span>
               Офлайн · {queueCount} {pluralChanges(queueCount)} в очереди
@@ -710,14 +711,14 @@ export default function ToolEditorPage() {
             {isBoard ? (
               <div className="p-4 h-full flex flex-col">
                 {/* Форма добавления заметки */}
-                <div className="mb-4 p-3 rounded-xl bg-card/60 border border-border/60 flex flex-col sm:flex-row gap-2 shrink-0">
+                <div className="mb-4 p-3 rounded-xl bg-card border border-border flex flex-col sm:flex-row gap-2 shrink-0">
                   <input
                     type="text"
                     value={newNoteText}
                     onChange={(e) => setNewNoteText(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
                     placeholder="Текст заметки..."
-                    className="flex-1 bg-card/60 border border-border rounded-xl py-2 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary/60 transition-all"
+                    className="flex-1 bg-background border border-input rounded-xl py-2 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-all duration-150"
                   />
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
@@ -737,7 +738,7 @@ export default function ToolEditorPage() {
                     <button
                       onClick={handleAddNote}
                       disabled={!newNoteText.trim()}
-                      className="px-3 py-2 rounded-xl bg-gradient-brand text-primary-foreground shadow-soft hover:shadow-glow disabled:opacity-50 transition-all flex items-center gap-1.5 text-sm"
+                      className="h-9 px-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none transition-all duration-150 flex items-center gap-1.5"
                     >
                       <Plus className="w-4 h-4" />
                       Добавить
@@ -751,7 +752,7 @@ export default function ToolEditorPage() {
                   onPointerMove={handleBoardPointerMove}
                   onPointerUp={handleBoardPointerUp}
                   onPointerLeave={handleBoardPointerUp}
-                  className="relative flex-1 min-h-[60vh] rounded-xl bg-secondary/30 border border-border/60 overflow-hidden touch-none"
+                  className="relative flex-1 min-h-[60vh] rounded-xl bg-graphite-100 border border-border overflow-hidden touch-none"
                 >
                   {boardNotes.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -879,7 +880,7 @@ export default function ToolEditorPage() {
                     return (
                       <div
                         key={paragraphId}
-                        className="group rounded-xl bg-card/60 border border-border/60 px-4 py-3 hover:border-primary/40 transition-colors"
+                        className="group rounded-xl bg-card border border-border px-4 py-3 hover:border-graphite-300 transition-colors duration-150"
                       >
                         {isEditing ? (
                           <div className="flex flex-col gap-2">
@@ -893,20 +894,20 @@ export default function ToolEditorPage() {
                                 }
                                 if (e.key === 'Escape') setEditingParagraphId(null)
                               }}
-                              className="w-full bg-card/60 border border-border rounded-lg p-2 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                              className="w-full bg-background border border-input rounded-lg p-2 text-sm text-foreground resize-none focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20"
                               rows={3}
                               autoFocus
                             />
                             <div className="flex justify-end gap-1.5">
                               <button
                                 onClick={() => setEditingParagraphId(null)}
-                                className="px-2.5 py-1 rounded-lg bg-secondary text-xs hover:bg-secondary/80 transition-colors"
+                                className="px-2.5 py-1 rounded-lg bg-secondary text-xs hover:bg-graphite-200 transition-colors duration-150"
                               >
                                 Отмена
                               </button>
                               <button
                                 onClick={() => handleSaveParagraph(paragraphId)}
-                                className="px-2.5 py-1 rounded-lg bg-gradient-brand text-primary-foreground text-xs hover:shadow-glow transition-all"
+                                className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs hover:bg-emerald-800 active:scale-[0.97] transition-all duration-150"
                               >
                                 Сохранить
                               </button>
@@ -921,14 +922,14 @@ export default function ToolEditorPage() {
                                   setEditingParagraphId(paragraphId)
                                   setEditingParagraphText(paragraph.text || '')
                                 }}
-                                className="p-1.5 rounded-lg hover:bg-primary/15 text-muted-foreground hover:text-foreground transition-colors"
+                                className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors duration-150"
                                 title="Редактировать"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => handleDeleteParagraph(paragraphId)}
-                                className="p-1.5 rounded-lg hover:bg-red-500/15 text-muted-foreground hover:text-red-400 transition-colors"
+                                className="p-1.5 rounded-lg hover:bg-danger-soft text-muted-foreground hover:text-destructive transition-colors duration-150"
                                 title="Удалить"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -953,13 +954,13 @@ export default function ToolEditorPage() {
                       }
                     }}
                     placeholder="Новый абзац... (Enter — добавить)"
-                    className="w-full bg-card/60 backdrop-blur-sm border border-border rounded-xl py-3 px-4 pr-12 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary/60 transition-all resize-none"
+                    className="w-full bg-card border border-input rounded-xl py-3 px-4 pr-12 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-all duration-150 resize-none"
                     rows={2}
                   />
                   <button
                     onClick={handleAddParagraph}
                     disabled={!newParagraph.trim()}
-                    className="absolute right-2 bottom-3 p-2 rounded-lg bg-gradient-brand text-primary-foreground shadow-soft disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-glow transition-all"
+                    className="absolute right-2 bottom-3 p-2 rounded-lg bg-primary text-primary-foreground shadow-soft disabled:opacity-50 disabled:pointer-events-none hover:bg-emerald-800 active:scale-[0.97] transition-all duration-150"
                     title="Добавить абзац"
                   >
                     <Plus className="w-4 h-4" />
@@ -972,9 +973,9 @@ export default function ToolEditorPage() {
           {/* Панель истории версий */}
           {showHistory && (
             <>
-              <div className="md:hidden fixed inset-0 bg-black/50 z-[55]" onClick={() => setShowHistory(false)} />
-              <div className="fixed inset-y-0 right-0 w-80 md:static md:w-80 bg-card/80 backdrop-blur-xl flex flex-col shrink-0 border-l border-border/60 z-[60] md:z-auto">
-                <div className="p-4 border-b border-border/60 flex items-center justify-between shrink-0">
+              <div className="md:hidden fixed inset-0 bg-graphite-950/40 z-[55]" onClick={() => setShowHistory(false)} />
+              <div className="fixed inset-y-0 right-0 w-80 md:static md:w-80 bg-card flex flex-col shrink-0 border-l border-border z-[60] md:z-auto animate-slide-in-right">
+                <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
                   <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                     <History className="w-4 h-4" />
                     История версий
@@ -988,25 +989,25 @@ export default function ToolEditorPage() {
                 </div>
 
                 {/* Сохранить версию */}
-                <div className="p-3 border-b border-border/60 space-y-2 shrink-0">
+                <div className="p-3 border-b border-border space-y-2 shrink-0">
                   <input
                     type="text"
                     value={snapshotName}
                     onChange={(e) => setSnapshotName(e.target.value)}
                     placeholder="Название версии"
-                    className="w-full bg-card/60 border border-border rounded-lg py-2 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                    className="w-full bg-background border border-input rounded-lg py-2 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-all duration-150"
                   />
                   <textarea
                     value={snapshotDescription}
                     onChange={(e) => setSnapshotDescription(e.target.value)}
                     placeholder="Описание (необязательно)"
-                    className="w-full bg-card/60 border border-border rounded-lg py-2 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all resize-none"
+                    className="w-full bg-background border border-input rounded-lg py-2 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-all duration-150 resize-none"
                     rows={2}
                   />
                   <button
                     onClick={handleSaveSnapshot}
                     disabled={!snapshotName.trim() || savingSnapshot}
-                    className="w-full px-3 py-2 rounded-lg bg-gradient-brand text-primary-foreground shadow-soft hover:shadow-glow disabled:opacity-50 transition-all flex items-center justify-center gap-2 text-sm"
+                    className="w-full h-10 px-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none transition-all duration-150 flex items-center justify-center gap-2"
                   >
                     {savingSnapshot ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Сохранить версию
@@ -1023,7 +1024,7 @@ export default function ToolEditorPage() {
                     snapshots.map((snapshot) => (
                       <div
                         key={snapshot.id}
-                        className="rounded-xl bg-secondary/40 border border-border/60 p-3 hover:border-primary/40 transition-colors"
+                        className="rounded-xl bg-secondary border border-border p-3 hover:border-graphite-300 transition-colors duration-150"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
@@ -1039,7 +1040,7 @@ export default function ToolEditorPage() {
                           </div>
                           <button
                             onClick={() => setRestoreTarget(snapshot)}
-                            className="p-1.5 rounded-lg hover:bg-primary/15 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                            className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors duration-150 shrink-0"
                             title="Восстановить"
                           >
                             <RotateCcw className="w-4 h-4" />
