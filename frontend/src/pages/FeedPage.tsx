@@ -593,9 +593,9 @@ export default function FeedPage() {
 
   return (
     <Layout>
-      <div className="h-full flex flex-col lg:flex-row overflow-hidden bg-nebula">
+      <div className="h-full flex flex-col lg:flex-row overflow-hidden bg-background">
         {/* Mobile Filter Tabs */}
-        <div className="lg:hidden flex flex-col gap-2 p-3 border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="lg:hidden flex flex-col gap-2 p-3 border-b border-border bg-card sticky top-0 z-10">
           <div className="flex overflow-x-auto gap-2">
             {filters.map((filter) => {
               const Icon = filter.icon;
@@ -604,10 +604,10 @@ export default function FeedPage() {
                   key={filter.id}
                   onClick={() => setSelectedFilter(filter.id)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 text-sm font-medium",
+                    "flex items-center gap-2 h-8 px-3 rounded-md whitespace-nowrap transition-all duration-150 ease-standard text-sm",
                     selectedFilter === filter.id
-                      ? "bg-gradient-brand text-white shadow-glow border border-transparent"
-                      : "bg-secondary/60 text-muted-foreground hover:text-foreground border border-border/50",
+                      ? "bg-card text-foreground font-medium shadow-soft border border-border"
+                      : "bg-secondary text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -617,12 +617,12 @@ export default function FeedPage() {
             })}
           </div>
           {selectedTag && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-primary/15 border border-primary/40 text-primary">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent border border-emerald-200 text-accent-foreground">
               <Hash className="w-4 h-4" />
-              <span className="text-sm">#{selectedTag}</span>
+              <span className="text-sm font-medium">#{selectedTag}</span>
               <button
                 onClick={clearTagFilter}
-                className="ml-auto p-1 hover:bg-primary/30 rounded transition-colors"
+                className="ml-auto p-1 hover:bg-emerald-100 rounded transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -631,8 +631,8 @@ export default function FeedPage() {
         </div>
 
         {/* Sidebar - Filters (Desktop only) */}
-        <aside className="hidden lg:block w-64 border-r border-border/50 p-4 space-y-2 overflow-y-auto shrink-0">
-          <h2 className="text-lg font-bold mb-4 tracking-tight gradient-brand-text">
+        <aside className="hidden lg:block w-64 border-r border-border bg-card p-4 space-y-1 overflow-y-auto shrink-0">
+          <h2 className="text-lg font-display font-bold mb-4 tracking-tight text-graphite-900 px-3">
             Фильтры ленты
           </h2>
           {filters.map((filter) => {
@@ -642,31 +642,34 @@ export default function FeedPage() {
                 key={filter.id}
                 onClick={() => setSelectedFilter(filter.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300",
+                  "relative w-full flex items-center gap-3 h-9 px-3 rounded-lg text-sm transition-all duration-150 ease-standard",
                   selectedFilter === filter.id
-                    ? "bg-gradient-brand text-white shadow-glow border border-transparent"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent",
+                    ? "bg-accent text-accent-foreground font-medium"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{filter.label}</span>
+                {selectedFilter === filter.id && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary" />
+                )}
+                <Icon className="w-5 h-5" strokeWidth={1.75} />
+                <span>{filter.label}</span>
               </button>
             );
           })}
 
-          <div className="my-4 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+          <div className="my-4 h-px bg-border" />
 
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">
+          <div className="space-y-2 pt-2">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-2 px-3">
               Популярные теги
             </h3>
             {selectedTag && (
-              <div className="mb-3 p-2 rounded-xl bg-primary/15 border border-primary/40">
+              <div className="mb-3 p-2 rounded-lg bg-accent border border-emerald-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Фильтр: #{selectedTag}</span>
+                  <span className="text-sm text-accent-foreground">Фильтр: #{selectedTag}</span>
                   <button
                     onClick={clearTagFilter}
-                    className="p-1 hover:bg-primary/30 rounded transition-colors"
+                    className="p-1 hover:bg-emerald-100 rounded transition-colors text-accent-foreground"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -678,8 +681,8 @@ export default function FeedPage() {
                 key={tag.name}
                 onClick={() => handleTagClick(tag.name)}
                 className={cn(
-                  "block w-full text-left px-3 py-1.5 rounded-full bg-secondary/60 text-sm border border-transparent transition-all flex items-center justify-between hover:bg-secondary hover:border-primary/30",
-                  selectedTag === tag.name && "bg-primary/15 border-primary/50 text-primary"
+                  "block w-full text-left px-3 py-1.5 rounded-full bg-secondary text-sm border border-transparent transition-all duration-150 flex items-center justify-between hover:bg-graphite-200",
+                  selectedTag === tag.name && "bg-accent border-emerald-200 text-accent-foreground"
                 )}
               >
                 <span>#{tag.name}</span>
@@ -695,7 +698,7 @@ export default function FeedPage() {
         <main ref={feedRef} className="flex-1 overflow-y-auto relative">
           <div className="max-w-2xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
             {/* Stories */}
-            <div className="glass rounded-2xl overflow-hidden">
+            <div className="rounded-xl border border-border bg-card shadow-soft overflow-hidden">
               <Stories 
                 viewUserId={viewingUserStory} 
                 onCloseViewer={() => setViewingUserStory(null)} 
@@ -706,7 +709,7 @@ export default function FeedPage() {
             {newPostsCount > 0 && (
               <button
                 onClick={loadNewPosts}
-                className="w-full glass rounded-xl p-3 flex items-center justify-center gap-2 text-primary hover:bg-primary/20 transition-colors animate-pulse"
+                className="w-full rounded-xl border border-border bg-card shadow-soft p-3 flex items-center justify-center gap-2 text-primary font-medium hover:bg-accent transition-colors animate-rise-in"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>{newPostsCount} {newPostsCount === 1 ? 'новый пост' : newPostsCount < 5 ? 'новых поста' : 'новых постов'}</span>
@@ -714,8 +717,8 @@ export default function FeedPage() {
             )}
 
             {/* Fixed Header - Create Post */}
-            <div className="sticky top-0 z-10 mb-6 animate-fade-in">
-              <div className="glass rounded-2xl p-6 glow">
+            <div className="sticky top-0 z-10 mb-6 animate-rise-in">
+              <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
                 <div className="flex gap-4">
                   <Avatar
                     src={user?.avatar}
@@ -728,13 +731,13 @@ export default function FeedPage() {
                       value={newPostContent}
                       onChange={(e) => setNewPostContent(e.target.value)}
                       placeholder="Что у вас нового?"
-                      className="input-field resize-none hover:border-primary/50"
+                      className="input-field resize-none hover:border-graphite-300"
                       rows={3}
                     />
 
                     {/* Media Preview */}
                     {selectedMedia && (
-                      <div className="relative rounded-lg overflow-hidden border border-border/50 bg-black/20">
+                      <div className="relative rounded-lg overflow-hidden border border-border bg-graphite-100">
                         {selectedMedia.type === "image" ? (
                           <img
                             src={selectedMedia.preview}
@@ -751,11 +754,11 @@ export default function FeedPage() {
                         <button
                           type="button"
                           onClick={handleMediaClear}
-                          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                          className="absolute top-2 right-2 p-1.5 rounded-full bg-graphite-950/70 hover:bg-graphite-950/90 text-white transition-colors"
                         >
                           <X className="w-4 h-4" />
                         </button>
-                        <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded bg-black/60 text-xs text-white">
+                        <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded-md bg-graphite-950/70 text-[11px] text-white">
                           {selectedMedia.type === "image" ? (
                             <ImageIcon className="w-3 h-3" />
                           ) : (
@@ -783,7 +786,7 @@ export default function FeedPage() {
                           (!newPostContent.trim() && !selectedMedia) ||
                           isUploading
                         }
-                        className="bg-gradient-brand text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all hover:opacity-90 hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft transition-all duration-150 ease-standard hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
                       >
                         {isUploading ? (
                           <>
@@ -809,18 +812,18 @@ export default function FeedPage() {
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="glass rounded-2xl p-6 animate-slide-in"
-                    style={{ animationDelay: `${i * 0.1}s` }}
+                    className="rounded-xl border border-border bg-card shadow-soft p-5 animate-rise-in"
+                    style={{ animationDelay: `${i * 60}ms` }}
                   >
                     <div className="flex gap-4 mb-4">
-                      <div className="animate-pulse bg-muted/60 w-12 h-12 rounded-full" />
+                      <div className="skeleton w-12 h-12 rounded-full" />
                       <div className="flex-1 space-y-2">
-                        <div className="animate-pulse bg-muted/60 rounded h-4 w-32" />
-                        <div className="animate-pulse bg-muted/60 rounded h-3 w-24" />
+                        <div className="skeleton h-4 w-32" />
+                        <div className="skeleton h-3 w-24" />
                       </div>
                     </div>
-                    <div className="animate-pulse bg-muted/60 rounded-lg h-20 w-full mb-4" />
-                    <div className="animate-pulse bg-muted/60 rounded-lg h-8 w-full" />
+                    <div className="skeleton h-20 w-full mb-4" />
+                    <div className="skeleton h-8 w-full" />
                   </div>
                 ))}
               </div>
@@ -828,17 +831,19 @@ export default function FeedPage() {
 
             {/* Empty State */}
             {!loading && filteredPosts.length === 0 && (
-              <div className="glass rounded-2xl p-8 text-center">
-                <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">
-                  {selectedFilter === "my" 
-                    ? "У вас пока нет постов" 
+              <div className="rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center animate-rise-in">
+                <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+                  <User className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-lg font-semibold mt-4">
+                  {selectedFilter === "my"
+                    ? "У вас пока нет постов"
                     : selectedFilter === "following"
                     ? "Нет постов от подписок"
-                    : "Пока нет постов"}
+                    : "Лента пуста"}
                 </h3>
-                <p className="text-muted-foreground">
-                  {selectedFilter === "my" 
+                <p className="text-sm text-muted-foreground max-w-[320px] mx-auto mt-1">
+                  {selectedFilter === "my"
                     ? "Создайте свой первый пост выше!"
                     : "Будьте первым, кто создаст пост!"}
                 </p>
@@ -849,11 +854,11 @@ export default function FeedPage() {
               filteredPosts.map((post, index) => (
                 <article
                   key={post.id}
-                  className="glass rounded-2xl p-6 animate-slide-in hover:shadow-lg-brand transition-shadow"
-                  style={{ animationDelay: `${index * 0.05}s` }}
+                  className="rounded-xl border border-border bg-card text-card-foreground shadow-soft p-5 mb-4 animate-rise-in"
+                  style={{ animationDelay: `${Math.min(index, 5) * 60}ms` }}
                 >
                   {/* Post Header */}
-                  <div className="flex items-start gap-4 mb-4">
+                  <div className="flex items-start gap-3 mb-4">
                     <button
                       type="button"
                       onClick={() => handleViewUserStory(post.author.id)}
@@ -870,7 +875,7 @@ export default function FeedPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <a
                           href={`/profile/${post.author.id}`}
-                          className="font-semibold hover:text-primary transition-colors cursor-pointer"
+                          className="text-sm font-semibold hover:text-primary transition-colors cursor-pointer"
                         >
                           {post.author.alias || post.author.username}
                         </a>
@@ -879,10 +884,10 @@ export default function FeedPage() {
                             type="button"
                             onClick={() => handleSubscribe(post.author.id)}
                             className={cn(
-                              "px-3 py-1 text-xs font-medium rounded-full transition-all",
+                              "px-3 py-1 text-xs font-medium rounded-full transition-all duration-150",
                               subscriptions.has(post.author.id)
-                                ? "bg-muted text-muted-foreground hover:bg-red-500/20 hover:text-red-400"
-                                : "bg-primary text-primary-foreground hover:bg-primary/80"
+                                ? "bg-secondary text-secondary-foreground hover:bg-danger-soft hover:text-destructive"
+                                : "bg-primary text-primary-foreground hover:bg-emerald-800"
                             )}
                           >
                             {subscriptions.has(post.author.id) ? (
@@ -909,26 +914,26 @@ export default function FeedPage() {
                         <>
                           <button
                             onClick={() => handleOpenEdit(post)}
-                            className="p-2 rounded-lg hover:bg-primary/20 transition-colors"
+                            className="p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                             title="Редактировать пост"
                           >
-                            <Pencil className="w-4 h-4 text-muted-foreground" />
+                            <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeletePost(post.id)}
-                            className="p-2 rounded-lg hover:bg-red-500/20 transition-colors"
+                            className="p-2 rounded-lg hover:bg-danger-soft transition-colors"
                             title="Удалить пост"
                           >
-                            <Trash2 className="w-4 h-4 text-red-400" />
+                            <Trash2 className="w-4 h-4 text-destructive" />
                           </button>
                         </>
                       )}
                       <button
                         onClick={() => handleShare(post.id)}
-                        className="p-2 rounded-lg hover:bg-accent/20 transition-colors"
+                        className="p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                         title="Поделиться"
                       >
-                        <Share2 className="w-4 h-4 text-muted-foreground" />
+                        <Share2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -942,20 +947,20 @@ export default function FeedPage() {
 
                   {/* Post Media */}
                   {post.media && post.media.length > 0 && (
-                    <div className="mb-4 rounded-lg overflow-hidden">
+                    <div className="mb-4 rounded-xl overflow-hidden border border-border">
                       {post.media.map((m, idx) => (
                         <div key={idx}>
                           {m.type === "image" ? (
                             <img
                               src={m.url}
                               alt="Post media"
-                              className="w-full max-h-[400px] object-contain bg-black/20 rounded-lg"
+                              className="w-full max-h-[520px] object-cover bg-graphite-100"
                             />
                           ) : (
                             <video
                               src={m.url}
                               controls
-                              className="w-full max-h-[400px] object-contain bg-black/20 rounded-lg"
+                              className="w-full max-h-[520px] object-contain bg-graphite-950"
                             />
                           )}
                         </div>
@@ -971,8 +976,8 @@ export default function FeedPage() {
                           key={tag}
                           onClick={() => handleTagClick(tag)}
                           className={cn(
-                            "px-3 py-1 rounded-full bg-secondary/60 text-sm border border-transparent cursor-pointer hover:bg-primary/15 hover:border-primary/30 transition-all",
-                            selectedTag === tag && "bg-primary/15 border-primary/50 text-primary"
+                            "px-3 py-1 rounded-full bg-secondary text-sm border border-transparent cursor-pointer hover:bg-accent hover:border-emerald-200 hover:text-accent-foreground transition-all duration-150",
+                            selectedTag === tag && "bg-accent border-emerald-200 text-accent-foreground"
                           )}
                         >
                           #{tag}
@@ -997,20 +1002,21 @@ export default function FeedPage() {
                   </div>
 
                   {/* Post Actions */}
-                  <div className="flex items-center gap-6 pt-4 border-t border-border/30">
+                  <div className="flex items-center gap-6 pt-4 border-t border-border">
                     <button
                       onClick={() => handleLike(post.id)}
                       className={cn(
-                        "flex items-center gap-2 transition-all duration-300 hover:scale-110",
+                        "flex items-center gap-2 transition-colors duration-150 ease-standard",
                         post.isLiked
-                          ? "text-red-500"
-                          : "text-muted-foreground hover:text-red-500",
+                          ? "text-emerald-600"
+                          : "text-muted-foreground hover:text-emerald-600",
                       )}
                     >
                       <Heart
+                        key={String(post.isLiked)}
                         className={cn(
                           "w-5 h-5",
-                          post.isLiked && "fill-current",
+                          post.isLiked && "fill-current animate-scale-in",
                         )}
                       />
                       <span className="text-sm font-medium">
@@ -1020,7 +1026,7 @@ export default function FeedPage() {
 
                     <button
                       onClick={() => handleOpenComments(post.id)}
-                      className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110"
+                      className="flex items-center gap-2 text-muted-foreground hover:text-emerald-700 transition-colors duration-150 ease-standard"
                     >
                       <MessageCircle className="w-5 h-5" />
                       <span className="text-sm font-medium">
@@ -1030,7 +1036,7 @@ export default function FeedPage() {
 
                     <button
                       onClick={() => handleShare(post.id)}
-                      className="flex items-center gap-2 text-muted-foreground hover:text-accent transition-all duration-300 hover:scale-110"
+                      className="flex items-center gap-2 text-muted-foreground hover:text-emerald-700 transition-colors duration-150 ease-standard"
                     >
                       <Share2 className="w-5 h-5" />
                       <span className="text-sm font-medium">
@@ -1041,16 +1047,17 @@ export default function FeedPage() {
                     <button
                       onClick={() => handleBookmark(post.id)}
                       className={cn(
-                        "ml-auto transition-all duration-300 hover:scale-110",
+                        "ml-auto transition-colors duration-150 ease-standard",
                         post.isBookmarked
-                          ? "text-accent"
-                          : "text-muted-foreground hover:text-accent",
+                          ? "text-emerald-600"
+                          : "text-muted-foreground hover:text-emerald-600",
                       )}
                     >
                       <Bookmark
+                        key={String(post.isBookmarked)}
                         className={cn(
                           "w-5 h-5",
-                          post.isBookmarked && "fill-current",
+                          post.isBookmarked && "fill-current animate-scale-in",
                         )}
                       />
                     </button>
@@ -1071,7 +1078,7 @@ export default function FeedPage() {
             {/* End of Feed */}
             {!loading && !hasMore && filteredPosts.length > 0 && (
               <div className="text-center py-8">
-                <div className="my-4 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+                <div className="my-4 h-px bg-border" />
                 <p className="text-muted-foreground text-sm mt-6">
                   Вы достигли конца ленты
                 </p>
@@ -1083,9 +1090,9 @@ export default function FeedPage() {
           {showScrollTop && (
             <button
               onClick={scrollToTop}
-              className="fixed bottom-8 right-8 p-4 rounded-full bg-gradient-brand
-                         text-white shadow-glow hover:scale-110 transition-all
-                         duration-300 animate-fade-in"
+              className="fixed bottom-8 right-8 p-3 rounded-full bg-primary
+                         text-primary-foreground shadow-pop hover:bg-emerald-800 hover:shadow-lg-brand transition-all
+                         duration-150 ease-standard active:scale-[0.97] animate-rise-in"
             >
               <ChevronUp className="w-6 h-6" />
             </button>
@@ -1096,11 +1103,11 @@ export default function FeedPage() {
       {/* Comment Modal */}
       {commentModal.open && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]"
+          className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] flex items-center justify-center z-[100] animate-fade-in-soft"
           onClick={handleCloseComments}
         >
           <div
-            className="glass-strong rounded-2xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
+            className="rounded-2xl border border-border bg-card shadow-pop w-full max-w-lg mx-4 max-h-[80vh] flex flex-col animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-border">
@@ -1108,7 +1115,7 @@ export default function FeedPage() {
               <button
                 type="button"
                 onClick={handleCloseComments}
-                className="p-2 hover:bg-accent/20 rounded-lg transition-colors"
+                className="p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1157,7 +1164,7 @@ export default function FeedPage() {
                   type="button"
                   onClick={handleSubmitComment}
                   disabled={!commentText.trim()}
-                  className="btn-primary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-primary text-primary-foreground shadow-soft transition-all duration-150 hover:bg-emerald-800 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -1170,11 +1177,11 @@ export default function FeedPage() {
       {/* Edit Modal */}
       {editModal.open && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]"
+          className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] flex items-center justify-center z-[100] animate-fade-in-soft"
           onClick={handleCloseEdit}
         >
           <div
-            className="glass-strong rounded-2xl w-full max-w-lg mx-4"
+            className="rounded-2xl border border-border bg-card shadow-pop w-full max-w-lg mx-4 animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-border">
@@ -1182,7 +1189,7 @@ export default function FeedPage() {
               <button
                 type="button"
                 onClick={handleCloseEdit}
-                className="p-2 hover:bg-accent/20 rounded-lg transition-colors"
+                className="p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1199,7 +1206,7 @@ export default function FeedPage() {
               <button
                 type="button"
                 onClick={handleCloseEdit}
-                className="px-4 py-2 rounded-lg hover:bg-accent/20 transition-colors"
+                className="px-4 h-10 rounded-lg border border-input bg-card text-sm font-medium hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150"
               >
                 Отмена
               </button>
@@ -1207,7 +1214,7 @@ export default function FeedPage() {
                 type="button"
                 onClick={handleSaveEdit}
                 disabled={!editContent.trim()}
-                className="btn-primary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none"
               >
                 Сохранить
               </button>
@@ -1218,9 +1225,9 @@ export default function FeedPage() {
 
       {/* Share Notification */}
       {shareNotification && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 z-[100] animate-fade-in">
-          <Check className="w-5 h-5" />
-          <span>Ссылка скопирована!</span>
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-card border border-border text-foreground px-5 py-3 rounded-full shadow-pop flex items-center gap-2 z-[100] animate-toast-in">
+          <Check className="w-5 h-5 text-emerald-600" />
+          <span className="text-sm font-medium">Ссылка скопирована!</span>
         </div>
       )}
 
