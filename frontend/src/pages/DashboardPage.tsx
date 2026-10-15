@@ -131,9 +131,9 @@ export default function DashboardPage() {
   const totalUnreadMessages = (conversations || []).reduce((sum, c) => sum + (c.unread_count || 0), 0)
 
   const stats = [
-    { name: 'Друзья', value: String(friendsCount), icon: Users, color: 'from-primary to-accent', change: 'добавлено' },
-    { name: 'В сети', value: String(platformStats.onlineUsers || 0), icon: Wifi, color: 'from-green-500 to-emerald-500', change: 'пользователей' },
-    { name: 'Стримов', value: String(liveStreams.length || platformStats.activeStreams || 0), icon: Radio, color: 'from-orange-500 to-red-500', change: 'активных' },
+    { name: 'Друзья', value: String(friendsCount), icon: Users, change: 'добавлено' },
+    { name: 'В сети', value: String(platformStats.onlineUsers || 0), icon: Wifi, change: 'пользователей' },
+    { name: 'Стримов', value: String(liveStreams.length || platformStats.activeStreams || 0), icon: Radio, change: 'активных' },
   ]
 
   const recentActivity = [
@@ -144,7 +144,7 @@ export default function DashboardPage() {
       action: 'Добро пожаловать на платформу!',
       time: 'сейчас',
       icon: Activity,
-      color: 'text-primary'
+      color: 'text-emerald-600'
     },
     {
       id: 2,
@@ -153,7 +153,7 @@ export default function DashboardPage() {
       action: `${platformStats.totalUsers || 0} пользователей зарегистрировано`,
       time: 'всего',
       icon: Users,
-      color: 'text-primary'
+      color: 'text-graphite-500'
     },
     {
       id: 3,
@@ -162,7 +162,7 @@ export default function DashboardPage() {
       action: `${platformStats.totalChannels || 0} активных каналов`,
       time: 'доступно',
       icon: Hash,
-      color: 'text-green-500'
+      color: 'text-emerald-600'
     },
   ]
 
@@ -178,21 +178,22 @@ export default function DashboardPage() {
 
   return (
     <Layout>
-      <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
-        {/* Header with cosmic gradient background */}
-        <div className="mb-6 md:mb-8 p-4 md:p-6 lg:p-8 rounded-2xl gradient-brand glow relative overflow-hidden">
+      <div className="p-4 md:p-6 lg:p-8 max-w-[1440px] mx-auto animate-rise-in">
+        {/* Header */}
+        <div className="mb-6 md:mb-8 p-4 md:p-6 lg:p-8 rounded-2xl border border-border bg-card shadow-soft relative overflow-hidden">
           <div className="relative z-10">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-white drop-shadow-lg">
-              С возвращением, <span className="text-white">{user?.alias || user?.username}</span>!
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-2">Дашборд</p>
+            <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight mb-2 text-graphite-900">
+              С возвращением, {user?.alias || user?.username}!
             </h1>
-            <p className="text-white/90 text-sm md:text-base lg:text-lg drop-shadow">
+            <p className="text-muted-foreground text-sm md:text-base">
               {isDemoMode
                 ? 'Демо режим — только просмотр интерфейса'
                 : 'Вот что происходит на платформе прямо сейчас.'}
             </p>
           </div>
           {liveStreams.length > 0 && (
-            <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium animate-pulse">
+            <div className="absolute top-4 right-4 flex items-center gap-2 bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-xs font-medium">
               <Radio className="w-4 h-4" />
               {liveStreams.length} Live
             </div>
@@ -206,22 +207,19 @@ export default function DashboardPage() {
             return (
               <div
                 key={stat.name}
-                className="glass rounded-xl shadow-soft p-6 animate-slide-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className="rounded-xl border border-border bg-card shadow-none p-5 animate-rise-in"
+                style={{ animationDelay: `${index * 80}ms` }}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1 truncate">{stat.name}</p>
-                    <p className="text-xl md:text-2xl lg:text-3xl font-bold mb-1 gradient-brand-text">{isLoading ? '...' : stat.value}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-1 truncate">{stat.name}</p>
+                    <p className="text-xl md:text-2xl lg:text-3xl font-display font-bold mb-1 text-graphite-900 animate-count-flick" style={{ animationDelay: `${index * 80}ms` }}>{isLoading ? '...' : stat.value}</p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-                      {stat.change}
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 bg-secondary text-secondary-foreground font-medium">{stat.change}</span>
                     </p>
                   </div>
-                  <div className={cn(
-                    'w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br flex items-center justify-center orb-glow shrink-0',
-                    stat.color
-                  )}>
-                    <Icon className="w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 text-white" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-accent text-emerald-700 flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.75} />
                   </div>
                 </div>
               </div>
@@ -235,38 +233,38 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold mb-4 text-muted-foreground">{t('common.more')}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
               <Link href="/feed">
-                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
-                  <Rss className="w-6 h-6 mx-auto mb-2 text-blue-500" />
+                <div className="rounded-xl border border-border bg-card shadow-soft p-4 text-center hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 cursor-pointer">
+                  <Rss className="w-6 h-6 mx-auto mb-2 text-emerald-600" />
                   <span className="text-sm">{t('nav.feed')}</span>
                 </div>
               </Link>
               <Link href="/jarvis">
-                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
-                  <Sparkles className="w-6 h-6 mx-auto mb-2 text-primary" />
+                <div className="rounded-xl border border-border bg-card shadow-soft p-4 text-center hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 cursor-pointer">
+                  <Sparkles className="w-6 h-6 mx-auto mb-2 text-emerald-600" />
                   <span className="text-sm">{t('nav.jarvis')}</span>
                 </div>
               </Link>
               <Link href="/video">
-                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
-                  <Video className="w-6 h-6 mx-auto mb-2 text-red-500" />
+                <div className="rounded-xl border border-border bg-card shadow-soft p-4 text-center hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 cursor-pointer">
+                  <Video className="w-6 h-6 mx-auto mb-2 text-graphite-600" />
                   <span className="text-sm">{t('nav.video')}</span>
                 </div>
               </Link>
               <Link href="/call">
-                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
-                  <Phone className="w-6 h-6 mx-auto mb-2 text-green-500" />
+                <div className="rounded-xl border border-border bg-card shadow-soft p-4 text-center hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 cursor-pointer">
+                  <Phone className="w-6 h-6 mx-auto mb-2 text-emerald-600" />
                   <span className="text-sm">{t('nav.calls')}</span>
                 </div>
               </Link>
               <Link href="/premium">
-                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
-                  <Crown className="w-6 h-6 mx-auto mb-2 text-yellow-500" />
+                <div className="rounded-xl border border-border bg-card shadow-soft p-4 text-center hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 cursor-pointer">
+                  <Crown className="w-6 h-6 mx-auto mb-2 text-warning" />
                   <span className="text-sm">{t('nav.premium')}</span>
                 </div>
               </Link>
               <Link href="/invite">
-                <div className="glass rounded-xl shadow-soft p-4 text-center hover:scale-105 hover:shadow-glow transition-all cursor-pointer">
-                  <UserPlus className="w-6 h-6 mx-auto mb-2 text-accent" />
+                <div className="rounded-xl border border-border bg-card shadow-soft p-4 text-center hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 cursor-pointer">
+                  <UserPlus className="w-6 h-6 mx-auto mb-2 text-emerald-600" />
                   <span className="text-sm">{t('nav.invite')}</span>
                 </div>
               </Link>
@@ -277,15 +275,15 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent activity */}
           <div className="lg:col-span-2">
-            <div className="glass rounded-xl shadow-soft p-6">
+            <div className="rounded-xl border border-border bg-card shadow-soft p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-primary" />
-                  <h2 className="text-xl font-bold">Активность платформы</h2>
+                  <Activity className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
+                  <h2 className="text-xl font-display font-bold">Активность платформы</h2>
                 </div>
-                <button 
+                <button
                   onClick={() => loadStats()}
-                  className="text-sm text-primary hover:text-accent transition-colors hover:underline"
+                  className="text-sm text-primary hover:underline underline-offset-4 transition-colors"
                 >
                   Обновить
                 </button>
@@ -296,14 +294,14 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={activity.id}
-                      className="flex items-start gap-4 p-3 rounded-lg hover:bg-accent/10 transition-all duration-300 hover:scale-[1.02] animate-slide-in"
-                      style={{ animationDelay: `${index * 0.05}s` }}
+                      className="flex items-start gap-4 p-3 rounded-lg hover:bg-accent/60 transition-colors duration-150 animate-rise-in"
+                      style={{ animationDelay: `${index * 40}ms` }}
                     >
                       <div className={cn(
-                        'w-10 h-10 rounded-full bg-muted flex items-center justify-center',
+                        'h-9 w-9 rounded-full bg-secondary grid place-items-center shrink-0',
                         activity.color
                       )}>
-                        <Icon className="w-5 h-5" />
+                        <Icon className="w-4 h-4" strokeWidth={1.75} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm">
@@ -321,14 +319,14 @@ export default function DashboardPage() {
 
           {/* Trending / Live streams */}
           <div className="space-y-6">
-            <div className="glass rounded-xl shadow-soft p-6">
+            <div className="rounded-xl border border-border bg-card shadow-soft p-6">
               <div className="flex items-center gap-2 mb-6">
                 {liveStreams.length > 0 ? (
-                  <Radio className="w-5 h-5 text-red-500 animate-pulse" />
+                  <Radio className="w-5 h-5 text-destructive" strokeWidth={1.75} />
                 ) : (
-                  <TrendingUp className="w-5 h-5 text-primary pulse-call" />
+                  <TrendingUp className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
                 )}
-                <h2 className="text-xl font-bold">
+                <h2 className="text-xl font-display font-bold">
                   {liveStreams.length > 0 ? 'Сейчас в эфире' : 'Популярное'}
                 </h2>
               </div>
@@ -336,19 +334,19 @@ export default function DashboardPage() {
                 {trendingContent.map((topic, index) => (
                   <div
                     key={index}
-                    className="p-3 rounded-lg hover:bg-accent/10 transition-all duration-300 cursor-pointer hover:scale-[1.02] animate-slide-in"
-                    style={{ animationDelay: `${index * 0.08}s` }}
+                    className="p-3 rounded-lg hover:bg-accent/60 transition-colors duration-150 cursor-pointer animate-rise-in"
+                    style={{ animationDelay: `${index * 40}ms` }}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <p className="font-medium text-sm flex items-center gap-2">
                         {topic.name}
                         {topic.isLive && (
-                          <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-bold">
+                          <span className="px-1.5 py-0.5 bg-destructive text-destructive-foreground text-[10px] rounded-full font-semibold">
                             LIVE
                           </span>
                         )}
                       </p>
-                      <span className="text-xs text-primary font-semibold">{topic.trend}</span>
+                      <span className="text-xs text-emerald-700 font-semibold">{topic.trend}</span>
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       {topic.isLive && <Eye className="w-3 h-3" />}
@@ -360,25 +358,25 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick stats */}
-            <div className="glass rounded-xl shadow-soft p-6">
+            <div className="rounded-xl border border-border bg-card shadow-soft p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Wifi className="w-5 h-5 text-green-500" />
-                <h2 className="text-lg font-bold">Статус платформы</h2>
+                <Wifi className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
+                <h2 className="text-lg font-display font-bold">Статус платформы</h2>
               </div>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-t border-border pt-3">
                   <span className="text-sm text-muted-foreground">Всего пользователей</span>
                   <span className="font-semibold">{platformStats.totalUsers || 0}</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-t border-border pt-3">
                   <span className="text-sm text-muted-foreground">Сейчас онлайн</span>
-                  <span className="font-semibold text-green-500">{platformStats.onlineUsers || 0}</span>
+                  <span className="font-semibold text-emerald-600">{platformStats.onlineUsers || 0}</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-t border-border pt-3">
                   <span className="text-sm text-muted-foreground">Всего сообщений</span>
                   <span className="font-semibold">{platformStats.totalMessages || 0}</span>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-t border-border pt-3">
                   <span className="text-sm text-muted-foreground">Пик зрителей</span>
                   <span className="font-semibold">{platformStats.peakViewers || 0}</span>
                 </div>

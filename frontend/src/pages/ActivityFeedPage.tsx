@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { Bell, CheckCheck, Gift, ArrowLeftRight, UserPlus, Trophy, Star, MessageSquare, Heart, TrendingUp } from 'lucide-react';
 import { activityFeedAPI, ActivityFeedItem } from '../lib/api';
 import { formatDistanceToNow } from 'date-fns';
@@ -28,18 +27,18 @@ export default function ActivityFeedPage() {
 
   const getActivityIcon = (actionType: string) => {
     switch (actionType) {
-      case 'gift_received': return { icon: Gift, color: 'text-pink-400', bg: 'bg-pink-400/10' };
+      case 'gift_received': return { icon: Gift, color: 'text-emerald-600' };
       case 'trade_request':
       case 'trade_accepted':
-      case 'trade_rejected': return { icon: ArrowLeftRight, color: 'text-blue-400', bg: 'bg-blue-400/10' };
-      case 'friend_add': return { icon: UserPlus, color: 'text-green-400', bg: 'bg-green-400/10' };
-      case 'level_up': return { icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10' };
-      case 'achievement': return { icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-400/10' };
-      case 'mentorship_request': return { icon: Star, color: 'text-orange-400', bg: 'bg-orange-400/10' };
-      case 'message': return { icon: MessageSquare, color: 'text-accent', bg: 'bg-accent/10' };
+      case 'trade_rejected': return { icon: ArrowLeftRight, color: 'text-graphite-500' };
+      case 'friend_add': return { icon: UserPlus, color: 'text-emerald-600' };
+      case 'level_up': return { icon: TrendingUp, color: 'text-emerald-600' };
+      case 'achievement': return { icon: Trophy, color: 'text-warning' };
+      case 'mentorship_request': return { icon: Star, color: 'text-graphite-500' };
+      case 'message': return { icon: MessageSquare, color: 'text-emerald-600' };
       case 'like':
-      case 'reaction': return { icon: Heart, color: 'text-red-400', bg: 'bg-red-400/10' };
-      default: return { icon: Bell, color: 'text-muted-foreground', bg: 'bg-muted' };
+      case 'reaction': return { icon: Heart, color: 'text-emerald-600' };
+      default: return { icon: Bell, color: 'text-graphite-500' };
     }
   };
 
@@ -65,25 +64,36 @@ export default function ActivityFeedPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
+      <div className="min-h-screen bg-background px-6 py-6">
+        <div className="max-w-[560px] mx-auto space-y-3">
+          <div className="skeleton h-9 w-44 mb-4" />
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="rounded-xl border border-border bg-card shadow-soft p-4 flex gap-4">
+              <div className="skeleton h-9 w-9 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton h-4 w-3/4" />
+                <div className="skeleton h-3 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-background text-foreground px-6 py-6 animate-rise-in">
+      <div className="max-w-[560px] mx-auto">
+        <div className="flex items-center justify-between pb-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-brand text-white shadow-glow">
-              <Bell className="w-6 h-6" />
+            <div className="p-2 rounded-xl bg-primary text-primary-foreground shadow-soft">
+              <Bell className="w-6 h-6" strokeWidth={1.75} />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              <span className="gradient-brand-text">Activity</span>
+            <h1 className="text-2xl font-display font-bold tracking-tight text-graphite-900">
+              Activity
             </h1>
             {unreadCount > 0 && (
-              <span className="px-2 py-1 bg-gradient-brand text-white rounded-full text-sm font-medium shadow-glow">
+              <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold grid place-items-center">
                 {unreadCount}
               </span>
             )}
@@ -92,7 +102,7 @@ export default function ActivityFeedPage() {
             <button
               onClick={() => markAllReadMutation.mutate()}
               disabled={markAllReadMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 glass rounded-xl hover:shadow-glow text-sm transition-all"
+              className="inline-flex items-center gap-2 h-9 px-3 rounded-lg border border-input bg-card text-sm font-medium hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
             >
               <CheckCheck className="w-4 h-4" />
               Mark all read
@@ -100,43 +110,43 @@ export default function ActivityFeedPage() {
           )}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {activities.map((activity, idx) => {
-            const { icon: Icon, color, bg } = getActivityIcon(activity.action_type);
+            const { icon: Icon, color } = getActivityIcon(activity.action_type);
             return (
-              <motion.div
+              <div
                 key={activity.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className={`p-4 rounded-xl flex items-start gap-4 cursor-pointer transition-all hover:shadow-lg-brand ${
-                  activity.is_read ? 'glass' : 'glass border-l-4 border-primary'
+                className={`p-4 rounded-xl border border-border flex items-start gap-3 cursor-pointer transition-all duration-150 hover:shadow-elev animate-rise-in ${
+                  activity.is_read ? 'bg-card shadow-soft' : 'bg-accent/40 shadow-soft'
                 }`}
+                style={{ animationDelay: `${Math.min(idx, 8) * 25}ms` }}
                 onClick={() => !activity.is_read && markReadMutation.mutate(activity.id)}
               >
-                <div className={`p-2 rounded-lg ${bg}`}>
-                  <Icon className={`w-5 h-5 ${color}`} />
+                <div className="h-9 w-9 rounded-full bg-secondary grid place-items-center shrink-0">
+                  <Icon className={`w-4 h-4 ${color}`} strokeWidth={1.75} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`${activity.is_read ? 'text-foreground' : 'text-foreground font-medium'}`}>
+                  <p className={`text-sm ${activity.is_read ? 'text-foreground' : 'text-foreground font-medium'}`}>
                     {getActivityMessage(activity)}
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-xs text-graphite-400 mt-1">
                     {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
                   </p>
                 </div>
                 {!activity.is_read && (
-                  <div className="w-2 h-2 bg-gradient-brand rounded-full mt-2 shadow-glow" />
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 shrink-0" />
                 )}
-              </motion.div>
+              </div>
             );
           })}
 
           {activities.length === 0 && (
-            <div className="glass rounded-2xl p-12 text-center">
-              <Bell className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-bold mb-2">No activity yet</h3>
-              <p className="text-muted-foreground">Your activity feed will appear here</p>
+            <div className="rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center animate-rise-in">
+              <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+                <Bell className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-lg font-semibold mt-4 mb-1">No activity yet</h3>
+              <p className="text-sm text-muted-foreground max-w-[320px] mx-auto">Your activity feed will appear here</p>
             </div>
           )}
         </div>

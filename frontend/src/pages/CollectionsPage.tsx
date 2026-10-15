@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 import { Bookmark, Plus, Folder, Lock, Globe, Trash2, FileText } from 'lucide-react';
 import { collectionsAPI, Collection, CollectionItem } from '../lib/api';
-import { formatDistanceToNow } from 'date-fns';
 
 export default function CollectionsPage() {
   const queryClient = useQueryClient();
@@ -61,23 +59,36 @@ export default function CollectionsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-nebula flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
+      <div className="min-h-screen bg-background px-6 py-6">
+        <div className="max-w-[1440px] mx-auto">
+          <div className="skeleton h-9 w-48 mb-8" />
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-xl border border-border bg-card shadow-soft overflow-hidden">
+                <div className="skeleton aspect-[4/3] rounded-none" />
+                <div className="p-4 space-y-2">
+                  <div className="skeleton h-4 w-2/3" />
+                  <div className="skeleton h-3 w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-nebula text-foreground p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-background text-foreground px-6 py-6 animate-rise-in">
+      <div className="max-w-[1440px] mx-auto">
+        <div className="flex items-center justify-between pb-4 mb-6">
           <div className="flex items-center gap-3">
-            <Bookmark className="w-8 h-8 text-accent" />
-            <h1 className="text-3xl font-bold gradient-brand-text">Коллекции</h1>
+            <Bookmark className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
+            <h1 className="text-2xl font-display font-bold tracking-tight text-graphite-900">Коллекции</h1>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-brand text-white rounded-lg shadow-soft hover:brightness-110 hover:shadow-glow transition-all"
+            className="inline-flex items-center gap-2 h-10 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 ease-standard"
           >
             <Plus className="w-4 h-4" />
             Новая коллекция
@@ -86,56 +97,64 @@ export default function CollectionsPage() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 grid md:grid-cols-2 gap-4">
-            {collections.map((collection: Collection) => (
-              <motion.div
+            {collections.map((collection: Collection, index: number) => (
+              <div
                 key={collection.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className={`glass rounded-xl p-5 cursor-pointer hover:bg-card/70 transition-colors ${
-                  selectedCollection === collection.id ? 'ring-2 ring-accent/50' : ''
+                className={`rounded-xl border bg-card shadow-soft p-5 cursor-pointer hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 animate-rise-in ${
+                  selectedCollection === collection.id ? 'border-emerald-300 ring-2 ring-emerald-600/20' : 'border-border'
                 }`}
+                style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
                 onClick={() => setSelectedCollection(collection.id)}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{collection.icon_emoji}</span>
                     <div>
-                      <h3 className="font-bold">{collection.name}</h3>
-                      <p className="text-muted-foreground text-sm">{collection.item_count} элементов</p>
+                      <h3 className="text-base font-semibold">{collection.name}</h3>
+                      <p className="text-xs text-muted-foreground">{collection.item_count} элементов</p>
                     </div>
                   </div>
                   {collection.is_private ? (
-                    <Lock className="w-4 h-4 text-accent" />
+                    <Lock className="w-4 h-4 text-graphite-500" />
                   ) : (
-                    <Globe className="w-4 h-4 text-green-400" />
+                    <Globe className="w-4 h-4 text-emerald-600" />
                   )}
                 </div>
                 {collection.description && (
                   <p className="text-muted-foreground text-sm line-clamp-2">{collection.description}</p>
                 )}
-              </motion.div>
+              </div>
             ))}
 
             {collections.length === 0 && (
-              <div className="col-span-2 glass rounded-xl p-12 text-center">
-                <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Коллекций пока нет</h3>
-                <p className="text-muted-foreground">Создайте первую коллекцию, чтобы сохранять контент</p>
+              <div className="col-span-2 rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center animate-rise-in">
+                <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+                  <Folder className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-lg font-semibold mt-4 mb-1">Сохраняйте посты в коллекции</h3>
+                <p className="text-sm text-muted-foreground max-w-[320px] mx-auto">Создайте первую коллекцию, чтобы сохранять контент</p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="mt-4 inline-flex items-center gap-2 h-10 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150"
+                >
+                  <Plus className="w-4 h-4" />
+                  Создать коллекцию
+                </button>
               </div>
             )}
           </div>
 
           <div>
             {selectedCollection && collectionData ? (
-              <div className="glass rounded-xl p-6 sticky top-6">
+              <div className="rounded-xl border border-border bg-card shadow-soft p-5 sticky top-6 animate-rise-in">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{collectionData.collection.icon_emoji}</span>
-                    <h3 className="font-bold">{collectionData.collection.name}</h3>
+                    <h3 className="text-base font-semibold">{collectionData.collection.name}</h3>
                   </div>
                   <button
                     onClick={() => deleteMutation.mutate(selectedCollection)}
-                    className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg"
+                    className="p-2 rounded-lg text-destructive hover:bg-danger-soft transition-colors duration-150"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -145,7 +164,7 @@ export default function CollectionsPage() {
                   {collectionData.items.map((item: CollectionItem) => (
                     <div
                       key={item.id}
-                      className="bg-secondary/50 rounded-lg p-3 flex items-start justify-between"
+                      className="bg-secondary/60 rounded-lg p-3 flex items-start justify-between"
                     >
                       <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-muted-foreground" />
@@ -163,37 +182,35 @@ export default function CollectionsPage() {
                             itemId: item.id,
                           })
                         }
-                        className="text-muted-foreground hover:text-red-400"
+                        className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors duration-150"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
                   {collectionData.items.length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">В коллекции пусто</p>
+                    <p className="text-muted-foreground text-sm text-center py-4">В коллекции пусто</p>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="glass rounded-xl p-8 text-center sticky top-6">
-                <Folder className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Выберите коллекцию, чтобы увидеть элементы</p>
+              <div className="rounded-xl border border-dashed border-input bg-card/50 p-8 text-center sticky top-6">
+                <Folder className="w-12 h-12 text-graphite-300 mx-auto mb-4" strokeWidth={1.5} />
+                <p className="text-sm text-muted-foreground">Выберите коллекцию, чтобы увидеть элементы</p>
               </div>
             )}
           </div>
         </div>
 
         {showCreateModal && (
-          <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="glass-strong rounded-xl p-6 w-full max-w-md m-4"
+          <div className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] flex items-center justify-center z-50 animate-fade-in-soft">
+            <div
+              className="rounded-2xl border border-border bg-card shadow-pop p-6 w-full max-w-md m-4 animate-scale-in"
             >
-              <h3 className="text-xl font-bold mb-4">Создать коллекцию</h3>
+              <h3 className="text-lg font-semibold mb-4">Создать коллекцию</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Название</label>
+                  <label className="block text-sm font-medium mb-1.5">Название</label>
                   <input
                     type="text"
                     value={newName}
@@ -202,7 +219,7 @@ export default function CollectionsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Описание</label>
+                  <label className="block text-sm font-medium mb-1.5">Описание</label>
                   <textarea
                     value={newDesc}
                     onChange={e => setNewDesc(e.target.value)}
@@ -211,14 +228,14 @@ export default function CollectionsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Иконка</label>
+                  <label className="block text-sm font-medium mb-1.5">Иконка</label>
                   <div className="flex gap-2 flex-wrap">
                     {emojiOptions.map(emoji => (
                       <button
                         key={emoji}
                         onClick={() => setNewEmoji(emoji)}
-                        className={`w-10 h-10 rounded-lg text-xl ${
-                          newEmoji === emoji ? 'bg-gradient-brand shadow-soft' : 'bg-secondary hover:bg-muted'
+                        className={`w-10 h-10 rounded-lg text-xl transition-all duration-150 ${
+                          newEmoji === emoji ? 'bg-accent ring-1 ring-emerald-300' : 'bg-secondary hover:bg-graphite-200'
                         }`}
                       >
                         {emoji}
@@ -231,27 +248,27 @@ export default function CollectionsPage() {
                     type="checkbox"
                     checked={newPrivate}
                     onChange={e => setNewPrivate(e.target.checked)}
-                    className="w-4 h-4"
+                    className="w-4 h-4 accent-emerald-700"
                   />
                   <span className="text-sm">Приватная коллекция</span>
                 </label>
-                <div className="flex gap-3 pt-2">
+                <div className="flex justify-end gap-2 pt-4">
                   <button
                     onClick={() => setShowCreateModal(false)}
-                    className="flex-1 py-2 bg-secondary rounded-lg hover:bg-muted"
+                    className="h-10 px-4 rounded-lg border border-input bg-card text-sm font-medium hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150"
                   >
                     Отмена
                   </button>
                   <button
                     onClick={() => createMutation.mutate()}
                     disabled={!newName || createMutation.isPending}
-                    className="flex-1 py-2 bg-gradient-brand text-white rounded-lg font-medium shadow-soft hover:brightness-110 disabled:opacity-50 transition-all"
+                    className="h-10 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none transition-all duration-150"
                   >
                     Создать
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
       </div>
