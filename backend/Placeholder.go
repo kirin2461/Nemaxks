@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -651,9 +652,49 @@ func updateVideoHandler(c *gin.Context) {
 }
 
 func deleteVideoHandler(c *gin.Context) {
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Необходима авторизация"})
+		return
+	}
+
 	id := c.Param("id")
-	db.Delete(&Video{}, id)
-	c.JSON(http.StatusOK, gin.H{"message": "Video deleted"})
+	var video Video
+	if err := db.First(&video, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Видео не найдено"})
+		return
+	}
+
+	var user User
+	if err := db.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не найден"})
+		return
+	}
+
+	if video.AuthorID != userID && user.Role != "admin" && user.Role != "super_admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Удалять видео может только автор"})
+		return
+	}
+
+	// Удаляем локальные файлы загрузок (ошибки игнорируем — файл может быть внешним или уже удалён)
+	if strings.HasPrefix(video.VideoURL, "/uploads/") {
+		os.Remove("./uploads/" + path.Base(video.VideoURL))
+	}
+	if strings.HasPrefix(video.Thumbnail, "/uploads/") {
+		os.Remove("./uploads/" + path.Base(video.Thumbnail))
+	}
+
+	// Удаляем связанные записи
+	db.Where("video_id = ?", video.ID).Delete(&VideoChapter{})
+	db.Where("video_id = ?", video.ID).Delete(&VideoLike{})
+	db.Where("video_id = ?", video.ID).Delete(&VideoBookmark{})
+
+	if err := db.Delete(&video).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не удалось удалить видео"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Видео удалено"})
 }
 
 // Post Likes

@@ -42,11 +42,14 @@ import {
   ThumbsUpIcon,
   ListVideo,
   FileVideo,
-  ImageIcon
+  ImageIcon,
+  Trash2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { videosAPI, VideoWithAuthor, VideoChapter, VideoDetail, uploadAPI } from '@/lib/api'
+import { videosAPI, authAPI, VideoWithAuthor, VideoChapter, VideoDetail, uploadAPI } from '@/lib/api'
 import { showToast } from '@/components/Toast'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 
@@ -98,7 +101,16 @@ export default function VideoPage() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'popular' | 'recent'>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Текущий пользователь (для проверки прав на удаление видео)
+  const { data: me } = useQuery({
+    queryKey: ['me'],
+    queryFn: authAPI.getMe,
+    staleTime: 60000
+  })
   const videoContainerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const progressRef = useRef<HTMLDivElement>(null)
@@ -162,6 +174,24 @@ export default function VideoPage() {
     setViewMode('grid')
     setSelectedVideo(null)
     setIsPlaying(false)
+  }
+
+  // Удаление видео владельцем/админом: после успеха возвращаемся к списку
+  const handleDeleteVideo = async () => {
+    if (!selectedVideo) return
+    setIsDeleting(true)
+    try {
+      await videosAPI.deleteVideo(selectedVideo.video.id)
+      showToast({ type: 'success', title: 'Видео удалено' })
+      setShowDeleteDialog(false)
+      backToGrid()
+      loadVideos()
+    } catch (error) {
+      console.error('Failed to delete video:', error)
+      showToast({ type: 'error', title: 'Не удалось удалить видео' })
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const formatTime = (seconds: number) => {
@@ -525,6 +555,15 @@ export default function VideoPage() {
                         <Bookmark className="w-5 h-5" />
                         <span>Сохранить</span>
                       </button>
+                      {me && video && (Number(me.id) === video.author_id || me.role === 'admin' || me.role === 'super_admin') && (
+                        <button
+                          onClick={() => setShowDeleteDialog(true)}
+                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                          <span>Удалить</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -624,6 +663,17 @@ export default function VideoPage() {
             </div>
           </div>
         </div>
+
+        <ConfirmDialog
+          isOpen={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          onConfirm={handleDeleteVideo}
+          title="Удалить видео"
+          message="Удалить видео? Это действие нельзя отменить."
+          confirmText="Удалить"
+          variant="danger"
+          loading={isDeleting}
+        />
       </Layout>
     )
   }
