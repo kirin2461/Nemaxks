@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Bell, Check, Trash2, Filter, Settings, ChevronDown, RefreshCw } from 'lucide-react'
+import { Bell, Check, X, Filter, Settings, ChevronDown, RefreshCw, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { notificationsAPI, Notification, NotificationGroup, getNotificationTypeInfo, formatNotificationTime, NOTIFICATION_TYPES } from '../lib/notificationsApi'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { useToast } from '../components/Toast'
+import { cn } from '@/lib/utils'
+
+const iconButtonClass =
+  'h-10 w-10 grid place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 
 export function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -118,54 +122,58 @@ export function NotificationsPage() {
   const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-4 sm:p-6 animate-rise-in">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Bell className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold gradient-brand-text">Уведомления</h1>
+            <Bell className="w-6 h-6 text-primary" strokeWidth={1.75} />
+            <h1 className="text-2xl font-display font-bold text-graphite-900 tracking-[-0.015em]">Уведомления</h1>
             {unreadCount > 0 && (
-              <span className="px-2 py-0.5 gradient-brand shadow-glow rounded-full text-primary-foreground text-sm font-bold">
+              <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold grid place-items-center animate-pop-menu">
                 {unreadCount}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => loadNotifications(1)}
-              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className={iconButtonClass}
               title="Обновить"
             >
-              <RefreshCw className="w-5 h-5" />
+              <RefreshCw className="w-5 h-5" strokeWidth={1.75} />
             </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-2 rounded-lg transition-colors ${
-                showFilters ? 'bg-primary/20 text-primary' : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-              }`}
+              className={cn(
+                iconButtonClass,
+                showFilters && 'bg-accent text-accent-foreground'
+              )}
               title="Фильтры"
             >
-              <Filter className="w-5 h-5" />
+              <Filter className="w-5 h-5" strokeWidth={1.75} />
             </button>
             <button
               onClick={() => navigate('/notifications/settings')}
-              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className={iconButtonClass}
               title="Настройки"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-5 h-5" strokeWidth={1.75} />
             </button>
           </div>
         </div>
 
         {showFilters && (
-          <div className="glass rounded-xl p-4 mb-4 shadow-soft animate-in slide-in-from-top-2">
+          <div className="rounded-xl border border-border bg-card shadow-none p-4 mb-4 animate-rise-in">
             <div className="flex flex-wrap gap-2 mb-4">
               <button
                 onClick={() => setSelectedType('')}
-                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                  !selectedType ? 'gradient-brand text-primary-foreground shadow-glow' : 'bg-muted/60 text-foreground hover:bg-muted'
-                }`}
+                className={cn(
+                  'h-8 px-3 rounded-md text-sm transition-all duration-150',
+                  !selectedType
+                    ? 'bg-primary text-primary-foreground shadow-soft'
+                    : 'bg-secondary text-secondary-foreground hover:bg-graphite-200'
+                )}
               >
                 Все
               </button>
@@ -173,9 +181,12 @@ export function NotificationsPage() {
                 <button
                   key={type}
                   onClick={() => setSelectedType(type)}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1 ${
-                    selectedType === type ? 'gradient-brand text-primary-foreground shadow-glow' : 'bg-muted/60 text-foreground hover:bg-muted'
-                  }`}
+                  className={cn(
+                    'h-8 px-3 rounded-md text-sm transition-all duration-150 flex items-center gap-1.5',
+                    selectedType === type
+                      ? 'bg-primary text-primary-foreground shadow-soft'
+                      : 'bg-secondary text-secondary-foreground hover:bg-graphite-200'
+                  )}
                 >
                   <span>{info.icon}</span>
                   {info.label}
@@ -183,37 +194,52 @@ export function NotificationsPage() {
               ))}
             </div>
 
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={unreadOnly}
-                onChange={e => setUnreadOnly(e.target.checked)}
-                className="w-4 h-4 rounded border-border bg-transparent accent-primary"
-              />
-              <span className="text-foreground text-sm">Только непрочитанные</span>
-            </label>
+            {/* Filter pills: Все / Непрочитанные */}
+            <div className="inline-flex p-1 rounded-lg bg-secondary gap-1">
+              <button
+                onClick={() => setUnreadOnly(false)}
+                className={cn(
+                  'h-8 px-3 rounded-md text-sm transition-all duration-150',
+                  !unreadOnly ? 'bg-card text-foreground shadow-soft font-medium' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                Все
+              </button>
+              <button
+                onClick={() => setUnreadOnly(true)}
+                className={cn(
+                  'h-8 px-3 rounded-md text-sm transition-all duration-150',
+                  unreadOnly ? 'bg-card text-foreground shadow-soft font-medium' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                Непрочитанные
+              </button>
+            </div>
           </div>
         )}
 
         {groups.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            {groups.slice(0, 4).map(group => {
+            {groups.slice(0, 4).map((group, i) => {
               const info = getNotificationTypeInfo(group.type)
               return (
                 <button
                   key={group.type}
                   onClick={() => setSelectedType(group.type)}
-                  className={`p-3 rounded-xl border transition-all ${
+                  className={cn(
+                    'p-3 rounded-xl border bg-card text-left transition-all duration-150 animate-rise-in',
+                    'hover:-translate-y-0.5 hover:shadow-elev',
                     selectedType === group.type
-                      ? 'bg-primary/15 border-primary/60 shadow-glow'
-                      : 'bg-card/55 border-border hover:border-primary/40 backdrop-blur-xl'
-                  }`}
+                      ? 'border-primary shadow-soft'
+                      : 'border-border hover:border-graphite-300'
+                  )}
+                  style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xl">{info.icon}</span>
-                    <span className="text-foreground font-medium">{info.label}</span>
+                    <span className="text-foreground text-sm font-medium truncate">{info.label}</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{group.count} всего</span>
                     {group.unread > 0 && (
                       <span className="text-primary font-medium">{group.unread} новых</span>
@@ -229,22 +255,22 @@ export function NotificationsPage() {
           <p className="text-muted-foreground text-sm">
             {notifications.length} уведомлений
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="px-3 py-1.5 text-sm bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded-lg transition-colors flex items-center gap-1"
+                className="h-8 px-3 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 flex items-center gap-1.5"
               >
-                <Check className="w-4 h-4" />
+                <Check className="w-4 h-4" strokeWidth={1.75} />
                 Прочитать все
               </button>
             )}
             {notifications.length > 0 && (
               <button
                 onClick={() => setShowDeleteAllConfirm(true)}
-                className="px-3 py-1.5 text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors flex items-center gap-1"
+                className="h-8 px-3 rounded-lg text-sm text-destructive hover:bg-danger-soft transition-all duration-150 flex items-center gap-1.5"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" strokeWidth={1.75} />
                 Очистить
               </button>
             )}
@@ -253,30 +279,47 @@ export function NotificationsPage() {
 
         <div className="space-y-2">
           {loading && page === 1 ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <div className="space-y-2">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex items-start gap-4 p-4 rounded-xl border border-border bg-card">
+                  <div className="skeleton h-12 w-12 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="skeleton h-4 w-1/2" />
+                    <div className="skeleton h-3 w-1/3" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : notifications.length === 0 ? (
-            <div className="text-center py-12 glass rounded-xl shadow-soft">
-              <Bell className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground text-lg">Нет уведомлений</p>
-              <p className="text-muted-foreground text-sm mt-1">
-                {unreadOnly ? 'Все уведомления прочитаны' : 'Здесь будут появляться ваши уведомления'}
+            <div className="text-center py-16 px-6 rounded-xl border border-border bg-card animate-rise-in">
+              <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+                <Bell className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+              </div>
+              <p className="text-lg font-semibold text-foreground mt-4">
+                {unreadOnly ? 'Все уведомления прочитаны' : 'Нет уведомлений'}
+              </p>
+              <p className="text-sm text-muted-foreground max-w-[320px] mx-auto mt-1">
+                {unreadOnly ? 'Новые уведомления появятся здесь' : 'Здесь будут появляться ваши уведомления'}
               </p>
             </div>
           ) : (
             <>
-              {notifications.map(notification => {
+              {notifications.map((notification, i) => {
                 const info = getNotificationTypeInfo(notification.type)
                 return (
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`flex items-start gap-4 p-4 bg-card/55 backdrop-blur-xl border rounded-xl transition-all cursor-pointer hover:border-primary/40 hover:shadow-glow ${
-                      !notification.is_read ? 'border-primary/50 bg-primary/5 shadow-soft' : 'border-border/50'
-                    }`}
+                    className={cn(
+                      'group flex items-start gap-4 p-4 rounded-xl border transition-all duration-150 cursor-pointer animate-rise-in',
+                      'hover:border-graphite-300 hover:shadow-elev',
+                      !notification.is_read
+                        ? 'border-emerald-200 bg-accent/40'
+                        : 'border-border bg-card'
+                    )}
+                    style={{ animationDelay: `${Math.min(i, 8) * 25}ms` }}
                   >
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                    <div className="shrink-0 w-12 h-12 rounded-full bg-emerald-700 ring-1 ring-border flex items-center justify-center overflow-hidden">
                       {notification.actor?.avatar ? (
                         <img
                           src={notification.actor.avatar}
@@ -290,8 +333,8 @@ export function NotificationsPage() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className={`font-medium ${notification.is_read ? 'text-foreground' : 'text-foreground'}`}>
+                        <div className="min-w-0">
+                          <p className={cn('text-sm', !notification.is_read ? 'font-semibold text-foreground' : 'font-medium text-foreground')}>
                             {notification.title}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">
@@ -299,7 +342,7 @@ export function NotificationsPage() {
                           </p>
                         </div>
                         {!notification.is_read && (
-                          <span className="w-2.5 h-2.5 bg-primary rounded-full flex-shrink-0 shadow-glow" />
+                          <span className="w-2.5 h-2.5 bg-primary rounded-full shrink-0 mt-1" />
                         )}
                       </div>
                       {notification.content && (
@@ -309,17 +352,17 @@ export function NotificationsPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1 flex-shrink-0">
+                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                       {!notification.is_read && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
                             handleMarkAsRead(notification.id)
                           }}
-                          className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-green-400 transition-colors"
+                          className="h-8 w-8 grid place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-emerald-700 transition-all duration-150"
                           title="Прочитано"
                         >
-                          <Check className="w-5 h-5" />
+                          <Check className="w-4 h-4" strokeWidth={1.75} />
                         </button>
                       )}
                       <button
@@ -327,10 +370,10 @@ export function NotificationsPage() {
                           e.stopPropagation()
                           handleDelete(notification.id)
                         }}
-                        className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-red-400 transition-colors"
+                        className="h-8 w-8 grid place-items-center rounded-lg text-muted-foreground hover:bg-danger-soft hover:text-destructive transition-all duration-150"
                         title="Удалить"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <X className="w-4 h-4" strokeWidth={1.75} />
                       </button>
                     </div>
                   </div>
@@ -341,13 +384,13 @@ export function NotificationsPage() {
                 <button
                   onClick={() => loadNotifications(page + 1)}
                   disabled={loading}
-                  className="w-full py-3 glass rounded-xl text-foreground hover:bg-accent/10 transition-colors flex items-center justify-center gap-2"
+                  className="w-full h-10 rounded-lg border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150 flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
                 >
                   {loading ? (
-                    <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                   ) : (
                     <>
-                      <ChevronDown className="w-5 h-5" />
+                      <ChevronDown className="w-4 h-4" strokeWidth={1.75} />
                       Загрузить ещё
                     </>
                   )}
