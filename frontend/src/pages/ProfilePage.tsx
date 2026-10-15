@@ -167,8 +167,19 @@ export default function ProfilePage() {
   if (profileLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto animate-fade-in-soft">
+          <Card className="overflow-hidden mb-6 p-0">
+            <div className="h-40 bg-[linear-gradient(90deg,hsl(var(--graphite-100))_25%,hsl(var(--graphite-200))_50%,hsl(var(--graphite-100))_75%)] bg-[length:200%_100%] animate-shimmer-sweep" />
+            <div className="px-4 sm:px-6 pb-6">
+              <div className="flex items-end gap-6 -mt-12">
+                <div className="h-24 w-24 rounded-full bg-[linear-gradient(90deg,hsl(var(--graphite-100))_25%,hsl(var(--graphite-200))_50%,hsl(var(--graphite-100))_75%)] bg-[length:200%_100%] animate-shimmer-sweep ring-4 ring-background" />
+                <div className="flex-1 pt-4 space-y-2">
+                  <div className="h-6 w-48 rounded-lg bg-graphite-100" />
+                  <div className="h-4 w-32 rounded-lg bg-graphite-100" />
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       </Layout>
     )
@@ -186,26 +197,26 @@ export default function ProfilePage() {
 
   return (
     <Layout>
-      <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">
-        <Card className="glass rounded-xl shadow-soft overflow-hidden mb-6">
+      <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto animate-rise-in">
+        <Card className="overflow-hidden mb-6 p-0">
           <div className="relative">
-            <div className="h-32 gradient-brand rounded-t-xl opacity-90" />
+            <div className="h-40 bg-graphite-100 animate-fade-in-soft" />
 
             <div className="px-4 sm:px-6 pb-4 sm:pb-6">
               {/* relative z-10: без этого контент с отрицательным margin
-                  (-mt-12) уходит ПОД градиентный баннер — кнопка
+                  (-mt-12) уходит ПОД баннер — кнопка
                   Edit Profile "проваливалась" за фон профиля */}
               <div className="relative z-10 flex items-end gap-3 sm:gap-6 -mt-12">
-                <div className="relative">
+                <div className="relative animate-scale-in">
                   <Avatar
                     src={displayUser?.avatar}
                     alt={displayUser?.username || 'User'}
                     userId={String(displayUser?.id)}
                     size="xl"
-                    className="border-4 border-card glow"
+                    className="ring-4 ring-background"
                   />
                   {isOwnProfile && (
-                    <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full gradient-brand text-primary-foreground flex items-center justify-center cursor-pointer hover:brightness-110 transition-all shadow-glow">
+                    <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer hover:bg-emerald-800 hover:shadow-lg-brand transition-all duration-150 shadow-soft active:scale-[0.97]">
                       <Upload className="w-4 h-4" />
                       <input
                         type="file"
@@ -222,7 +233,7 @@ export default function ProfilePage() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-3 sm:gap-0">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-xl sm:text-2xl font-bold drop-shadow-md">
+                        <h1 className="text-xl sm:text-2xl font-display font-bold tracking-[-0.015em] text-graphite-900">
                           {displayUser?.username}
                         </h1>
                         <PremiumBadge
@@ -231,7 +242,7 @@ export default function ProfilePage() {
                           active={isOwnProfile ? !!user?.premium?.active : hasPremium}
                         />
                       </div>
-                      <p className="text-muted-foreground">@{displayUser?.username}</p>
+                      <p className="text-sm text-muted-foreground">@{displayUser?.username}</p>
                     </div>
                     {isOwnProfile && !isEditing && (
                       <Button onClick={() => setIsEditing(true)} className="px-3 sm:px-4 text-sm whitespace-nowrap">
@@ -287,15 +298,15 @@ export default function ProfilePage() {
                   </p>
                   
                   {!isOwnProfile && (
-                    <div className="flex flex-wrap gap-3 sm:gap-4 mt-3">
-                      <div className="flex items-center gap-1 text-sm">
+                    <div className="flex flex-wrap gap-8 mt-3">
+                      <div className="flex items-center gap-2 animate-count-flick">
                         <Users className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-semibold">{followersCount}</span>
-                        <span className="text-muted-foreground">followers</span>
+                        <span className="text-xl font-display font-bold text-graphite-900">{followersCount}</span>
+                        <span className="text-xs text-muted-foreground">followers</span>
                       </div>
-                      <div className="flex items-center gap-1 text-sm">
-                        <span className="font-semibold">{followingCount}</span>
-                        <span className="text-muted-foreground">following</span>
+                      <div className="flex items-center gap-2 animate-count-flick" style={{ animationDelay: '60ms' }}>
+                        <span className="text-xl font-display font-bold text-graphite-900">{followingCount}</span>
+                        <span className="text-xs text-muted-foreground">following</span>
                       </div>
                     </div>
                   )}
@@ -309,7 +320,7 @@ export default function ProfilePage() {
         {liteMode && isOwnProfile && (
           <div className="grid grid-cols-2 gap-4 mb-6">
             <Link href="/invite">
-              <Card className="glass rounded-xl shadow-soft cursor-pointer hover:bg-accent/10 transition-colors">
+              <Card hover className="cursor-pointer">
                 <CardContent className="flex items-center gap-3 py-4">
                   <Share2 className="w-6 h-6 text-primary" />
                   <div>
@@ -320,9 +331,9 @@ export default function ProfilePage() {
               </Card>
             </Link>
             <Link href="/premium">
-              <Card className="glass rounded-xl shadow-soft cursor-pointer hover:bg-accent/10 transition-colors">
+              <Card hover className="cursor-pointer">
                 <CardContent className="flex items-center gap-3 py-4">
-                  <Crown className="w-6 h-6 text-yellow-500" />
+                  <Crown className="w-6 h-6 text-warning" />
                   <div>
                     <p className="font-medium">{t('nav.premium')}</p>
                     <p className="text-sm text-muted-foreground">
@@ -337,7 +348,7 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
-            <Card className="glass rounded-xl shadow-soft">
+            <Card>
               <CardHeader>
                 <CardTitle>About</CardTitle>
               </CardHeader>
@@ -370,7 +381,7 @@ export default function ProfilePage() {
                     )}
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Bio</p>
-                      <p className="whitespace-pre-wrap">
+                      <p className="whitespace-pre-wrap text-[15px] leading-6 max-w-[65ch]">
                         {displayUser?.bio || 'No bio yet'}
                       </p>
                     </div>
@@ -379,7 +390,7 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            <Card className="glass rounded-xl shadow-soft">
+            <Card>
               <CardHeader>
                 <CardTitle>Activity</CardTitle>
               </CardHeader>
@@ -392,31 +403,31 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-6">
-            <Card className="glass rounded-xl shadow-soft">
+            <Card>
               <CardHeader>
                 <CardTitle>Stats</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Followers</p>
-                  <p className="text-2xl font-bold gradient-brand-text">{followersCount}</p>
+                  <p className="text-xs text-muted-foreground">Followers</p>
+                  <p className="text-xl font-display font-bold text-graphite-900 animate-count-flick" style={{ animationDelay: '0ms' }}>{followersCount}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Following</p>
-                  <p className="text-2xl font-bold gradient-brand-text">{followingCount}</p>
+                  <p className="text-xs text-muted-foreground">Following</p>
+                  <p className="text-xl font-display font-bold text-graphite-900 animate-count-flick" style={{ animationDelay: '60ms' }}>{followingCount}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Friends</p>
-                  <p className="text-2xl font-bold gradient-brand-text">{friendsCount}</p>
+                  <p className="text-xs text-muted-foreground">Friends</p>
+                  <p className="text-xl font-display font-bold text-graphite-900 animate-count-flick" style={{ animationDelay: '120ms' }}>{friendsCount}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Posts</p>
-                  <p className="text-2xl font-bold gradient-brand-text">{postsCount}</p>
+                  <p className="text-xs text-muted-foreground">Posts</p>
+                  <p className="text-xl font-display font-bold text-graphite-900 animate-count-flick" style={{ animationDelay: '180ms' }}>{postsCount}</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="glass rounded-xl shadow-soft">
+            <Card>
               <CardHeader>
                 <CardTitle>Badges</CardTitle>
               </CardHeader>

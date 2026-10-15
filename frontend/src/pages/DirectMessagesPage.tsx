@@ -351,18 +351,29 @@ const DirectMessagesPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-xl text-muted-foreground">{t('messages.loading')}</div>
+      <div className="flex flex-col h-full bg-background animate-fade-in-soft">
+        <div className="h-16 px-4 flex items-center gap-3 border-b border-border bg-card shrink-0">
+          <div className="h-8 w-8 rounded-full bg-graphite-100" />
+          <div className="h-4 w-40 rounded-lg bg-graphite-100" />
+        </div>
+        <div className="flex-1 p-4 space-y-3">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className={`h-12 rounded-2xl bg-[linear-gradient(90deg,hsl(var(--graphite-100))_25%,hsl(var(--graphite-200))_50%,hsl(var(--graphite-100))_75%)] bg-[length:200%_100%] animate-shimmer-sweep ${i % 2 ? 'ml-auto w-2/5' : 'w-3/5'}`}
+            />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="sticky top-0 z-10 shrink-0 flex items-center gap-3 px-3 py-3 border-b border-border/60 bg-card/70 backdrop-blur-xl">
+    <div className="flex flex-col h-full bg-background animate-rise-in">
+      <div className="sticky top-0 z-10 shrink-0 flex items-center gap-3 h-16 px-4 border-b border-border bg-card">
         <button
           onClick={() => navigate('/friends')}
-          className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          className="h-8 w-8 grid place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -374,14 +385,14 @@ const DirectMessagesPage: React.FC = () => {
         <div className="flex items-center gap-1">
           <button
             onClick={() => startDmCall("audio")}
-            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="h-8 w-8 grid place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150"
             title="Аудиозвонок"
           >
             <Phone className="w-5 h-5" />
           </button>
           <button
             onClick={() => startDmCall("video")}
-            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="h-8 w-8 grid place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150"
             title="Видеозвонок"
           >
             <Video className="w-5 h-5" />
@@ -390,28 +401,28 @@ const DirectMessagesPage: React.FC = () => {
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <MessageSquare className="w-7 h-7 text-primary/70" />
+          <div className="flex flex-col items-center justify-center h-full py-16 px-6 animate-rise-in">
+            <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center">
+              <MessageSquare className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
             </div>
-            <p className="text-sm">{t('messages.noMessages')}</p>
+            <p className="text-lg font-semibold text-graphite-900 mt-4">{t('messages.noMessages')}</p>
           </div>
         ) : (
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 animate-fade-in ${
+              className={`flex gap-2.5 px-0 py-1 ${
                 message.sender_id === currentUser?.id
-                  ? "justify-end"
-                  : "justify-start"
+                  ? "justify-end animate-msg-send [transform-origin:bottom_right]"
+                  : "justify-start animate-msg-receive [transform-origin:bottom_left]"
               }`}
             >
               {message.sender_id !== currentUser?.id && <Avatar size="sm" />}
               <div
-                className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-soft transition-shadow duration-200 ${
+                className={`max-w-[65%] px-3.5 py-2 rounded-2xl shadow-soft text-[15px] leading-6 ${
                   message.sender_id === currentUser?.id
-                    ? "bg-gradient-brand text-primary-foreground rounded-br-md"
-                    : "bg-card border border-border/60 text-card-foreground rounded-bl-md"
+                    ? "bg-primary text-primary-foreground rounded-br-[6px]"
+                    : "bg-card border border-border text-card-foreground rounded-bl-[6px]"
                 }`}
               >
                 {message.type === "call" ? (
@@ -431,16 +442,16 @@ const DirectMessagesPage: React.FC = () => {
                         }
                         if (e.key === 'Escape') setEditingId(null)
                       }}
-                      className="bg-background/40 border border-border rounded-lg px-2 py-1 text-sm w-full focus:outline-none focus:border-primary focus:ring-1 focus:ring-ring"
+                      className="bg-background border border-input rounded-lg px-2 py-1 text-sm w-full focus:outline-none focus:border-primary focus:ring-4 focus:ring-emerald-600/10"
                       autoFocus
                     />
-                    <button onClick={() => { handleEditMessage(message.id, editContent); setEditingId(null) }} className="text-xs text-green-400 hover:text-green-300 shrink-0">✓</button>
+                    <button onClick={() => { handleEditMessage(message.id, editContent); setEditingId(null) }} className="text-xs text-emerald-600 hover:text-emerald-700 shrink-0">✓</button>
                     <button onClick={() => setEditingId(null)} className="text-xs text-muted-foreground hover:text-foreground shrink-0">✕</button>
                   </div>
                 ) : (
                   <p className="break-words">{message.content}</p>
                 )}
-                <p className="text-xs opacity-70 mt-1">
+                <p className={`text-[11px] mt-1 ${message.sender_id === currentUser?.id ? "text-emerald-100/80" : "text-muted-foreground"}`}>
                   {new Date(message.created_at).toLocaleTimeString()}
                 </p>
               </div>
@@ -454,7 +465,7 @@ const DirectMessagesPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleDeleteMessage(message.id)}
-                    className="text-xs sm:text-sm text-red-400 hover:text-red-300 p-1"
+                    className="text-xs sm:text-sm text-destructive hover:text-[hsl(0_72%_38%)] p-1 transition-colors"
                   >
                     {t('messages.delete')}
                   </button>
@@ -465,10 +476,10 @@ const DirectMessagesPage: React.FC = () => {
         )}
         {typing && (
           <div className="flex gap-3 text-muted-foreground text-sm">
-            <div className="flex gap-1">
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100"></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200"></div>
+            <div className="flex gap-1 items-center">
+              <div className="w-2 h-2 bg-graphite-400 rounded-full animate-typing-bounce"></div>
+              <div className="w-2 h-2 bg-graphite-400 rounded-full animate-typing-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-graphite-400 rounded-full animate-typing-bounce" style={{ animationDelay: '300ms' }}></div>
             </div>
             <span>{t('messages.typing')}</span>
           </div>
@@ -478,13 +489,13 @@ const DirectMessagesPage: React.FC = () => {
 
       <form
         onSubmit={handleSendMessage}
-        className="border-t border-border/60 p-3 md:p-4 shrink-0 sticky bottom-16 lg:bottom-0 bg-card/70 backdrop-blur-xl z-10"
+        className="border-t border-border p-3 shrink-0 sticky bottom-16 lg:bottom-0 bg-card z-10"
       >
         {isRecording ? (
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 flex-1 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
-              <span className="text-sm font-medium text-red-400 tabular-nums">
+            <div className="flex items-center gap-2 flex-1 px-3 py-2 rounded-xl bg-danger-soft border border-destructive/30">
+              <span className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse shrink-0" />
+              <span className="text-sm font-medium text-destructive tabular-nums">
                 {formatRecordingTime(recordingTime)}
               </span>
               <span className="text-xs text-muted-foreground truncate">Идёт запись голосового…</span>
@@ -492,7 +503,7 @@ const DirectMessagesPage: React.FC = () => {
             <button
               type="button"
               onClick={() => stopRecording(false)}
-              className="p-2.5 rounded-xl bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2.5 rounded-xl bg-secondary text-secondary-foreground hover:bg-graphite-200 transition-all duration-150 active:scale-[0.97]"
               title="Отменить запись"
             >
               <X className="w-5 h-5" />
@@ -501,7 +512,7 @@ const DirectMessagesPage: React.FC = () => {
               type="button"
               onClick={() => stopRecording(true)}
               disabled={sendingVoice || recordingTime < 1}
-              className="p-2.5 rounded-xl bg-gradient-brand text-primary-foreground shadow-soft hover:shadow-glow disabled:opacity-50 transition-all"
+              className="p-2.5 rounded-xl bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand disabled:opacity-50 disabled:pointer-events-none transition-all duration-150 active:scale-[0.97]"
               title="Отправить голосовое"
             >
               <Send className="w-5 h-5" />
@@ -513,7 +524,7 @@ const DirectMessagesPage: React.FC = () => {
               type="button"
               onClick={startRecording}
               disabled={sendingVoice}
-              className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+              className="p-2 rounded-xl text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 disabled:opacity-50"
               title="Записать голосовое сообщение"
             >
               <Mic className="w-5 h-5" />
@@ -529,7 +540,7 @@ const DirectMessagesPage: React.FC = () => {
             <button
               type="submit"
               disabled={!newMessage.trim() || sendingVoice}
-              className="bg-gradient-brand text-primary-foreground px-6 py-2 rounded-xl font-medium shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand disabled:opacity-50 disabled:pointer-events-none transition-all duration-150 active:scale-[0.97]"
             >
               {t('messages.send')}
             </button>

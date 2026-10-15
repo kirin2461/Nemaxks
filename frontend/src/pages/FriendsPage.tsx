@@ -401,27 +401,27 @@ export default function FriendsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'online': return 'bg-green-500'
-      case 'away': return 'bg-yellow-500'
-      case 'busy': return 'bg-red-500'
-      default: return 'bg-muted-foreground'
+      case 'online': return 'bg-online'
+      case 'away': return 'bg-idle'
+      case 'busy': return 'bg-dnd'
+      default: return 'bg-offline'
     }
   }
 
   return (
     <Layout>
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col animate-rise-in">
         {/* Header */}
-        <div className="p-4 md:p-6 border-b border-border/60 bg-card/55 backdrop-blur-xl sticky top-0 z-10 shrink-0 shadow-soft">
+        <div className="p-4 md:p-6 border-b border-border bg-card sticky top-0 z-10 shrink-0">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between gap-3 mb-4 md:mb-6">
               <div className="min-w-0">
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold gradient-brand-text mb-1 md:mb-2">{t('friends.title')}</h1>
+                <h1 className="text-xl md:text-2xl font-display font-bold tracking-[-0.015em] text-graphite-900 mb-1 md:mb-2">{t('friends.title')}</h1>
                 <p className="text-sm md:text-base text-muted-foreground hidden sm:block">{t('friends.manageConnections')}</p>
               </div>
               <button
                 onClick={() => setShowAddFriend(!showAddFriend)}
-                className="gradient-brand text-primary-foreground rounded-lg font-medium shadow-soft hover:brightness-110 hover:shadow-glow active:scale-[0.98] transition-all px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 shrink-0"
+                className="bg-primary text-primary-foreground rounded-lg font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 shrink-0"
               >
                 <UserPlus className="w-5 h-5" />
                 <span className="hidden sm:inline">{t('friends.addFriend')}</span>
@@ -430,7 +430,7 @@ export default function FriendsPage() {
 
             {/* Add Friend Form */}
             {showAddFriend && (
-              <div className="mb-6 p-4 glass rounded-xl animate-slide-in">
+              <div className="mb-6 p-4 rounded-xl border border-border bg-card shadow-soft animate-rise-in">
                 <div className="flex gap-3">
                   <input
                     type="text"
@@ -445,7 +445,7 @@ export default function FriendsPage() {
                   <button
                     onClick={handleAddFriend}
                     disabled={!addFriendInput.trim()}
-                    className="gradient-brand text-primary-foreground rounded-lg font-medium shadow-soft hover:brightness-110 active:scale-[0.98] transition-all px-6 disabled:opacity-50"
+                    className="bg-primary text-primary-foreground rounded-lg font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 px-6 disabled:opacity-50 disabled:pointer-events-none"
                   >
                     <Send className="w-5 h-5" />
                   </button>
@@ -471,8 +471,8 @@ export default function FriendsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="px-4 md:px-6 py-2 md:py-3 border-b border-border bg-card/30 backdrop-blur-sm overflow-x-auto hide-scrollbar">
-          <div className="max-w-6xl mx-auto flex gap-1 md:gap-2 min-w-max">
+        <div className="px-4 md:px-6 border-b border-border bg-card overflow-x-auto hide-scrollbar">
+          <div className="max-w-6xl mx-auto flex gap-6 min-w-max">
             {[
               { key: 'all', label: t('friends.all'), count: friends.length },
               { key: 'online', label: t('friends.online'), count: friends.filter(f => f.status === 'online').length },
@@ -483,15 +483,15 @@ export default function FriendsPage() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as TabType)}
-                className={`px-3 md:px-4 py-2 rounded-lg transition-all duration-300 flex items-center gap-1.5 md:gap-2 whitespace-nowrap ${
+                className={`pb-2.5 pt-3 text-sm font-medium border-b-2 -mb-px transition-colors duration-150 flex items-center gap-2 whitespace-nowrap ${
                   activeTab === tab.key
-                    ? 'gradient-brand text-primary-foreground shadow-glow'
-                    : 'hover:bg-accent/10 text-muted-foreground'
+                    ? 'text-foreground border-primary'
+                    : 'text-muted-foreground border-transparent hover:text-foreground'
                 }`}
               >
-                <span className="font-medium text-sm md:text-base">{tab.label}</span>
+                <span>{tab.label}</span>
                 {tab.count > 0 && (
-                  <span className="px-1.5 md:px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-semibold">
+                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold grid place-items-center">
                     {tab.count}
                   </span>
                 )}
@@ -507,10 +507,10 @@ export default function FriendsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredFriends.length === 0 ? (
                   <div className="col-span-full text-center py-12">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
-                      <Users className="w-10 h-10 text-primary-foreground" />
+                    <div className="h-20 w-20 mx-auto mb-4 rounded-2xl bg-secondary grid place-items-center animate-rise-in">
+                      <Users className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
                     </div>
-                    <p className="text-muted-foreground">
+                    <p className="text-lg font-semibold text-graphite-900">
                       {searchQuery ? t('friends.noFriendsFound') : t('friends.noFriends')}
                     </p>
                   </div>
@@ -518,8 +518,8 @@ export default function FriendsPage() {
                   filteredFriends.map((friend, index) => (
                     <div
                       key={friend.id}
-                      className="glass rounded-xl shadow-soft p-4 hover:scale-[1.02] hover:shadow-glow transition-all duration-300 animate-slide-in"
-                      style={{ animationDelay: `${index * 0.05}s` }}
+                      className="rounded-xl border border-border bg-card shadow-soft p-4 hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150 animate-rise-in"
+                      style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
                     >
                       {/* Friend Header */}
                       <div className="flex items-start gap-3 mb-3">
@@ -540,9 +540,9 @@ export default function FriendsPage() {
 
                         <button
                           onClick={(e) => friendContextMenu.showContextMenu(e, getFriendContextMenuItems(friend))}
-                          className="p-1 hover:bg-accent/20 rounded transition-colors"
+                          className="h-8 w-8 grid place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150"
                         >
-                          <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                          <MoreVertical className="w-5 h-5" />
                         </button>
                       </div>
 
@@ -555,21 +555,21 @@ export default function FriendsPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleSendMessage(friend.id)}
-                          className="flex-1 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all flex items-center justify-center gap-2"
+                          className="flex-1 px-3 py-2 bg-accent hover:bg-emerald-100 text-accent-foreground rounded-lg transition-all duration-150 flex items-center justify-center gap-2 active:scale-[0.97]"
                         >
                           <MessageSquare className="w-4 h-4" />
                           <span className="text-sm font-medium">{t('friends.message')}</span>
                         </button>
                         <button
                           onClick={() => handleVoiceCall(friend.id)}
-                          className="p-2 bg-accent/10 hover:bg-accent/20 rounded-lg transition-all"
+                          className="p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-lg transition-all duration-150 active:scale-[0.97]"
                           title="Voice Call"
                         >
                           <Phone className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleVideoCall(friend.id)}
-                          className="p-2 bg-accent/10 hover:bg-accent/20 rounded-lg transition-all"
+                          className="p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-lg transition-all duration-150 active:scale-[0.97]"
                           title="Video Call"
                         >
                           <Video className="w-4 h-4" />
@@ -578,7 +578,7 @@ export default function FriendsPage() {
 
                       {/* Friend Since */}
                       {friend.created_at && (
-                        <div className="mt-3 pt-3 border-t border-border/50 flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="w-3 h-3" />
                           {t('friends.friendsSince')} {formatTime(friend.created_at)}
                         </div>
@@ -591,17 +591,17 @@ export default function FriendsPage() {
               <div className="space-y-4">
                 {pendingRequests.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
-                      <UserCheck className="w-10 h-10 text-primary-foreground" />
+                    <div className="h-20 w-20 mx-auto mb-4 rounded-2xl bg-secondary grid place-items-center animate-rise-in">
+                      <UserCheck className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
                     </div>
-                    <p className="text-muted-foreground">{t('friends.noPendingRequests')}</p>
+                    <p className="text-lg font-semibold text-graphite-900">{t('friends.noPendingRequests')}</p>
                   </div>
                 ) : (
                   pendingRequests.map((request, index) => (
                     <div
                       key={request.id}
-                      className="glass rounded-xl shadow-soft p-4 flex items-center gap-4 animate-slide-in"
-                      style={{ animationDelay: `${index * 0.05}s` }}
+                      className="rounded-xl border border-border bg-card shadow-soft p-4 flex items-center gap-4 animate-rise-in"
+                      style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
                     >
                       <Avatar
                         src={request.avatar || undefined}
@@ -621,7 +621,7 @@ export default function FriendsPage() {
                         <button
                           type="button"
                           onClick={() => handleCancelRequest(request)}
-                          className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-all cursor-pointer relative z-10"
+                          className="px-4 py-2 border border-input bg-card text-destructive hover:bg-danger-soft rounded-lg transition-all duration-150 cursor-pointer relative z-10 active:scale-[0.97]"
                         >
                           {t('friends.cancel')}
                         </button>
@@ -630,7 +630,7 @@ export default function FriendsPage() {
                           <button
                             type="button"
                             onClick={() => handleAcceptRequest(request)}
-                            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all flex items-center gap-2 cursor-pointer select-none"
+                            className="px-4 py-2 bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand rounded-lg transition-all duration-150 flex items-center gap-2 cursor-pointer select-none active:scale-[0.97]"
                           >
                             <UserCheck className="w-4 h-4" />
                             {t('friends.accept')}
@@ -638,7 +638,7 @@ export default function FriendsPage() {
                           <button
                             type="button"
                             onClick={() => handleDeclineRequest(request)}
-                            className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-all flex items-center gap-2 cursor-pointer select-none"
+                            className="px-4 py-2 border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 rounded-lg transition-all duration-150 flex items-center gap-2 cursor-pointer select-none active:scale-[0.97]"
                           >
                             <UserX className="w-4 h-4" />
                             {t('friends.decline')}
@@ -653,17 +653,17 @@ export default function FriendsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {allUsers.filter(u => u.id !== user?.id && !friends.some(f => f.id === String(u.id)) && !pendingRequests.some(p => p.id === String(u.id))).length === 0 ? (
                   <div className="col-span-full text-center py-12">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
-                      <Users className="w-10 h-10 text-primary-foreground" />
+                    <div className="h-20 w-20 mx-auto mb-4 rounded-2xl bg-secondary grid place-items-center animate-rise-in">
+                      <Users className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
                     </div>
-                    <p className="text-muted-foreground">{t('friends.noNewUsers')}</p>
+                    <p className="text-lg font-semibold text-graphite-900">{t('friends.noNewUsers')}</p>
                   </div>
                 ) : (
                   allUsers.filter(u => u.id !== user?.id && !friends.some(f => f.id === String(u.id)) && !pendingRequests.some(p => p.id === String(u.id))).map((discoverUser, index) => (
                     <div
                       key={discoverUser.id}
-                      className="glass rounded-xl shadow-soft p-4 animate-slide-in"
-                      style={{ animationDelay: `${index * 0.05}s` }}
+                      className="rounded-xl border border-border bg-card shadow-soft p-4 animate-rise-in"
+                      style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
                     >
                       <div className="flex items-start gap-3 mb-3">
                         <Avatar
@@ -687,7 +687,7 @@ export default function FriendsPage() {
                           e.stopPropagation()
                           handleSendFriendRequest(discoverUser.username)
                         }}
-                        className="w-full px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full px-4 py-2 border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 rounded-lg transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97]"
                       >
                         <UserPlus className="w-4 h-4" />
                         {t('friends.addFriend')}
@@ -700,17 +700,17 @@ export default function FriendsPage() {
               <div className="space-y-4">
                 {blockedUsers.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-brand glow flex items-center justify-center">
-                      <Ban className="w-10 h-10 text-primary-foreground" />
+                    <div className="h-20 w-20 mx-auto mb-4 rounded-2xl bg-secondary grid place-items-center animate-rise-in">
+                      <Ban className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
                     </div>
-                    <p className="text-muted-foreground">{t('friends.noBlockedUsers')}</p>
+                    <p className="text-lg font-semibold text-graphite-900">{t('friends.noBlockedUsers')}</p>
                   </div>
                 ) : (
                   blockedUsers.map((blocked, index) => (
                     <div
                       key={blocked.id}
-                      className="glass rounded-xl shadow-soft p-4 flex items-center gap-4 animate-slide-in"
-                      style={{ animationDelay: `${index * 0.05}s` }}
+                      className="rounded-xl border border-border bg-card shadow-soft p-4 flex items-center gap-4 animate-rise-in"
+                      style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
                     >
                       <Avatar
                         src={blocked.avatar || undefined}
@@ -725,7 +725,7 @@ export default function FriendsPage() {
 
                       <button
                         onClick={() => handleUnblockUser(blocked.id)}
-                        className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all"
+                        className="px-4 py-2 border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 rounded-lg transition-all duration-150 active:scale-[0.97]"
                       >
                         {t('friends.unblock')}
                       </button>
