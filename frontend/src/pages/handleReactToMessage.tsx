@@ -802,23 +802,23 @@ export default function MessagesPage() {
 
   return (
     <Layout>
-      <div className="h-full flex flex-col lg:flex-row">
+      <div className="h-full flex flex-col lg:flex-row animate-rise-in">
         {/* Conversations list */}
-        <div className={`${selectedUser ? 'hidden lg:flex' : 'flex'} w-full lg:w-80 bg-card/60 backdrop-blur-xl border-r border-border/60 flex-col`}>
+        <div className={`${selectedUser ? 'hidden lg:flex' : 'flex'} w-full lg:w-[340px] bg-card border-r border-border flex-col`}>
           {/* Search and New Message */}
-          <div className="p-4 border-b border-border/60 space-y-3">
+          <div className="p-4 border-b border-border space-y-3">
             {/* New Message Button */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowNewMessageModal(true)}
-                className="flex-1 btn-cosmic py-2.5 flex items-center justify-center gap-2"
+                className="flex-1 bg-primary text-primary-foreground rounded-lg font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none h-10 flex items-center justify-center gap-2"
               >
                 <Edit className="w-4 h-4" />
                 <span className="font-medium">{t('messages.newMessage')}</span>
               </button>
               <button
                 onClick={() => setShowCreateGroup(true)}
-                className="p-2 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-colors"
+                className="h-10 w-10 grid place-items-center text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-lg transition-all duration-150"
                 title="Создать группу"
               >
                 <Users className="w-5 h-5" />
@@ -831,7 +831,7 @@ export default function MessagesPage() {
               <input
                 type="text"
                 placeholder={t('messages.searchConversations')}
-                className="input-field pl-10 hover:border-primary/50"
+                className="input-field pl-10 h-9"
               />
             </div>
           </div>
@@ -839,12 +839,12 @@ export default function MessagesPage() {
           {/* Conversations */}
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             {(!conversations || conversations.length === 0) ? (
-              <div className="text-center py-12 px-4 animate-fade-in">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center orb-glow">
-                  <MessageSquare className="w-8 h-8 text-primary/70" />
+              <div className="flex flex-col items-center text-center py-16 px-6 animate-rise-in">
+                <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center">
+                  <MessageSquare className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
                 </div>
-                <p className="text-muted-foreground text-sm">{t('messages.noConversations')}</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">{t('messages.startNewChat')}</p>
+                <p className="text-lg font-semibold text-graphite-900 mt-4">{t('messages.noConversations')}</p>
+                <p className="text-sm text-muted-foreground max-w-[320px] mt-1">{t('messages.startNewChat')}</p>
               </div>
             ) : (
               conversations.map((conv, index) => {
@@ -854,14 +854,16 @@ export default function MessagesPage() {
                   key={conv.user.id}
                   onClick={() => handleSelectUser(conv.user)}
                   onContextMenu={(e) => conversationContextMenu.showContextMenu(e, getConversationContextMenuItems(conv.user))}
-                  className={`w-full p-4 flex items-center gap-3 transition-all duration-300
-                             border-b border-border/40 animate-slide-in ${
+                  className={`group relative h-[72px] px-3 py-2.5 mx-2 flex items-center gap-3 rounded-xl cursor-pointer transition-all duration-150 animate-rise-in ${
                     isSelected
-                      ? 'bg-gradient-brand text-primary-foreground shadow-glow'
-                      : 'hover:bg-primary/10'
+                      ? 'bg-accent'
+                      : 'hover:bg-accent/60'
                   }`}
-                  style={{ animationDelay: `${index * 0.05}s` }}
+                  style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
                 >
+                  {isSelected && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary" />
+                  )}
                   <div className="relative">
                     <Avatar
                       src={conv.user.avatar}
@@ -879,15 +881,15 @@ export default function MessagesPage() {
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2 min-w-0">
-                        <p className="font-medium truncate">
+                        <p className={`text-sm truncate ${conv.unread_count > 0 ? 'font-semibold text-foreground' : 'font-medium'}`}>
                           {conv.user.alias || conv.user.username}
                         </p>
                       </div>
-                      <span className={`text-xs ${isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                      <span className="text-xs text-graphite-400">
                         {formatTime(conv.last_message.created_at)}
                       </span>
                     </div>
-                    <p className={`text-sm truncate ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                    <p className="text-sm text-muted-foreground truncate">
                       {conv.last_message.type === 'call' || conv.last_message.message_type === 'call'
                         ? '📞 Звонок'
                         : conv.last_message.voice_url
@@ -896,11 +898,7 @@ export default function MessagesPage() {
                     </p>
                   </div>
                   {conv.unread_count > 0 && (
-                    <div className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-semibold pulse-call ${
-                      isSelected
-                        ? 'bg-card text-card-foreground'
-                        : 'bg-gradient-brand text-primary-foreground shadow-glow'
-                    }`}>
+                    <div className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold grid place-items-center">
                       {conv.unread_count}
                     </div>
                   )}
@@ -909,9 +907,7 @@ export default function MessagesPage() {
                       e.stopPropagation()
                       conversationContextMenu.showContextMenu(e as any, getConversationContextMenuItems(conv.user))
                     }}
-                    className={`opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 p-1 rounded transition-opacity ${
-                      isSelected ? 'hover:bg-white/15 text-primary-foreground/80' : 'hover:bg-accent/20'
-                    }`}
+                    className="opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 p-1 rounded-lg transition-all duration-150 text-muted-foreground hover:bg-emerald-100 hover:text-accent-foreground"
                   >
                     <MoreVertical className="w-4 h-4" />
                   </button>
@@ -927,10 +923,10 @@ export default function MessagesPage() {
                     key={`group-${group.id}`}
                     onClick={() => selectGroup(group)}
                     className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
-                      selectedGroup?.id === group.id ? 'bg-primary/15 border-l-4 border-l-primary' : 'hover:bg-primary/10'
+                      selectedGroup?.id === group.id ? 'bg-accent border-l-[3px] border-l-primary' : 'hover:bg-accent/60'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-primary-foreground font-bold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-graphite-700 flex items-center justify-center text-white font-semibold text-sm">
                       {group.name?.charAt(0)?.toUpperCase() || 'G'}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -950,17 +946,17 @@ export default function MessagesPage() {
         <div className={`${selectedUser || selectedGroup ? 'flex' : 'hidden lg:flex'} flex-1 flex-col`}>
           {selectedGroup ? (
             <div className="flex-1 flex flex-col">
-              <div className="p-3 sm:p-4 border-b border-border/60 bg-card/70 backdrop-blur-xl">
+              <div className="px-4 py-3 border-b border-border bg-card">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setSelectedGroup(null)}
-                    className="lg:hidden p-2 -ml-1 hover:bg-accent/20 rounded-lg transition-colors"
+                    className="lg:hidden h-8 w-8 grid place-items-center -ml-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-lg transition-all duration-150"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-primary-foreground font-bold">
+                  <div className="w-10 h-10 rounded-full bg-graphite-700 flex items-center justify-center text-white font-semibold">
                     {selectedGroup.name?.charAt(0)?.toUpperCase() || 'G'}
                   </div>
                   <div>
@@ -972,7 +968,7 @@ export default function MessagesPage() {
               <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {groupMessages.map((msg: any) => (
                   <div key={msg.id} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-graphite-700 flex items-center justify-center text-white text-xs font-semibold shrink-0">
                       {msg.sender?.username?.charAt(0)?.toUpperCase() || msg.sender_username?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                     <div>
@@ -986,8 +982,8 @@ export default function MessagesPage() {
                 ))}
                 <div ref={messagesEndRef} />
               </div>
-              <div className="p-4 border-t border-border/60 bg-card/70 backdrop-blur-xl">
-                <div className="flex items-center gap-2 bg-card/60 border border-border rounded-xl px-4 py-2 transition-all focus-within:ring-2 focus-within:ring-ring focus-within:border-primary/60">
+              <div className="p-3 border-t border-border bg-card">
+                <div className="flex items-center gap-2 bg-secondary rounded-xl px-4 py-2 transition-all duration-150 focus-within:ring-4 focus-within:ring-emerald-600/10">
                   <input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
@@ -998,7 +994,7 @@ export default function MessagesPage() {
                   <button
                     onClick={sendGroupMessage}
                     disabled={!newMessage.trim()}
-                    className="p-1.5 hover:bg-accent/20 rounded-lg transition-colors disabled:opacity-50"
+                    className="p-1.5 hover:bg-accent rounded-lg transition-all duration-150 disabled:opacity-50"
                   >
                     <Send className="w-5 h-5 text-muted-foreground" />
                   </button>
@@ -1008,12 +1004,12 @@ export default function MessagesPage() {
           ) : selectedUser ? (
             <>
               {/* Header */}
-              <div className="p-3 sm:p-4 border-b border-border/60 bg-card/70 backdrop-blur-xl">
+              <div className="px-4 py-3 border-b border-border bg-card">
                 <div className="flex items-center gap-3">
                   {/* Mobile back button */}
                   <button
                     onClick={() => setSelectedUser(null)}
-                    className="lg:hidden p-2 -ml-1 hover:bg-accent/20 rounded-lg transition-colors"
+                    className="lg:hidden h-8 w-8 grid place-items-center -ml-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-lg transition-all duration-150"
                     aria-label="Back to conversations"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1036,7 +1032,7 @@ export default function MessagesPage() {
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-base sm:text-lg truncate">{selectedUser.alias || selectedUser.username}</p>
+                    <p className="text-sm font-semibold truncate">{selectedUser.alias || selectedUser.username}</p>
                     <div className="flex items-center gap-2">
                       <p className="text-xs sm:text-sm text-muted-foreground">@{selectedUser.username}</p>
                       <span className="text-xs">•</span>
@@ -1050,28 +1046,28 @@ export default function MessagesPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => startCall('audio')}
-                      className="p-2 rounded-lg transition-colors hover:bg-accent/20 text-muted-foreground hover:text-primary"
+                      className="h-8 w-8 grid place-items-center rounded-lg transition-all duration-150 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                       title="Аудиозвонок"
                     >
                       <Phone className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => startCall('video')}
-                      className="p-2 rounded-lg transition-colors hover:bg-accent/20 text-muted-foreground hover:text-primary"
+                      className="h-8 w-8 grid place-items-center rounded-lg transition-all duration-150 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                       title="Видеозвонок"
                     >
                       <Video className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => setShowSearch(!showSearch)}
-                      className={`p-2 rounded-lg transition-colors ${showSearch ? 'bg-primary/20 text-primary' : 'hover:bg-accent/20'}`}
+                      className={`h-8 w-8 grid place-items-center rounded-lg transition-all duration-150 ${showSearch ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'}`}
                       title={t('messages.searchMessages')}
                     >
                       <Search className="w-5 h-5" />
                     </button>
                     <button
                       onClick={loadPinnedMessages}
-                      className={`p-2 rounded-lg transition-colors ${showPinned ? 'bg-primary/20 text-primary' : 'hover:bg-accent/20'}`}
+                      className={`h-8 w-8 grid place-items-center rounded-lg transition-all duration-150 ${showPinned ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'}`}
                       title={t('messages.pinnedMessages')}
                     >
                       <Pin className="w-5 h-5" />
@@ -1089,14 +1085,14 @@ export default function MessagesPage() {
                       placeholder={t('messages.searchInConversation')}
                       className="input-field flex-1 text-sm"
                     />
-                    <button onClick={handleSearch} className="btn-cosmic px-4 py-2 text-sm">{t('messages.search')}</button>
+                    <button onClick={handleSearch} className="bg-primary text-primary-foreground rounded-lg font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 px-4 py-2 text-sm">{t('messages.search')}</button>
                   </div>
                 )}
                 {/* Search results */}
                 {showSearch && searchResults.length > 0 && (
-                  <div className="mt-2 max-h-40 overflow-y-auto bg-card/60 backdrop-blur-sm border border-border/60 rounded-xl custom-scrollbar">
+                  <div className="mt-2 max-h-40 overflow-y-auto bg-card border border-border rounded-xl shadow-soft custom-scrollbar">
                     {searchResults.map((msg) => (
-                      <div key={msg.id} className="p-2 hover:bg-primary/10 cursor-pointer border-b border-border/40 last:border-0 text-sm transition-colors">
+                      <div key={msg.id} className="p-2 hover:bg-accent cursor-pointer border-b border-border last:border-0 text-sm transition-colors duration-150">
                         <p className="truncate">{msg.content}</p>
                         <span className="text-xs text-muted-foreground">{formatTime(msg.created_at)}</span>
                       </div>
@@ -1105,7 +1101,7 @@ export default function MessagesPage() {
                 )}
                 {/* Pinned messages */}
                 {showPinned && pinnedMessages.length > 0 && (
-                  <div className="mt-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2">
+                  <div className="mt-2 bg-warning-soft border border-warning/30 rounded-lg p-2">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium flex items-center gap-1">{t('messages.pinnedMessage')}</span>
                       <button onClick={() => setShowPinned(false)} className="text-xs text-muted-foreground hover:text-foreground">{t('messages.close')}</button>
@@ -1113,7 +1109,7 @@ export default function MessagesPage() {
                     {pinnedMessages.map((msg) => (
                       <div 
                         key={msg.id} 
-                        className="p-2 bg-card/70 rounded-lg text-sm mb-1 last:mb-0 cursor-pointer hover:bg-primary/10 transition-colors"
+                        className="p-2 bg-card rounded-lg text-sm mb-1 last:mb-0 cursor-pointer hover:bg-accent transition-colors duration-150"
                         onClick={() => scrollToMessage(msg.id)}
                       >
                         <p className="truncate opacity-80">{msg.content.substring(0, 100)}{msg.content.length > 100 ? '...' : ''}</p>
@@ -1128,14 +1124,14 @@ export default function MessagesPage() {
                 <div className="flex-1" />
                 {loading ? (
                   <div className="text-center py-12 space-y-4">
-                    <div className="skeleton-cosmic h-16 w-3/4 mx-auto" />
-                    <div className="skeleton-cosmic h-16 w-2/3 mx-auto" />
-                    <div className="skeleton-cosmic h-16 w-4/5 mx-auto" />
+                    <div className="bg-[linear-gradient(90deg,hsl(var(--graphite-100))_25%,hsl(var(--graphite-200))_50%,hsl(var(--graphite-100))_75%)] bg-[length:200%_100%] animate-shimmer-sweep rounded-2xl h-16 w-3/4 mx-auto" />
+                    <div className="bg-[linear-gradient(90deg,hsl(var(--graphite-100))_25%,hsl(var(--graphite-200))_50%,hsl(var(--graphite-100))_75%)] bg-[length:200%_100%] animate-shimmer-sweep rounded-2xl h-16 w-2/3 mx-auto" />
+                    <div className="bg-[linear-gradient(90deg,hsl(var(--graphite-100))_25%,hsl(var(--graphite-200))_50%,hsl(var(--graphite-100))_75%)] bg-[length:200%_100%] animate-shimmer-sweep rounded-2xl h-16 w-4/5 mx-auto" />
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="text-center py-12 animate-fade-in">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-aurora-animated flex items-center justify-center orb-glow">
-                      <MessageSquare className="w-10 h-10 text-white" />
+                  <div className="flex flex-col items-center text-center py-16 px-6 animate-rise-in">
+                    <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center">
+                      <MessageSquare className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
                     </div>
                     <p className="text-muted-foreground">{t('messages.startConversation')}</p>
                   </div>
@@ -1150,12 +1146,12 @@ export default function MessagesPage() {
                         <div
                           key={message.id}
                           ref={el => { if (el) messageRefs.current.set(message.id, el) }}
-                          className="flex justify-center animate-slide-in"
-                          style={{ animationDelay: `${index * 0.03}s` }}
+                          className="flex justify-center animate-rise-in"
+                          style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }}
                         >
-                          <div className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl bg-secondary/40 border border-border/40 text-muted-foreground">
+                          <div className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-full bg-secondary text-muted-foreground">
                             <CallCard content={message.content} />
-                            <span className="text-[11px] text-muted-foreground/70">{formatTime(message.created_at)}</span>
+                            <span className="text-[11px] text-muted-foreground">{formatTime(message.created_at)}</span>
                           </div>
                         </div>
                       )
@@ -1165,21 +1161,21 @@ export default function MessagesPage() {
                       <div
                         key={message.id}
                         ref={el => { if (el) messageRefs.current.set(message.id, el) }}
-                        className={`flex ${isSent ? 'justify-end' : 'justify-start'} animate-slide-in`}
-                        style={{ animationDelay: `${index * 0.03}s` }}
+                        className={`flex ${isSent ? 'justify-end animate-msg-send [transform-origin:bottom_right]' : 'justify-start animate-msg-receive [transform-origin:bottom_left]'}`}
+                        style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }}
                       >
                         <div
-                          className={`message-hoverable max-w-md px-4 py-3 rounded-2xl transition-all duration-300 hover:scale-[1.02] ${
+                          className={`group relative max-w-[65%] px-3.5 py-2 rounded-2xl shadow-soft text-[15px] leading-6 ${
                             isSent
-                              ? 'bg-gradient-brand text-primary-foreground rounded-br-md shadow-soft'
-                              : 'bg-card/80 backdrop-blur-sm border border-border/60 text-card-foreground rounded-bl-md shadow-soft'
+                              ? 'bg-primary text-primary-foreground rounded-br-[6px]'
+                              : 'bg-card border border-border text-card-foreground rounded-bl-[6px]'
                           }`}
                           onContextMenu={(e) => messageContextMenu.showContextMenu(e, getMessageContextMenuItems(message))}
                         >
                           {/* Quick action buttons - shown on hover */}
-                          <div className="message-actions">
+                          <div className="absolute -top-3 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                             <button
-                              className="message-action-btn"
+                              className="h-7 w-7 grid place-items-center rounded-lg border border-border bg-card shadow-soft text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-150"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 messageContextMenu.showContextMenu(e as any, getMessageContextMenuItems(message));
@@ -1192,7 +1188,7 @@ export default function MessagesPage() {
 
                           {/* Forwarded indicator */}
                           {message.forwarded_from_id && (
-                            <div className={`flex items-center gap-1 mb-1 text-xs ${isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                            <div className={`flex items-center gap-1 mb-1 text-xs ${isSent ? 'text-emerald-100/80' : 'text-muted-foreground'}`}>
                               <Forward className="w-3 h-3" />
                               <span>{t('messages.forwarded')}</span>
                             </div>
@@ -1202,11 +1198,11 @@ export default function MessagesPage() {
                           {message.reply_to_id && (() => {
                             const repliedMessage = message.reply_to || messages.find(m => parseInt(m.id) === message.reply_to_id)
                             return (
-                              <div className={`mb-2 p-2 rounded-lg border-l-2 ${isSent ? 'bg-white/10 border-white/30' : 'bg-secondary/80 border-primary/40'}`}>
-                                <p className={`text-xs font-medium ${isSent ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                              <div className={`mb-2 p-2 rounded-lg border-l-2 ${isSent ? 'bg-white/10 border-white/30' : 'bg-accent/50 border-primary'}`}>
+                                <p className={`text-xs font-medium ${isSent ? 'text-emerald-100' : 'text-muted-foreground'}`}>
                                   {repliedMessage ? (String(repliedMessage.sender_id) === String(user?.id) ? 'You' : selectedUser?.username) : 'Message'}
                                 </p>
-                                <p className={`text-xs truncate ${isSent ? 'text-primary-foreground/60' : 'text-muted-foreground/80'}`}>
+                                <p className={`text-xs truncate ${isSent ? 'text-emerald-100/60' : 'text-muted-foreground'}`}>
                                   {repliedMessage?.voice_url
                                     ? '🎤 Voice message'
                                     : repliedMessage?.type === 'call' || repliedMessage?.message_type === 'call'
@@ -1219,7 +1215,7 @@ export default function MessagesPage() {
 
                           {/* Pinned indicator */}
                           {message.is_pinned && (
-                            <div className={`flex items-center gap-1 mb-1 text-xs ${isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                            <div className={`flex items-center gap-1 mb-1 text-xs ${isSent ? 'text-emerald-100/80' : 'text-muted-foreground'}`}>
                               <span>{t('messages.pinned')}</span>
                             </div>
                           )}
@@ -1232,16 +1228,16 @@ export default function MessagesPage() {
                           )}
 
                           <div className="flex items-center gap-1 mt-1">
-                            <p className={`text-xs ${isSent ? 'text-primary-foreground/70' : 'text-muted-foreground/70'}`}>
+                            <p className={`text-[11px] ${isSent ? 'text-emerald-100/80' : 'text-muted-foreground'}`}>
                               {formatTime(message.created_at)}
                             </p>
                             {message.edited && (
-                              <span className={`text-xs ${isSent ? 'text-primary-foreground/50' : 'text-muted-foreground/50'}`}>
+                              <span className={`text-[11px] ${isSent ? 'text-emerald-100/60' : 'text-muted-foreground'}`}>
                                 (edited)
                               </span>
                             )}
                             {isSent && (
-                              <CheckCheck className="w-3 h-3 text-primary-foreground/70" />
+                              <CheckCheck className="w-3 h-3 text-emerald-300" />
                             )}
                           </div>
                         </div>
@@ -1253,12 +1249,12 @@ export default function MessagesPage() {
                 {typingUsers.length > 0 && (
                   <div className="px-4 py-2 flex items-center gap-2 text-muted-foreground text-sm">
                     {typingUsers.some(u => u.status === 'recording_voice') ? (
-                      <Mic className="w-4 h-4 text-red-500 animate-pulse" />
+                      <Mic className="w-4 h-4 text-destructive animate-pulse" />
                     ) : (
                       <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="w-2 h-2 bg-graphite-400 rounded-full animate-typing-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-2 h-2 bg-graphite-400 rounded-full animate-typing-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-2 h-2 bg-graphite-400 rounded-full animate-typing-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
                     )}
                     <span>
@@ -1273,10 +1269,10 @@ export default function MessagesPage() {
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t border-border/60 bg-card/70 backdrop-blur-xl">
+              <div className="p-3 border-t border-border bg-card">
                 {/* Reply/Edit indicator */}
                 {(replyingTo || editingMessage) && (
-                  <div className="mb-3 p-3 bg-primary/10 border-l-4 border-l-primary rounded-lg flex items-center justify-between">
+                  <div className="mb-3 px-3 py-1.5 bg-accent/50 border-l-2 border-primary rounded-r-lg flex items-center justify-between animate-rise-in text-sm">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         {editingMessage ? (
@@ -1298,7 +1294,7 @@ export default function MessagesPage() {
                         setEditingMessage(null)
                         setNewMessage('')
                       }}
-                      className="p-1 hover:bg-accent/20 rounded transition-colors"
+                      className="p-1 hover:bg-accent rounded transition-colors duration-150"
                     >
                       <Trash2 className="w-4 h-4 text-muted-foreground" />
                     </button>
@@ -1307,22 +1303,22 @@ export default function MessagesPage() {
 
                 <div className="flex gap-3 items-center">
                   {isRecording ? (
-                    <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500 rounded-lg">
-                      <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                      <span className="text-red-500 font-medium">{t('messages.recording')} {formatRecordingTime(recordingTime)}</span>
+                    <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-danger-soft border border-destructive/30 rounded-lg">
+                      <div className="w-3 h-3 rounded-full bg-destructive animate-pulse" />
+                      <span className="text-destructive font-medium">{t('messages.recording')} {formatRecordingTime(recordingTime)}</span>
                       <div className="flex-1" />
                       <button
                         onClick={stopRecording}
-                        className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition"
+                        className="p-2 rounded-full bg-destructive text-destructive-foreground hover:bg-[hsl(0_72%_38%)] transition-all duration-150 active:scale-[0.97]"
                       >
                         <Square className="w-4 h-4" />
                       </button>
                     </div>
                   ) : voicePreview ? (
-                    <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-primary/10 border border-primary rounded-lg">
+                    <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-accent border border-emerald-200 rounded-lg">
                       <button
                         onClick={togglePlayVoicePreview}
-                        className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/80 transition"
+                        className="p-2 rounded-full bg-primary text-primary-foreground hover:bg-emerald-800 transition-all duration-150 active:scale-[0.97]"
                       >
                         {playingVoice === 'preview' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </button>
@@ -1334,14 +1330,14 @@ export default function MessagesPage() {
                       </div>
                       <button
                         onClick={cancelVoicePreview}
-                        className="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition"
+                        className="p-2 rounded-lg hover:bg-danger-soft text-destructive transition-all duration-150"
                         title={t('messages.cancel')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={sendVoiceMessage}
-                        className="btn-cosmic px-4"
+                        className="bg-primary text-primary-foreground rounded-lg font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 px-4 py-2"
                       >
                         <Send className="w-4 h-4" />
                       </button>
@@ -1350,7 +1346,7 @@ export default function MessagesPage() {
                     <>
                       <button
                         onClick={startRecording}
-                        className="p-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                        className="p-3 rounded-xl text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150"
                         title={t('messages.voiceMessage')}
                       >
                         <Mic className="w-5 h-5" />
@@ -1369,10 +1365,10 @@ export default function MessagesPage() {
                         }}
                         placeholder={editingMessage ? 'Edit your message...' : 'Type a message...'}
                         rows={1}
-                        className="flex-1 px-4 py-3 bg-card/60 backdrop-blur-sm border border-border rounded-xl resize-none
-                                  text-foreground placeholder:text-muted-foreground
-                                  focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary/60
-                                  transition-all duration-200 hover:border-primary/50"
+                        className="flex-1 px-4 py-3 bg-secondary border-0 rounded-xl resize-none min-h-[44px] max-h-[160px]
+                                  text-foreground placeholder:text-graphite-400
+                                  focus:outline-none focus:ring-4 focus:ring-emerald-600/10
+                                  transition-all duration-150"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -1383,7 +1379,7 @@ export default function MessagesPage() {
                       <button
                         onClick={handleSendMessage}
                         disabled={!newMessage.trim()}
-                        className="btn-cosmic px-6"
+                        className="bg-primary text-primary-foreground rounded-lg font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none px-6 py-2.5"
                       >
                         <Send className="w-5 h-5" />
                       </button>
@@ -1393,13 +1389,13 @@ export default function MessagesPage() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center animate-fade-in">
-              <div className="text-center">
-                <div className="w-24 h-24 mx-auto mb-6 rounded-full gradient-cosmic-rainbow-animated flex items-center justify-center orb-glow">
-                  <MessageSquare className="w-12 h-12 text-white" />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex flex-col items-center text-center py-16 px-6 animate-rise-in">
+                <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center">
+                  <MessageSquare className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
                 </div>
-                <p className="text-muted-foreground text-lg font-medium mb-2">{t('messages.welcome')}</p>
-                <p className="text-muted-foreground/70 text-sm">{t('messages.selectConversation')}</p>
+                <p className="text-lg font-semibold text-graphite-900 mt-4">{t('messages.welcome')}</p>
+                <p className="text-sm text-muted-foreground max-w-[320px] mt-1">{t('messages.selectConversation')}</p>
               </div>
             </div>
           )}
@@ -1430,12 +1426,12 @@ export default function MessagesPage() {
 
       {/* Forward Message Modal */}
       {forwardingMessage && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="glass-strong rounded-2xl max-w-md w-full p-6 animate-fade-in">
+        <div className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] z-50 flex items-center justify-center p-4 animate-fade-in-soft">
+          <div className="rounded-2xl border border-border bg-card shadow-pop max-w-md w-full p-6 animate-scale-in">
             <h3 className="text-lg font-semibold tracking-tight mb-4 flex items-center gap-2">
               <Forward className="w-5 h-5 text-primary" /> Forward Message
             </h3>
-            <p className="text-sm text-muted-foreground mb-4 p-3 bg-secondary/60 rounded-xl truncate">
+            <p className="text-sm text-muted-foreground mb-4 p-3 bg-secondary rounded-xl truncate">
               {forwardingMessage.content}
             </p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -1446,7 +1442,7 @@ export default function MessagesPage() {
                   <button
                     key={friend.id}
                     onClick={() => handleForwardMessage(friend.id)}
-                    className="w-full p-3 flex items-center gap-3 hover:bg-primary/10 rounded-xl transition-colors"
+                    className="w-full p-3 flex items-center gap-3 hover:bg-accent rounded-xl transition-all duration-150"
                   >
                     <Avatar src={friend.avatar} alt={friend.username} size="sm" />
                     <span className="font-medium">{friend.alias || friend.username}</span>
@@ -1456,7 +1452,7 @@ export default function MessagesPage() {
             </div>
             <button
               onClick={() => setForwardingMessage(null)}
-              className="mt-4 w-full py-2 border border-border rounded-xl hover:bg-secondary transition-colors"
+              className="mt-4 w-full py-2 border border-input bg-card rounded-xl hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150"
             >
               {t('messages.cancelDelete')}
             </button>
@@ -1489,8 +1485,8 @@ export default function MessagesPage() {
         variant="danger"
       />
       {showCreateGroup && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="glass-strong rounded-2xl w-full max-w-md p-6 animate-fade-in">
+        <div className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] z-50 flex items-center justify-center p-4 animate-fade-in-soft">
+          <div className="rounded-2xl border border-border bg-card shadow-pop w-full max-w-md p-6 animate-scale-in">
             <h3 className="text-lg font-semibold tracking-tight mb-4">Создать групповой чат</h3>
             <input
               value={newGroupName}
@@ -1501,7 +1497,7 @@ export default function MessagesPage() {
             <div className="text-sm text-muted-foreground mb-2">Выберите участников:</div>
             <div className="max-h-48 overflow-y-auto space-y-1 mb-4">
               {conversations.map((conv: any) => (
-                <label key={conv.user.id} className="flex items-center gap-3 p-2 hover:bg-primary/10 rounded-lg cursor-pointer transition-colors">
+                <label key={conv.user.id} className="flex items-center gap-3 p-2 hover:bg-accent rounded-lg cursor-pointer transition-colors duration-150">
                   <input
                     type="checkbox"
                     checked={selectedParticipants.includes(conv.user.id)}
@@ -1528,7 +1524,7 @@ export default function MessagesPage() {
               <button
                 onClick={createGroupDM}
                 disabled={!newGroupName.trim() || selectedParticipants.length === 0}
-                className="px-4 py-2 bg-primary hover:bg-primary/80 text-primary-foreground text-sm rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-primary hover:bg-emerald-800 hover:shadow-lg-brand text-primary-foreground text-sm rounded-lg font-medium shadow-soft transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
               >
                 Создать
               </button>

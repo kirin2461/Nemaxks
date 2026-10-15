@@ -1340,23 +1340,23 @@ export default function VideoCallPage() {
 
   const getSignalIcon = () => {
     switch (networkStats.quality) {
-      case 'excellent': return <SignalHigh className="w-4 h-4 text-green-500" />
-      case 'good': return <SignalMedium className="w-4 h-4 text-green-400" />
-      case 'fair': return <SignalLow className="w-4 h-4 text-yellow-500" />
-      case 'poor': return <Signal className="w-4 h-4 text-red-500" />
+      case 'excellent': return <SignalHigh className="w-4 h-4 text-emerald-600" />
+      case 'good': return <SignalMedium className="w-4 h-4 text-emerald-600" />
+      case 'fair': return <SignalLow className="w-4 h-4 text-warning" />
+      case 'poor': return <Signal className="w-4 h-4 text-destructive" />
     }
   }
 
   return (
     <Layout>
-      <div ref={containerRef} className="min-h-screen bg-nebula">
+      <div ref={containerRef} className="min-h-screen bg-background">
         {callState === 'idle' && (
           <div className="p-6 max-w-4xl mx-auto">
             <h1 className="text-3xl font-bold mb-6 tracking-tight">
-              <span className="gradient-brand-text">Звонки</span>
+              <span className="font-display tracking-[-0.02em] text-graphite-900">Звонки</span>
             </h1>
             
-            <div className="glass rounded-2xl p-6 mb-6">
+            <div className="rounded-xl border border-border bg-card shadow-soft p-6 mb-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 tracking-tight">
                 <Users className="w-5 h-5 text-primary" />
                 Друзья
@@ -1368,11 +1368,11 @@ export default function VideoCallPage() {
                   {friends.map((friend) => (
                     <div
                       key={friend.id}
-                      className="p-4 rounded-xl bg-secondary/40 border border-border/50 flex items-center justify-between hover:bg-secondary/60 hover:border-primary/30 transition-all"
+                      className="p-4 rounded-xl border border-border bg-card shadow-soft flex items-center justify-between hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150"
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="w-12 h-12 rounded-full bg-gradient-brand flex items-center justify-center text-white font-bold shadow-soft">
+                          <div className="w-12 h-12 rounded-full bg-emerald-700 flex items-center justify-center text-white font-semibold shadow-soft ring-1 ring-border">
                             {friend.avatar ? (
                               <img src={friend.avatar} alt={friend.username} className="w-full h-full rounded-full object-cover" />
                             ) : (
@@ -1381,7 +1381,7 @@ export default function VideoCallPage() {
                           </div>
                           <span className={cn(
                             "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background",
-                            friend.status === 'online' ? 'bg-green-500' : 'bg-gray-500'
+                            friend.status === 'online' ? 'bg-online' : 'bg-offline'
                           )} />
                         </div>
                         <div>
@@ -1392,14 +1392,14 @@ export default function VideoCallPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => startCall(friend)}
-                          className="p-3 rounded-full bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-green-500/30"
+                          className="p-3 rounded-full bg-accent text-emerald-700 hover:bg-primary hover:text-primary-foreground transition-all duration-150 hover:shadow-lg-brand active:scale-[0.97]"
                           title="Видеозвонок"
                         >
                           <Video className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => startCall(friend)}
-                          className="p-3 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white transition-all hover:scale-105 hover:shadow-glow"
+                          className="p-3 rounded-full bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-150 hover:shadow-lg-brand active:scale-[0.97]"
                           title="Аудиозвонок"
                         >
                           <Phone className="w-5 h-5" />
@@ -1411,7 +1411,7 @@ export default function VideoCallPage() {
               )}
             </div>
 
-            <div className="glass rounded-2xl p-6">
+            <div className="rounded-xl border border-border bg-card shadow-soft p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 tracking-tight">
                 <Phone className="w-5 h-5 text-primary" />
                 История звонков
@@ -1434,10 +1434,10 @@ export default function VideoCallPage() {
                     return (
                       <div
                         key={call.id}
-                        className="p-4 rounded-xl bg-secondary/40 border border-border/50 flex items-center justify-between hover:bg-secondary/60 hover:border-primary/30 transition-all"
+                        className="p-4 rounded-xl border border-border bg-card shadow-soft flex items-center justify-between hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 transition-all duration-150"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0">
                             {isDm ? (
                               <PhoneCall className="w-5 h-5 text-primary" />
                             ) : (
@@ -1450,7 +1450,7 @@ export default function VideoCallPage() {
                               <span>{formatCallDate(call.started_at)}</span>
                               <span>•</span>
                               {call.status === 'ongoing' ? (
-                                <span className="text-green-500">идёт</span>
+                                <span className="text-emerald-600">идёт</span>
                               ) : (
                                 <span>{formatDuration(call.duration_sec)}</span>
                               )}
@@ -1464,7 +1464,7 @@ export default function VideoCallPage() {
                                 <div
                                   key={p.id}
                                   title={p.username}
-                                  className="w-8 h-8 rounded-full bg-gradient-brand border-2 border-background flex items-center justify-center text-white text-xs font-bold overflow-hidden"
+                                  className="w-8 h-8 rounded-full bg-emerald-700 border-2 border-card flex items-center justify-center text-white text-xs font-semibold overflow-hidden"
                                 >
                                   {p.avatar ? (
                                     <img src={p.avatar} alt={p.username} className="w-full h-full object-cover" />
@@ -1483,7 +1483,7 @@ export default function VideoCallPage() {
                           {isDm && friend && (
                             <button
                               onClick={() => startCall(friend)}
-                              className="p-2.5 rounded-full bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-green-500/30"
+                              className="p-2.5 rounded-full bg-accent text-emerald-700 hover:bg-primary hover:text-primary-foreground transition-all duration-150 hover:shadow-lg-brand active:scale-[0.97]"
                               title="Перезвонить"
                             >
                               <PhoneCall className="w-4 h-4" />
@@ -1502,14 +1502,17 @@ export default function VideoCallPage() {
         {callState === 'calling' && (
           <div className="h-dvh flex flex-col items-center justify-center">
             <div className="text-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-brand glow flex items-center justify-center text-white text-4xl font-bold mx-auto mb-6 animate-pulse">
-                {selectedFriend?.username?.charAt(0).toUpperCase()}
+              <div className="relative w-32 h-32 mx-auto mb-6">
+                <span className="absolute inset-0 rounded-full bg-emerald-500/40 animate-pulse-ring" />
+                <div className="relative w-32 h-32 rounded-full bg-emerald-700 flex items-center justify-center text-white text-4xl font-semibold shadow-elev">
+                  {selectedFriend?.username?.charAt(0).toUpperCase()}
+                </div>
               </div>
               <h2 className="text-2xl font-bold mb-2 tracking-tight">{selectedFriend?.username}</h2>
               <p className="text-muted-foreground mb-8">Вызов...</p>
               <button
                 onClick={endCall}
-                className="p-4 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-110 shadow-lg shadow-red-500/40"
+                className="h-12 w-12 grid place-items-center rounded-full bg-destructive text-destructive-foreground hover:bg-[hsl(0_72%_38%)] transition-all duration-150 active:scale-[0.97] shadow-elev"
               >
                 <PhoneOff className="w-8 h-8" />
               </button>
@@ -1520,21 +1523,24 @@ export default function VideoCallPage() {
         {callState === 'ringing' && (
           <div className="h-dvh flex flex-col items-center justify-center">
             <div className="text-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-brand glow flex items-center justify-center text-white text-4xl font-bold mx-auto mb-6 pulse-call">
-                {selectedFriend?.username?.charAt(0).toUpperCase()}
+              <div className="relative w-32 h-32 mx-auto mb-6 animate-scale-in">
+                <span className="absolute inset-0 rounded-full bg-emerald-500/40 animate-pulse-ring" />
+                <div className="relative w-32 h-32 rounded-full bg-emerald-700 flex items-center justify-center text-white text-4xl font-semibold shadow-elev">
+                  {selectedFriend?.username?.charAt(0).toUpperCase()}
+                </div>
               </div>
               <h2 className="text-2xl font-bold mb-2 tracking-tight">{selectedFriend?.username}</h2>
               <p className="text-muted-foreground mb-8">Входящий звонок</p>
               <div className="flex gap-6">
                 <button
                   onClick={rejectCall}
-                  className="p-4 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-110 shadow-lg shadow-red-500/40"
+                  className="h-12 w-12 grid place-items-center rounded-full bg-destructive text-destructive-foreground hover:bg-[hsl(0_72%_38%)] transition-all duration-150 active:scale-[0.97] shadow-elev"
                 >
                   <PhoneOff className="w-8 h-8" />
                 </button>
                 <button
                   onClick={acceptCall}
-                  className="p-4 rounded-full bg-green-500 hover:bg-green-600 text-white transition-all hover:scale-110 shadow-lg shadow-green-500/40"
+                  className="h-12 w-12 grid place-items-center rounded-full bg-primary text-primary-foreground hover:bg-emerald-800 hover:shadow-lg-brand transition-all duration-150 active:scale-[0.97] shadow-elev"
                 >
                   <Phone className="w-8 h-8" />
                 </button>
@@ -1546,25 +1552,25 @@ export default function VideoCallPage() {
         {(callState === 'connected' || callState === 'ended') && (
           // relative — обязательно: absolute-оверлеи позиционируются от этого контейнера,
           // h-dvh (100dvh) — корректная высота на мобильных с динамической адресной строкой
-          <div className="relative h-dvh flex flex-col bg-black">
+          <div className="relative h-dvh flex flex-col bg-graphite-950">
             <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
               <div className="flex items-center gap-4">
-                <div className="bg-black/50 backdrop-blur-md border border-white/10 rounded-xl shadow-lg-brand px-3 py-2 flex items-center gap-2">
+                <div className="bg-graphite-950/60 border border-white/10 rounded-xl shadow-pop px-3 py-2 flex items-center gap-2">
                   {getSignalIcon()}
                   <span className="text-white text-sm">{currentQuality}</span>
                 </div>
-                <div className="bg-black/50 backdrop-blur-md border border-white/10 rounded-xl shadow-lg-brand px-3 py-2">
+                <div className="bg-graphite-950/60 border border-white/10 rounded-xl shadow-pop px-3 py-2">
                   <span className="text-white text-sm font-mono">{formatDuration(callDuration)}</span>
                 </div>
                 {isScreenSharing && (
-                  <div className="bg-gradient-brand rounded-xl shadow-glow px-3 py-2 flex items-center gap-2 animate-pulse">
+                  <div className="bg-emerald-600 rounded-xl shadow-pop px-3 py-2 flex items-center gap-2">
                     <Monitor className="w-4 h-4 text-white" />
                     <span className="text-white text-sm font-medium">Вы демонстрируете экран</span>
                   </div>
                 )}
-                <div className="bg-black/50 backdrop-blur-md border border-white/10 rounded-xl shadow-lg-brand px-3 py-2 flex items-center gap-3">
+                <div className="bg-graphite-950/60 border border-white/10 rounded-xl shadow-pop px-3 py-2 flex items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400 text-xs">Вы:</span>
+                    <span className="text-white/60 text-xs">Вы:</span>
                     <AudioLevelIndicator 
                       stream={localStreamRef.current} 
                       isActive={!isMuted}
@@ -1572,9 +1578,9 @@ export default function VideoCallPage() {
                     />
                     {isMuted && <MicOff className="w-3 h-3 text-red-400" />}
                   </div>
-                  <div className="w-px h-4 bg-gray-600" />
+                  <div className="w-px h-4 bg-white/20" />
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400 text-xs">Собеседник:</span>
+                    <span className="text-white/60 text-xs">Собеседник:</span>
                     {remoteMuted ? (
                       <MicOff className="w-3 h-3 text-red-400" />
                     ) : (
@@ -1593,7 +1599,7 @@ export default function VideoCallPage() {
                   onClick={() => setShowAudioLogs(!showAudioLogs)}
                   className={cn(
                     "p-2 rounded-xl transition-all",
-                    showAudioLogs ? "bg-gradient-brand text-white shadow-glow" : "bg-black/50 backdrop-blur-md border border-white/10 hover:bg-black/70 hover:shadow-glow text-white"
+                    showAudioLogs ? "bg-emerald-600 text-white" : "bg-graphite-950/60 border border-white/10 hover:bg-graphite-800 text-white"
                   )}
                   title="Логи аудио"
                 >
@@ -1601,13 +1607,13 @@ export default function VideoCallPage() {
                 </button>
                 <button
                   onClick={() => setShowSettings(!showSettings)}
-                  className="p-2 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 hover:bg-black/70 hover:shadow-glow text-white transition-all"
+                  className="p-2 rounded-xl bg-graphite-950/60 border border-white/10 hover:bg-graphite-800 text-white transition-all duration-150"
                 >
                   <Settings className="w-5 h-5" />
                 </button>
                 <button
                   onClick={toggleFullscreen}
-                  className="p-2 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 hover:bg-black/70 hover:shadow-glow text-white transition-all"
+                  className="p-2 rounded-xl bg-graphite-950/60 border border-white/10 hover:bg-graphite-800 text-white transition-all duration-150"
                 >
                   {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
                 </button>
@@ -1625,16 +1631,16 @@ export default function VideoCallPage() {
 
               {/* Аудиозвонок / камера собеседника выключена: вместо чёрного экрана — аватар */}
               {!remoteVideoStream && callState === 'connected' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-nebula">
-                  <div className="w-28 h-28 rounded-full bg-gradient-brand glow flex items-center justify-center text-white text-4xl font-bold mb-4 overflow-hidden">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-graphite-950">
+                  <div className="w-28 h-28 rounded-full bg-emerald-700 flex items-center justify-center text-white text-4xl font-semibold mb-4 overflow-hidden ring-1 ring-white/10">
                     {selectedFriend?.avatar ? (
                       <img src={selectedFriend.avatar} alt={selectedFriend.username} className="w-full h-full object-cover" />
                     ) : (
                       selectedFriend?.username?.charAt(0).toUpperCase()
                     )}
                   </div>
-                  <h2 className="text-xl font-bold tracking-tight">{selectedFriend?.username}</h2>
-                  <p className="text-muted-foreground text-sm mt-1">
+                  <h2 className="text-xl font-bold tracking-tight text-white">{selectedFriend?.username}</h2>
+                  <p className="text-white/70 text-sm mt-1">
                     {callMode === 'audio' ? 'Аудиозвонок' : 'Камера выключена'}
                   </p>
                 </div>
@@ -1646,11 +1652,11 @@ export default function VideoCallPage() {
                   autoPlay
                   playsInline
                   muted
-                  className="absolute inset-0 w-full h-full object-contain bg-black"
+                  className="absolute inset-0 w-full h-full object-contain bg-graphite-950"
                 />
               )}
 
-              <div className="absolute bottom-24 right-4 w-48 aspect-video rounded-xl overflow-hidden border border-white/20 shadow-lg-brand">
+              <div className="absolute bottom-24 right-4 w-48 aspect-video rounded-xl overflow-hidden border border-white/20 shadow-pop">
                 <video
                   ref={localVideoRef}
                   autoPlay
@@ -1662,30 +1668,30 @@ export default function VideoCallPage() {
                   )}
                 />
                 {!isVideoOn && (
-                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                    <VideoOff className="w-8 h-8 text-gray-500" />
+                  <div className="w-full h-full bg-graphite-800 flex items-center justify-center">
+                    <VideoOff className="w-8 h-8 text-graphite-400" />
                   </div>
                 )}
               </div>
 
               {callState === 'ended' && (
-                <div className="absolute inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center">
-                  <div className="text-center text-white bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg-brand px-10 py-8">
-                    <PhoneOff className="w-16 h-16 mx-auto mb-4 text-red-500" />
+                <div className="absolute inset-0 bg-graphite-950/70 flex items-center justify-center">
+                  <div className="text-center text-white bg-graphite-900 border border-white/10 rounded-2xl shadow-pop px-10 py-8 animate-scale-in">
+                    <PhoneOff className="w-16 h-16 mx-auto mb-4 text-destructive" />
                     <h2 className="text-2xl font-bold mb-2 tracking-tight">Звонок завершён</h2>
-                    <p className="text-muted-foreground">Длительность: {formatDuration(callDuration)}</p>
+                    <p className="text-white/70">Длительность: {formatDuration(callDuration)}</p>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+            <div className="absolute bottom-0 left-0 right-0 p-4 z-10 animate-drawer-up">
               <div className="flex items-center justify-center gap-4">
                 <button
                   onClick={toggleMute}
                   className={cn(
-                    "p-4 rounded-full transition-all hover:scale-105",
-                    isMuted ? "bg-red-500 text-white shadow-lg shadow-red-500/40" : "bg-white/10 backdrop-blur-md border border-white/15 text-white hover:bg-white/20 hover:shadow-glow"
+                    "h-12 w-12 grid place-items-center rounded-full transition-all duration-150 active:scale-[0.97]",
+                    isMuted ? "bg-white text-graphite-900" : "bg-graphite-800 text-white hover:bg-graphite-700"
                   )}
                   title={isMuted ? "Включить микрофон" : "Выключить микрофон"}
                 >
@@ -1694,8 +1700,8 @@ export default function VideoCallPage() {
                 <button
                   onClick={toggleVideo}
                   className={cn(
-                    "p-4 rounded-full transition-all hover:scale-105",
-                    !isVideoOn ? "bg-red-500 text-white shadow-lg shadow-red-500/40" : "bg-white/10 backdrop-blur-md border border-white/15 text-white hover:bg-white/20 hover:shadow-glow"
+                    "h-12 w-12 grid place-items-center rounded-full transition-all duration-150 active:scale-[0.97]",
+                    !isVideoOn ? "bg-white text-graphite-900" : "bg-graphite-800 text-white hover:bg-graphite-700"
                   )}
                   title={isVideoOn ? "Выключить камеру" : "Включить камеру"}
                 >
@@ -1704,8 +1710,8 @@ export default function VideoCallPage() {
                 <button
                   onClick={toggleScreenShare}
                   className={cn(
-                    "p-4 rounded-full transition-all hover:scale-105",
-                    isScreenSharing ? "bg-gradient-brand text-white shadow-glow" : "bg-white/10 backdrop-blur-md border border-white/15 text-white hover:bg-white/20 hover:shadow-glow"
+                    "h-12 w-12 grid place-items-center rounded-full transition-all duration-150 active:scale-[0.97]",
+                    isScreenSharing ? "bg-emerald-600 text-white" : "bg-graphite-800 text-white hover:bg-graphite-700"
                   )}
                   title={isScreenSharing ? "Остановить демонстрацию" : "Демонстрация экрана"}
                 >
@@ -1713,7 +1719,7 @@ export default function VideoCallPage() {
                 </button>
                 <button
                   onClick={endCall}
-                  className="p-4 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-110 shadow-lg shadow-red-500/40"
+                  className="h-12 w-12 grid place-items-center rounded-full bg-destructive text-destructive-foreground hover:bg-[hsl(0_72%_38%)] transition-all duration-150 active:scale-[0.97] shadow-elev"
                   title="Завершить звонок"
                 >
                   <PhoneOff className="w-6 h-6" />
@@ -1722,11 +1728,11 @@ export default function VideoCallPage() {
             </div>
 
             {showSettings && (
-              <div className="absolute top-16 right-4 w-72 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-lg-brand p-4 z-20">
+              <div className="absolute top-16 right-4 w-72 bg-graphite-900 border border-white/10 rounded-2xl shadow-pop p-4 z-20 animate-pop-menu">
                 <h3 className="font-semibold text-white mb-4 tracking-tight">Настройки</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm text-gray-400 block mb-2">Качество видео</label>
+                    <label className="text-sm text-white/60 block mb-2">Качество видео</label>
                     <div className="flex gap-2">
                       {(['720p', '480p', '360p', '240p'] as VideoQuality[]).map((q) => (
                         <button
@@ -1737,7 +1743,7 @@ export default function VideoCallPage() {
                           }}
                           className={cn(
                             "px-2.5 py-1 rounded-full text-xs font-medium transition-all",
-                            currentQuality === q ? "bg-gradient-brand text-white shadow-glow" : "bg-white/10 text-white hover:bg-white/20"
+                            currentQuality === q ? "bg-emerald-600 text-white" : "bg-white/10 text-white hover:bg-white/20"
                           )}
                         >
                           {q}
@@ -1746,13 +1752,13 @@ export default function VideoCallPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-400 block mb-2">Статистика сети</label>
+                    <label className="text-sm text-white/60 block mb-2">Статистика сети</label>
                     <div className="space-y-1 text-sm text-white">
                       <p>Качество: <span className={cn(
-                        networkStats.quality === 'excellent' && 'text-green-500',
-                        networkStats.quality === 'good' && 'text-green-400',
-                        networkStats.quality === 'fair' && 'text-yellow-500',
-                        networkStats.quality === 'poor' && 'text-red-500'
+                        networkStats.quality === 'excellent' && 'text-emerald-400',
+                        networkStats.quality === 'good' && 'text-emerald-400',
+                        networkStats.quality === 'fair' && 'text-amber-400',
+                        networkStats.quality === 'poor' && 'text-red-400'
                       )}>{networkStats.quality}</span></p>
                       <p>Битрейт: {(networkStats.bitrate / 1000000).toFixed(1)} Мбит/с</p>
                       <p>Потеря пакетов: {networkStats.packetLoss.toFixed(1)}%</p>
@@ -1773,7 +1779,7 @@ export default function VideoCallPage() {
             )}
 
             {(remoteMuted || remoteVideoOff) && callState === 'connected' && (
-              <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full shadow-lg-brand px-4 py-2 flex items-center gap-3 z-10">
+              <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-graphite-950/60 border border-white/10 rounded-full shadow-pop px-4 py-2 flex items-center gap-3 z-10">
                 {remoteMuted && (
                   <div className="flex items-center gap-2 text-red-400">
                     <MicOff className="w-4 h-4" />
