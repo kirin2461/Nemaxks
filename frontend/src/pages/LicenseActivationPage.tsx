@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
-import { Key, Check, Shield, Ban, Sparkles, Clock, Star, Crown } from 'lucide-react';
+import { Key, Check, Shield, Ban, Sparkles, Clock, Star, Crown, Loader2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 
 interface LicensePricing {
@@ -143,77 +143,76 @@ export default function LicenseActivationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-nebula text-foreground">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative z-10 container mx-auto px-3 sm:px-4 py-6 sm:py-12">
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6 sm:mb-12"
+          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center mb-8 sm:mb-12"
         >
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <Key className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
-            <h1 className="text-2xl sm:text-4xl font-bold gradient-brand-text">Активация лицензии</h1>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-12 w-12 rounded-xl bg-accent grid place-items-center">
+              <Key className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
+            </div>
           </div>
-          <p className="text-muted-foreground text-sm sm:text-lg max-w-2xl mx-auto px-2">
+          <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-[-0.025em] text-graphite-900">Активация лицензии</h1>
+          <p className="text-muted-foreground text-sm sm:text-lg max-w-2xl mx-auto px-2 mt-3">
             Для доступа к платформе Nebula необходима действующая лицензия.
             Выберите подходящий тариф или активируйте имеющийся ключ.
           </p>
         </motion.div>
 
-        <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
+        <div className="max-w-[440px] mx-auto space-y-6 sm:space-y-8">
           {/* Ввод ключа - первым */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="glass-strong rounded-xl sm:rounded-2xl p-4 sm:p-8"
+            transition={{ duration: 0.32, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="rounded-xl border border-border bg-card shadow-soft p-5 sm:p-8"
           >
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
-              <Key className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            <h2 className="text-lg sm:text-xl font-display font-bold text-graphite-900 mb-4 sm:mb-6 flex items-center gap-2">
+              <Key className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
               Активировать ключ
             </h2>
 
-            <p className="text-muted-foreground text-sm sm:text-base mb-4 sm:mb-6">
+            <p className="text-muted-foreground text-sm mb-4 sm:mb-6">
               Если у вас уже есть ключ лицензии, введите его ниже для активации.
             </p>
 
             {/* Тестовый ключ */}
-            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-primary/10 rounded-lg sm:rounded-xl border border-primary/30">
-              <p className="text-xs sm:text-sm text-foreground mb-2">
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-accent rounded-lg border border-emerald-200">
+              <p className="text-xs sm:text-sm text-accent-foreground mb-2">
                 Пробный ключ (25 дней Premium, однократная активация):
               </p>
               <button
                 onClick={() => setLicenseKey('NEMKS-TEST0-TEST0-TEST0')}
-                className="w-full py-2 sm:py-3 bg-background/50 hover:bg-primary/10 rounded-lg font-mono text-sm sm:text-lg text-primary tracking-wider transition-all flex items-center justify-center gap-2"
+                className="w-full py-2 sm:py-3 bg-card hover:bg-emerald-100 rounded-lg border border-emerald-200 font-mono text-sm sm:text-base text-primary tracking-[0.15em] transition-all duration-150 flex items-center justify-center gap-2"
               >
                 <span>NEMKS-TEST0-TEST0-TEST0</span>
-                <span className="text-xs text-muted-foreground">(нажмите для вставки)</span>
+                <span className="text-xs text-muted-foreground font-sans tracking-normal">(нажмите для вставки)</span>
               </button>
             </div>
 
             <div className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-xs sm:text-sm text-muted-foreground mb-2">Ключ лицензии</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Ключ лицензии</label>
                 <input
                   type="text"
                   value={licenseKey}
                   onChange={handleKeyChange}
                   placeholder="NEMKS-XXXXX-XXXXX-XXXXX"
                   maxLength={23}
-                  className="input-field !rounded-lg sm:!rounded-xl text-center text-base sm:text-xl font-mono tracking-wider uppercase py-3 sm:py-4"
+                  className="input-field h-12 font-mono text-base tracking-[0.15em] text-center uppercase"
                 />
               </div>
 
               {error && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.18 }}
+                  className="p-4 bg-danger-soft border border-destructive/20 rounded-lg text-destructive text-sm text-center"
                 >
                   {error}
                 </motion.div>
@@ -221,27 +220,31 @@ export default function LicenseActivationPage() {
 
               {success && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-accent/15 border border-accent/40 rounded-xl text-accent text-center"
+                  initial={{ opacity: 0, scale: 0.96, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  className="p-5 bg-accent border border-emerald-200 rounded-xl text-center"
                 >
-                  Ключ проверен! После регистрации лицензия будет активирована.
+                  <Check className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-emerald-900">
+                    Ключ проверен! После регистрации лицензия будет активирована.
+                  </p>
                 </motion.div>
               )}
 
               <button
                 onClick={handleActivate}
                 disabled={isValidating || licenseKey.length < 23}
-                className="w-full py-3 sm:py-4 gradient-brand rounded-lg sm:rounded-xl font-bold text-base sm:text-lg text-primary-foreground shadow-soft hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full h-12 px-6 inline-flex items-center justify-center gap-2 rounded-lg text-base font-medium bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 disabled:pointer-events-none disabled:opacity-50"
               >
                 {isValidating ? (
                   <>
-                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     Проверка...
                   </>
                 ) : (
                   <>
-                    <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Check className="w-4 h-4" />
                     Активировать
                   </>
                 )}
@@ -249,24 +252,24 @@ export default function LicenseActivationPage() {
 
               <button
                 onClick={handleDemoMode}
-                className="w-full py-2 text-sm text-white/50 hover:text-white transition-colors"
+                className="w-full h-9 px-3 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150"
               >
                 Продолжить без ключа — демо-режим
               </button>
             </div>
 
-            <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border">
+            <div className="mt-6 pt-4 border-t border-border">
               <p className="text-muted-foreground text-xs sm:text-sm text-center">
-                Формат ключа: <code className="text-primary text-xs sm:text-sm">NEMKS-XXXXX-XXXXX-XXXXX</code>
+                Формат ключа: <code className="font-mono text-primary text-xs sm:text-sm">NEMKS-XXXXX-XXXXX-XXXXX</code>
               </p>
             </div>
 
-            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-accent/10 rounded-lg sm:rounded-xl border border-accent/30">
-              <p className="text-accent text-xs sm:text-sm text-center">
+            <div className="mt-4 p-3 sm:p-4 bg-accent rounded-lg border border-emerald-200">
+              <p className="text-accent-foreground text-xs sm:text-sm text-center">
                 Уже есть аккаунт с лицензией?{' '}
                 <button
                   onClick={() => setLocation('/auth')}
-                  className="text-accent hover:underline font-medium"
+                  className="text-primary hover:underline underline-offset-4 font-medium"
                 >
                   Войти
                 </button>
@@ -275,54 +278,54 @@ export default function LicenseActivationPage() {
           </motion.div>
 
           {/* Разделитель */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="flex-1 h-px bg-secondary" />
-            <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap">или купите лицензию</span>
-            <div className="flex-1 h-px bg-secondary" />
+          <div className="flex items-center gap-3 text-xs text-graphite-400">
+            <span className="flex-1 h-px bg-border" />
+            <span className="whitespace-nowrap">или купите лицензию</span>
+            <span className="flex-1 h-px bg-border" />
           </div>
 
           {/* Выбор тарифа - вторым */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="glass-strong rounded-xl sm:rounded-2xl p-4 sm:p-8"
+            transition={{ duration: 0.32, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            className="rounded-xl border border-border bg-card shadow-soft p-5 sm:p-8"
           >
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
-              <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            <h2 className="text-lg sm:text-xl font-display font-bold text-graphite-900 mb-4 sm:mb-6 flex items-center gap-2">
+              <Crown className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
               Выберите тариф
             </h2>
 
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3">
               {pricingTiers.map((tier, index) => (
                 <motion.div
                   key={tier.type}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
+                  transition={{ duration: 0.22, delay: 0.24 + index * 0.08, ease: [0.16, 1, 0.3, 1] }}
                   onClick={() => handlePurchase(tier)}
-                  className={`relative p-4 sm:p-5 rounded-lg sm:rounded-xl cursor-pointer transition-all ${
+                  className={`relative p-4 sm:p-5 rounded-xl cursor-pointer transition-all duration-150 border ${
                     selectedTier?.type === tier.type
-                      ? 'bg-primary/15 border-2 border-primary glow'
-                      : 'bg-background/40 border-2 border-border hover:border-primary/40 hover:bg-primary/5'
+                      ? 'bg-accent border-primary shadow-soft'
+                      : 'bg-card border-border hover:border-emerald-200 hover:bg-accent/50 hover:-translate-y-0.5 hover:shadow-elev'
                   }`}
                 >
                   {tier.popular && (
-                    <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 gradient-brand text-primary-foreground rounded-full text-[10px] sm:text-xs font-bold shadow-soft">
+                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-primary text-primary-foreground rounded-full text-[11px] font-semibold shadow-soft">
                       ПОПУЛЯРНЫЙ
                     </div>
                   )}
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-base sm:text-lg font-bold">{tier.label_ru}</h3>
+                      <h3 className="text-base sm:text-lg font-semibold text-graphite-900">{tier.label_ru}</h3>
                       <p className="text-muted-foreground text-xs sm:text-sm flex items-center gap-1">
-                        <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <Clock className="w-3.5 h-3.5" />
                         {tier.duration_days} дней
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl sm:text-2xl font-bold gradient-brand-text">{tier.price_rub}₽</p>
+                      <p className="text-xl sm:text-2xl font-display font-extrabold tracking-[-0.02em] text-graphite-900">{tier.price_rub}₽</p>
                       <p className="text-muted-foreground text-xs sm:text-sm">${tier.price_usd}</p>
                     </div>
                   </div>
@@ -337,7 +340,7 @@ export default function LicenseActivationPage() {
                 className="mt-4 sm:mt-6"
               >
                 <button
-                  className="w-full py-3 sm:py-4 gradient-brand rounded-lg sm:rounded-xl font-bold text-base sm:text-lg text-primary-foreground shadow-glow hover:brightness-110 transition-all"
+                  className="w-full h-12 px-6 inline-flex items-center justify-center gap-2 rounded-lg text-base font-medium bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150"
                 >
                   Купить {selectedTier.label_ru.toLowerCase()} лицензию
                 </button>
@@ -350,19 +353,19 @@ export default function LicenseActivationPage() {
 
           {/* Преимущества */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-soft"
+            transition={{ duration: 0.32, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="rounded-xl border border-border bg-card shadow-soft p-5 sm:p-6"
           >
-            <h3 className="font-bold text-sm sm:text-base mb-3 sm:mb-4 flex items-center gap-2">
-              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <h3 className="font-semibold text-graphite-900 text-sm sm:text-base mb-3 sm:mb-4 flex items-center gap-2">
+              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" strokeWidth={1.75} />
               Что включает лицензия:
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center gap-2 sm:gap-3 text-foreground text-sm">
-                  <benefit.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
+                <div key={index} className="flex items-center gap-2 sm:gap-3 text-graphite-700 text-sm">
+                  <benefit.icon className="w-4 h-4 text-emerald-600 flex-shrink-0" strokeWidth={1.75} />
                   <span>{benefit.text}</span>
                 </div>
               ))}

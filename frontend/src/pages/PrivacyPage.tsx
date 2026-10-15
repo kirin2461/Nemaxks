@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'wouter'
 import { ArrowLeft, Shield, Lock, Database, Bot, Clock, Users, Cookie, Key, Bell, MessageSquare } from 'lucide-react'
 
@@ -486,25 +486,44 @@ Telegram: https://t.me/neMaxks
 
 export default function PrivacyPage() {
   const [lang, setLang] = useState<Lang>('ru')
+  const [activeSection, setActiveSection] = useState(0)
   const t = content[lang]
+
+  // Scroll-spy для sticky TOC (auth-landing.md §4)
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-legal-section]'))
+    if (!sections.length) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveSection(Number(entry.target.getAttribute('data-legal-section')))
+          }
+        }
+      },
+      { rootMargin: '-20% 0px -70% 0px' }
+    )
+    sections.forEach((s) => observer.observe(s))
+    return () => observer.disconnect()
+  }, [lang])
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      <nav className="fixed top-0 w-full z-40 bg-card/55 backdrop-blur-xl border-b border-border/60 shadow-soft px-3 py-3 sm:p-4">
-        <div className="max-w-4xl mx-auto flex justify-between items-center gap-2">
+      <nav className="sticky top-0 w-full z-40 bg-background/95 border-b border-border">
+        <div className="h-16 max-w-[1120px] mx-auto px-3 sm:px-6 flex justify-between items-center gap-2">
           <Link href="/welcome">
-            <button className="flex items-center gap-1 sm:gap-2 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0">
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-sm sm:text-base">Назад</span>
+            <button className="flex items-center gap-1 sm:gap-2 h-9 px-2 sm:px-3 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150 flex-shrink-0">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Назад</span>
             </button>
           </Link>
-          <div className="flex gap-1 sm:gap-2">
+          <div className="inline-flex p-1 rounded-lg bg-secondary gap-1">
             {(['ru', 'en', 'zh'] as Lang[]).map((l) => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
-                className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                  lang === l ? 'gradient-brand text-primary-foreground shadow-glow' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                className={`h-8 px-2 sm:px-3 rounded-md text-xs font-medium transition-all duration-150 ${
+                  lang === l ? 'bg-card text-foreground shadow-soft' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {l.toUpperCase()}
@@ -514,31 +533,62 @@ export default function PrivacyPage() {
         </div>
       </nav>
 
-      <main className="pt-24 pb-16 px-3 sm:px-4 overflow-x-hidden">
-        <div className="max-w-4xl mx-auto w-full">
-          <div className="text-center mb-8 sm:mb-12">
-            <h1 className="text-2xl sm:text-4xl font-bold gradient-brand-text mb-2 break-words">{t.title}</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">{t.subtitle}</p>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-2">{t.version} | {t.effectiveDate}</p>
+      <main className="py-12 px-3 sm:px-6 overflow-x-hidden">
+        <div className="max-w-[1120px] mx-auto w-full flex justify-center gap-12">
+          <div className="max-w-[720px] w-full min-w-0 animate-rise-in">
+            <div className="mb-8 sm:mb-12">
+              <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-[-0.025em] text-graphite-900 mb-2 break-words">{t.title}</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">{t.subtitle}</p>
+              <p className="text-sm text-graphite-400 mt-2">{t.version} | {t.effectiveDate}</p>
+            </div>
+
+            <div className="space-y-6 sm:space-y-8">
+              {t.sections.map((section, i) => (
+                <div
+                  key={i}
+                  id={`privacy-section-${i}`}
+                  data-legal-section={i}
+                  className="rounded-xl border border-border bg-card shadow-soft p-4 sm:p-6 overflow-hidden scroll-mt-24"
+                >
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                    <section.icon className="w-5 h-5 text-emerald-600 flex-shrink-0" strokeWidth={1.75} />
+                    <h2 className="text-xl font-semibold text-graphite-900 break-words">{section.title}</h2>
+                  </div>
+                  <div className="text-[15px] leading-7 text-graphite-700 whitespace-pre-line break-words overflow-wrap-anywhere">
+                    {section.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center mt-12 text-xs text-graphite-400 font-mono">
+              {t.footer}
+            </div>
           </div>
 
-          <div className="space-y-6 sm:space-y-8">
-            {t.sections.map((section, i) => (
-              <div key={i} className="glass shadow-soft rounded-xl sm:rounded-2xl p-4 sm:p-6 overflow-hidden">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <section.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
-                  <h2 className="text-lg sm:text-xl font-semibold break-words">{section.title}</h2>
-                </div>
-                <div className="text-foreground/80 whitespace-pre-line leading-relaxed text-sm sm:text-base break-words overflow-wrap-anywhere">
-                  {section.content}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12 text-muted-foreground">
-            {t.footer}
-          </div>
+          {/* Sticky mini TOC */}
+          <aside className="hidden xl:block w-56 shrink-0">
+            <div className="sticky top-24">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-3">
+                {t.title}
+              </p>
+              <nav className="space-y-0.5">
+                {t.sections.map((section, i) => (
+                  <a
+                    key={i}
+                    href={`#privacy-section-${i}`}
+                    className={`block text-sm py-1 transition-colors duration-150 ${
+                      activeSection === i
+                        ? 'text-primary font-medium border-l-2 border-primary pl-3'
+                        : 'text-muted-foreground hover:text-foreground border-l-2 border-transparent pl-3'
+                    }`}
+                  >
+                    {section.title}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          </aside>
         </div>
       </main>
     </div>
