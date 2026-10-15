@@ -3,16 +3,17 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Layout, Search, Users, GraduationCap, Gamepad2, Briefcase,
-  BookOpen, MessageCircle, Video, PenTool, Mic, FileText,
-  ChevronRight, Star, Crown, Zap, Building, Lock, Code,
-  Sparkles, Filter, Grid3X3, List
+  Search, Users, GraduationCap, Gamepad2, Briefcase,
+  BookOpen, MessageCircle, Video, PenTool, Mic,
+  ChevronRight, Crown, Building, Code,
+  Sparkles
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { premiumAPI } from "@/lib/api";
-import { TemplateCard, TemplateCardSkeleton, FeaturedTemplateCard } from "@/components/educational/TemplateCard";
+import { TemplateCard, FeaturedTemplateCard } from "@/components/educational/TemplateCard";
 import { CategoryFilter } from "@/components/educational/CategoryFilter";
 import { TemplatePreviewModal } from "@/components/educational/TemplatePreviewModal";
+import { cn } from "@/lib/utils";
 
 interface EducationalToolTemplate {
   id: number;
@@ -55,17 +56,26 @@ interface ChannelTemplate {
 
 type TabType = "notebooks" | "whiteboards" | "editors" | "servers" | "channels";
 
+const planBadges: Record<string, { label: string; color: string }> = {
+  free: { label: "Бесплатно", color: "bg-secondary text-secondary-foreground" },
+  edu_basic: { label: "Базовый", color: "bg-accent text-accent-foreground border border-emerald-200" },
+  edu_pro: { label: "Про", color: "bg-emerald-100 text-emerald-800 border border-emerald-200" },
+};
+
+const primaryButtonClass =
+  "w-full h-10 inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand transition-all duration-150 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
 export function TemplatesPage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { user } = useStore();
-  
+
   const tabs = [
-    { id: "notebooks" as TabType, label: t("templates.notebooks"), icon: <BookOpen size={18} />, toolType: "notebook", color: "blue" },
-    { id: "whiteboards" as TabType, label: t("templates.whiteboards"), icon: <PenTool size={18} />, toolType: "whiteboard", color: "green" },
-    { id: "editors" as TabType, label: t("templates.editors"), icon: <Code size={18} />, toolType: "editor", color: "orange" },
-    { id: "servers" as TabType, label: t("nav.servers"), icon: <Building size={18} />, toolType: null, color: "purple" },
-    { id: "channels" as TabType, label: t("nav.channels"), icon: <MessageCircle size={18} />, toolType: null, color: "cyan" },
+    { id: "notebooks" as TabType, label: t("templates.notebooks"), icon: <BookOpen size={18} strokeWidth={1.75} />, toolType: "notebook" },
+    { id: "whiteboards" as TabType, label: t("templates.whiteboards"), icon: <PenTool size={18} strokeWidth={1.75} />, toolType: "whiteboard" },
+    { id: "editors" as TabType, label: t("templates.editors"), icon: <Code size={18} strokeWidth={1.75} />, toolType: "editor" },
+    { id: "servers" as TabType, label: t("nav.servers"), icon: <Building size={18} strokeWidth={1.75} />, toolType: null },
+    { id: "channels" as TabType, label: t("nav.channels"), icon: <MessageCircle size={18} strokeWidth={1.75} />, toolType: null },
   ];
   const [educationalTemplates, setEducationalTemplates] = useState<EducationalToolTemplate[]>([]);
   const [guildTemplates, setGuildTemplates] = useState<GuildTemplate[]>([]);
@@ -122,14 +132,14 @@ export function TemplatesPage() {
   async function applyTemplate(template: EducationalToolTemplate) {
     if (applying) return;
     setApplying(true);
-    
+
     try {
       const res = await fetch(`/api/templates/educational/${template.slug}/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         if (data.channel_id) {
@@ -181,24 +191,22 @@ export function TemplatesPage() {
     channels: channelTemplates.length,
   }), [educationalTemplates, guildTemplates, channelTemplates]);
 
-  const freeTemplatesCount = useMemo(() => 
-    educationalTemplates.filter(t => t.required_plan === "free").length, 
+  const freeTemplatesCount = useMemo(() =>
+    educationalTemplates.filter(t => t.required_plan === "free").length,
     [educationalTemplates]
   );
 
-  const canAccessTemplate = (plan: string) => {
-    if (plan === "free") return true;
-    if (plan === "edu_basic" && (userPlan === "edu_basic" || userPlan === "edu_pro" || hasPremium)) return true;
-    if (plan === "edu_pro" && (userPlan === "edu_pro" || hasPremium)) return true;
-    return false;
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-nebula text-foreground flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
-          <p className="text-muted-foreground">{t("common.loading")}</p>
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+          <div className="skeleton h-10 w-72 mx-auto" />
+          <div className="skeleton h-4 w-96 mx-auto" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="skeleton h-48 rounded-xl" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -208,12 +216,12 @@ export function TemplatesPage() {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-8 p-4 glass rounded-2xl shadow-soft"
+      className="mb-8 p-4 rounded-xl border border-emerald-200 bg-accent/30"
     >
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/15 rounded-lg">
-            <Crown className="text-primary" size={24} />
+          <div className="p-2 bg-primary rounded-lg shadow-lg-brand">
+            <Crown className="text-primary-foreground" size={24} strokeWidth={1.75} />
           </div>
           <div>
             <p className="text-foreground font-medium">{t("templates.unlockWith")} {t("common.premium")}</p>
@@ -222,7 +230,7 @@ export function TemplatesPage() {
         </div>
         <button
           onClick={() => setLocation("/premium")}
-          className="px-6 py-2.5 gradient-brand hover:brightness-110 rounded-xl font-medium text-sm text-primary-foreground shadow-soft whitespace-nowrap transition-all"
+          className={cn(primaryButtonClass, "w-auto px-6 whitespace-nowrap")}
         >
           {t("premium.upgrade")}
         </button>
@@ -230,69 +238,20 @@ export function TemplatesPage() {
     </motion.div>
   );
 
-  /* Previously blocked non-premium users entirely - now showing all templates with access control
-  if (!hasPremium) {
-    return (
-      <div className="min-h-screen bg-background text-foreground p-6">
-        <div className="max-w-2xl mx-auto text-center py-20">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-gradient-to-b from-card/50 to-background/50 border border-border rounded-3xl p-12"
-          >
-            <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-purple-600/30">
-              <Lock size={48} className="text-muted-foreground" />
-            </div>
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Премиум функция
-            </h1>
-            <p className="text-muted-foreground text-lg mb-8 max-w-md mx-auto">
-              Образовательные шаблоны доступны только для премиум пользователей. 
-              Оформите подписку, чтобы получить доступ к тетрадям, доскам и редакторам.
-            </p>
-            
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="p-4 bg-blue-600/10 rounded-xl border border-blue-600/20">
-                <BookOpen className="text-blue-400 mx-auto mb-2" size={28} />
-                <p className="text-sm text-foreground">11 тетрадей</p>
-              </div>
-              <div className="p-4 bg-green-600/10 rounded-xl border border-green-600/20">
-                <PenTool className="text-green-400 mx-auto mb-2" size={28} />
-                <p className="text-sm text-foreground">12 досок</p>
-              </div>
-              <div className="p-4 bg-orange-600/10 rounded-xl border border-orange-600/20">
-                <Code className="text-orange-400 mx-auto mb-2" size={28} />
-                <p className="text-sm text-foreground">10 редакторов</p>
-              </div>
-            </div>
-            
-            <button
-              onClick={() => setLocation("/premium")}
-              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-medium text-lg transition-all flex items-center gap-2 mx-auto shadow-lg shadow-purple-600/30"
-            >
-              <Crown size={22} />
-              Оформить премиум
-            </button>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-  */
-
   return (
-    <div className="min-h-screen bg-nebula text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22 }}
           className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 px-4 py-2 rounded-full mb-4">
-            <Sparkles size={18} className="text-primary" />
-            <span className="gradient-brand-text font-medium text-sm">{t("nav.templates")}</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold gradient-brand-text mb-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-emerald-100 text-emerald-800 mb-4">
+            <Sparkles size={14} strokeWidth={1.75} />
+            {t("nav.templates")}
+          </span>
+          <h1 className="text-3xl md:text-4xl font-display font-extrabold text-graphite-900 tracking-[-0.02em] mb-3">
             {t("templates.title")}
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-lg">
@@ -302,40 +261,45 @@ export function TemplatesPage() {
 
         {premiumBanner}
 
-        <div className="flex flex-wrap gap-2 mb-8 justify-center">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setCategoryFilter("");
-              }}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
-                activeTab === tab.id
-                  ? "gradient-brand text-primary-foreground shadow-soft"
-                  : "glass text-muted-foreground hover:bg-primary/10 hover:text-foreground"
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                activeTab === tab.id ? "bg-white/20" : "bg-primary/10 text-primary"
-              }`}>
-                {templateCounts[tab.id]}
-              </span>
-            </button>
-          ))}
+        {/* Segmented tabs (design.md §6.12) */}
+        <div className="flex flex-wrap gap-1 mb-8 justify-center">
+          <div className="inline-flex flex-wrap justify-center p-1 rounded-lg bg-secondary gap-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setCategoryFilter("");
+                }}
+                className={cn(
+                  "flex items-center gap-2 h-8 px-3 rounded-md text-sm transition-all duration-150",
+                  activeTab === tab.id
+                    ? "bg-card text-foreground shadow-soft font-medium"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab.icon}
+                {tab.label}
+                <span className={cn(
+                  "text-[11px] font-semibold px-1.5 py-0.5 rounded-full",
+                  activeTab === tab.id ? "bg-emerald-100 text-emerald-800" : "bg-graphite-200 text-graphite-600"
+                )}>
+                  {templateCounts[tab.id]}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+          <div className="relative flex-1 max-w-[520px] mx-auto w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-graphite-400" size={20} strokeWidth={1.75} />
             <input
               type="text"
               placeholder={t("templates.search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-field !rounded-xl pl-12 py-3.5"
+              className="input-field pl-10 h-12 text-base"
             />
           </div>
         </div>
@@ -355,9 +319,10 @@ export function TemplatesPage() {
           {(activeTab === "notebooks" || activeTab === "whiteboards" || activeTab === "editors") && (
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               className="space-y-8"
             >
               {featuredTemplate && !categoryFilter && !searchQuery && (
@@ -384,12 +349,12 @@ export function TemplatesPage() {
               </div>
 
               {filteredTemplates.length === 0 && (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 glass rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search size={28} className="text-muted-foreground" />
+                <div className="text-center py-16 px-6 animate-rise-in">
+                  <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+                    <Search size={48} strokeWidth={1.5} className="text-graphite-300" />
                   </div>
-                  <p className="text-muted-foreground text-lg">Шаблоны не найдены</p>
-                  <p className="text-muted-foreground text-sm mt-1">Попробуйте изменить фильтры или поисковый запрос</p>
+                  <p className="text-lg font-semibold text-foreground mt-4">Шаблоны не найдены</p>
+                  <p className="text-sm text-muted-foreground max-w-[320px] mx-auto mt-1">Попробуйте изменить фильтры или поисковый запрос</p>
                 </div>
               )}
             </motion.div>
@@ -398,9 +363,10 @@ export function TemplatesPage() {
           {activeTab === "servers" && (
             <motion.div
               key="servers"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               className="grid md:grid-cols-2 lg:grid-cols-3 gap-5"
             >
               {guildTemplates
@@ -412,7 +378,7 @@ export function TemplatesPage() {
                   <GuildTemplateCard key={template.id} template={template} />
                 ))}
               {guildTemplates.length === 0 && (
-                <div className="col-span-full text-center py-16 text-muted-foreground">
+                <div className="col-span-full text-center py-16 text-muted-foreground text-sm">
                   Шаблоны серверов не найдены
                 </div>
               )}
@@ -422,9 +388,10 @@ export function TemplatesPage() {
           {activeTab === "channels" && (
             <motion.div
               key="channels"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               className="grid md:grid-cols-2 lg:grid-cols-3 gap-5"
             >
               {channelTemplates
@@ -436,7 +403,7 @@ export function TemplatesPage() {
                   <ChannelTemplateCard key={template.id} template={template} />
                 ))}
               {channelTemplates.length === 0 && (
-                <div className="col-span-full text-center py-16 text-muted-foreground">
+                <div className="col-span-full text-center py-16 text-muted-foreground text-sm">
                   Шаблоны каналов не найдены
                 </div>
               )}
@@ -457,19 +424,13 @@ export function TemplatesPage() {
 }
 
 function GuildTemplateCard({ template }: { template: GuildTemplate }) {
-  const planBadges: Record<string, { label: string; color: string }> = {
-    free: { label: "Бесплатно", color: "bg-muted text-muted-foreground" },
-    edu_basic: { label: "Базовый", color: "bg-accent/15 text-accent border border-accent/25" },
-    edu_pro: { label: "Про", color: "bg-primary/15 text-primary border border-primary/25" },
-  };
-  
   const plan = planBadges[template.required_plan] || planBadges.free;
 
   const categoryIcons: Record<string, React.ReactNode> = {
-    community: <Users size={20} />,
-    education: <GraduationCap size={20} />,
-    gaming: <Gamepad2 size={20} />,
-    business: <Briefcase size={20} />,
+    community: <Users size={20} strokeWidth={1.75} />,
+    education: <GraduationCap size={20} strokeWidth={1.75} />,
+    gaming: <Gamepad2 size={20} strokeWidth={1.75} />,
+    business: <Briefcase size={20} strokeWidth={1.75} />,
   };
 
   let channels: { name: string; type: string }[] = [];
@@ -479,20 +440,20 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      className="glass rounded-2xl p-5 shadow-soft hover:border-primary/50 hover:shadow-glow transition-all"
+      whileHover={{ y: -2 }}
+      className="rounded-xl border border-border bg-card p-5 shadow-soft hover:shadow-elev hover:border-graphite-300 transition-all duration-150"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-primary/15 rounded-xl text-primary">
-            {categoryIcons[template.category] || <Building size={20} />}
+      <div className="flex items-start justify-between gap-2 mb-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2.5 bg-accent border border-emerald-200 rounded-xl text-emerald-700 shrink-0">
+            {categoryIcons[template.category] || <Building size={20} strokeWidth={1.75} />}
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground">{template.name}</h3>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-foreground truncate">{template.name}</h3>
             <p className="text-xs text-muted-foreground">{template.usage_count} использований</p>
           </div>
         </div>
-        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color}`}>
+        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium shrink-0", plan.color)}>
           {plan.label}
         </span>
       </div>
@@ -504,7 +465,7 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
           <p className="text-xs text-muted-foreground mb-2">Каналы ({channels.length}):</p>
           <div className="flex flex-wrap gap-1.5">
             {channels.slice(0, 5).map((ch, i) => (
-              <span key={i} className="px-2 py-1 bg-background/50 border border-border rounded-lg text-xs text-foreground">
+              <span key={i} className="px-2 py-1 bg-secondary rounded-lg text-xs text-secondary-foreground">
                 #{ch.name}
               </span>
             ))}
@@ -515,56 +476,50 @@ function GuildTemplateCard({ template }: { template: GuildTemplate }) {
         </div>
       )}
 
-      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 gradient-brand hover:brightness-110 text-primary-foreground shadow-soft rounded-xl font-medium transition-all">
+      <button className={primaryButtonClass}>
         Использовать шаблон
-        <ChevronRight size={16} />
+        <ChevronRight size={16} strokeWidth={1.75} />
       </button>
     </motion.div>
   );
 }
 
 function ChannelTemplateCard({ template }: { template: ChannelTemplate }) {
-  const planBadges: Record<string, { label: string; color: string }> = {
-    free: { label: "Бесплатно", color: "bg-muted text-muted-foreground" },
-    edu_basic: { label: "Базовый", color: "bg-accent/15 text-accent border border-accent/25" },
-    edu_pro: { label: "Про", color: "bg-primary/15 text-primary border border-primary/25" },
-  };
-  
   const plan = planBadges[template.required_plan] || planBadges.free;
 
   const typeIcons: Record<string, React.ReactNode> = {
-    text: <MessageCircle size={20} />,
-    voice: <Mic size={20} />,
-    video: <Video size={20} />,
-    board: <PenTool size={20} />,
-    notebook: <BookOpen size={20} />,
+    text: <MessageCircle size={20} strokeWidth={1.75} />,
+    voice: <Mic size={20} strokeWidth={1.75} />,
+    video: <Video size={20} strokeWidth={1.75} />,
+    board: <PenTool size={20} strokeWidth={1.75} />,
+    notebook: <BookOpen size={20} strokeWidth={1.75} />,
   };
 
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      className="glass rounded-2xl p-5 shadow-soft hover:border-accent/50 hover:shadow-glow transition-all"
+      whileHover={{ y: -2 }}
+      className="rounded-xl border border-border bg-card p-5 shadow-soft hover:shadow-elev hover:border-graphite-300 transition-all duration-150"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-accent/15 rounded-xl text-accent">
-            {typeIcons[template.type] || <MessageCircle size={20} />}
+      <div className="flex items-start justify-between gap-2 mb-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2.5 bg-accent border border-emerald-200 rounded-xl text-emerald-700 shrink-0">
+            {typeIcons[template.type] || <MessageCircle size={20} strokeWidth={1.75} />}
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground">{template.name}</h3>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-foreground truncate">{template.name}</h3>
             <p className="text-xs text-muted-foreground">{template.type} · {template.usage_count} использований</p>
           </div>
         </div>
-        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.color}`}>
+        <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium shrink-0", plan.color)}>
           {plan.label}
         </span>
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
 
-      <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 gradient-brand hover:brightness-110 text-primary-foreground shadow-soft rounded-xl font-medium transition-all">
+      <button className={primaryButtonClass}>
         Добавить канал
-        <ChevronRight size={16} />
+        <ChevronRight size={16} strokeWidth={1.75} />
       </button>
     </motion.div>
   );

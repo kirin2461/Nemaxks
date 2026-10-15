@@ -9,7 +9,7 @@ import { useStore } from '@/lib/store'
 import { userAPI, premiumAPI } from '@/lib/api'
 import { useToast } from '@/components/Toast'
 import { Heart, Crown, Sparkles, Check, ArrowLeft } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
+import { formatDate, cn } from '@/lib/utils'
 
 interface PremiumPlan {
   id: number
@@ -101,8 +101,19 @@ export default function SupportPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="p-8 max-w-6xl mx-auto space-y-6">
+          <div className="skeleton h-6 w-40" />
+          <div className="flex items-center gap-4">
+            <div className="skeleton h-16 w-16 rounded-full" />
+            <div className="space-y-2">
+              <div className="skeleton h-7 w-64" />
+              <div className="skeleton h-4 w-80" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="skeleton h-96 rounded-xl" />
+            <div className="skeleton h-96 rounded-xl" />
+          </div>
         </div>
       </Layout>
     )
@@ -111,8 +122,11 @@ export default function SupportPage() {
   if (!creator) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground">Пользователь не найден</p>
+        <div className="flex flex-col items-center justify-center h-full py-16 px-6 animate-rise-in">
+          <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center">
+            <Heart className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+          </div>
+          <p className="text-lg font-semibold text-foreground mt-4">Пользователь не найден</p>
         </div>
       </Layout>
     )
@@ -120,12 +134,12 @@ export default function SupportPage() {
 
   return (
     <Layout>
-      <div className="p-8 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-8 max-w-6xl mx-auto animate-rise-in">
         <button
           onClick={() => navigate(`/profile/${userId}`)}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors duration-150 text-sm"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" strokeWidth={1.75} />
           Назад к профилю
         </button>
 
@@ -137,8 +151,10 @@ export default function SupportPage() {
             size="lg"
           />
           <div>
-            <h1 className="text-2xl font-bold">Поддержать <span className="gradient-brand-text">{creator.username}</span></h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-display font-bold text-graphite-900 tracking-[-0.015em]">
+              Поддержать <span className="text-primary">{creator.username}</span>
+            </h1>
+            <p className="text-muted-foreground text-sm">
               Помогите создателю продолжать делать контент
             </p>
           </div>
@@ -146,10 +162,10 @@ export default function SupportPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <Card className="glass rounded-xl shadow-soft">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-pink-500" />
+                  <Heart className="w-5 h-5 text-primary" strokeWidth={1.75} />
                   Отправить донат
                 </CardTitle>
               </CardHeader>
@@ -164,11 +180,13 @@ export default function SupportPage() {
                           setSelectedAmount(amount)
                           setCustomAmount('')
                         }}
-                        className={`py-2 px-3 rounded-lg font-medium transition-all ${
+                        className={cn(
+                          'h-10 px-3 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97]',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                           selectedAmount === amount && !customAmount
-                            ? 'gradient-brand text-primary-foreground shadow-glow'
-                            : 'bg-muted hover:bg-muted/80'
-                        }`}
+                            ? 'bg-primary text-primary-foreground shadow-soft'
+                            : 'bg-secondary text-secondary-foreground hover:bg-graphite-200'
+                        )}
                       >
                         {amount}₽
                       </button>
@@ -205,18 +223,18 @@ export default function SupportPage() {
                   className="w-full"
                   disabled={!selectedAmount && !customAmount}
                 >
-                  <Heart className="w-4 h-4" />
+                  <Heart className="w-4 h-4" strokeWidth={1.75} />
                   Поддержать на {customAmount || selectedAmount || 0}₽
                 </Button>
 
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-graphite-400 text-center">
                   Платёж обрабатывается через YooKassa
                 </p>
               </CardContent>
             </Card>
 
             {donations.length > 0 && (
-              <Card className="glass rounded-xl shadow-soft">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">
                     Последние донаты ({totalDonations.toFixed(0)}₽ всего)
@@ -224,20 +242,21 @@ export default function SupportPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {donations.slice(0, 5).map((donation) => (
+                    {donations.slice(0, 5).map((donation, i) => (
                       <div
                         key={donation.id}
-                        className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
+                        className="flex items-start justify-between gap-3 p-3 bg-secondary rounded-lg animate-rise-in"
+                        style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}
                       >
-                        <div>
-                          <p className="font-medium">{donation.amount_rub}₽</p>
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground text-sm">{donation.amount_rub}₽</p>
                           {donation.message && (
                             <p className="text-sm text-muted-foreground mt-1">
                               {donation.message}
                             </p>
                           )}
                         </div>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground shrink-0">
                           {formatDate(donation.created_at)}
                         </span>
                       </div>
@@ -249,18 +268,20 @@ export default function SupportPage() {
           </div>
 
           <div className="space-y-6">
-            <Card className="glass rounded-xl shadow-soft">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-yellow-500" />
+                  <Crown className="w-5 h-5 text-primary" strokeWidth={1.75} />
                   Премиум подписка
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {plans.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">
+                  <div className="text-center py-8 animate-rise-in">
+                    <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto mb-3">
+                      <Sparkles className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
                       Премиум планы скоро появятся
                     </p>
                   </div>
@@ -269,21 +290,21 @@ export default function SupportPage() {
                     {plans.map((plan) => (
                       <div
                         key={plan.id}
-                        className="p-4 border border-border/50 bg-card/40 backdrop-blur-sm rounded-xl hover:border-primary/50 hover:shadow-glow transition-all"
+                        className="p-4 border border-border bg-card rounded-xl hover:border-graphite-300 hover:shadow-elev transition-all duration-150"
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-lg">{plan.name}</h3>
-                          <span className="text-xl font-bold gradient-brand-text">
-                            {plan.price_rub}₽<span className="text-sm font-normal">/мес</span>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <h3 className="font-semibold text-lg text-foreground">{plan.name}</h3>
+                          <span className="text-xl font-display font-extrabold text-graphite-900">
+                            {plan.price_rub}₽<span className="text-sm font-normal text-muted-foreground">/мес</span>
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground mb-3">
                           {plan.description}
                         </p>
-                        <ul className="space-y-1 mb-4">
+                        <ul className="space-y-1.5 mb-4">
                           {parseFeatures(plan.features).map((feature, idx) => (
-                            <li key={idx} className="flex items-center gap-2 text-sm">
-                              <Check className="w-4 h-4 text-green-500" />
+                            <li key={idx} className="flex items-center gap-2 text-sm text-foreground">
+                              <Check className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={1.75} />
                               {feature}
                             </li>
                           ))}
@@ -298,7 +319,7 @@ export default function SupportPage() {
               </CardContent>
             </Card>
 
-            <Card className="glass rounded-xl shadow-soft">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Зачем поддерживать?</CardTitle>
               </CardHeader>
