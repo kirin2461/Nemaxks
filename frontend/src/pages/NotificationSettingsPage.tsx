@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Bell, ArrowLeft, Save, Loader2, Volume2, Monitor, Mail, Moon, TestTube } from 'lucide-react'
+import { Bell, ArrowLeft, Save, Loader2, Volume2, Monitor, Mail, Moon, TestTube, type LucideIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { notificationsAPI, NotificationPreferences } from '../lib/notificationsApi'
 import { useToast } from '../components/Toast'
@@ -46,7 +46,7 @@ function SettingRow({
   hint,
   control,
 }: {
-  icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>
+  icon?: LucideIcon
   label: string
   hint?: string
   control: React.ReactNode
