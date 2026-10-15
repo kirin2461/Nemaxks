@@ -49,7 +49,7 @@ export function Hint({ text, className }: HintProps) {
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         onFocus={() => setOpen(true)}
-        className="inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+        className="inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <CircleHelp className="w-4 h-4" />
       </button>

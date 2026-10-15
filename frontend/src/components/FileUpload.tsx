@@ -77,10 +77,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition ${
+        className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition ${
           isDragging
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50'
+            ? 'border-primary bg-accent'
+            : 'border-graphite-300 bg-card hover:border-emerald-300 hover:bg-accent'
         }`}
       >
         <input
@@ -92,39 +92,39 @@ const FileUpload: React.FC<FileUploadProps> = ({
           accept={allowedTypes.join(',')}
         />
         <div className="flex justify-center mb-3">
-          <Upload size={32} className="text-blue-500" />
+          <Upload size={32} className="text-primary" />
         </div>
-        <p className="text-lg font-semibold text-gray-700">Drag files here or click to upload</p>
+        <p className="text-lg font-semibold font-display text-graphite-800">Drag files here or click to upload</p>
         <p className="text-sm text-muted-foreground mt-2">Maximum file size: {maxSize}MB</p>
       </div>
 
       {/* File List */}
       {files.length > 0 && (
         <div className="space-y-2">
-          <h3 className="font-semibold text-gray-800">Uploading Files</h3>
+          <h3 className="font-semibold text-graphite-800">Uploading Files</h3>
           {files.map((uploadFile, index) => (
-            <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
-              <FileIcon size={20} className="text-blue-500 flex-shrink-0" />
+            <div key={index} className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border shadow-soft">
+              <FileIcon size={20} className="text-primary flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-800 truncate">{uploadFile.file.name}</p>
+                <p className="text-sm font-medium text-graphite-800 truncate">{uploadFile.file.name}</p>
                 <p className="text-xs text-muted-foreground">{formatFileSize(uploadFile.file.size)}</p>
                 {uploadFile.status === 'uploading' && (
-                  <div className="mt-1 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                  <div className="mt-1 bg-graphite-200 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-blue-500 h-full transition-all"
+                      className="bg-primary h-full transition-all"
                       style={{ width: `${uploadFile.progress}%` }}
                     ></div>
                   </div>
                 )}
-                {uploadFile.error && <p className="text-xs text-red-500 mt-1">{uploadFile.error}</p>}
+                {uploadFile.error && <p className="text-xs text-destructive mt-1">{uploadFile.error}</p>}
               </div>
-              {uploadFile.status === 'complete' && <CheckCircle size={20} className="text-green-500" />}
+              {uploadFile.status === 'complete' && <CheckCircle size={20} className="text-emerald-600" />}
               {uploadFile.status !== 'complete' && (
                 <button
                   onClick={() => removeFile(index)}
-                  className="p-1 hover:bg-red-50 rounded transition"
+                  className="p-1 hover:bg-danger-soft rounded-md transition-colors duration-150"
                 >
-                  <X size={20} className="text-red-500" />
+                  <X size={20} className="text-destructive" />
                 </button>
               )}
             </div>

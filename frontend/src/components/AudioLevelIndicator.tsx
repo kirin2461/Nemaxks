@@ -107,7 +107,7 @@ export const AudioLevelIndicator: React.FC<AudioLevelIndicatorProps> = ({
       {showLabel && (
         <span className={cn(
           'text-xs mr-2 transition-colors',
-          isTransmitting ? 'text-green-400' : 'text-muted-foreground'
+          isTransmitting ? 'text-emerald-600' : 'text-muted-foreground'
         )}>
           {label}
         </span>
@@ -118,7 +118,7 @@ export const AudioLevelIndicator: React.FC<AudioLevelIndicatorProps> = ({
             key={index}
             className={cn(
               'w-1 rounded-sm transition-all duration-75',
-              isTransmitting ? 'bg-green-500' : 'bg-muted'
+              isTransmitting ? 'bg-emerald-500' : 'bg-muted'
             )}
             style={{
               height: `${Math.max(4, level * 16)}px`,
@@ -128,7 +128,7 @@ export const AudioLevelIndicator: React.FC<AudioLevelIndicatorProps> = ({
         ))}
       </div>
       {isTransmitting && (
-        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse ml-1" />
+        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-1" />
       )}
     </div>
   )
@@ -165,11 +165,11 @@ export const AudioLogsPanel: React.FC<AudioLogsPanelProps> = ({
   const getTypeColor = (type: AudioLogEntry['type']) => {
     switch (type) {
       case 'success':
-        return 'text-green-400'
+        return 'text-emerald-600'
       case 'warning':
-        return 'text-yellow-400'
+        return 'text-warning'
       case 'error':
-        return 'text-red-400'
+        return 'text-destructive'
       default:
         return 'text-muted-foreground'
     }
@@ -194,7 +194,7 @@ export const AudioLogsPanel: React.FC<AudioLogsPanelProps> = ({
       </div>
       <div
         ref={scrollRef}
-        className="h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
+        className="h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-graphite-400 scrollbar-track-transparent"
       >
         {displayLogs.length === 0 ? (
           <p className="text-xs text-muted-foreground italic">No audio events yet...</p>

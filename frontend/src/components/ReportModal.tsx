@@ -80,8 +80,8 @@ export function ReportModal({
     return (
       <Modal isOpen={isOpen} onClose={handleClose} size="sm">
         <div className="text-center py-4">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-green-400" />
+          <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-emerald-600" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Жалоба отправлена</h2>
           <p className="text-muted-foreground text-sm mb-6">
@@ -89,7 +89,7 @@ export function ReportModal({
           </p>
           <button
             onClick={handleClose}
-            className="w-full px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white transition-colors"
+            className="w-full px-4 py-2 bg-primary hover:bg-emerald-800 rounded-lg text-white transition-colors"
           >
             Закрыть
           </button>
@@ -101,9 +101,9 @@ export function ReportModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="md">
       <div className="space-y-4">
-        <div className="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-          <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-          <p className="text-yellow-300 text-sm">
+        <div className="flex items-center gap-3 p-3 bg-warning-soft border border-warning/30 rounded-lg">
+          <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0" />
+          <p className="text-[hsl(32_95%_30%)] text-sm">
             Пожалуйста, используйте эту функцию только для реальных нарушений. 
             Ложные жалобы могут привести к ограничениям вашего аккаунта.
           </p>
@@ -124,7 +124,7 @@ export function ReportModal({
                 onClick={() => setCategory(cat.id)}
                 className={`flex items-center gap-2 p-3 rounded-lg border transition-all text-left ${
                   category === cat.id
-                    ? 'border-red-500/50 bg-red-500/15 text-red-300'
+                    ? 'border-destructive/40 bg-danger-soft text-destructive'
                     : 'border-border bg-muted/40 text-foreground hover:bg-primary/5 hover:border-primary/30'
                 }`}
               >
@@ -149,7 +149,7 @@ export function ReportModal({
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+          <div className="p-3 bg-danger-soft border border-destructive/30 rounded-lg text-destructive text-sm">
             {error}
           </div>
         )}
@@ -165,7 +165,7 @@ export function ReportModal({
           <button
             onClick={handleSubmit}
             disabled={loading || !category}
-            className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-soft"
+            className="flex-1 px-4 py-2 bg-destructive hover:bg-[hsl(0_72%_38%)] rounded-lg text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-soft"
           >
             {loading ? (
               <>

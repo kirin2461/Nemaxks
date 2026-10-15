@@ -112,7 +112,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-accent" />
+          <MessageSquare className="w-5 h-5 text-emerald-700" />
           Мессенджер MAX
         </CardTitle>
       </CardHeader>
@@ -123,7 +123,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
           </div>
         ) : connected ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-accent">
+            <div className="flex items-center gap-2 text-emerald-700">
               <Check className="w-5 h-5" />
               <span>
                 Подключён бот:{' '}
@@ -143,21 +143,21 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
             </p>
 
             {webhookSet === true && (
-              <div className="flex items-center gap-2 text-sm text-accent">
+              <div className="flex items-center gap-2 text-sm text-emerald-700">
                 <Check className="w-4 h-4" />
                 Webhook настроен автоматически
               </div>
             )}
 
             {webhookSet === false && (
-              <div className="flex items-center gap-2 text-sm text-yellow-500">
+              <div className="flex items-center gap-2 text-sm text-warning">
                 <AlertTriangle className="w-4 h-4" />
                 Требуется ручная настройка webhook
               </div>
             )}
 
             {warning && (
-              <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/40 text-sm text-yellow-500">
+              <div className="p-3 rounded-lg bg-warning-soft border border-warning/30 text-sm text-warning">
                 {warning}
               </div>
             )}
@@ -185,7 +185,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
                         aria-label="Скопировать URL webhook"
                       >
                         {copiedField === 'url' ? (
-                          <Check className="w-4 h-4 text-accent" />
+                          <Check className="w-4 h-4 text-emerald-700" />
                         ) : (
                           <Copy className="w-4 h-4" />
                         )}
@@ -212,7 +212,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
                         aria-label="Скопировать секрет webhook"
                       >
                         {copiedField === 'secret' ? (
-                          <Check className="w-4 h-4 text-accent" />
+                          <Check className="w-4 h-4 text-emerald-700" />
                         ) : (
                           <Copy className="w-4 h-4" />
                         )}
@@ -233,7 +233,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
             )}
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/40 text-sm text-red-500">
+              <div className="p-3 rounded-lg bg-danger-soft border border-destructive/30 text-sm text-destructive">
                 {error}
               </div>
             )}
@@ -258,7 +258,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
 
             <ol className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent/15 text-accent text-xs font-semibold flex items-center justify-center">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent text-accent-foreground text-xs font-semibold flex items-center justify-center">
                   1
                 </span>
                 <span className="flex-1">
@@ -267,7 +267,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent/15 text-accent text-xs font-semibold flex items-center justify-center">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent text-accent-foreground text-xs font-semibold flex items-center justify-center">
                   2
                 </span>
                 <span className="flex-1">
@@ -276,7 +276,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent/15 text-accent text-xs font-semibold flex items-center justify-center">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent text-accent-foreground text-xs font-semibold flex items-center justify-center">
                   3
                 </span>
                 <span className="flex-1">
@@ -302,7 +302,7 @@ export function MaxLink({ isOwnProfile }: MaxLinkProps) {
             />
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/40 text-sm text-red-500">
+              <div className="p-3 rounded-lg bg-danger-soft border border-destructive/30 text-sm text-destructive">
                 {error}
               </div>
             )}

@@ -34,12 +34,12 @@ export const CallCard: React.FC<{ content: string }> = ({ content }) => {
   return (
     <div className="flex items-center gap-2.5 py-0.5">
       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-        missed ? 'bg-red-500/15 text-red-400' : 'bg-primary/10 text-primary'
+        missed ? 'bg-danger-soft text-destructive' : 'bg-accent text-emerald-700'
       }`}>
         <Icon size={15} />
       </div>
       <div className="text-sm">
-        <p className={missed ? 'text-red-400 font-medium' : 'font-medium'}>
+        <p className={missed ? 'text-destructive font-medium' : 'font-medium'}>
           {missed ? 'Пропущенный звонок' : meta.kind === 'audio' ? 'Аудиозвонок' : 'Видеозвонок'}
         </p>
         {!missed && typeof meta.duration_sec === 'number' && (
@@ -94,11 +94,11 @@ export const VoiceMessagePlayer: React.FC<{ url: string; duration?: number }> = 
       <button
         type="button"
         onClick={toggle}
-        className="w-8 h-8 rounded-full bg-primary/20 hover:bg-primary/30 text-primary flex items-center justify-center shrink-0 transition-colors"
+        className="w-8 h-8 rounded-full bg-accent hover:bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 transition-colors duration-150"
       >
         {playing ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
       </button>
-      <div className="flex-1 h-1.5 bg-foreground/10 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-graphite-200 rounded-full overflow-hidden">
         <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
       </div>
       <span className="text-xs text-muted-foreground tabular-nums shrink-0">
@@ -194,8 +194,8 @@ const MessageList: React.FC<MessageListProps> = ({
 
         {messages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Send className="w-7 h-7 text-primary/70" />
+            <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center">
+              <Send className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
             </div>
             <p className="text-sm">No messages yet. Start a conversation!</p>
           </div>
@@ -228,7 +228,7 @@ const MessageList: React.FC<MessageListProps> = ({
                       className="w-8 h-8 rounded-full"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center text-xs text-primary-foreground font-semibold shadow-soft">
+                    <div className="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-xs text-white font-semibold ring-1 ring-border">
                       {message.username.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -243,10 +243,10 @@ const MessageList: React.FC<MessageListProps> = ({
                   </div>
 
                   <div
-                    className={`inline-block max-w-xs px-4 py-2 rounded-2xl transition-shadow duration-200 hover:shadow-soft ${
+                    className={`inline-block max-w-[65%] px-3.5 py-2 rounded-2xl text-[15px] leading-6 shadow-soft ${
                       isOwn
-                        ? 'bg-gradient-brand text-primary-foreground rounded-br-md'
-                        : 'bg-card border border-border/60 text-card-foreground rounded-bl-md'
+                        ? 'bg-primary text-primary-foreground rounded-br-[6px] animate-msg-send'
+                        : 'bg-card border border-border text-card-foreground rounded-bl-[6px] animate-msg-receive'
                     }`}
                   >
                     {message.type === 'call' ? (
@@ -284,7 +284,7 @@ const MessageList: React.FC<MessageListProps> = ({
                         <button
                           key={idx}
                           onClick={() => onReaction?.(message.id, reaction.emoji)}
-                          className="px-2.5 py-1 text-xs bg-secondary/80 rounded-full hover:bg-primary/20 border border-transparent hover:border-primary/40 transition-colors"
+                          className="px-2 h-6 text-xs bg-card rounded-full border border-border hover:bg-accent hover:border-emerald-200 hover:text-accent-foreground transition-colors duration-150"
                         >
                           {reaction.emoji} {reaction.users.length}
                         </button>
@@ -310,11 +310,11 @@ const MessageList: React.FC<MessageListProps> = ({
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-border/60 p-4 bg-card/60 backdrop-blur-xl">
+      <div className="border-t border-border p-4 bg-card">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <button
             type="button"
-            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-accent-foreground hover:bg-accent rounded-lg transition-colors duration-150"
           >
             <Paperclip size={20} />
           </button>
@@ -329,7 +329,7 @@ const MessageList: React.FC<MessageListProps> = ({
 
           <button
             type="button"
-            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-accent-foreground hover:bg-accent rounded-lg transition-colors duration-150"
           >
             <Smile size={20} />
           </button>
@@ -337,7 +337,7 @@ const MessageList: React.FC<MessageListProps> = ({
           <button
             type="submit"
             disabled={sending || !inputValue.trim()}
-            className="px-4 py-2 bg-gradient-brand text-primary-foreground rounded-xl shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
+            className="h-10 w-10 grid place-items-center bg-primary text-primary-foreground rounded-lg shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none transition-all duration-150"
           >
             <Send size={20} />
           </button>

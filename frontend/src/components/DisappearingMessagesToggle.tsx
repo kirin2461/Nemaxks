@@ -80,11 +80,11 @@ export default function DisappearingMessagesToggle({
   }
 
   return (
-    <div className="p-4 bg-card/50 backdrop-blur-sm rounded-xl border border-border/50">
+    <div className="p-4 bg-card/50 rounded-xl border border-border/50">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-            enabled ? 'bg-purple-600' : 'bg-secondary'
+            enabled ? 'bg-primary' : 'bg-secondary'
           }`}>
             <Timer className="w-5 h-5 text-white" />
           </div>
@@ -105,7 +105,7 @@ export default function DisappearingMessagesToggle({
           onClick={handleToggle}
           disabled={saving}
           className={`relative w-14 h-7 rounded-full transition-colors ${
-            enabled ? 'bg-purple-600' : 'bg-muted'
+            enabled ? 'bg-primary' : 'bg-muted'
           } ${saving ? 'opacity-50' : ''}`}
         >
           <motion.div
@@ -138,7 +138,7 @@ export default function DisappearingMessagesToggle({
                 disabled={saving}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   duration === opt.value
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-primary text-white'
                     : 'bg-secondary text-foreground hover:bg-muted'
                 }`}
               >

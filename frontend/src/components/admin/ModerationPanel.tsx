@@ -282,7 +282,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       </div>
       <button
         onClick={() => handleRevokeSanction(entry)}
-        className="px-3 py-1.5 rounded-lg bg-red-500/15 text-red-400 border border-red-500/25 hover:bg-red-500/25 text-sm transition-colors flex-shrink-0"
+        className="px-3 py-1.5 rounded-lg bg-danger-soft text-destructive border border-destructive/30 hover:bg-destructive/25 text-sm transition-colors flex-shrink-0"
       >
         {revokeLabel}
       </button>
@@ -291,10 +291,10 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
 
   const dmStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      pending: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25',
-      approved: 'bg-accent/15 text-accent border border-accent/25',
-      revoked: 'bg-red-500/15 text-red-400 border border-red-500/25',
-      rejected: 'bg-red-500/15 text-red-400 border border-red-500/25',
+      pending: 'bg-warning/15 text-warning border border-warning/30',
+      approved: 'bg-accent text-accent-foreground border border-emerald-200',
+      revoked: 'bg-danger-soft text-destructive border border-destructive/30',
+      rejected: 'bg-danger-soft text-destructive border border-destructive/30',
       expired: 'bg-muted text-muted-foreground border border-border',
     }
     const labels: Record<string, string> = {
@@ -314,14 +314,14 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="p-4 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 text-sm flex items-center gap-2">
+        <div className="p-4 bg-danger-soft border border-destructive/30 rounded-xl text-destructive text-sm flex items-center gap-2">
           <Shield className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
       )}
 
       {/* Селектор сервера + подвкладки */}
-      <div className="glass rounded-xl p-4">
+      <div className="card !p-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Server className="w-4 h-4" />
@@ -347,7 +347,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                 className={cn(
                   'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200',
                   subTab === tab.id
-                    ? 'gradient-brand text-primary-foreground shadow-soft'
+                    ? 'bg-primary text-primary-foreground shadow-soft'
                     : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground'
                 )}
               >
@@ -367,7 +367,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         <>
           {/* Форма выдачи санкции */}
           {currentIssue && (
-            <div className="glass rounded-xl p-4">
+            <div className="card !p-4">
               <h3 className="font-medium mb-4 flex items-center gap-2">
                 <currentIssue.icon className="w-4 h-4 text-muted-foreground" />
                 {currentIssue.label}
@@ -406,7 +406,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                 <button
                   onClick={handleIssue}
                   disabled={submitting || !targetId || !reason.trim() || !guildId}
-                  className="px-4 py-2 rounded-lg gradient-brand text-primary-foreground shadow-soft hover:brightness-110 flex items-center gap-2 transition-all disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-soft  flex items-center gap-2 transition-all disabled:opacity-50"
                 >
                   <Plus className="w-4 h-4" />
                   {currentIssue.button}
@@ -416,7 +416,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           )}
 
           {/* Список санкций */}
-          <div className="glass rounded-xl">
+          <div className="card !p-0">
             <div className="divide-y divide-border">
               {subTab === 'bans' &&
                 (bans.length === 0 ? (
@@ -446,7 +446,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       ) : (
         <>
           {/* DM-доступ: форма запроса */}
-          <div className="glass rounded-xl p-4">
+          <div className="card !p-4">
             <h3 className="font-medium mb-4 flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-muted-foreground" />
               Запросить доступ к личным сообщениям
@@ -470,7 +470,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
               <button
                 onClick={handleRequestDmAccess}
                 disabled={submitting || !dmTargetId || !dmReason.trim()}
-                className="px-4 py-2 rounded-lg gradient-brand text-primary-foreground shadow-soft hover:brightness-110 flex items-center gap-2 transition-all disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-soft  flex items-center gap-2 transition-all disabled:opacity-50"
               >
                 <Plus className="w-4 h-4" />
                 Запросить доступ
@@ -482,7 +482,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           </div>
 
           {/* DM-доступ: список запросов */}
-          <div className="glass rounded-xl">
+          <div className="card !p-0">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h3 className="font-semibold">Запросы DM-доступа</h3>
               <select
@@ -520,7 +520,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                         {req.status === 'pending' && (
                           <button
                             onClick={() => handleApprove(req.id)}
-                            className="p-2 rounded-lg hover:bg-green-500/10 text-green-500 transition-colors"
+                            className="p-2 rounded-lg hover:bg-accent text-emerald-600 transition-colors"
                             title="Одобрить"
                           >
                             <CheckCircle className="w-4 h-4" />
@@ -528,7 +528,7 @@ export function ModerationPanel({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                         )}
                         <button
                           onClick={() => handleRevoke(req.id)}
-                          className="p-2 rounded-lg hover:bg-red-500/15 text-red-400 transition-colors"
+                          className="p-2 rounded-lg hover:bg-danger-soft text-destructive transition-colors"
                           title="Отозвать"
                         >
                           <XCircle className="w-4 h-4" />

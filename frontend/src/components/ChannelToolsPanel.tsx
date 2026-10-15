@@ -151,7 +151,7 @@ export function ChannelToolsPanel({ channelId, userPlan = 'start' }: ChannelTool
           <div className="text-center py-8">
             <div className="text-muted-foreground mb-4">No tools yet</div>
             {!canCreateBoard && (
-              <div className="flex items-center justify-center gap-2 text-sm text-amber-500">
+              <div className="flex items-center justify-center gap-2 text-sm text-warning">
                 <Crown className="w-4 h-4" />
                 <span>Upgrade to Pro for whiteboards</span>
               </div>
@@ -166,9 +166,9 @@ export function ChannelToolsPanel({ channelId, userPlan = 'start' }: ChannelTool
                 onClick={() => setSelectedTool(tool)}
               >
                 {tool.tool_type === 'board' ? (
-                  <PenTool className="w-5 h-5 text-blue-500" />
+                  <PenTool className="w-5 h-5 text-primary" />
                 ) : (
-                  <BookOpen className="w-5 h-5 text-green-500" />
+                  <BookOpen className="w-5 h-5 text-emerald-600" />
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{tool.title}</div>
@@ -199,7 +199,7 @@ export function ChannelToolsPanel({ channelId, userPlan = 'start' }: ChannelTool
       </div>
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowCreateModal(false)}>
+        <div className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft flex items-center justify-center z-50" onClick={() => setShowCreateModal(false)}>
           <div className="bg-card p-6 rounded-lg w-full max-w-md" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold mb-4">Create New Tool</h3>
             
@@ -214,7 +214,7 @@ export function ChannelToolsPanel({ channelId, userPlan = 'start' }: ChannelTool
                     } ${!canCreateBoard ? 'opacity-50' : ''}`}
                     disabled={!canCreateBoard}
                   >
-                    <PenTool className="w-5 h-5 text-blue-500" />
+                    <PenTool className="w-5 h-5 text-primary" />
                     <div className="text-left">
                       <div className="font-medium">Whiteboard</div>
                       <div className="text-xs text-muted-foreground">Pro+</div>
@@ -227,7 +227,7 @@ export function ChannelToolsPanel({ channelId, userPlan = 'start' }: ChannelTool
                     } ${!canCreateNotebook ? 'opacity-50' : ''}`}
                     disabled={!canCreateNotebook}
                   >
-                    <BookOpen className="w-5 h-5 text-green-500" />
+                    <BookOpen className="w-5 h-5 text-emerald-600" />
                     <div className="text-left">
                       <div className="font-medium">Notebook</div>
                       <div className="text-xs text-muted-foreground">Premium</div>

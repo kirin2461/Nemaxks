@@ -101,8 +101,8 @@ export function ChannelSettingsModal({ channel, onClose, onSave, onDelete }: Cha
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex animate-fade-in">
+    <div className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft z-50 flex items-center justify-center p-4">
+      <div className="bg-card border border-border shadow-pop rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex animate-scale-in">
         <div className="w-56 bg-muted/50 p-4 border-r border-border">
           <div className="flex items-center gap-2 mb-6 px-2">
             {channel.type === 'text' ? (
@@ -137,7 +137,7 @@ export function ChannelSettingsModal({ channel, onClose, onSave, onDelete }: Cha
           <div className="mt-auto pt-4 border-t border-border mt-6">
             <button
               onClick={onDelete}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-danger-soft transition-colors"
             >
               <Trash2 className="w-4 h-4" />
               Delete Channel
@@ -275,7 +275,7 @@ export function ChannelSettingsModal({ channel, onClose, onSave, onDelete }: Cha
                               onClick={() => togglePermission(selectedRole.id, perm.id)}
                               className={cn(
                                 'w-10 h-5 rounded-full transition-colors relative',
-                                rolePermissions[selectedRole.id]?.[perm.id] ? 'bg-green-500' : 'bg-muted'
+                                rolePermissions[selectedRole.id]?.[perm.id] ? 'bg-emerald-500' : 'bg-muted'
                               )}
                             >
                               <div
@@ -323,7 +323,7 @@ export function ChannelSettingsModal({ channel, onClose, onSave, onDelete }: Cha
                   ) : (
                     <button
                       onClick={generateInvite}
-                      className="btn-cosmic"
+                      className="button-primary"
                     >
                       Generate Invite Link
                     </button>

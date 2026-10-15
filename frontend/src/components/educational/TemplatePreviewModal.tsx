@@ -26,8 +26,8 @@ interface TemplatePreviewModalProps {
 
 const planConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   free: { label: "Бесплатно", color: "text-muted-foreground", icon: <Zap size={16} /> },
-  edu_basic: { label: "Базовый план", color: "text-blue-400", icon: <Star size={16} /> },
-  edu_pro: { label: "Про план", color: "text-purple-400", icon: <Crown size={16} /> },
+  edu_basic: { label: "Базовый план", color: "text-primary", icon: <Star size={16} /> },
+  edu_pro: { label: "Про план", color: "text-emerald-700", icon: <Crown size={16} /> },
 };
 
 const toolTypeIcons: Record<string, React.ReactNode> = {
@@ -67,7 +67,7 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft z-50"
             onClick={onClose}
           />
           
@@ -75,14 +75,14 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl md:max-h-[85vh] bg-background border border-border rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col"
+            className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl md:max-h-[85vh] bg-background border border-border rounded-2xl shadow-pop z-50 overflow-hidden flex flex-col animate-scale-in"
           >
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-xl ${
-                  template.tool_type === "notebook" ? "bg-blue-600/20 text-blue-400" :
-                  template.tool_type === "whiteboard" ? "bg-green-600/20 text-green-400" :
-                  "bg-orange-600/20 text-orange-400"
+                  template.tool_type === "notebook" ? "bg-primary/20 text-primary" :
+                  template.tool_type === "whiteboard" ? "bg-accent text-emerald-700" :
+                  "bg-graphite-100 text-graphite-600"
                 }`}>
                   {toolTypeIcons[template.tool_type]}
                 </div>
@@ -122,7 +122,7 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
                   <div className="grid grid-cols-2 gap-2">
                     {features.map((feature, i) => (
                       <div key={i} className="flex items-center gap-2 p-3 bg-card/50 rounded-lg">
-                        <CheckCircle size={16} className="text-green-500 flex-shrink-0" />
+                        <CheckCircle size={16} className="text-emerald-600 flex-shrink-0" />
                         <span className="text-sm text-foreground capitalize">{feature.replace(/_/g, " ")}</span>
                       </div>
                     ))}
@@ -143,7 +143,7 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
                 </div>
               )}
 
-              <div className="p-4 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/20 rounded-xl">
+              <div className="p-4 bg-accent border border-border rounded-xl">
                 <h4 className="font-medium text-foreground mb-2">Как использовать</h4>
                 <p className="text-sm text-muted-foreground">
                   Нажмите "Открыть шаблон", чтобы создать новый документ на основе этого шаблона. 
@@ -167,9 +167,9 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
                     onClose();
                   }}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-colors ${
-                    template.tool_type === "notebook" ? "bg-blue-600 hover:bg-blue-500" :
-                    template.tool_type === "whiteboard" ? "bg-green-600 hover:bg-green-500" :
-                    "bg-orange-600 hover:bg-orange-500"
+                    template.tool_type === "notebook" ? "bg-primary hover:bg-primary" :
+                    template.tool_type === "whiteboard" ? "bg-primary hover:bg-emerald-800" :
+                    "bg-graphite-700 hover:bg-graphite-600"
                   } text-white`}
                 >
                   <Play size={18} />
@@ -177,7 +177,7 @@ export function TemplatePreviewModal({ template, isOpen, onClose, onApply, userP
                 </button>
               ) : (
                 <button
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-medium transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors"
                 >
                   <Crown size={18} />
                   Улучшить план

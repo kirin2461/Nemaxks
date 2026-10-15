@@ -1,9 +1,10 @@
 import React from 'react'
+import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
-  size?: 'sm' | 'md' | 'lg'
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'link'
+  size?: 'sm' | 'md' | 'lg' | 'icon'
   loading?: boolean
 }
 
@@ -19,29 +20,37 @@ export function Button({
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200',
-        'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
+        'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium',
+        'transition-all duration-150 ease-standard active:scale-[0.97]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        'disabled:pointer-events-none disabled:opacity-50',
         {
-          // Variants
-          'bg-gradient-brand text-primary-foreground shadow-soft hover:brightness-110 hover:shadow-glow active:scale-[0.98]':
+          // Variants (design.md §6.1)
+          'bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand':
             variant === 'primary',
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80':
+          'bg-secondary text-secondary-foreground hover:bg-graphite-200':
             variant === 'secondary',
-          'hover:bg-accent/10 text-foreground': variant === 'ghost',
-          'bg-red-500 text-white hover:bg-red-600': variant === 'danger',
+          'border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200':
+            variant === 'outline',
+          'text-muted-foreground hover:bg-accent hover:text-accent-foreground':
+            variant === 'ghost',
+          'bg-destructive text-destructive-foreground hover:bg-[hsl(0_72%_38%)]':
+            variant === 'danger',
+          'text-primary underline-offset-4 hover:underline h-auto p-0':
+            variant === 'link',
 
           // Sizes
-          'px-3 py-1.5 text-sm': size === 'sm',
-          'px-4 py-2': size === 'md',
-          'px-6 py-3 text-lg': size === 'lg',
+          'h-8 px-3 text-xs': size === 'sm',
+          'h-10 px-4': size === 'md',
+          'h-12 px-6 text-base': size === 'lg',
+          'h-10 w-10': size === 'icon',
         },
         className
       )}
       disabled={disabled || loading}
       {...props}
     >
-      {loading && <div className="loading-spinner w-4 h-4" />}
+      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
       {children}
     </button>
   )

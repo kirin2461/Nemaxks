@@ -77,23 +77,23 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
   const notebookItems = visibleItems.filter(item => item.type === 'notebook');
 
   return (
-    <div className="channel-tools-container w-full bg-gray-50 rounded-lg border border-gray-200">
+    <div className="channel-tools-container w-full bg-graphite-50 rounded-lg border border-border">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
-        <h2 className="text-lg font-semibold text-gray-800">Channel Tools</h2>
+      <div className="flex items-center justify-between p-4 border-b border-border bg-white">
+        <h2 className="text-lg font-semibold text-graphite-800">Channel Tools</h2>
         <div className="flex gap-2">
           {userRole !== 'member' && (
             <>
               <button
                 onClick={onCreateBoard}
-                className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-primary text-white rounded hover:bg-primary transition"
               >
                 <Grid3x3 size={16} />
                 Board
               </button>
               <button
                 onClick={onCreateNotebook}
-                className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-purple-500 text-white rounded hover:bg-purple-600 transition"
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-primary text-white rounded hover:bg-emerald-800 transition"
               >
                 <FileText size={16} />
                 Notebook
@@ -110,14 +110,14 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
           <div className="mb-4">
             <button
               onClick={() => toggleExpand('boards')}
-              className="flex items-center gap-2 w-full p-2 hover:bg-gray-100 rounded font-medium text-gray-700"
+              className="flex items-center gap-2 w-full p-2 hover:bg-graphite-100 rounded font-medium text-graphite-700"
             >
               {expandedItems.has('boards') ? (
                 <ChevronDown size={18} />
               ) : (
                 <ChevronRight size={18} />
               )}
-              <Grid3x3 size={18} className="text-blue-500" />
+              <Grid3x3 size={18} className="text-primary" />
               Boards ({boardItems.length})
             </button>
             {expandedItems.has('boards') && (
@@ -128,13 +128,13 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
                     onClick={() => handleItemClick(item)}
                     className={`p-3 rounded border cursor-pointer transition ${
                       selectedItem === item.id
-                        ? 'bg-blue-50 border-blue-300'
-                        : 'bg-white border-gray-200 hover:border-blue-300'
+                        ? 'bg-accent border-emerald-300'
+                        : 'bg-card border-border hover:border-emerald-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-800">{item.name}</h4>
+                        <h4 className="font-medium text-graphite-800">{item.name}</h4>
                         {item.description && (
                           <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                         )}
@@ -149,7 +149,7 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
                             e.stopPropagation();
                             onDeleteItem?.(item.id);
                           }}
-                          className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                          className="px-2 py-1 text-sm text-destructive hover:bg-danger-soft rounded"
                         >
                           Delete
                         </button>
@@ -167,14 +167,14 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
           <div>
             <button
               onClick={() => toggleExpand('notebooks')}
-              className="flex items-center gap-2 w-full p-2 hover:bg-gray-100 rounded font-medium text-gray-700"
+              className="flex items-center gap-2 w-full p-2 hover:bg-graphite-100 rounded font-medium text-graphite-700"
             >
               {expandedItems.has('notebooks') ? (
                 <ChevronDown size={18} />
               ) : (
                 <ChevronRight size={18} />
               )}
-              <FileText size={18} className="text-purple-500" />
+              <FileText size={18} className="text-emerald-700" />
               Notebooks ({notebookItems.length})
             </button>
             {expandedItems.has('notebooks') && (
@@ -185,13 +185,13 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
                     onClick={() => handleItemClick(item)}
                     className={`p-3 rounded border cursor-pointer transition ${
                       selectedItem === item.id
-                        ? 'bg-purple-50 border-purple-300'
-                        : 'bg-white border-gray-200 hover:border-purple-300'
+                        ? 'bg-accent border-emerald-300'
+                        : 'bg-card border-border hover:border-emerald-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-800">{item.name}</h4>
+                        <h4 className="font-medium text-graphite-800">{item.name}</h4>
                         {item.description && (
                           <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                         )}
@@ -206,7 +206,7 @@ const ChannelTools: React.FC<ChannelToolsProps> = ({
                             e.stopPropagation();
                             onDeleteItem?.(item.id);
                           }}
-                          className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                          className="px-2 py-1 text-sm text-destructive hover:bg-danger-soft rounded"
                         >
                           Delete
                         </button>

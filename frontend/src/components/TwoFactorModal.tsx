@@ -71,8 +71,8 @@ export function TwoFactorModal({ isOpen, onClose, onVerify, error }: TwoFactorMo
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
       <div className="text-center">
-        <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Shield className="w-8 h-8 text-purple-400" />
+        <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+          <Shield className="w-8 h-8 text-emerald-700" />
         </div>
         
         <h2 className="text-xl font-bold text-foreground mb-2">Двухфакторная аутентификация</h2>
@@ -92,17 +92,17 @@ export function TwoFactorModal({ isOpen, onClose, onVerify, error }: TwoFactorMo
               onChange={e => handleChange(index, e.target.value)}
               onKeyDown={e => handleKeyDown(index, e)}
               disabled={loading}
-              className="w-12 h-14 text-center text-2xl font-bold bg-muted/60 border border-white/20 rounded-lg text-foreground focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 outline-none transition-all disabled:opacity-50"
+              className="w-12 h-14 text-center text-2xl font-bold bg-muted/60 border border-input rounded-lg text-foreground focus:border-primary focus:ring-4 focus:ring-emerald-600/10 outline-none transition-all disabled:opacity-50"
             />
           ))}
         </div>
 
         {(error || localError) && (
-          <p className="text-red-400 text-sm mb-4">{error || localError}</p>
+          <p className="text-destructive text-sm mb-4">{error || localError}</p>
         )}
 
         {loading && (
-          <div className="flex items-center justify-center gap-2 text-purple-400">
+          <div className="flex items-center justify-center gap-2 text-emerald-700">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>Проверка...</span>
           </div>

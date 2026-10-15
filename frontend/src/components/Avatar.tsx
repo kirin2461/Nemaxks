@@ -1,5 +1,5 @@
 import React from 'react'
-import { cn, getInitials, generateAvatarColor } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { Mic } from 'lucide-react'
 
 type PresenceStatus = 'online' | 'offline' | 'idle' | 'dnd' | 'typing' | 'recording_voice'
@@ -39,7 +39,6 @@ function sanitizeImageSrc(src?: string): string | null {
 export function Avatar({ src, alt = '', size = 'md', userId = '', className, showStatus = false, status }: AvatarProps) {
   const [imgError, setImgError] = React.useState(false)
   const initials = getInitials(alt || 'User')
-  const gradient = generateAvatarColor(userId)
   const safeSrc = sanitizeImageSrc(src)
 
   const sizeClasses = {
@@ -59,25 +58,25 @@ export function Avatar({ src, alt = '', size = 'md', userId = '', className, sho
   const getStatusColor = () => {
     switch (status) {
       case 'online':
-        return 'bg-green-500'
+        return 'bg-online'
       case 'idle':
-        return 'bg-yellow-500'
+        return 'bg-idle'
       case 'dnd':
-        return 'bg-red-500'
+        return 'bg-dnd'
       case 'typing':
-        return 'bg-blue-500 animate-pulse'
+        return 'bg-emerald-500 animate-pulse'
       case 'recording_voice':
-        return 'bg-red-500 animate-pulse'
+        return 'bg-dnd animate-pulse'
       case 'offline':
       default:
-        return 'bg-gray-500'
+        return 'bg-offline'
     }
   }
 
   const StatusIndicator = showStatus && status ? (
     <span 
       className={cn(
-        'absolute rounded-full border-background',
+        'absolute rounded-full border-card',
         statusSizeClasses[size],
         getStatusColor()
       )}
@@ -98,8 +97,7 @@ export function Avatar({ src, alt = '', size = 'md', userId = '', className, sho
       )}>
         <div
           className={cn(
-            'rounded-full overflow-hidden flex items-center justify-center font-semibold text-white',
-            `bg-gradient-to-br ${gradient}`,
+            'rounded-full overflow-hidden flex items-center justify-center font-semibold text-white bg-emerald-700 ring-1 ring-border',
             isFillParent ? 'w-full h-full' : sizeClasses[size],
             className
           )}
@@ -120,7 +118,7 @@ export function Avatar({ src, alt = '', size = 'md', userId = '', className, sho
         src={safeSrc}
         alt={alt}
         className={cn(
-          'rounded-full object-cover overflow-hidden',
+          'rounded-full object-cover overflow-hidden ring-1 ring-border bg-graphite-100',
           isFillParent ? 'w-full h-full' : sizeClasses[size],
           className
         )}

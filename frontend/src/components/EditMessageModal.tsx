@@ -89,7 +89,7 @@ export function EditMessageModal({
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+          <div className="p-3 bg-danger-soft border border-destructive/30 rounded-lg text-destructive text-sm">
             {error}
           </div>
         )}

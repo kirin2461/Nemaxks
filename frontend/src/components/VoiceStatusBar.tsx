@@ -15,12 +15,12 @@ export function VoiceStatusBar() {
         <div className="flex-1 flex items-center gap-2 min-w-0 hover:bg-accent rounded px-2 py-1 transition-colors">
           <Signal className={cn(
             "w-4 h-4 flex-shrink-0",
-            state.connectionQuality === 'excellent' && "text-green-500",
-            state.connectionQuality === 'good' && "text-yellow-500",
-            state.connectionQuality === 'poor' && "text-red-500"
+            state.connectionQuality === 'excellent' && "text-emerald-600",
+            state.connectionQuality === 'good' && "text-warning",
+            state.connectionQuality === 'poor' && "text-destructive"
           )} />
           <div className="text-left min-w-0">
-            <div className="text-xs font-semibold text-green-500">Голосовой канал</div>
+            <div className="text-xs font-semibold text-emerald-600">Голосовой канал</div>
             <div className="text-[10px] text-[#b5bac1] truncate">
               {state.channelName} • {state.connectedUsers.length} участн.
             </div>
@@ -32,7 +32,7 @@ export function VoiceStatusBar() {
             onClick={toggleMute}
             className={cn(
               "p-2 rounded hover:bg-accent transition-colors",
-              state.isMuted ? "text-red-400" : "text-foreground"
+              state.isMuted ? "text-destructive" : "text-foreground"
             )}
             title={state.isMuted ? "Включить микрофон" : "Отключить микрофон"}
           >
@@ -43,7 +43,7 @@ export function VoiceStatusBar() {
             onClick={toggleDeafen}
             className={cn(
               "p-2 rounded hover:bg-accent transition-colors",
-              state.isDeafened ? "text-red-400" : "text-foreground"
+              state.isDeafened ? "text-destructive" : "text-foreground"
             )}
             title={state.isDeafened ? "Включить звук" : "Отключить звук"}
           >
@@ -59,7 +59,7 @@ export function VoiceStatusBar() {
 
           <button
             onClick={leaveChannel}
-            className="p-2 rounded hover:bg-red-500/20 text-red-400 transition-colors"
+            className="p-2 rounded hover:bg-danger-soft text-destructive transition-colors"
             title="Отключиться"
           >
             <PhoneOff className="w-5 h-5" />

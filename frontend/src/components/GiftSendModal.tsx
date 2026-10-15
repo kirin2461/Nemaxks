@@ -69,7 +69,7 @@ export function GiftSendModal({
     return (
       <Modal isOpen={isOpen} onClose={handleClose} size="sm">
         <div className="text-center py-4">
-          <div className="w-20 h-20 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+          <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
             <Gift className="w-10 h-10 text-white" />
           </div>
           <h2 className="text-xl font-bold text-foreground mb-2">Подарок отправлен!</h2>
@@ -78,7 +78,7 @@ export function GiftSendModal({
           </p>
           <button
             onClick={handleClose}
-            className="mt-6 w-full px-4 py-2 bg-gradient-brand hover:brightness-110 rounded-lg text-white shadow-soft transition-all"
+            className="mt-6 w-full px-4 py-2 bg-primary hover:bg-emerald-800 rounded-lg text-white shadow-soft transition-all"
           >
             Закрыть
           </button>
@@ -91,7 +91,7 @@ export function GiftSendModal({
     <Modal isOpen={isOpen} onClose={handleClose} title="Отправить подарок" size="lg">
       <div className="space-y-4">
         <div className="flex items-center gap-3 p-3 bg-muted/60 rounded-lg">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
+          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center overflow-hidden">
             {recipientAvatar ? (
               <img src={recipientAvatar} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -107,7 +107,7 @@ export function GiftSendModal({
         <div className="flex items-center justify-between p-3 bg-muted/60 rounded-lg">
           <span className="text-muted-foreground">Ваш баланс:</span>
           <div className="flex gap-4">
-            <span className="text-accent font-bold">{userBalance.coins} 🪙</span>
+            <span className="text-emerald-700 font-bold">{userBalance.coins} 🪙</span>
             <span className="text-primary font-bold">{userBalance.gems} 💎</span>
           </div>
         </div>
@@ -135,7 +135,7 @@ export function GiftSendModal({
                 >
                   <div className="text-3xl mb-1">{gift.icon}</div>
                   <p className="text-xs text-foreground truncate">{gift.name}</p>
-                  <p className={`text-xs ${gift.currency === 'coins' ? 'text-accent' : 'text-primary'}`}>
+                  <p className={`text-xs ${gift.currency === 'coins' ? 'text-emerald-700' : 'text-primary'}`}>
                     {gift.price} {gift.currency === 'coins' ? '🪙' : '💎'}
                   </p>
                   {selectedGift === gift.id && (
@@ -162,7 +162,7 @@ export function GiftSendModal({
         </div>
 
         {selectedGiftData && !canAfford && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+          <div className="p-3 bg-danger-soft border border-destructive/30 rounded-lg text-destructive text-sm">
             Недостаточно {selectedGiftData.currency === 'coins' ? 'монет' : 'кристаллов'}
           </div>
         )}
@@ -178,7 +178,7 @@ export function GiftSendModal({
           <button
             onClick={handleSend}
             disabled={loading || !selectedGift || !canAfford}
-            className="flex-1 px-4 py-2 bg-gradient-brand hover:brightness-110 rounded-lg text-white font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-soft hover:shadow-glow"
+            className="flex-1 px-4 py-2 bg-primary hover:bg-emerald-800 rounded-lg text-white font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-soft hover:shadow-lg-brand"
           >
             {loading ? (
               <>

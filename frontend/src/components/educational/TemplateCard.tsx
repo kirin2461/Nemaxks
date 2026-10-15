@@ -71,25 +71,25 @@ const iconMap: Record<string, React.ReactNode> = {
 
 const planConfig: Record<string, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
   free: { label: "Бесплатно", color: "text-foreground", bgColor: "bg-secondary", icon: <Zap size={14} /> },
-  edu_basic: { label: "Базовый", color: "text-blue-300", bgColor: "bg-blue-600/80", icon: <Star size={14} /> },
-  edu_pro: { label: "Про", color: "text-purple-300", bgColor: "bg-purple-600/80", icon: <Crown size={14} /> },
+  edu_basic: { label: "Базовый", color: "text-graphite-100", bgColor: "bg-graphite-700", icon: <Star size={14} /> },
+  edu_pro: { label: "Про", color: "text-emerald-700", bgColor: "bg-primary/90", icon: <Crown size={14} /> },
 };
 
 const toolTypeConfig: Record<string, { gradient: string; hoverGradient: string; accent: string }> = {
   notebook: {
-    gradient: "from-blue-600/20 via-cyan-600/10 to-transparent",
-    hoverGradient: "group-hover:from-blue-600/30 group-hover:via-cyan-600/20",
-    accent: "text-blue-400",
+    gradient: "from-graphite-100 via-graphite-100/60 to-transparent",
+    hoverGradient: "group-hover:from-graphite-200/70 group-hover:via-graphite-100/60",
+    accent: "text-graphite-600",
   },
   whiteboard: {
-    gradient: "from-green-600/20 via-emerald-600/10 to-transparent",
-    hoverGradient: "group-hover:from-green-600/30 group-hover:via-emerald-600/20",
-    accent: "text-green-400",
+    gradient: "from-emerald-100/70 via-emerald-50/60 to-transparent",
+    hoverGradient: "group-hover:from-emerald-100 group-hover:via-emerald-50/70",
+    accent: "text-emerald-700",
   },
   editor: {
-    gradient: "from-orange-600/20 via-amber-600/10 to-transparent",
-    hoverGradient: "group-hover:from-orange-600/30 group-hover:via-amber-600/20",
-    accent: "text-orange-400",
+    gradient: "from-graphite-100 via-graphite-100/60 to-transparent",
+    hoverGradient: "group-hover:from-graphite-200/70 group-hover:via-graphite-100/60",
+    accent: "text-graphite-600",
   },
 };
 
@@ -118,12 +118,12 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
     >
-      <div className={`relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm transition-all duration-300 ${isHovered ? "border-border shadow-xl shadow-black/20" : ""}`}>
+      <div className={`relative overflow-hidden rounded-2xl border border-border/50 bg-card transition-all duration-150 ${isHovered ? "border-graphite-300 shadow-elev" : "shadow-soft"}`}>
         <div className={`absolute inset-0 bg-gradient-to-br ${typeConfig.gradient} ${typeConfig.hoverGradient} transition-all duration-300`} />
         
         <div className="relative p-5">
           <div className="flex items-start justify-between mb-4">
-            <div className={`p-3 rounded-xl bg-gradient-to-br ${typeConfig.gradient} border border-white/5 ${typeConfig.accent}`}>
+            <div className={`p-3 rounded-xl bg-gradient-to-br ${typeConfig.gradient} border border-border ${typeConfig.accent}`}>
               {icon}
             </div>
             <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${plan.bgColor} text-xs font-medium ${plan.color}`}>
@@ -172,10 +172,10 @@ export function TemplateCard({ template, userPlan = "free", onApply, onPreview }
                   onClick={() => onApply?.(template)}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                     template.tool_type === "notebook"
-                      ? "bg-blue-600 hover:bg-blue-500 text-white"
+                      ? "bg-primary hover:bg-primary text-white"
                       : template.tool_type === "whiteboard"
-                      ? "bg-green-600 hover:bg-green-500 text-white"
-                      : "bg-orange-600 hover:bg-orange-500 text-white"
+                      ? "bg-primary hover:bg-emerald-800 text-primary-foreground"
+                      : "bg-graphite-700 hover:bg-graphite-600 text-white"
                   }`}
                 >
                   <Play size={14} />
@@ -241,10 +241,10 @@ export function FeaturedTemplateCard({ template, onApply, userPlan = "free", has
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-sm"
+      className="relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-card/80 to-background/80"
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${typeConfig.gradient} opacity-50`} />
-      <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-medium">
+      <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning-soft text-warning text-xs font-medium">
         <Sparkles size={14} />
         Рекомендуем
       </div>

@@ -36,7 +36,7 @@ describe('Button', () => {
     )
 
     const btn = screen.getByRole('button', { name: 'Delete' })
-    expect(btn.className).toContain('bg-red-500')
+    expect(btn.className).toContain('bg-destructive')
     expect(btn.className).toContain('px-6')
   })
 })

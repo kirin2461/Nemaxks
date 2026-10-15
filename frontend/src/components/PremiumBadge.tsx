@@ -26,8 +26,8 @@ export function PremiumBadge({ planName, tier, active = true, className }: Premi
       className={cn(
         'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-white shadow-soft',
         isVip
-          ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
-          : 'bg-gradient-to-r from-indigo-500 to-violet-500',
+          ? 'bg-graphite-900'
+          : 'bg-primary',
         className
       )}
     >

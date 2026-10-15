@@ -65,11 +65,11 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'super_admin':
-        return { icon: Crown, color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'Super Admin' }
+        return { icon: Crown, color: 'text-warning', bg: 'bg-warning-soft', label: 'Super Admin' }
       case 'admin':
-        return { icon: Shield, color: 'text-red-400', bg: 'bg-red-500/20', label: 'Админ' }
+        return { icon: Shield, color: 'text-destructive', bg: 'bg-danger-soft', label: 'Админ' }
       case 'moderator':
-        return { icon: Shield, color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'Модератор' }
+        return { icon: Shield, color: 'text-primary', bg: 'bg-accent', label: 'Модератор' }
       default:
         return null
     }
@@ -87,7 +87,7 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
     return (
       <Modal isOpen={isOpen} onClose={onClose} size="md">
         <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       </Modal>
     )
@@ -108,10 +108,10 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
       <div className="relative max-h-[85vh] overflow-y-auto">
-        <div className="h-24 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-t-lg -mx-4 -mt-4" />
+        <div className="h-24 bg-emerald-700 rounded-t-lg -mx-4 -mt-4" />
         
         <div className="relative -mt-12 px-4">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-4 border-card flex items-center justify-center overflow-hidden">
+          <div className="w-24 h-24 rounded-full bg-emerald-700 border-4 border-card flex items-center justify-center overflow-hidden">
             {user.avatar ? (
               <img src={user.avatar} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -140,7 +140,7 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
 
           <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-yellow-400" />
+              <Star className="w-4 h-4 text-warning" />
               <span>Уровень {user.level || 1}</span>
             </div>
             <div className="flex items-center gap-1">
@@ -167,7 +167,7 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
           <div className="flex gap-2 mt-4">
             <button
               onClick={() => onMessage?.(user.id)}
-              className="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-primary hover:bg-emerald-800 rounded-lg text-white transition-colors flex items-center justify-center gap-2"
             >
               <MessageCircle className="w-4 h-4" />
               Написать
@@ -177,8 +177,8 @@ export function UserProfileModal({ isOpen, onClose, userId, onMessage }: UserPro
               disabled={friendLoading}
               className={`flex-1 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
                 isFriend 
-                  ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400'
-                  : 'bg-green-500/20 hover:bg-green-500/30 text-green-400'
+                  ? 'bg-danger-soft hover:bg-destructive/30 text-destructive'
+                  : 'bg-accent hover:bg-emerald-500/30 text-emerald-600'
               }`}
             >
               {isFriend ? (

@@ -36,14 +36,14 @@ export function BlockUserModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
       <div className="text-center">
-        <div className="w-16 h-16 bg-red-500/15 border border-red-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Ban className="w-8 h-8 text-red-400" />
+        <div className="w-16 h-16 bg-danger-soft border border-destructive/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Ban className="w-8 h-8 text-destructive" />
         </div>
 
         <h2 className="text-xl font-bold text-foreground mb-2">Заблокировать пользователя?</h2>
         
         <div className="flex items-center justify-center gap-3 my-4 p-3 bg-muted/40 border border-border rounded-lg">
-          <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center overflow-hidden">
             {avatar ? (
               <img src={avatar} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -53,12 +53,12 @@ export function BlockUserModal({
           <span className="text-foreground font-medium">@{username}</span>
         </div>
 
-        <div className="p-3 bg-yellow-500/10 border border-yellow-500/25 rounded-xl mb-4 text-left">
+        <div className="p-3 bg-warning-soft border border-warning/30 rounded-xl mb-4 text-left">
           <div className="flex gap-2">
-            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-yellow-300">
+            <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-[hsl(32_95%_30%)]">
               <p className="font-medium mb-1">После блокировки:</p>
-              <ul className="list-disc list-inside text-yellow-300/80 space-y-1">
+              <ul className="list-disc list-inside text-[hsl(32_95%_30%)]/80 space-y-1">
                 <li>Пользователь не сможет писать вам</li>
                 <li>Вы не увидите его сообщения в чатах</li>
                 <li>Он не сможет добавить вас в друзья</li>
@@ -79,7 +79,7 @@ export function BlockUserModal({
           <button
             onClick={handleBlock}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white transition-all shadow-soft flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 bg-destructive hover:bg-[hsl(0_72%_38%)] rounded-lg text-white transition-all shadow-soft flex items-center justify-center gap-2"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

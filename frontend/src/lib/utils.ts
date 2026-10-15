@@ -43,13 +43,14 @@ export function getInitials(name: string): string {
 }
 
 export function generateAvatarColor(id: string | number): string {
+  // Premium Monochrome: flat emerald/graphite surfaces only (no gradients)
   const colors = [
-    'from-purple-500 to-pink-500',
-    'from-blue-500 to-cyan-500',
-    'from-green-500 to-emerald-500',
-    'from-orange-500 to-red-500',
-    'from-indigo-500 to-purple-500',
-    'from-rose-500 to-pink-500',
+    'bg-emerald-700',
+    'bg-graphite-700',
+    'bg-emerald-800',
+    'bg-graphite-800',
+    'bg-emerald-600',
+    'bg-graphite-600',
   ]
 
   const strId = String(id || 'default')

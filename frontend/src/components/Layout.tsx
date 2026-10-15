@@ -16,8 +16,6 @@ import {
   Settings,
   User,
   LogOut,
-  Moon,
-  Sun,
   Sparkles,
   Video,
   Rss,
@@ -39,7 +37,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { t } = useTranslation()
-  const { user, logout, theme, setTheme, isDemoMode, notifications, liteMode } = useStore()
+  const { user, logout, isDemoMode, notifications, liteMode } = useStore()
   const { unreadCount } = useNotifications()
   const [location] = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -94,50 +92,24 @@ export function Layout({ children }: LayoutProps) {
     { name: t('common.profile'), href: '/profile', icon: User },
   ]
 
-  const handleThemeChange = (e: React.MouseEvent) => {
-    e.preventDefault()
-    const themes = [
-      'dark', 'light', 'cosmic', 'nebula-winter', 'glass',
-      'midnight-ocean', 'forest-night', 'sunset-glow', 'neon-tokyo', 'arctic-aurora'
-    ] as const
-    const currentIndex = themes.indexOf(theme as any)
-    const nextTheme = themes[(currentIndex + 1) % themes.length]
-    setTheme(nextTheme)
-  }
-
-  const getThemeIcon = () => {
-    switch (theme) {
-      case 'light':
-        return <Sun className="w-5 h-5" />
-      case 'cosmic':
-        return <Sparkles className="w-5 h-5" />
-      case 'nebula-winter':
-        return <Sparkles className="w-5 h-5" style={{ color: '#60a5fa' }} />
-      case 'glass':
-        return <Sparkles className="w-5 h-5" style={{ opacity: 0.7 }} />
-      default:
-        return <Moon className="w-5 h-5" />
-    }
-  }
-
   const closeSidebar = () => setSidebarOpen(false)
 
   return (
     <div className="h-app-shell bg-background flex flex-col relative z-10 overflow-hidden">
       {/* Demo mode banner */}
       {isDemoMode && (
-        <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 text-center">
-          <p className="text-sm text-yellow-500">
+        <div className="bg-warning-soft border-b border-border px-4 py-2 text-center">
+          <p className="text-sm text-[hsl(32_95%_30%)]">
             <strong>Demo Mode:</strong> Backend not connected. Exploring UI only.
           </p>
         </div>
       )}
 
       {/* Mobile Header */}
-      <header className="lg:hidden flex items-center justify-between p-3 border-b border-border/60 bg-card/55 backdrop-blur-xl sticky top-0 z-50 shadow-soft">
+      <header className="lg:hidden flex items-center justify-between p-3 border-b border-border bg-card sticky top-0 z-50">
         <button
           onClick={() => setSidebarOpen(true)}
-          className="p-2 hover:bg-accent rounded-lg transition-colors"
+          className="p-2 hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors duration-150"
           aria-label="Open menu"
         >
           <Menu className="w-6 h-6" />
@@ -149,7 +121,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-50"
+          className="lg:hidden fixed inset-0 bg-graphite-950/40 z-50 animate-fade-in-soft"
           onClick={closeSidebar}
         />
       )}
@@ -158,16 +130,16 @@ export function Layout({ children }: LayoutProps) {
         {/* Sidebar - Hidden on mobile, shown as overlay when open */}
         <aside
           className={cn(
-            "fixed lg:static inset-y-0 left-0 z-[60] w-64 bg-card/55 backdrop-blur-xl border-r border-border/60 flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0 shadow-lg-brand",
+            "fixed lg:static inset-y-0 left-0 z-[60] w-64 bg-card border-r border-border flex flex-col shrink-0 transition-transform duration-300 lg:translate-x-0",
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
           {/* Logo and close button for mobile */}
-          <div className="p-4 border-b border-border/60 flex items-center justify-between">
+          <div className="p-4 border-b border-border flex items-center justify-between">
             <Logo size="md" showText />
             <button
               onClick={closeSidebar}
-              className="lg:hidden p-2 hover:bg-accent rounded-lg transition-colors"
+              className="lg:hidden p-2 hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors duration-150"
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />
@@ -177,9 +149,9 @@ export function Layout({ children }: LayoutProps) {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             <div className="flex items-center justify-between mb-2 px-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Navigation</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em]">Navigation</span>
               <button 
-                className="p-1 hover:bg-accent rounded-md text-muted-foreground transition-colors z-50 relative" 
+                className="p-1 hover:bg-accent hover:text-accent-foreground rounded-md text-muted-foreground transition-colors duration-150 z-50 relative" 
                 onClick={(e) => {
                   e.preventDefault();
                   toast.info('Функция скоро появится!');
@@ -206,7 +178,7 @@ export function Layout({ children }: LayoutProps) {
                   <div className="relative">
                     <Icon className="w-5 h-5" />
                     {item.badge > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold animate-pulse">
+                      <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold grid place-items-center">
                         {item.badge > 9 ? '9+' : item.badge}
                       </span>
                     )}
@@ -218,17 +190,7 @@ export function Layout({ children }: LayoutProps) {
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-border/60 space-y-2">
-            {/* Theme toggle */}
-            <button
-              onClick={handleThemeChange}
-              className="sidebar-item w-full relative z-50"
-              title={`Current theme: ${theme}`}
-            >
-              {getThemeIcon()}
-              <span className="capitalize">{theme}</span>
-            </button>
-
+          <div className="p-4 border-t border-border space-y-1">
             {/* User info */}
             <Link href="/profile" onClick={closeSidebar} className="sidebar-item relative z-50">
               <Avatar
@@ -260,7 +222,7 @@ export function Layout({ children }: LayoutProps) {
                 logout();
                 closeSidebar();
               }} 
-              className="sidebar-item w-full text-red-500 relative z-50"
+              className="sidebar-item w-full text-destructive hover:bg-danger-soft relative z-50"
             >
               <LogOut className="w-5 h-5" />
               <span>Logout</span>
@@ -269,14 +231,14 @@ export function Layout({ children }: LayoutProps) {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-h-0 min-w-0 overflow-auto bg-background/40 pb-20 lg:pb-0">
+        <main className="flex-1 min-h-0 min-w-0 overflow-auto bg-background pb-20 lg:pb-0">
           <BannerDisplay />
           {children}
         </main>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/55 backdrop-blur-xl border-t border-border/60 z-40 safe-area-bottom shadow-lg-brand">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-40 safe-area-bottom shadow-elev">
         <div className="flex items-center justify-around py-2">
           {bottomNavItems.map((item) => {
             const Icon = item.icon
@@ -289,14 +251,14 @@ export function Layout({ children }: LayoutProps) {
                 className={cn(
                   "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-[60px]",
                   isActive
-                    ? "text-primary drop-shadow-[0_0_10px_hsl(var(--primary)/0.7)]"
+                    ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <div className="relative">
                   <Icon className="w-5 h-5" />
                   {item.badge && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold grid place-items-center">
                       {item.badge > 9 ? '9+' : item.badge}
                     </span>
                   )}

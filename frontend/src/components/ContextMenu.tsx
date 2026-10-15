@@ -60,7 +60,7 @@ export function ContextMenu({ items, position, onClose, visible }: ContextMenuPr
   return (
     <div
       ref={menuRef}
-      className="glass-strong rounded-xl min-w-[190px] py-1.5 overflow-hidden animate-context-menu"
+      className="context-menu animate-context-menu"
       style={menuStyle}
     >
       {items.map((item, index) => (

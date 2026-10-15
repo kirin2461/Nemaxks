@@ -168,7 +168,7 @@ export function MediaUpload({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          className="p-2 rounded-lg hover:bg-accent transition-colors duration-150 text-muted-foreground hover:text-accent-foreground"
           title="Attach image or video"
         >
           <Upload className="w-5 h-5" />
@@ -184,7 +184,7 @@ export function MediaUpload({
 
       {selectedMedia && !isCompressing && (
         <div className="relative inline-block">
-          <div className="relative rounded-lg overflow-hidden border border-border bg-black/20">
+          <div className="relative rounded-xl overflow-hidden border border-border bg-graphite-100">
             {selectedMedia.type === 'image' ? (
               <img
                 src={selectedMedia.preview}
@@ -214,9 +214,9 @@ export function MediaUpload({
                 <Video className="w-3 h-3" />
               )}
               {compressionStats && (
-                <span className="text-green-400">
+                <span className="text-emerald-300">
                   {formatFileSize(compressionStats.compressed)}
-                  <span className="text-muted-foreground line-through ml-1">
+                  <span className="text-white/60 line-through ml-1">
                     {formatFileSize(compressionStats.original)}
                   </span>
                 </span>

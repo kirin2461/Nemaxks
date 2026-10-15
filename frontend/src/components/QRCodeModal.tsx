@@ -50,7 +50,7 @@ export function QRCodeModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       <div className="text-center space-y-4">
-        <div className="bg-white p-4 rounded-xl inline-block shadow-glow">
+        <div className="bg-white p-4 rounded-xl inline-block shadow-lg-brand">
           <img
             src={qrCodeUrl}
             alt="QR Code"
@@ -73,7 +73,7 @@ export function QRCodeModal({
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4 text-accent" />
+                <Check className="w-4 h-4 text-emerald-700" />
                 Скопировано
               </>
             ) : (
@@ -86,7 +86,7 @@ export function QRCodeModal({
           {typeof navigator.share === 'function' && (
             <button
               onClick={handleShare}
-              className="flex-1 px-4 py-2 gradient-brand rounded-lg text-primary-foreground font-medium shadow-soft hover:brightness-110 transition-all flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-primary rounded-lg text-primary-foreground font-medium shadow-soft  transition-all flex items-center justify-center gap-2"
             >
               <Share2 className="w-4 h-4" />
               Поделиться

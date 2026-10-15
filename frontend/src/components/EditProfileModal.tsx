@@ -93,14 +93,14 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[85vh] overflow-y-auto">
         <div className="flex justify-center">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
+            <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center overflow-hidden">
               {avatarPreview ? (
                 <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
               ) : (
                 <User className="w-12 h-12 text-primary-foreground" />
               )}
             </div>
-            <label className="absolute bottom-0 right-0 w-8 h-8 gradient-brand shadow-glow rounded-full flex items-center justify-center cursor-pointer hover:brightness-110 transition-all">
+            <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary shadow-lg-brand rounded-full flex items-center justify-center cursor-pointer  transition-all">
               <Camera className="w-4 h-4 text-primary-foreground" />
               <input
                 type="file"
@@ -138,13 +138,13 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+          <div className="p-3 bg-danger-soft border border-destructive/30 rounded-lg text-destructive text-sm">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm flex items-center gap-2">
+          <div className="p-3 bg-accent border border-emerald-200 rounded-lg text-emerald-600 text-sm flex items-center gap-2">
             <Check className="w-4 h-4" />
             Профиль обновлён!
           </div>
@@ -161,7 +161,7 @@ export function EditProfileModal({ isOpen, onClose, user, onUpdate }: EditProfil
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 px-4 py-2 gradient-brand hover:brightness-110 shadow-glow rounded-lg text-primary-foreground transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 bg-primary  shadow-lg-brand rounded-lg text-primary-foreground transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

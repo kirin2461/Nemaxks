@@ -26,9 +26,9 @@ const categoryConfig: Record<string, { label: string; icon: React.ReactNode }> =
 };
 
 const toolTypeColors: Record<string, { bg: string; text: string; activeBg: string }> = {
-  notebook: { bg: "bg-primary/10", text: "text-primary", activeBg: "bg-gradient-brand shadow-glow" },
-  whiteboard: { bg: "bg-accent/10", text: "text-accent", activeBg: "bg-accent" },
-  editor: { bg: "bg-amber-600/10", text: "text-amber-400", activeBg: "bg-amber-600" },
+  notebook: { bg: "bg-primary/10", text: "text-primary", activeBg: "bg-primary shadow-lg-brand" },
+  whiteboard: { bg: "bg-accent/10", text: "text-emerald-700", activeBg: "bg-accent" },
+  editor: { bg: "bg-warning-soft", text: "text-warning", activeBg: "bg-warning" },
 };
 
 export function CategoryFilter({ categories, selectedCategory, onSelect, toolType }: CategoryFilterProps) {
@@ -42,7 +42,7 @@ export function CategoryFilter({ categories, selectedCategory, onSelect, toolTyp
         onClick={() => onSelect("")}
         className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
           selectedCategory === ""
-            ? `${colors.activeBg} text-white shadow-lg`
+            ? `${colors.activeBg} text-white shadow-elev`
             : `${colors.bg} ${colors.text} hover:bg-opacity-20`
         }`}
       >
@@ -60,7 +60,7 @@ export function CategoryFilter({ categories, selectedCategory, onSelect, toolTyp
             onClick={() => onSelect(cat)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
               selectedCategory === cat
-                ? `${colors.activeBg} text-white shadow-lg`
+                ? `${colors.activeBg} text-white shadow-elev`
                 : `${colors.bg} ${colors.text} hover:bg-opacity-20`
             }`}
           >

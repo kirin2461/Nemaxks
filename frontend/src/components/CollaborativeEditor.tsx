@@ -162,18 +162,18 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   }, [content, onSave]);
 
   return (
-    <div className="collaborative-editor w-full h-full flex flex-col bg-white rounded-lg border border-gray-200 shadow-lg">
+    <div className="collaborative-editor w-full h-full flex flex-col bg-white rounded-lg border border-border shadow-elev">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+      <div className="flex items-center justify-between p-4 border-b border-border bg-card">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-gray-800">{username}'s Document</h2>
-          <span className={`inline-block w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <h2 className="text-lg font-semibold text-graphite-800">{username}'s Document</h2>
+          <span className={`inline-block w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-destructive'}`} />
           <span className="text-xs text-muted-foreground">{isConnected ? 'Connected' : 'Offline'}</span>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setRemoteUsers(new Map())}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-white rounded transition"
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-graphite-700 hover:bg-white rounded transition"
           >
             <Users size={16} />
             {remoteUsers.size} online
@@ -181,7 +181,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
           <button
             onClick={handleSave}
             disabled={isSaving || !isConnected}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-400 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded hover:bg-primary disabled:bg-graphite-400 transition"
           >
             <Send size={16} />
             {isSaving ? 'Saving...' : 'Save'}
@@ -191,12 +191,12 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
 
       {/* Remote Users Cursors */}
       {remoteUsers.size > 0 && (
-        <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+        <div className="px-4 py-2 bg-graphite-50 border-b border-border">
           <div className="flex gap-2 flex-wrap">
             {Array.from(remoteUsers.values()).map((user) => (
-              <div key={user.userId} className="flex items-center gap-2 px-2 py-1 bg-white rounded border border-gray-200">
+              <div key={user.userId} className="flex items-center gap-2 px-2 py-1 bg-white rounded border border-border">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: user.color }} />
-                <span className="text-xs text-gray-700">{user.username}</span>
+                <span className="text-xs text-graphite-700">{user.username}</span>
               </div>
             ))}
           </div>
@@ -212,12 +212,12 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
           onMouseMove={handleCursorMove}
           onKeyUp={handleCursorMove}
           placeholder="Start typing... Your changes will sync in real-time."
-          className="w-full h-full p-4 font-mono text-sm border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full h-full p-4 font-mono text-sm border border-graphite-300 rounded resize-none focus:outline-none focus:ring-4 focus:ring-emerald-600/10 focus:border-transparent"
         />
       </div>
 
       {/* Status Bar */}
-      <div className="flex items-center justify-between p-3 border-t border-gray-200 bg-gray-50 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between p-3 border-t border-border bg-graphite-50 text-xs text-muted-foreground">
         <div>Characters: {content.length}</div>
         <div>Version: {version}</div>
         <div>Last saved: {new Date().toLocaleTimeString()}</div>

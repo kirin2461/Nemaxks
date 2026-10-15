@@ -1,44 +1,49 @@
-/* Component-specific styles */
+/* Component-specific styles — Premium Monochrome (light-only) */
 
+/* ===== 6.9 Message bubbles ===== */
 .message-bubble {
-  @apply rounded-2xl px-4 py-2 max-w-[70%] break-words;
-  @apply transition-all duration-200;
+  @apply rounded-2xl px-3.5 py-2 max-w-[65%] break-words;
+  @apply text-[15px] leading-6 shadow-soft;
+  @apply transition-all duration-150;
 }
 
 .message-bubble.sent {
-  @apply bg-primary text-primary-foreground ml-auto;
+  @apply bg-primary text-primary-foreground ml-auto rounded-br-[6px];
 }
 
 .message-bubble.received {
-  @apply bg-muted text-muted-foreground mr-auto;
+  @apply bg-card border border-border text-card-foreground mr-auto rounded-bl-[6px];
 }
 
-.message-bubble:hover {
-  @apply shadow-md;
-}
-
+/* ===== Chat composer input ===== */
 .chat-input {
-  @apply w-full rounded-lg border border-input bg-background px-4 py-3;
-  @apply focus:outline-none focus:ring-2 focus:ring-ring;
+  @apply w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground;
+  @apply placeholder:text-graphite-400;
+  @apply focus:outline-none focus:border-primary focus:ring-4 focus:ring-emerald-600/10;
+  @apply transition-all duration-150;
   @apply resize-none max-h-32;
 }
 
+/* ===== 6.7 Sidebar / nav item (active = 3px emerald bar, NOT gradient) ===== */
 .sidebar-item {
-  @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer;
-  @apply text-muted-foreground hover:bg-accent/50 hover:text-foreground active:scale-[0.98];
+  @apply relative flex items-center gap-3 h-9 px-3 rounded-lg text-sm transition-all duration-150 cursor-pointer;
+  @apply text-muted-foreground hover:bg-accent hover:text-accent-foreground;
   text-decoration: none !important;
 }
 
 .sidebar-item.active {
-  @apply text-primary-foreground font-semibold;
-  background-image: linear-gradient(135deg, hsl(var(--primary) / 0.9) 0%, hsl(var(--accent) / 0.75) 100%);
-  box-shadow: 0 0 14px hsl(var(--primary) / 0.35);
+  @apply bg-accent text-accent-foreground font-medium;
 }
 
+.sidebar-item.active::before {
+  content: '';
+  @apply absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary;
+}
+
+/* ===== 6.8 Avatar (flat, no gradient) ===== */
 .avatar {
   @apply rounded-full flex items-center justify-center;
-  @apply bg-gradient-to-br from-primary to-accent;
-  @apply text-primary-foreground font-semibold;
+  @apply bg-emerald-700 text-white font-semibold ring-1 ring-border;
 }
 
 .avatar.sm {
@@ -53,46 +58,52 @@
   @apply w-16 h-16 text-2xl;
 }
 
+/* ===== Buttons (legacy class API, new visuals per 6.1) ===== */
 .button-primary {
-  @apply px-4 py-2 rounded-lg font-medium;
-  @apply bg-primary text-primary-foreground;
-  @apply hover:opacity-90 active:opacity-80;
-  @apply transition-opacity duration-200;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply inline-flex items-center justify-center gap-2 px-4 h-10 rounded-lg text-sm font-medium;
+  @apply bg-primary text-primary-foreground shadow-soft;
+  @apply hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97];
+  @apply transition-all duration-150;
+  @apply disabled:opacity-50 disabled:pointer-events-none;
 }
 
 .button-secondary {
-  @apply px-4 py-2 rounded-lg font-medium;
+  @apply inline-flex items-center justify-center gap-2 px-4 h-10 rounded-lg text-sm font-medium;
   @apply bg-secondary text-secondary-foreground;
-  @apply hover:bg-secondary/80 active:bg-secondary/60;
-  @apply transition-colors duration-200;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply hover:bg-graphite-200 active:scale-[0.97];
+  @apply transition-all duration-150;
+  @apply disabled:opacity-50 disabled:pointer-events-none;
 }
 
+/* ===== 6.3 Input (flat emerald focus ring, NO glow) ===== */
 .input-field {
-  @apply w-full px-4 py-2 rounded-lg;
-  @apply bg-card/60 border border-input backdrop-blur-sm;
-  @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary/60;
-  @apply transition-all duration-200;
-  @apply placeholder:text-muted-foreground;
-}
-.input-field:focus {
-  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.4), 0 0 18px hsl(var(--primary) / 0.25);
+  @apply flex h-10 w-full px-3 rounded-lg text-sm;
+  @apply bg-card border border-input text-foreground;
+  @apply placeholder:text-graphite-400;
+  @apply focus:outline-none focus:border-primary focus:ring-4 focus:ring-emerald-600/10;
+  @apply transition-all duration-150;
+  @apply disabled:bg-graphite-100 disabled:text-graphite-400;
 }
 
+/* ===== 6.2 Card ===== */
 .card {
   @apply bg-card text-card-foreground;
-  @apply rounded-lg border border-border;
-  @apply p-6 shadow-sm;
+  @apply rounded-xl border border-border;
+  @apply p-6 shadow-soft;
 }
 
+.card-hover {
+  @apply transition-all duration-150 hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300;
+}
+
+/* ===== 6.10 Badge ===== */
 .badge {
-  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
-  @apply transition-colors duration-200;
+  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  @apply transition-colors duration-150;
 }
 
 .badge.primary {
-  @apply bg-primary/10 text-primary border border-primary/20;
+  @apply bg-emerald-100 text-emerald-800;
 }
 
 .badge.secondary {
@@ -100,46 +111,59 @@
 }
 
 .badge.success {
-  @apply bg-green-500/10 text-green-500 border border-green-500/20;
+  @apply bg-success-soft text-emerald-800;
 }
 
 .badge.warning {
-  @apply bg-yellow-500/10 text-yellow-500 border border-yellow-500/20;
+  @apply bg-warning-soft text-[hsl(32_95%_30%)];
 }
 
 .badge.error {
-  @apply bg-red-500/10 text-red-500 border border-red-500/20;
+  @apply bg-danger-soft text-destructive;
 }
 
 .divider {
   @apply h-px bg-border my-4;
 }
 
+/* Monochrome skeleton shimmer */
 .skeleton {
-  @apply animate-pulse bg-muted rounded;
+  @apply rounded-lg;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--graphite-100)) 25%,
+    hsl(var(--graphite-200)) 50%,
+    hsl(var(--graphite-100)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-sweep 1.4s linear infinite;
 }
 
+/* ===== 6.11 Dropdown / context menu (pop-menu) ===== */
 .dropdown-menu {
-  @apply bg-card border border-border rounded-lg shadow-lg;
-  @apply p-1 min-w-[200px];
+  @apply bg-popover border border-border rounded-xl shadow-pop;
+  @apply p-1 min-w-[180px];
 }
 
 .dropdown-item {
-  @apply px-3 py-2 rounded-md cursor-pointer;
-  @apply hover:bg-accent/10 transition-colors duration-200;
-  @apply flex items-center gap-2;
+  @apply flex items-center gap-2 h-8 px-2.5 rounded-md text-sm cursor-pointer;
+  @apply hover:bg-accent hover:text-accent-foreground transition-colors duration-150;
 }
 
+/* ===== 6.4 Modal ===== */
 .modal-overlay {
-  @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
+  @apply fixed inset-0 z-50;
   @apply flex items-center justify-center p-4;
-  @apply z-50;
+  background: hsl(var(--graphite-950) / 0.4);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: fade-in-soft 160ms var(--ease-standard);
 }
 
 .modal-content {
-  @apply bg-card rounded-lg shadow-xl;
+  @apply bg-card border border-border rounded-2xl shadow-pop;
   @apply max-w-md w-full p-6;
-  animation: fadeIn 0.5s ease-in-out;
+  animation: scale-in 200ms var(--ease-out-expo);
 }
 
 .loading-spinner {
@@ -147,27 +171,23 @@
   @apply rounded-full animate-spin;
 }
 
+/* ===== 6.5 Toast ===== */
 .notification-toast {
-  @apply fixed top-4 right-4 z-50;
-  @apply bg-card border border-border rounded-lg shadow-lg;
-  @apply p-4 min-w-[300px];
-  animation: slideIn 0.3s ease-out;
+  @apply fixed top-4 right-4 z-[100];
+  @apply bg-card border border-border rounded-xl shadow-pop;
+  @apply p-4 w-[360px] max-w-[calc(100vw-2rem)];
+  animation: toast-in 220ms var(--ease-out-quint);
 }
 
-.gradient-text {
-  @apply bg-clip-text text-transparent;
-  background-image: linear-gradient(120deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
-}
-
-/* Context Menu - Non-transparent solid background */
+/* ===== 6.11 Context menu — solid popover ===== */
 .context-menu {
-  @apply bg-card rounded-lg shadow-2xl border border-border;
-  @apply min-w-[180px] py-1.5 overflow-hidden;
+  @apply bg-popover rounded-xl shadow-pop border border-border;
+  @apply min-w-[180px] p-1 overflow-hidden;
 }
 
 .context-menu-item {
-  @apply w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground;
-  @apply hover:bg-accent/30 transition-colors duration-150 cursor-pointer;
+  @apply w-full flex items-center gap-2 h-8 px-2.5 rounded-md text-sm text-foreground;
+  @apply hover:bg-accent hover:text-accent-foreground transition-colors duration-150 cursor-pointer;
   @apply text-left;
 }
 
@@ -177,11 +197,11 @@
 }
 
 .context-menu-item-danger {
-  @apply text-red-500 hover:bg-red-500/20;
+  @apply text-destructive hover:bg-danger-soft hover:text-destructive;
 }
 
 .context-menu-item-success {
-  @apply text-green-500 hover:bg-green-500/20;
+  @apply text-emerald-700 hover:bg-accent;
 }
 
 .context-menu-icon {
@@ -193,20 +213,9 @@
 }
 
 .context-menu-divider {
-  @apply h-px bg-border my-1 mx-2;
-}
-
-@keyframes context-menu-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  @apply my-1 h-px bg-border;
 }
 
 .animate-context-menu {
-  animation: context-menu-in 0.15s ease-out;
+  animation: pop-menu 140ms var(--ease-spring-soft);
 }

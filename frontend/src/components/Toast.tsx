@@ -27,20 +27,21 @@ const TOAST_ICONS = {
   notification: Bell
 }
 
-const TOAST_COLORS = {
-  success: 'from-green-500/20 to-green-600/20 border-green-500/50',
-  error: 'from-red-500/20 to-red-600/20 border-red-500/50',
-  info: 'from-blue-500/20 to-blue-600/20 border-blue-500/50',
-  warning: 'from-yellow-500/20 to-yellow-600/20 border-yellow-500/50',
-  notification: 'from-purple-500/20 to-pink-500/20 border-purple-500/50'
+/* design.md §6.5 — flat card + left accent bar */
+const TOAST_BAR_COLORS = {
+  success: 'bg-emerald-600',
+  error: 'bg-destructive',
+  info: 'bg-graphite-500',
+  warning: 'bg-warning',
+  notification: 'bg-primary'
 }
 
 const TOAST_ICON_COLORS = {
-  success: 'text-green-400',
-  error: 'text-red-400',
-  info: 'text-blue-400',
-  warning: 'text-yellow-400',
-  notification: 'text-purple-400'
+  success: 'text-emerald-600',
+  error: 'text-destructive',
+  info: 'text-graphite-500',
+  warning: 'text-warning',
+  notification: 'text-primary'
 }
 
 function Toast({ id, type, title, message, duration = 5000, action, onClose }: ToastProps) {
@@ -65,21 +66,22 @@ function Toast({ id, type, title, message, duration = 5000, action, onClose }: T
 
   return (
     <div
-      className={`flex items-start gap-3 p-4 bg-gradient-to-r ${TOAST_COLORS[type]} border rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 ${
-        isExiting ? 'opacity-0 translate-x-full' : 'opacity-100 translate-x-0'
+      className={`flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-pop ${
+        isExiting ? 'animate-toast-out' : 'animate-toast-in'
       }`}
     >
-      <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${TOAST_ICON_COLORS[type]}`} />
-      
+      <span className={`w-1 self-stretch rounded-full shrink-0 ${TOAST_BAR_COLORS[type]}`} />
+      <Icon className={`w-[18px] h-[18px] flex-shrink-0 mt-0.5 ${TOAST_ICON_COLORS[type]}`} strokeWidth={1.75} />
+
       <div className="flex-1 min-w-0">
-        <p className="text-white font-medium">{title}</p>
+        <p className="text-sm font-medium text-foreground">{title}</p>
         {message && (
-          <p className="text-foreground text-sm mt-1 line-clamp-2">{message}</p>
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{message}</p>
         )}
         {action && (
           <button
             onClick={action.onClick}
-            className="mt-2 text-sm text-purple-400 hover:text-purple-300 font-medium"
+            className="mt-2 text-sm text-primary hover:text-emerald-800 font-medium"
           >
             {action.label}
           </button>
@@ -88,7 +90,7 @@ function Toast({ id, type, title, message, duration = 5000, action, onClose }: T
 
       <button
         onClick={handleClose}
-        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+        className="p-1 rounded-md hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors duration-150"
       >
         <X className="w-4 h-4" />
       </button>
@@ -138,7 +140,7 @@ export function ToastContainer() {
   }, [])
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 w-[360px] max-w-[calc(100vw-2rem)] pointer-events-none">
       {toasts.map(toast => (
         <div key={toast.id} className="pointer-events-auto">
           <Toast {...toast} onClose={handleClose} />

@@ -57,11 +57,11 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card/50 backdrop-blur-sm rounded-xl p-5 border border-purple-500/20"
+      className="bg-card/50 rounded-xl p-5 border border-border"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center">
             <BarChart3 className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -92,7 +92,7 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
               onClick={() => toggleOption(option.id)}
               className={`relative rounded-lg p-3 transition-all cursor-pointer overflow-hidden ${
                 isSelected
-                  ? 'bg-purple-600/30 border-2 border-purple-500'
+                  ? 'bg-accent border-2 border-primary'
                   : 'bg-secondary/50 border-2 border-transparent hover:border-border'
               } ${(poll.is_closed || isExpired) ? 'cursor-default' : ''}`}
             >
@@ -101,14 +101,14 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
                   initial={{ width: 0 }}
                   animate={{ width: `${percentage}%` }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
-                  className="absolute inset-0 bg-purple-600/20"
+                  className="absolute inset-0 bg-accent/60"
                 />
               )}
               
               <div className="relative flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'border-purple-500 bg-purple-500' : 'border-gray-500'
+                    isSelected ? 'border-primary bg-primary' : 'border-graphite-400'
                   }`}>
                     {isSelected && <Check className="w-3 h-3 text-white" />}
                   </div>
@@ -158,7 +158,7 @@ export default function PollCard({ poll, myVotes = [], onVote, language = 'ru' }
           <button
             onClick={handleVote}
             disabled={selectedOptions.length === 0 || voting}
-            className="px-4 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {voting ? (
               <span className="flex items-center gap-2">

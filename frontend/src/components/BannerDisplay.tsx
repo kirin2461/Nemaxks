@@ -41,11 +41,11 @@ export function BannerDisplay() {
         <div
           key={banner.id}
           className={cn(
-            "relative px-4 py-3 flex items-start gap-3 animate-fade-in",
-            banner.type === 'info' && "bg-blue-500/10 text-blue-400 border-b border-blue-500/20",
-            banner.type === 'success' && "bg-green-500/10 text-green-400 border-b border-green-500/20",
-            banner.type === 'warning' && "bg-yellow-500/10 text-yellow-400 border-b border-yellow-500/20",
-            banner.type === 'error' && "bg-red-500/10 text-red-400 border-b border-red-500/20"
+            "relative px-4 py-3 flex items-start gap-3 animate-fade-in-soft",
+            banner.type === 'info' && "bg-accent text-primary border-b border-emerald-200",
+            banner.type === 'success' && "bg-accent text-emerald-600 border-b border-emerald-200",
+            banner.type === 'warning' && "bg-warning-soft text-warning border-b border-warning/30",
+            banner.type === 'error' && "bg-danger-soft text-destructive border-b border-destructive/30"
           )}
         >
           <div className="flex-shrink-0 mt-0.5">

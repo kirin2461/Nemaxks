@@ -71,7 +71,7 @@ export function SpinWheelModal({
           
           <div
             ref={wheelRef}
-            className="w-full h-full rounded-full border-4 border-border shadow-2xl overflow-hidden"
+            className="w-full h-full rounded-full border-4 border-border shadow-pop overflow-hidden"
             style={{
               transform: `rotate(${rotation}deg)`,
               transition: spinning ? 'transform 4s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none'
@@ -125,7 +125,7 @@ export function SpinWheelModal({
         </div>
 
         {result && !spinning && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-primary/20 to-accent/20 rounded-lg border border-primary/30 animate-in fade-in zoom-in">
+          <div className="mb-6 p-4 bg-accent rounded-lg border border-primary/30 animate-scale-in">
             <Gift className="w-8 h-8 text-primary mx-auto mb-2" />
             <p className="text-foreground font-bold text-lg mb-1">Поздравляем!</p>
             <p className="text-primary/80">Вы выиграли: {result.prize}</p>
@@ -141,7 +141,7 @@ export function SpinWheelModal({
         <button
           onClick={handleSpin}
           disabled={!canSpin || spinning}
-          className="w-full px-6 py-3 bg-gradient-brand hover:brightness-110 rounded-lg text-white font-bold transition-all shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full px-6 py-3 bg-primary hover:bg-emerald-800 rounded-lg text-white font-bold transition-all shadow-soft hover:shadow-lg-brand disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {spinning ? (
             <>

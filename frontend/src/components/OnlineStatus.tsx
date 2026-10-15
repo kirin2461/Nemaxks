@@ -9,19 +9,19 @@ interface OnlineStatusProps {
 
 const statusConfig = {
   online: {
-    color: 'bg-green-500',
+    color: 'bg-online',
     label: 'В сети',
   },
   away: {
-    color: 'bg-yellow-500',
+    color: 'bg-idle',
     label: 'Отошёл',
   },
   offline: {
-    color: 'bg-gray-500',
+    color: 'bg-offline',
     label: 'Не в сети',
   },
   dnd: {
-    color: 'bg-red-500',
+    color: 'bg-dnd',
     label: 'Не беспокоить',
   },
 }

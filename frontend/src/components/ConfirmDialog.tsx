@@ -48,20 +48,20 @@ export function ConfirmDialog({
 
   const variantStyles = {
     danger: {
-      icon: 'text-red-400',
-      iconBg: 'bg-red-500/15',
+      icon: 'text-destructive',
+      iconBg: 'bg-danger-soft',
       buttonVariant: 'danger' as const,
       Icon: AlertTriangle
     },
     warning: {
-      icon: 'text-amber-400',
-      iconBg: 'bg-amber-500/15',
+      icon: 'text-warning',
+      iconBg: 'bg-warning-soft',
       buttonVariant: 'primary' as const,
       Icon: AlertTriangle
     },
     info: {
-      icon: 'text-primary',
-      iconBg: 'bg-primary/15',
+      icon: 'text-emerald-700',
+      iconBg: 'bg-accent',
       buttonVariant: 'primary' as const,
       Icon: Info
     }
@@ -73,35 +73,35 @@ export function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        className="absolute inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft"
         onClick={onClose}
       />
       <div
         ref={dialogRef}
-        className="relative glass-strong rounded-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200"
+        className="relative bg-card border border-border shadow-pop rounded-2xl w-full max-w-sm p-6 animate-scale-in"
       >
-        <div className="flex items-center justify-between p-4 border-b border-border/60">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-full", styles.iconBg, styles.icon)}>
-              <IconComponent className="w-5 h-5" />
+            <div className={cn("h-10 w-10 rounded-full grid place-items-center", styles.iconBg, styles.icon)}>
+              <IconComponent className="w-5 h-5" strokeWidth={1.75} />
             </div>
             <h3 className="text-lg font-semibold tracking-tight text-foreground">{title}</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="h-8 w-8 grid place-items-center rounded-lg hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors duration-150"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" strokeWidth={1.75} />
           </button>
         </div>
 
-        <div className="p-4">
-          <p className="text-muted-foreground text-sm leading-relaxed">{message}</p>
+        <div className="pt-4">
+          <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
         </div>
 
-        <div className="flex justify-end gap-3 p-4 border-t border-border/60">
+        <div className="flex justify-end gap-2 pt-4">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={onClose}
             disabled={loading}
           >

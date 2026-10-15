@@ -50,18 +50,18 @@ export function DailyRewardModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Ежедневные награды" size="lg">
       <div className="space-y-6">
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/15 to-accent/15 rounded-lg border border-accent/30">
+        <div className="flex items-center justify-between p-4 bg-accent rounded-lg border border-emerald-200">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-brand rounded-full flex items-center justify-center shadow-soft">
+            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-soft">
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
               <p className="text-foreground font-bold">Серия: {currentStreak} дней</p>
-              <p className="text-accent/80 text-sm">Заходите каждый день для бонусов!</p>
+              <p className="text-emerald-700 text-sm">Заходите каждый день для бонусов!</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-black text-accent">x{Math.min(currentStreak, 7)}</p>
+            <p className="text-2xl font-black text-emerald-700">x{Math.min(currentStreak, 7)}</p>
             <p className="text-xs text-muted-foreground">множитель</p>
           </div>
         </div>
@@ -74,12 +74,12 @@ export function DailyRewardModal({
                 reward.isToday
                   ? 'border-primary/40 bg-primary/15 ring-2 ring-primary/50'
                   : reward.claimed
-                  ? 'border-green-500/50 bg-green-500/10'
+                  ? 'border-emerald-300 bg-accent'
                   : 'border-border bg-muted/60'
               }`}
             >
               {reward.claimed && (
-                <CheckCircle className="absolute -top-1 -right-1 w-5 h-5 text-green-400" />
+                <CheckCircle className="absolute -top-1 -right-1 w-5 h-5 text-emerald-600" />
               )}
               
               <p className={`text-xs font-medium mb-2 ${
@@ -94,7 +94,7 @@ export function DailyRewardModal({
                 ) : reward.gems ? (
                   <Gem className="w-5 h-5 text-primary" />
                 ) : (
-                  <Coins className="w-5 h-5 text-accent" />
+                  <Coins className="w-5 h-5 text-emerald-700" />
                 )}
               </div>
               
@@ -108,18 +108,18 @@ export function DailyRewardModal({
         </div>
 
         {claimed && claimedReward && (
-          <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
-            <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-            <p className="text-green-400 font-bold mb-2">Награда получена!</p>
+          <div className="p-4 bg-accent border border-emerald-200 rounded-lg text-center">
+            <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+            <p className="text-emerald-600 font-bold mb-2">Награда получена!</p>
             <div className="flex justify-center gap-4">
               {claimedReward.coins && (
-                <span className="text-accent">+{claimedReward.coins} 🪙</span>
+                <span className="text-emerald-700">+{claimedReward.coins} 🪙</span>
               )}
               {claimedReward.gems && (
                 <span className="text-primary">+{claimedReward.gems} 💎</span>
               )}
               {claimedReward.xp && (
-                <span className="text-accent">+{claimedReward.xp} XP</span>
+                <span className="text-emerald-700">+{claimedReward.xp} XP</span>
               )}
             </div>
           </div>
@@ -135,7 +135,7 @@ export function DailyRewardModal({
           <button
             onClick={handleClaim}
             disabled={!canClaim || loading}
-            className="flex-1 px-4 py-3 bg-gradient-brand hover:brightness-110 rounded-lg text-white font-bold transition-all shadow-soft hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-primary hover:bg-emerald-800 rounded-lg text-white font-bold transition-all shadow-soft hover:shadow-lg-brand disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

@@ -52,7 +52,8 @@ export const useStore = create<AppState>((set, get) => ({
   isLoading: true,
   conversations: [],
   settings: null,
-  theme: (localStorage.getItem('theme') as any) || 'dark',
+  // Premium Monochrome is light-only: theme is fixed, no localStorage/data-theme.
+  theme: 'light',
   isDemoMode: false,
   notifications: { messages: 0, friends: 0, channels: 0 },
   soundEnabled: localStorage.getItem('soundEnabled') !== 'false',
@@ -196,11 +197,9 @@ export const useStore = create<AppState>((set, get) => ({
     }))
   },
 
-  setTheme: (theme) => {
-    set({ theme })
-    localStorage.setItem('theme', theme)
-    document.documentElement.setAttribute('data-theme', theme)
-  },
+  // Theme switching was removed with the redesign (light-only design system).
+  // Kept as a no-op so legacy callers (pages scheduled for restyle) don't break.
+  setTheme: () => {},
 
   enableDemoMode: () => {
     const demoUser: User = {

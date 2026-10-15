@@ -36,8 +36,8 @@ export function DeleteMessageModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
       <div className="text-center">
-        <div className="w-16 h-16 bg-red-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Trash2 className="w-8 h-8 text-red-400" />
+        <div className="w-16 h-16 bg-danger-soft rounded-full flex items-center justify-center mx-auto mb-4">
+          <Trash2 className="w-8 h-8 text-destructive" />
         </div>
 
         <h2 className="text-xl font-bold tracking-tight text-foreground mb-2">Удалить сообщение?</h2>
@@ -57,7 +57,7 @@ export function DeleteMessageModal({
               type="checkbox"
               checked={deleteForEveryone}
               onChange={e => setDeleteForEveryone(e.target.checked)}
-              className="w-5 h-5 rounded border-border bg-transparent text-red-500 focus:ring-red-500"
+              className="w-5 h-5 rounded border-border bg-transparent text-destructive focus:ring-destructive/30"
             />
             <div className="text-left">
               <p className="text-foreground text-sm font-medium">Удалить для всех</p>

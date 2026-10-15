@@ -112,14 +112,14 @@ export default function CustomStatusModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="glass-strong rounded-xl p-6 max-w-md w-full border-border/50"
+          className="bg-card border border-border shadow-pop rounded-xl p-6 max-w-md w-full animate-scale-in"
           onClick={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-6">
@@ -145,7 +145,7 @@ export default function CustomStatusModal({
                   onClick={() => setEmoji(e)}
                   className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all ${
                     emoji === e 
-                      ? 'gradient-brand ring-2 ring-primary/60 shadow-glow' 
+                      ? 'bg-primary ring-2 ring-primary/60 shadow-lg-brand' 
                       : 'bg-secondary hover:bg-muted'
                   }`}
                 >
@@ -207,7 +207,7 @@ export default function CustomStatusModal({
                     {preset.id && (
                       <button
                         onClick={() => handleDeletePreset(preset.id!)}
-                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity flex items-center justify-center"
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-white opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity flex items-center justify-center"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -231,7 +231,7 @@ export default function CustomStatusModal({
                 <button
                   onClick={handleSavePreset}
                   disabled={!presetName.trim() || !text.trim()}
-                  className="flex-1 px-3 py-2 rounded-lg gradient-brand text-primary-foreground font-semibold hover:brightness-110 shadow-glow disabled:opacity-50 transition-all"
+                  className="flex-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-semibold  shadow-lg-brand disabled:opacity-50 transition-all"
                 >
                   {language === 'ru' ? 'Сохранить' : 'Save'}
                 </button>
@@ -265,7 +265,7 @@ export default function CustomStatusModal({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 px-4 py-3 rounded-xl gradient-brand text-primary-foreground font-semibold hover:brightness-110 shadow-glow disabled:opacity-50 transition-all"
+              className="flex-1 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold  shadow-lg-brand disabled:opacity-50 transition-all"
             >
               {saving ? (
                 <span className="flex items-center justify-center gap-2">

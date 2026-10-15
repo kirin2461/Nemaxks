@@ -139,11 +139,11 @@ export function ForwardMessageModal({
                 onClick={() => setSelectedTarget(target)}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
                   selectedTarget?.id === target.id && selectedTarget?.type === target.type
-                    ? 'bg-primary/15 border border-primary/60 shadow-glow'
+                    ? 'bg-primary/15 border border-primary/60 shadow-lg-brand'
                     : 'bg-secondary/50 hover:bg-secondary border border-transparent'
                 }`}
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center overflow-hidden">
                   {target.avatar ? (
                     <img src={target.avatar} alt="" className="w-full h-full object-cover" />
                   ) : target.type === 'user' ? (

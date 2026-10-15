@@ -121,14 +121,14 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-accent" />
+          <MessageCircle className="w-5 h-5 text-emerald-700" />
           Telegram
         </CardTitle>
       </CardHeader>
       <CardContent>
         {linkStatus?.linked ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-accent">
+            <div className="flex items-center gap-2 text-emerald-700">
               <Check className="w-5 h-5" />
               <span>Подключено: @{linkStatus.telegram_username}</span>
             </div>
@@ -142,7 +142,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
                 disabled={loading}
               >
                 {notificationsEnabled ? (
-                  <Bell className="w-5 h-5 text-accent" />
+                  <Bell className="w-5 h-5 text-emerald-700" />
                 ) : (
                   <BellOff className="w-5 h-5 text-muted-foreground" />
                 )}
@@ -173,7 +173,7 @@ export function TelegramLink({ isOwnProfile }: TelegramLinkProps) {
               </div>
               <Button variant="ghost" size="sm" onClick={copyCode}>
                 {codeCopied ? (
-                  <Check className="w-5 h-5 text-accent" />
+                  <Check className="w-5 h-5 text-emerald-700" />
                 ) : (
                   <Copy className="w-5 h-5" />
                 )}

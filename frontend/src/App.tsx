@@ -104,11 +104,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
-  const { checkAuth, setTheme, theme } = useStore()
+  const { checkAuth } = useStore()
 
   useEffect(() => {
     checkAuth()
-    setTheme(theme)
   }, [])
 
   return (

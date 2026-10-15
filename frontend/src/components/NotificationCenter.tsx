@@ -7,16 +7,16 @@ import { formatTimeAgo, type Notification } from './NotificationToast'
 const getIcon = (type: Notification['type']) => {
   switch (type) {
     case 'message':
-      return <MessageSquare className="w-4 h-4 text-blue-400" />
+      return <MessageSquare className="w-4 h-4 text-primary" />
     case 'friend_request':
     case 'friend_accepted':
-      return <UserPlus className="w-4 h-4 text-green-400" />
+      return <UserPlus className="w-4 h-4 text-emerald-600" />
     case 'mention':
-      return <AtSign className="w-4 h-4 text-purple-400" />
+      return <AtSign className="w-4 h-4 text-emerald-700" />
     case 'like':
-      return <Heart className="w-4 h-4 text-pink-400" />
+      return <Heart className="w-4 h-4 text-destructive" />
     case 'call':
-      return <Phone className="w-4 h-4 text-green-400" />
+      return <Phone className="w-4 h-4 text-emerald-600" />
     default:
       return <Bell className="w-4 h-4 text-primary" />
   }
@@ -42,25 +42,25 @@ export function NotificationCenter() {
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-accent/20 transition-colors"
+        className="relative p-2 rounded-lg hover:bg-accent transition-colors"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-primary text-primary-foreground text-[11px] font-semibold rounded-full grid place-items-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-card/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-popover border border-border rounded-xl shadow-pop overflow-hidden z-50 animate-pop-menu">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold">Уведомления</h3>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="p-1.5 rounded-lg hover:bg-accent/20 text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
                   title="Прочитать все"
                 >
                   <CheckCheck className="w-4 h-4" />
@@ -69,7 +69,7 @@ export function NotificationCenter() {
               {notifications.length > 0 && (
                 <button
                   onClick={clearAll}
-                  className="p-1.5 rounded-lg hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-danger-soft text-muted-foreground hover:text-destructive transition-colors"
                   title="Очистить все"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -94,11 +94,11 @@ export function NotificationCenter() {
                       if (notification.onClick) notification.onClick()
                     }}
                     className={cn(
-                      "p-4 hover:bg-accent/10 cursor-pointer transition-colors flex items-start gap-3",
-                      !notification.read && "bg-primary/5"
+                      "p-4 hover:bg-accent/60 cursor-pointer transition-colors flex items-start gap-3",
+                      !notification.read && "bg-accent/60"
                     )}
                   >
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center">
                       {getIcon(notification.type)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -122,7 +122,7 @@ export function NotificationCenter() {
                             e.stopPropagation()
                             clearNotification(notification.id)
                           }}
-                          className="p-1 rounded hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                          className="p-1 rounded hover:bg-danger-soft text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Modal } from './Modal'
-import { 
-  Settings, Bell, Lock, Palette, Globe, Volume2, VolumeX,
-  Moon, Sun, Shield, Eye, EyeOff, Smartphone, LogOut, Trash2
+import {
+  Settings, Bell, Lock, Globe, Volume2, VolumeX,
+  Shield, Eye, EyeOff, Smartphone, LogOut, Trash2
 } from 'lucide-react'
 import { useStore } from '../lib/store'
 
@@ -11,22 +11,12 @@ interface SettingsModalProps {
   onClose: () => void
 }
 
-type TabId = 'general' | 'notifications' | 'privacy' | 'appearance'
+type TabId = 'general' | 'notifications' | 'privacy'
 
 const TABS = [
   { id: 'general', label: 'Основные', icon: Settings },
   { id: 'notifications', label: 'Уведомления', icon: Bell },
   { id: 'privacy', label: 'Приватность', icon: Lock },
-  { id: 'appearance', label: 'Внешний вид', icon: Palette },
-]
-
-const THEMES = [
-  { id: 'dark', name: 'Тёмная', preview: 'bg-background' },
-  { id: 'light', name: 'Светлая', preview: 'bg-muted' },
-  { id: 'cosmic', name: 'Космос', preview: 'bg-gradient-to-br from-purple-900 to-blue-900' },
-  { id: 'midnight-ocean', name: 'Океан', preview: 'bg-gradient-to-br from-blue-900 to-cyan-900' },
-  { id: 'neon-tokyo', name: 'Неон', preview: 'bg-gradient-to-br from-pink-900 to-purple-900' },
-  { id: 'forest-night', name: 'Лес', preview: 'bg-gradient-to-br from-green-900 to-emerald-900' },
 ]
 
 const LANGUAGES = [
@@ -37,7 +27,7 @@ const LANGUAGES = [
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<TabId>('general')
-  const { theme, setTheme, soundEnabled, setSoundEnabled, logout } = useStore()
+  const { soundEnabled, setSoundEnabled, logout } = useStore()
   
   const [settings, setSettings] = useState({
     language: 'ru',
@@ -61,7 +51,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     <button
       onClick={() => onChange(!checked)}
       className={`relative w-11 h-6 rounded-full transition-colors ${
-        checked ? 'gradient-brand shadow-glow' : 'bg-muted'
+        checked ? 'bg-primary shadow-soft' : 'bg-muted'
       }`}
     >
       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
@@ -80,7 +70,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               onClick={() => setActiveTab(tab.id as TabId)}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mb-1 transition-colors ${
                 activeTab === tab.id
-                  ? 'gradient-brand text-primary-foreground shadow-glow'
+                  ? 'bg-primary text-primary-foreground shadow-soft'
                   : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
               }`}
             >
@@ -92,7 +82,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <div className="border-t border-border mt-4 pt-4">
             <button
               onClick={logout}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-destructive hover:bg-danger-soft transition-colors"
             >
               <LogOut className="w-5 h-5" />
               <span className="text-sm">Выйти</span>
@@ -115,7 +105,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         onClick={() => updateSetting('language', lang.id)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                           settings.language === lang.id
-                            ? 'gradient-brand text-primary-foreground shadow-glow'
+                            ? 'bg-primary text-primary-foreground shadow-soft'
                             : 'bg-muted/60 text-foreground hover:bg-muted'
                         }`}
                       >
@@ -198,35 +188,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <p className="text-muted-foreground text-sm">Дополнительная защита аккаунта</p>
                   </div>
                 </div>
-                <button className="px-3 py-1 gradient-brand hover:brightness-110 shadow-glow rounded-lg text-primary-foreground text-sm transition-all">
+                <button className="px-3 h-8 bg-primary hover:bg-emerald-800 shadow-soft rounded-lg text-primary-foreground text-sm font-medium transition-all duration-150">
                   Настроить
                 </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'appearance' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Внешний вид</h3>
-              
-              <div>
-                <label className="block text-sm text-muted-foreground mb-3">Тема оформления</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {THEMES.map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => setTheme(t.id as any)}
-                      className={`p-3 rounded-lg border transition-all ${
-                        theme === t.id
-                          ? 'border-primary ring-2 ring-primary/40 shadow-glow'
-                          : 'border-border hover:border-primary/40'
-                      }`}
-                    >
-                      <div className={`w-full h-12 rounded-lg mb-2 ${t.preview}`} />
-                      <p className="text-sm text-foreground">{t.name}</p>
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           )}

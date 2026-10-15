@@ -21,17 +21,17 @@ export function JarvisFloatingIndicator() {
   return (
     <div className="fixed bottom-20 right-4 z-50 pointer-events-auto">
       <div className={cn(
-        "flex items-center gap-1 p-1 rounded-lg shadow-lg transition-all duration-300",
+        "flex items-center gap-1 p-1 rounded-lg shadow-elev transition-all duration-300",
         isAlwaysListening 
-          ? "bg-green-500/20 border border-green-500/40 backdrop-blur-sm" 
-          : "bg-card/90 border border-border backdrop-blur-sm"
+          ? "bg-accent border border-emerald-300" 
+          : "bg-card/90 border border-border"
       )}>
         <button
           onClick={toggleAlwaysListening}
           className={cn(
             "p-1.5 rounded transition-colors flex items-center gap-1",
             isAlwaysListening 
-              ? "bg-green-500/30 text-green-400 hover:bg-green-500/40" 
+              ? "bg-emerald-500/30 text-emerald-600 hover:bg-emerald-500/40" 
               : "hover:bg-accent/20"
           )}
           title={isAlwaysListening ? "Отключить Джарвиса" : "Включить Джарвиса"}
@@ -41,15 +41,15 @@ export function JarvisFloatingIndicator() {
 
         {isAlwaysListening && (
           <>
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
               <Bot className="w-3 h-3 text-white" />
             </div>
             
             <div className="text-[10px] max-w-[120px]">
               {isAwaitingCommand ? (
-                <span className="text-green-400">Слушаю...</span>
+                <span className="text-emerald-600">Слушаю...</span>
               ) : pendingAction.type === 'message' ? (
-                <span className="text-blue-400">Для: {pendingAction.contact}</span>
+                <span className="text-primary">Для: {pendingAction.contact}</span>
               ) : lastTranscript ? (
                 <span className="text-muted-foreground truncate block">{lastTranscript}</span>
               ) : (
@@ -63,7 +63,7 @@ export function JarvisFloatingIndicator() {
           onClick={toggleMute}
           className={cn(
             "p-1.5 rounded transition-colors",
-            isMuted ? "text-red-500" : "hover:bg-accent/20"
+            isMuted ? "text-destructive" : "hover:bg-accent/20"
           )}
           title={isMuted ? "Включить звук" : "Выключить звук"}
         >

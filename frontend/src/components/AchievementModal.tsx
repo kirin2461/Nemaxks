@@ -20,27 +20,27 @@ interface AchievementModalProps {
 
 const RARITY_STYLES = {
   common: {
-    gradient: 'from-muted-foreground/40 to-muted-foreground/60',
+    solid: 'bg-graphite-200',
     glow: 'shadow-soft',
     text: 'text-foreground',
     label: 'Обычное'
   },
   rare: {
-    gradient: 'from-accent to-primary',
-    glow: 'shadow-glow',
-    text: 'text-accent/80',
+    solid: 'bg-emerald-100',
+    glow: 'shadow-lg-brand',
+    text: 'text-emerald-700',
     label: 'Редкое'
   },
   epic: {
-    gradient: 'from-primary to-accent',
-    glow: 'shadow-glow',
-    text: 'text-primary/80',
+    solid: 'bg-emerald-600',
+    glow: 'shadow-lg-brand',
+    text: 'text-emerald-700',
     label: 'Эпическое'
   },
   legendary: {
-    gradient: 'from-primary via-accent to-primary',
-    glow: 'shadow-glow',
-    text: 'text-accent/80',
+    solid: 'bg-primary',
+    glow: 'shadow-lg-brand',
+    text: 'text-emerald-700',
     label: 'Легендарное'
   }
 }
@@ -68,7 +68,7 @@ export function AchievementModal({ isOpen, onClose, achievement }: AchievementMo
         </div>
 
         <div className="relative">
-          <div className={`w-24 h-24 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${rarity.gradient} flex items-center justify-center shadow-2xl ${rarity.glow} animate-bounce`}>
+          <div className={`w-24 h-24 mx-auto mb-4 rounded-2xl ${rarity.solid} flex items-center justify-center shadow-pop animate-scale-in`}>
             {achievement.icon ? (
               <span className="text-4xl">{achievement.icon}</span>
             ) : (
@@ -90,15 +90,15 @@ export function AchievementModal({ isOpen, onClose, achievement }: AchievementMo
           {(achievement.xp_reward || achievement.coins_reward) && (
             <div className="flex justify-center gap-4 mb-6">
               {achievement.xp_reward && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-accent/15 rounded-lg">
-                  <Star className="w-5 h-5 text-accent" />
-                  <span className="text-accent/80 font-bold">+{achievement.xp_reward} XP</span>
+                <div className="flex items-center gap-2 px-4 py-2 bg-accent rounded-lg">
+                  <Star className="w-5 h-5 text-emerald-600" />
+                  <span className="text-emerald-700 font-bold">+{achievement.xp_reward} XP</span>
                 </div>
               )}
               {achievement.coins_reward && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-accent/15 rounded-lg">
+                <div className="flex items-center gap-2 px-4 py-2 bg-accent rounded-lg">
                   <span className="text-xl">🪙</span>
-                  <span className="text-accent/80 font-bold">+{achievement.coins_reward}</span>
+                  <span className="text-emerald-700 font-bold">+{achievement.coins_reward}</span>
                 </div>
               )}
             </div>
@@ -107,7 +107,7 @@ export function AchievementModal({ isOpen, onClose, achievement }: AchievementMo
 
         <button
           onClick={onClose}
-          className={`w-full px-6 py-3 bg-gradient-to-r ${rarity.gradient} rounded-lg text-white font-bold transition-all hover:opacity-90 shadow-lg ${rarity.glow}`}
+          className="w-full px-6 h-12 bg-primary rounded-lg text-primary-foreground font-bold transition-all duration-150 hover:bg-emerald-800 active:scale-[0.97] shadow-soft hover:shadow-lg-brand"
         >
           Забрать награду
         </button>

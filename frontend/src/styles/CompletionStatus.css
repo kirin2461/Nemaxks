@@ -1,12 +1,12 @@
-/* Nebula Project Completion Status Page Styles */
+/* Nebula Project Completion Status Page Styles — Premium Monochrome tokens */
 
 .completion-status-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 20px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  color: #e0e0e0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
   min-height: 100vh;
 }
 
@@ -16,36 +16,39 @@
   align-items: center;
   margin-bottom: 40px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #0f3460;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .status-header h1 {
+  font-family: var(--font-display);
   font-size: 2.5em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   margin: 0;
-  color: #00d4ff;
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  color: hsl(var(--graphite-900));
 }
 
 .status-badge {
   padding: 12px 24px;
-  border-radius: 25px;
+  border-radius: 999px;
   font-weight: 600;
   font-size: 1.1em;
-  animation: pulse 2s infinite;
 }
 
 .status-badge.ready {
-  background-color: #00d084;
-  color: #000;
-  box-shadow: 0 0 20px rgba(0, 208, 132, 0.4);
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: var(--shadow-lg-brand);
 }
 
 .project-info {
-  background: rgba(15, 52, 96, 0.5);
+  background: hsl(var(--card));
   padding: 30px;
-  border-radius: 10px;
+  border-radius: 14px;
   margin-bottom: 40px;
-  border-left: 4px solid #00d4ff;
+  border: 1px solid hsl(var(--border));
+  border-left: 3px solid hsl(var(--primary));
+  box-shadow: var(--shadow-soft);
 }
 
 .components-grid {
@@ -55,17 +58,18 @@
 }
 
 .component-item {
-  background: rgba(15, 52, 96, 0.4);
+  background: hsl(var(--card));
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   gap: 15px;
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-soft);
 }
 
 .status-icon.complete {
-  color: #00d084;
+  color: hsl(var(--emerald-600));
   font-size: 1.5em;
   font-weight: bold;
 }
@@ -77,25 +81,29 @@
 }
 
 .metric-item {
-  background: rgba(0, 212, 255, 0.1);
+  background: hsl(var(--accent));
   padding: 25px;
-  border-radius: 10px;
+  border-radius: 14px;
   text-align: center;
-  border: 2px solid rgba(0, 212, 255, 0.3);
+  border: 1px solid hsl(var(--emerald-200));
 }
 
 .metric-value {
+  font-family: var(--font-display);
   font-size: 2.5em;
-  font-weight: bold;
-  color: #00d4ff;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: hsl(var(--emerald-700));
   margin-bottom: 10px;
 }
 
 .features-list {
-  background: rgba(15, 52, 96, 0.4);
+  background: hsl(var(--card));
   padding: 30px;
-  border-radius: 10px;
-  border-left: 4px solid #00d084;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--border));
+  border-left: 3px solid hsl(var(--primary));
+  box-shadow: var(--shadow-soft);
 }
 
 .features-list ul {
@@ -107,21 +115,23 @@
 .features-list li {
   padding: 12px 0;
   font-size: 1.05em;
-  color: #d0d0d0;
-  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+  color: hsl(var(--graphite-700));
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .conclusion {
-  background: linear-gradient(135deg, rgba(0, 208, 132, 0.15), rgba(0, 212, 255, 0.15));
+  background: hsl(var(--accent));
   padding: 40px;
-  border-radius: 10px;
+  border-radius: 14px;
   text-align: center;
-  border: 2px solid rgba(0, 212, 255, 0.3);
+  border: 1px solid hsl(var(--emerald-200));
   margin-top: 40px;
 }
 
 .celebration {
+  font-family: var(--font-display);
   font-size: 2em;
-  font-weight: bold;
-  color: #00d4ff;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: hsl(var(--emerald-700));
 }

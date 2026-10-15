@@ -48,8 +48,8 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl w-full max-w-md mx-4 animate-fade-in">
+    <div className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft z-50 flex items-center justify-center p-4">
+      <div className="bg-card border border-border shadow-pop rounded-2xl w-full max-w-md mx-4 animate-scale-in">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div>
             <h2 className="text-lg font-semibold">{t('channels.createChannel')}</h2>

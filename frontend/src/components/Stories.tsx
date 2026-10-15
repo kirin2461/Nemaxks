@@ -473,9 +473,9 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
             className="flex-shrink-0 flex flex-col items-center gap-2 group"
           >
             <div className="relative w-[72px] h-[72px]">
-              <div className="w-full h-full rounded-full bg-gradient-to-br from-primary/30 to-accent/30 border-2 border-dashed border-primary/50 flex items-center justify-center group-hover:border-primary group-hover:scale-105 transition-all duration-300">
+              <div className="w-full h-full rounded-full bg-accent border-2 border-dashed border-emerald-300 flex items-center justify-center group-hover:border-emerald-500 group-hover:scale-105 transition-all duration-150">
                 <div className="w-14 h-14 rounded-full bg-card flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-primary" />
+                  <Plus className="w-6 h-6 text-emerald-700" strokeWidth={1.75} />
                 </div>
               </div>
             </div>
@@ -489,8 +489,8 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
             className="flex-shrink-0 flex flex-col items-center gap-2 group"
           >
             <div className="relative w-[72px] h-[72px]">
-              <div className="w-full h-full rounded-full bg-card border-2 border-border flex items-center justify-center group-hover:border-primary/60 group-hover:scale-105 transition-all duration-300">
-                <Settings className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:rotate-45 transition-all duration-300" />
+              <div className="w-full h-full rounded-full bg-card border-2 border-border flex items-center justify-center group-hover:border-emerald-300 group-hover:scale-105 transition-all duration-150">
+                <Settings className="w-6 h-6 text-muted-foreground group-hover:text-emerald-700 group-hover:rotate-45 transition-all duration-150" strokeWidth={1.75} />
               </div>
             </div>
             <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">Приватность</span>
@@ -502,10 +502,10 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                 const firstUserStoryIndex = stories.findIndex(s => s.user_id === user?.id)
                 if (firstUserStoryIndex >= 0) openStoryViewer(firstUserStoryIndex)
               }}
-              className="flex-shrink-0 flex flex-col items-center gap-2 group animate-fade-in"
+              className="flex-shrink-0 flex flex-col items-center gap-2 group animate-fade-in-soft"
             >
               <div className="relative w-[72px] h-[72px]">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-accent to-primary animate-spin-slow" style={{ padding: '2px' }}>
+                <div className="absolute inset-0 rounded-full bg-emerald-500" style={{ padding: '2px' }}>
                   <div className="w-full h-full rounded-full bg-card p-0.5">
                     <Avatar size="lg" alt={user?.username || ''} userId={String(user?.id || '')} className="w-full h-full" />
                   </div>
@@ -530,11 +530,11 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
               <button
                 key={story.id}
                 onClick={() => openStoryViewer(storyIndex >= 0 ? storyIndex : idx)}
-                className="flex-shrink-0 flex flex-col items-center gap-2 group animate-fade-in"
+                className="flex-shrink-0 flex flex-col items-center gap-2 group animate-fade-in-soft"
                 style={{ animationDelay: `${idx * 0.1}s` }}
               >
                 <div className="relative w-[72px] h-[72px]">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary via-accent to-primary group-hover:shadow-glow transition-shadow" style={{ padding: '2px' }}>
+                  <div className="absolute inset-0 rounded-full bg-emerald-500 group-hover:bg-emerald-600 transition-colors duration-150" style={{ padding: '2px' }}>
                     <div className="w-full h-full rounded-full bg-card p-0.5">
                       <Avatar size="lg" alt={`User ${story.user_id}`} userId={String(story.user_id)} className="w-full h-full group-hover:scale-105 transition-transform" />
                     </div>
@@ -553,8 +553,8 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
 
           {loading && (
             <>
-              <div className="flex-shrink-0 w-[72px] h-[72px] rounded-full bg-muted animate-pulse" />
-              <div className="flex-shrink-0 w-[72px] h-[72px] rounded-full bg-muted animate-pulse" />
+              <div className="flex-shrink-0 w-[72px] h-[72px] rounded-full skeleton-shimmer" />
+              <div className="flex-shrink-0 w-[72px] h-[72px] rounded-full skeleton-shimmer" />
             </>
           )}
         </div>
@@ -563,7 +563,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
       {showViewer && currentStory && createPortal(
         <div 
           ref={viewerRef}
-          className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[9999] flex flex-col"
+          className="fixed inset-0 bg-graphite-950/90 z-[9999] flex flex-col animate-fade-in-soft"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onMouseDown={handleMouseDown}
@@ -574,7 +574,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
               {stories.map((_, idx) => (
                 <div key={idx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-brand transition-all duration-100"
+                    className="h-full bg-emerald-400 transition-all duration-100"
                     style={{ 
                       width: idx < currentStoryIndex ? '100%' : idx === currentStoryIndex ? `${progress}%` : '0%' 
                     }}
@@ -623,7 +623,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                 {currentStory.user_id === user?.id && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleDeleteStory(currentStory.id) }}
-                    className="p-2 text-red-400 hover:text-red-300"
+                    className="p-2 text-white/80 hover:text-white"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -642,7 +642,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
             <button
               onClick={(e) => { e.stopPropagation(); goToPrevStory() }}
               className={cn(
-                "absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-black/70 hover:shadow-glow transition-all z-10",
+                "absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 border border-white/10 text-white/80 hover:text-white hover:bg-black/70 transition-all duration-150 z-10",
                 currentStoryIndex === 0 && "opacity-30 pointer-events-none"
               )}
             >
@@ -667,8 +667,8 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                   />
                 )
               ) : (
-                <div className="max-w-lg w-full bg-gradient-to-br from-primary/25 via-accent/15 to-primary/10 rounded-2xl border border-white/10 p-8 text-center">
-                  <p className="text-white text-xl font-medium leading-relaxed">
+                <div className="max-w-lg w-full bg-card rounded-2xl shadow-pop p-8 text-center">
+                  <p className="text-foreground text-xl font-medium leading-relaxed">
                     {currentStory.content}
                   </p>
                 </div>
@@ -678,7 +678,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
             <button
               onClick={(e) => { e.stopPropagation(); goToNextStory() }}
               className={cn(
-                "absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-black/70 hover:shadow-glow transition-all z-10",
+                "absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 border border-white/10 text-white/80 hover:text-white hover:bg-black/70 transition-all duration-150 z-10",
                 currentStoryIndex === stories.length - 1 && "opacity-30 pointer-events-none"
               )}
             >
@@ -688,7 +688,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
 
           {currentStory.content && currentStory.media_url && (
             <div className="absolute bottom-20 left-0 right-0 px-4">
-              <div className="max-w-lg mx-auto bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-4">
+              <div className="max-w-lg mx-auto bg-black/60 border border-white/10 rounded-2xl p-4">
                 <p className="text-white text-center">{currentStory.content}</p>
               </div>
             </div>
@@ -699,7 +699,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
               <input
                 type="text"
                 placeholder="Отправить ответ..."
-                className="w-full px-4 py-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/30 transition-all"
+                className="w-full px-4 py-3 rounded-full bg-white/10 border border-white/25 text-white placeholder:text-white/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 transition-all duration-150"
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
@@ -709,12 +709,12 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
       )}
 
       {showCreateModal && createPortal(
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[9999] animate-fade-in flex items-center justify-center">
-          <div className="glass-strong rounded-2xl w-full max-w-lg mx-4 animate-slide-in overflow-hidden">
-            <div className="bg-gradient-to-r from-primary/20 via-accent/10 to-transparent p-5 border-b border-border">
+        <div className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] z-[9999] animate-fade-in-soft flex items-center justify-center">
+          <div className="bg-card border border-border shadow-pop rounded-2xl w-full max-w-lg mx-4 animate-scale-in overflow-hidden">
+            <div className="p-5 border-b border-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white shadow-glow">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -733,7 +733,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
             
             <div className="p-6 space-y-5">
               {uploadError && (
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 animate-shake">
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-danger-soft border border-destructive/20 text-destructive">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
                   <p className="text-sm">{uploadError}</p>
                 </div>
@@ -769,7 +769,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <button
                               onClick={() => removeMedia(index)}
-                              className="p-2 rounded-full bg-red-500/80 hover:bg-red-500 text-white transition-colors"
+                              className="p-2 rounded-full bg-destructive/90 hover:bg-destructive text-destructive-foreground transition-colors duration-150"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -782,9 +782,9 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                       <button
                         type="button"
                         onClick={() => mediaInputRef.current?.click()}
-                        className="aspect-square rounded-lg border-2 border-dashed border-primary/30 flex items-center justify-center hover:border-primary/60 hover:bg-primary/5 transition-all"
+                        className="aspect-square rounded-lg border-2 border-dashed border-emerald-300 flex items-center justify-center hover:border-emerald-500 hover:bg-accent transition-all duration-150"
                       >
-                        <Plus className="w-6 h-6 text-primary/60" />
+                        <Plus className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
                       </button>
                     </div>
                   </div>
@@ -792,13 +792,13 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                   <button
                     type="button"
                     onClick={() => mediaInputRef.current?.click()}
-                    className="w-full py-8 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/60 hover:from-primary/20 hover:to-accent/20 transition-all duration-300 group"
+                    className="w-full py-8 rounded-xl bg-accent border-2 border-dashed border-emerald-300 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-emerald-500 transition-all duration-150 group"
                   >
-                    <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Plus className="w-7 h-7 text-primary" />
+                    <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-150">
+                      <Plus className="w-7 h-7 text-emerald-700" strokeWidth={1.75} />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-semibold text-primary">Добавить фото или видео</p>
+                      <p className="text-sm font-semibold text-emerald-700">Добавить фото или видео</p>
                       <p className="text-xs text-muted-foreground">Максимум 100 МБ</p>
                     </div>
                   </button>
@@ -810,8 +810,8 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                   <label className="text-sm text-muted-foreground font-medium">Текст истории</label>
                   <span className={cn(
                     "text-xs font-medium transition-colors",
-                    newStoryContent.length > 180 ? "text-amber-400" : "text-muted-foreground",
-                    newStoryContent.length >= 200 && "text-red-400"
+                    newStoryContent.length > 180 ? "text-warning" : "text-muted-foreground",
+                    newStoryContent.length >= 200 && "text-destructive"
                   )}>
                     {newStoryContent.length}/200
                   </span>
@@ -821,7 +821,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                     value={newStoryContent}
                     onChange={(e) => { setNewStoryContent(e.target.value); setUploadError(null) }}
                     placeholder="Напишите что-нибудь интересное..."
-                    className="w-full h-28 p-4 rounded-xl bg-background border-2 border-border resize-none focus:outline-none focus:ring-0 focus:border-primary text-sm transition-all duration-300 group-hover:border-primary/50"
+                    className="w-full h-28 p-4 rounded-xl bg-card border border-input resize-none focus:outline-none focus:border-primary focus:ring-4 focus:ring-emerald-600/10 text-sm transition-all duration-150"
                     maxLength={200}
                   />
                   <div className="absolute bottom-3 right-3">
@@ -829,7 +829,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                       <div 
                         className="w-6 h-6 rounded-full border-2 border-primary/30"
                         style={{
-                          background: `conic-gradient(var(--primary) ${(newStoryContent.length / 200) * 100}%, transparent ${(newStoryContent.length / 200) * 100}%)`
+                          background: `conic-gradient(hsl(var(--primary)) ${(newStoryContent.length / 200) * 100}%, transparent ${(newStoryContent.length / 200) * 100}%)`
                         }}
                       />
                     </div>
@@ -838,7 +838,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
               </div>
             </div>
             
-            <div className="p-5 border-t border-border flex items-center justify-between bg-muted/20">
+            <div className="p-5 border-t border-border flex items-center justify-between">
               <button
                 onClick={resetModal}
                 className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -851,8 +851,8 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                 className={cn(
                   "px-8 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2",
                   canPublish && !isUploading
-                    ? "bg-gradient-brand text-white hover:opacity-90 hover:scale-105 shadow-glow"
-                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                    ? "bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97]"
+                    : "bg-graphite-100 text-graphite-400 cursor-not-allowed"
                 )}
               >
                 {isUploading ? (
@@ -875,17 +875,17 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
 
       {showPrivacyModal && createPortal(
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[9999] animate-fade-in flex items-center justify-center"
+          className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] z-[9999] animate-fade-in-soft flex items-center justify-center"
           onClick={closePrivacyModal}
         >
           <div
-            className="glass-strong rounded-2xl w-full max-w-md mx-4 animate-slide-in overflow-hidden flex flex-col max-h-[85vh]"
+            className="bg-card border border-border shadow-pop rounded-2xl w-full max-w-md mx-4 animate-scale-in overflow-hidden flex flex-col max-h-[85vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-gradient-to-r from-primary/20 via-accent/10 to-transparent p-5 border-b border-border">
+            <div className="p-5 border-b border-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center text-white shadow-glow">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
                     <EyeOff className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -904,7 +904,7 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
 
             <div className="p-5 overflow-y-auto space-y-5">
               {privacyError && (
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 animate-shake">
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-danger-soft border border-destructive/20 text-destructive">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
                   <p className="text-sm">{privacyError}</p>
                 </div>
@@ -912,9 +912,9 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
 
               {privacyLoading ? (
                 <div className="space-y-2">
-                  <div className="h-12 rounded-xl bg-muted animate-pulse" />
-                  <div className="h-12 rounded-xl bg-muted animate-pulse" />
-                  <div className="h-12 rounded-xl bg-muted animate-pulse" />
+                  <div className="h-12 rounded-xl skeleton-shimmer" />
+                  <div className="h-12 rounded-xl skeleton-shimmer" />
+                  <div className="h-12 rounded-xl skeleton-shimmer" />
                 </div>
               ) : (
                 <>
@@ -934,13 +934,13 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                             className={cn(
                               'w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all disabled:opacity-60 disabled:cursor-not-allowed',
                               isActive
-                                ? 'border-primary bg-primary/10'
-                                : 'border-border hover:border-primary/40 hover:bg-white/5'
+                                ? 'border-primary bg-accent'
+                                : 'border-border hover:border-emerald-200 hover:bg-accent/60'
                             )}
                           >
                             <div className={cn(
                               'w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
-                              isActive ? 'bg-gradient-brand text-white' : 'bg-muted text-muted-foreground'
+                              isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
                             )}>
                               <OptionIcon className="w-4 h-4" />
                             </div>
@@ -969,13 +969,13 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                         ) : (
                           <div className="space-y-1">
                             {privacyExclusions.map((excluded) => (
-                              <div key={excluded.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
+                              <div key={excluded.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors duration-150">
                                 <Avatar size="sm" alt={excluded.username} src={excluded.avatar ?? undefined} userId={String(excluded.id)} />
                                 <span className="flex-1 text-sm font-medium text-foreground truncate">{excluded.username}</span>
                                 <button
                                   onClick={() => { void handleRemoveExclusion(excluded) }}
                                   disabled={isPrivacyBusy(excluded.id)}
-                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {isPrivacyBusy(excluded.id) ? 'Удаление...' : 'Убрать'}
                                 </button>
@@ -994,13 +994,13 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
                         ) : (
                           <div className="space-y-1">
                             {visibleFriends.map((friend) => (
-                              <div key={friend.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
+                              <div key={friend.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors duration-150">
                                 <Avatar size="sm" alt={friend.username} src={friend.avatar} userId={String(friend.id)} />
                                 <span className="flex-1 text-sm font-medium text-foreground truncate">{friend.username}</span>
                                 <button
                                   onClick={() => { void handleAddExclusion(friend) }}
                                   disabled={isPrivacyBusy(Number(friend.id))}
-                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted text-muted-foreground hover:bg-red-500/20 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-danger-soft hover:text-destructive transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {isPrivacyBusy(Number(friend.id)) ? 'Скрываем...' : 'Скрыть'}
                                 </button>
@@ -1015,10 +1015,10 @@ export function Stories({ className, viewUserId, onCloseViewer }: StoriesProps) 
               )}
             </div>
 
-            <div className="p-5 border-t border-border bg-muted/20 flex justify-end">
+            <div className="p-5 border-t border-border flex justify-end">
               <button
                 onClick={closePrivacyModal}
-                className="px-6 py-2.5 rounded-xl font-semibold bg-gradient-brand text-white hover:opacity-90 transition-all"
+                className="px-6 h-10 rounded-lg text-sm font-medium bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 transition-all duration-150"
               >
                 Готово
               </button>

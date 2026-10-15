@@ -130,14 +130,14 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
       >
         <Bell className="w-6 h-6 text-foreground" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-red-500 rounded-full text-white text-xs font-bold flex items-center justify-center animate-pulse">
+          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-primary rounded-full text-primary-foreground text-[11px] font-semibold grid place-items-center">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-96 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 top-full mt-2 w-96 bg-popover border border-border rounded-xl shadow-pop overflow-hidden z-50 animate-pop-menu">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <h3 className="text-lg font-bold text-foreground">Уведомления</h3>
             <div className="flex items-center gap-2">
@@ -172,7 +172,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
             ) : notifications.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -186,11 +186,11 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`flex items-start gap-3 p-4 border-b border-white/5 hover:bg-muted/60 transition-colors cursor-pointer ${
-                      !notification.is_read ? 'bg-purple-500/5' : ''
+                    className={`flex items-start gap-3 p-4 border-b border-border hover:bg-accent/60 transition-colors cursor-pointer ${
+                      !notification.is_read ? 'bg-accent/60' : ''
                     }`}
                   >
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center">
                       {notification.actor?.avatar ? (
                         <img 
                           src={notification.actor.avatar} 
@@ -208,7 +208,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
                           {notification.title}
                         </p>
                         {!notification.is_read && (
-                          <span className="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0 mt-1.5" />
+                          <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1.5" />
                         )}
                       </div>
                       {notification.content && (
@@ -225,7 +225,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
                       {!notification.is_read && (
                         <button
                           onClick={(e) => handleMarkAsRead(notification.id, e)}
-                          className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-green-400 transition-colors"
+                          className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-emerald-600 transition-colors"
                           title="Отметить как прочитанное"
                         >
                           <Check className="w-4 h-4" />
@@ -233,7 +233,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
                       )}
                       <button
                         onClick={(e) => handleDelete(notification.id, e)}
-                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-400 transition-colors"
+                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
                         title="Удалить"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -252,7 +252,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
                   setLocation('/notifications')
                   setIsOpen(false)
                 }}
-                className="w-full py-2 text-center text-sm text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="w-full py-2 text-center text-sm text-primary hover:text-emerald-800 hover:bg-accent rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 Все уведомления
                 <ExternalLink className="w-4 h-4" />

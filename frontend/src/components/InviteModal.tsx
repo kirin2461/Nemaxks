@@ -48,11 +48,11 @@ export function InviteModal({ guildId, guildName, onClose }: InviteModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-card rounded-2xl w-full max-w-md mx-4 shadow-2xl border border-border max-h-[85vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft flex items-center justify-center z-50">
+      <div className="bg-card rounded-2xl w-full max-w-md mx-4 shadow-pop border border-border max-h-[85vh] overflow-y-auto animate-scale-in">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div>

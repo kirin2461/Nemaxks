@@ -88,18 +88,18 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
               }}
               className={`w-full p-4 rounded-lg border transition-all flex items-center gap-4 ${
                 template === t.id
-                  ? 'border-purple-500 bg-purple-500/10'
-                  : 'border-border bg-muted/60 hover:bg-muted hover:border-white/20'
+                  ? 'border-primary bg-accent'
+                  : 'border-border bg-muted/60 hover:bg-muted hover:border-input'
               }`}
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-2xl">
+              <div className="w-12 h-12 bg-emerald-700 rounded-xl flex items-center justify-center text-2xl">
                 {t.icon}
               </div>
               <div className="text-left flex-1">
                 <p className="text-foreground font-medium">{t.name}</p>
                 <p className="text-muted-foreground text-sm">Каналы: {t.channels.join(', ')}</p>
               </div>
-              <Sparkles className="w-5 h-5 text-purple-400" />
+              <Sparkles className="w-5 h-5 text-emerald-700" />
             </button>
           ))}
         </div>
@@ -107,14 +107,14 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
         <div className="space-y-4 max-h-[85vh] overflow-y-auto">
           <div className="flex justify-center">
             <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+              <div className="w-20 h-20 rounded-2xl bg-emerald-700 flex items-center justify-center overflow-hidden">
                 {iconPreview ? (
                   <img src={iconPreview} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <Users className="w-10 h-10 text-white" />
                 )}
               </div>
-              <label className="absolute -bottom-1 -right-1 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-600 transition-colors">
+              <label className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-emerald-800 transition-colors">
                 <Camera className="w-4 h-4 text-white" />
                 <input
                   type="file"
@@ -133,7 +133,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
               value={name}
               onChange={e => setName(e.target.value)}
               maxLength={50}
-              className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors"
+              className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-primary outline-none transition-colors"
               placeholder="Моя крутая гильдия"
               autoFocus
             />
@@ -146,7 +146,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
               onChange={e => setDescription(e.target.value)}
               maxLength={300}
               rows={3}
-              className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-purple-500 outline-none transition-colors resize-none"
+              className="w-full px-4 py-2 bg-muted/60 border border-border rounded-lg text-foreground focus:border-primary outline-none transition-colors resize-none"
               placeholder="Расскажите о своей гильдии..."
             />
           </div>
@@ -154,9 +154,9 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
           <div className="flex items-center justify-between p-4 bg-muted/60 rounded-lg">
             <div className="flex items-center gap-3">
               {isPrivate ? (
-                <Lock className="w-5 h-5 text-yellow-400" />
+                <Lock className="w-5 h-5 text-warning" />
               ) : (
-                <Globe className="w-5 h-5 text-green-400" />
+                <Globe className="w-5 h-5 text-emerald-600" />
               )}
               <div>
                 <p className="text-foreground font-medium">
@@ -170,7 +170,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
             <button
               onClick={() => setIsPrivate(!isPrivate)}
               className={`relative w-12 h-6 rounded-full transition-colors ${
-                isPrivate ? 'bg-purple-500' : 'bg-muted'
+                isPrivate ? 'bg-primary' : 'bg-muted'
               }`}
             >
               <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
@@ -180,7 +180,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
           </div>
 
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+            <div className="p-3 bg-danger-soft border border-destructive/30 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
@@ -196,7 +196,7 @@ export function CreateGuildModal({ isOpen, onClose, onCreate }: CreateGuildModal
             <button
               onClick={handleCreate}
               disabled={loading || !name.trim()}
-              className="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-primary hover:bg-emerald-800 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

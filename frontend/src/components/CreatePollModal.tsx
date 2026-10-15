@@ -103,19 +103,19 @@ export default function CreatePollModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-card rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-purple-500/20 max-h-[90vh] overflow-y-auto"
+          className="bg-card rounded-2xl p-6 max-w-lg w-full shadow-pop border border-border max-h-[90vh] overflow-y-auto animate-scale-in"
           onClick={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-emerald-700 flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-white" />
               </div>
               <h2 className="text-xl font-bold text-foreground">
@@ -131,7 +131,7 @@ export default function CreatePollModal({
           </div>
 
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 text-sm">
+            <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-destructive/40 text-destructive text-sm">
               {error}
             </div>
           )}
@@ -147,7 +147,7 @@ export default function CreatePollModal({
                 onChange={e => setQuestion(e.target.value)}
                 placeholder={language === 'ru' ? 'О чём спросить?' : 'What do you want to ask?'}
                 maxLength={200}
-                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-4 focus:ring-emerald-600/10 outline-none"
               />
             </div>
 
@@ -161,7 +161,7 @@ export default function CreatePollModal({
                 placeholder={language === 'ru' ? 'Дополнительная информация...' : 'Additional context...'}
                 maxLength={500}
                 rows={2}
-                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-primary focus:ring-4 focus:ring-emerald-600/10 outline-none resize-none"
               />
             </div>
 
@@ -178,12 +178,12 @@ export default function CreatePollModal({
                       onChange={e => updateOption(index, e.target.value)}
                       placeholder={`${language === 'ru' ? 'Вариант' : 'Option'} ${index + 1}`}
                       maxLength={100}
-                      className="flex-1 px-4 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-purple-500 outline-none"
+                      className="flex-1 px-4 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder-muted-foreground focus:border-primary outline-none"
                     />
                     {options.length > 2 && (
                       <button
                         onClick={() => removeOption(index)}
-                        className="p-2 rounded-lg bg-secondary hover:bg-red-600/50 text-muted-foreground hover:text-red-400 transition-colors"
+                        className="p-2 rounded-lg bg-secondary hover:bg-[hsl(0_72%_38%])/50 text-muted-foreground hover:text-destructive transition-colors"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -195,7 +195,7 @@ export default function CreatePollModal({
               {options.length < 10 && (
                 <button
                   onClick={addOption}
-                  className="mt-2 w-full px-4 py-2 rounded-lg border border-dashed border-border text-muted-foreground hover:border-purple-500 hover:text-purple-400 transition-colors flex items-center justify-center gap-2"
+                  className="mt-2 w-full px-4 py-2 rounded-lg border border-dashed border-border text-muted-foreground hover:border-primary hover:text-emerald-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   {language === 'ru' ? 'Добавить вариант' : 'Add option'}
@@ -211,7 +211,7 @@ export default function CreatePollModal({
               <select
                 value={duration}
                 onChange={e => setDuration(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:border-purple-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:border-primary outline-none"
               >
                 {DURATION_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>
@@ -227,7 +227,7 @@ export default function CreatePollModal({
                   type="checkbox"
                   checked={multiChoice}
                   onChange={e => setMultiChoice(e.target.checked)}
-                  className="w-5 h-5 rounded border-border bg-secondary text-purple-600 focus:ring-purple-500"
+                  className="w-5 h-5 rounded border-border bg-secondary text-emerald-700 focus:ring-emerald-600/10"
                 />
                 <span className="text-sm text-foreground">
                   {language === 'ru' ? 'Множественный выбор' : 'Multiple choice'}
@@ -239,7 +239,7 @@ export default function CreatePollModal({
                   type="checkbox"
                   checked={anonymous}
                   onChange={e => setAnonymous(e.target.checked)}
-                  className="w-5 h-5 rounded border-border bg-secondary text-purple-600 focus:ring-purple-500"
+                  className="w-5 h-5 rounded border-border bg-secondary text-emerald-700 focus:ring-emerald-600/10"
                 />
                 <span className="text-sm text-foreground">
                   {language === 'ru' ? 'Анонимный опрос' : 'Anonymous poll'}
@@ -258,7 +258,7 @@ export default function CreatePollModal({
             <button
               onClick={handleCreate}
               disabled={creating || !question.trim() || options.filter(o => o.trim()).length < 2}
-              className="flex-1 px-4 py-3 rounded-xl bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-4 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {creating ? (
                 <span className="flex items-center justify-center gap-2">

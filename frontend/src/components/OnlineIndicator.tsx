@@ -37,7 +37,7 @@ export function OnlineIndicator({
     return (
       <span className={cn(
         'text-xs',
-        isOnline ? 'text-green-500' : 'text-muted-foreground',
+        isOnline ? 'text-emerald-600' : 'text-muted-foreground',
         className
       )}>
         {getLastSeenText()}
@@ -51,8 +51,8 @@ export function OnlineIndicator({
         'rounded-full',
         sizeClasses[size],
         isOnline 
-          ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]' 
-          : 'bg-gray-400',
+          ? 'bg-online' 
+          : 'bg-offline',
         className
       )}
       title={getLastSeenText()}

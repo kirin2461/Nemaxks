@@ -24,16 +24,16 @@ interface NotificationToastProps {
 const getIcon = (type: Notification['type']) => {
   switch (type) {
     case 'message':
-      return <MessageSquare className="w-5 h-5 text-blue-400" />
+      return <MessageSquare className="w-5 h-5 text-primary" />
     case 'friend_request':
     case 'friend_accepted':
-      return <UserPlus className="w-5 h-5 text-green-400" />
+      return <UserPlus className="w-5 h-5 text-emerald-600" />
     case 'mention':
-      return <AtSign className="w-5 h-5 text-purple-400" />
+      return <AtSign className="w-5 h-5 text-emerald-700" />
     case 'like':
-      return <Heart className="w-5 h-5 text-pink-400" />
+      return <Heart className="w-5 h-5 text-destructive" />
     case 'call':
-      return <Phone className="w-5 h-5 text-green-400" />
+      return <Phone className="w-5 h-5 text-emerald-600" />
     default:
       return <Bell className="w-5 h-5 text-primary" />
   }
@@ -69,12 +69,12 @@ function NotificationToast({ notification, onDismiss }: NotificationToastProps) 
     <div
       onClick={handleClick}
       className={cn(
-        "w-80 bg-card/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl p-4 cursor-pointer transition-all duration-300 transform",
+        "w-80 bg-card border border-border rounded-xl shadow-pop p-4 cursor-pointer transition-all duration-300 transform",
         isVisible && !isLeaving ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
       )}
     >
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent flex items-center justify-center">
           {notification.avatar ? (
             <img src={notification.avatar} alt="" className="w-full h-full rounded-full object-cover" />
           ) : (

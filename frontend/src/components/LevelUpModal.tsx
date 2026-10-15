@@ -28,10 +28,10 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
 
   const getRewardIcon = (type: string) => {
     switch (type) {
-      case 'coins': return <Coins className="w-5 h-5 text-accent" />
+      case 'coins': return <Coins className="w-5 h-5 text-emerald-700" />
       case 'gems': return <Gem className="w-5 h-5 text-primary" />
-      case 'xp': return <Star className="w-5 h-5 text-accent" />
-      default: return <Gift className="w-5 h-5 text-accent" />
+      case 'xp': return <Star className="w-5 h-5 text-emerald-700" />
+      default: return <Gift className="w-5 h-5 text-emerald-700" />
     }
   }
 
@@ -39,18 +39,18 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
     <Modal isOpen={isOpen} onClose={onClose} size="sm" showCloseButton={false}>
       <div className="text-center py-4">
         <div className="relative w-32 h-32 mx-auto mb-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent to-primary rounded-full animate-pulse opacity-50 blur-xl" />
-          <div className="relative w-32 h-32 bg-gradient-brand rounded-full flex items-center justify-center border-4 border-primary/40 shadow-2xl">
+          <div className="absolute inset-0 rounded-full bg-emerald-500/40 animate-pulse-ring" />
+          <div className="relative w-32 h-32 bg-primary rounded-full flex items-center justify-center border-4 border-primary/40 shadow-pop">
             <div className="text-center">
               <p className="text-white/80 text-sm font-medium">УРОВЕНЬ</p>
               <p className="text-5xl font-black text-white drop-shadow-lg">{newLevel}</p>
             </div>
           </div>
-          <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-accent/80 animate-bounce" />
-          <Sparkles className="absolute -bottom-1 -left-3 w-6 h-6 text-accent/80 animate-bounce delay-100" />
+          <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-emerald-700 animate-bounce" />
+          <Sparkles className="absolute -bottom-1 -left-3 w-6 h-6 text-emerald-700 animate-bounce delay-100" />
         </div>
 
-        <h2 className="text-2xl font-black gradient-brand-text mb-2">
+        <h2 className="text-2xl font-black text-primary mb-2">
           УРОВЕНЬ ПОВЫШЕН!
         </h2>
         <p className="text-muted-foreground mb-6">
@@ -67,7 +67,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
                   className="flex items-center justify-between p-3 bg-muted/60 rounded-lg border border-border"
                   style={{ 
                     animationDelay: `${index * 100}ms`,
-                    animation: showRewards ? 'slideIn 0.3s ease forwards' : 'none'
+                    animation: showRewards ? 'rise-in 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards' : 'none'
                   }}
                 >
                   <div className="flex items-center gap-3">
@@ -85,7 +85,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, rewards = [] }: LevelU
 
         <button
           onClick={onClose}
-          className="mt-6 w-full px-6 py-3 bg-gradient-brand hover:brightness-110 rounded-lg text-white font-bold transition-all shadow-lg hover:shadow-glow"
+          className="mt-6 w-full px-6 py-3 bg-primary hover:bg-emerald-800 rounded-lg text-white font-bold transition-all shadow-elev hover:shadow-lg-brand"
         >
           Отлично!
         </button>

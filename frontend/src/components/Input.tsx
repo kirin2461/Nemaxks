@@ -11,7 +11,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium mb-2 text-foreground">
+          <label className="block text-sm font-medium mb-1.5 text-foreground">
             {label}
           </label>
         )}
@@ -20,12 +20,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           className={cn(
             'input-field',
-            error && 'border-red-500 focus:ring-red-500',
+            error && 'border-destructive focus:border-destructive focus:ring-destructive/10',
             className
           )}
           {...props}
         />
-        {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+        {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
       </div>
     )
   }
@@ -44,20 +44,20 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium mb-2 text-foreground">
+          <label className="block text-sm font-medium mb-1.5 text-foreground">
             {label}
           </label>
         )}
         <textarea
           ref={ref}
           className={cn(
-            'input-field resize-none',
-            error && 'border-red-500 focus:ring-red-500',
+            'input-field resize-none min-h-[96px] py-2',
+            error && 'border-destructive focus:border-destructive focus:ring-destructive/10',
             className
           )}
           {...props}
         />
-        {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+        {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
       </div>
     )
   }

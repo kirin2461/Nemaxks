@@ -40,12 +40,12 @@ export function NewMessageModal({ isOpen, onClose, onSelectUser, friends }: NewM
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        className="absolute inset-0 bg-graphite-950/40 backdrop-blur-[3px] animate-fade-in-soft"
         onClick={handleClose}
       />
 
       <div
-        className="relative z-10 w-full max-w-md glass-strong rounded-2xl animate-fade-in"
+        className="relative z-10 w-full max-w-md bg-card border border-border shadow-pop rounded-2xl animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 border-b border-border/60 flex items-center justify-between">
