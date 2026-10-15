@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { competitionsAPI, GuildCompetition, GuildCompetitionEntry } from '../lib/api';
 import { Trophy, Users, Clock, Medal, Crown, Award } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -41,13 +40,13 @@ export default function CompetitionsPage() {
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
-        return <Crown className="w-6 h-6 text-accent" />;
+        return <Crown className="w-6 h-6 text-emerald-700" strokeWidth={1.75} />;
       case 2:
-        return <Medal className="w-6 h-6 text-muted-foreground" />;
+        return <Medal className="w-6 h-6 text-graphite-500" strokeWidth={1.75} />;
       case 3:
-        return <Award className="w-6 h-6 text-accent" />;
+        return <Award className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />;
       default:
-        return <span className="w-6 h-6 flex items-center justify-center text-muted-foreground font-bold">{rank}</span>;
+        return <span className="w-10 font-display font-bold text-graphite-500 text-center">{rank}</span>;
     }
   };
 
@@ -59,29 +58,42 @@ export default function CompetitionsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-primary/40 border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-background p-4 sm:p-6">
+        <div className="max-w-6xl mx-auto space-y-6 animate-fade-in-soft">
+          <div className="skeleton h-9 w-72 rounded-lg" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="skeleton h-28 rounded-xl" />
+              ))}
+            </div>
+            <div className="skeleton h-72 rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-nebula p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6">
+      <div className="max-w-6xl mx-auto animate-rise-in">
         <div className="flex items-center gap-3 mb-8">
-          <Trophy className="w-8 h-8 text-accent" />
-          <h1 className="text-3xl font-bold gradient-brand-text">Соревнования гильдий</h1>
+          <Trophy className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
+          <div>
+            <h1 className="text-2xl font-display font-bold text-graphite-900">Соревнования гильдий</h1>
+            <p className="text-sm text-muted-foreground">Сражайтесь за призовые места</p>
+          </div>
         </div>
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-6 border-b border-border mb-6">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`pb-2.5 text-sm font-medium border-b-2 -mb-px transition-colors duration-150 ${
                 activeTab === tab.id
-                  ? 'bg-gradient-brand text-white'
-                  : 'bg-card/50 text-muted-foreground hover:bg-secondary'
+                  ? 'text-foreground border-primary'
+                  : 'text-muted-foreground border-transparent hover:text-foreground'
               }`}
             >
               {tab.label}
@@ -89,35 +101,34 @@ export default function CompetitionsPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" key={activeTab}>
           <div className="space-y-4">
-            {competitions.map((comp) => (
-              <motion.div
+            {competitions.map((comp, index) => (
+              <div
                 key={comp.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
                 onClick={() => loadCompetitionDetails(comp)}
-                className={`bg-card/55 backdrop-blur-xl rounded-xl p-5 border shadow-soft cursor-pointer transition-all hover:border-accent/50 hover:shadow-glow ${
-                  selectedCompetition?.id === comp.id ? 'border-accent/50 glow' : 'border-border/50'
+                className={`rounded-xl bg-card border shadow-soft p-5 cursor-pointer transition-all duration-150 animate-rise-in hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 ${
+                  selectedCompetition?.id === comp.id ? 'border-primary' : 'border-border'
                 }`}
+                style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground">{comp.name_ru || comp.name}</h3>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold text-graphite-900">{comp.name_ru || comp.name}</h3>
                     <p className="text-sm text-muted-foreground">{comp.description_ru || comp.description}</p>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    activeTab === 'active' ? 'bg-green-500/20 text-green-400' :
-                    activeTab === 'upcoming' ? 'bg-accent/15 text-accent' :
-                    'bg-muted/50 text-muted-foreground'
+                  <div className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                    activeTab === 'active' ? 'bg-success-soft text-emerald-800' :
+                    activeTab === 'upcoming' ? 'bg-warning-soft text-[hsl(32_95%_30%)]' :
+                    'bg-secondary text-secondary-foreground'
                   }`}>
                     {activeTab === 'active' ? 'Активно' : activeTab === 'upcoming' ? 'Скоро' : 'Завершено'}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
+                  <div className="flex items-center gap-1 font-mono text-xs">
+                    <Clock className="w-4 h-4" strokeWidth={1.75} />
                     {activeTab === 'active' ? (
                       `Осталось ${formatDistanceToNow(new Date(comp.ends_at), { locale: ru })}`
                     ) : activeTab === 'upcoming' ? (
@@ -127,46 +138,49 @@ export default function CompetitionsPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
+                    <Users className="w-4 h-4" strokeWidth={1.75} />
                     {comp.metric === 'messages' ? 'Сообщения' : comp.metric}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
 
             {competitions.length === 0 && (
-              <div className="text-center py-12">
-                <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Нет соревнований</p>
+              <div className="rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center animate-rise-in">
+                <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+                  <Trophy className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-lg font-semibold mt-4 text-graphite-900">Соревнования ещё не начались</h3>
+                <p className="text-sm text-muted-foreground max-w-[320px] mx-auto">Загляните позже</p>
               </div>
             )}
           </div>
 
           {selectedCompetition && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="glass rounded-xl p-6"
-            >
-              <h3 className="text-xl font-bold text-foreground mb-4">
+            <div className="rounded-xl border border-border bg-card shadow-soft p-6 animate-slide-in-right h-fit">
+              <h3 className="text-lg font-semibold text-graphite-900 mb-4">
                 Таблица лидеров
               </h3>
 
               {leaderboard.length > 0 ? (
-                <div className="space-y-3">
+                <div>
+                  <div className="flex items-center gap-4 pb-2 text-xs uppercase tracking-[0.08em] text-muted-foreground border-b border-border">
+                    <span className="w-10">#</span>
+                    <span className="flex-1">Гильдия</span>
+                    <span>Очки</span>
+                  </div>
                   {leaderboard.map((entry, index) => (
                     <div
                       key={entry.id}
-                      className={`flex items-center gap-4 p-3 rounded-lg ${
-                        index < 3 ? 'bg-gradient-to-r from-primary/10 to-transparent' : 'bg-secondary/30'
-                      }`}
+                      className="flex items-center gap-4 h-14 border-b border-border last:border-0 transition-colors duration-150 hover:bg-accent/50 animate-rise-in"
+                      style={{ animationDelay: `${Math.min(index, 8) * 20}ms` }}
                     >
-                      {getRankIcon(entry.rank)}
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground">{entry.guild?.name || `Guild #${entry.guild_id}`}</p>
+                      <div className="w-10 flex justify-center shrink-0">{getRankIcon(entry.rank)}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-graphite-900 truncate">{entry.guild?.name || `Guild #${entry.guild_id}`}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-accent">{entry.score.toLocaleString()}</p>
+                        <p className="font-mono text-sm font-bold text-emerald-700">{entry.score.toLocaleString()}</p>
                         <p className="text-xs text-muted-foreground">очков</p>
                       </div>
                     </div>
@@ -174,14 +188,14 @@ export default function CompetitionsPage() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">Пока нет участников</p>
+                  <Users className="w-10 h-10 text-graphite-300 mx-auto mb-3" strokeWidth={1.5} />
+                  <p className="text-sm text-muted-foreground">Пока нет участников</p>
                 </div>
               )}
 
               {selectedCompetition.prizes && (
-                <div className="mt-6 p-4 bg-gradient-to-r from-primary/10 to-primary/10 rounded-lg border border-accent/20">
-                  <h4 className="text-sm font-semibold text-accent mb-2">Призы</h4>
+                <div className="mt-6 p-4 rounded-lg bg-accent/50 border border-emerald-200">
+                  <h4 className="text-sm font-semibold text-emerald-800 mb-2">Призы</h4>
                   <div className="text-sm text-foreground">
                     {(() => {
                       try {
@@ -200,7 +214,7 @@ export default function CompetitionsPage() {
                   </div>
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
         </div>
       </div>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { Users, Plus, Crown, Target, Lock, Globe, ChevronRight } from 'lucide-react';
+import { Users, Plus, Crown, Target, Lock, Globe, ChevronRight, X } from 'lucide-react';
 import { clansAPI, Clan, ClanChallenge } from '../lib/api';
 
 export default function ClansPage() {
@@ -11,7 +10,7 @@ export default function ClansPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newClanName, setNewClanName] = useState('');
   const [newClanDesc, setNewClanDesc] = useState('');
-  const [newClanColor, setNewClanColor] = useState('#6366f1');
+  const [newClanColor, setNewClanColor] = useState('#047857');
   const [newClanPublic, setNewClanPublic] = useState(true);
 
   const { data: clans = [], isLoading } = useQuery({
@@ -52,119 +51,149 @@ export default function ClansPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-nebula flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
+      <div className="min-h-screen bg-background p-4 sm:p-6">
+        <div className="max-w-6xl mx-auto space-y-6 animate-fade-in-soft">
+          <div className="skeleton h-9 w-40 rounded-lg" />
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="skeleton h-32 rounded-xl" />
+              ))}
+            </div>
+            <div className="skeleton h-72 rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-nebula text-foreground p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6">
+      <div className="max-w-6xl mx-auto animate-rise-in">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <Users className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold gradient-brand-text">Кланы</h1>
+            <Users className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
+            <div>
+              <h1 className="text-2xl font-display font-bold text-graphite-900">Кланы</h1>
+              <p className="text-sm text-muted-foreground">Объединяйтесь и выполняйте испытания</p>
+            </div>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-brand text-white rounded-lg shadow-soft hover:brightness-110 hover:shadow-glow transition-all"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand transition-all duration-150 active:scale-[0.97]"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" strokeWidth={2} />
             Создать клан
           </button>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
-            {clans.map((clan: Clan) => (
-              <motion.div
+            {clans.map((clan: Clan, index: number) => (
+              <div
                 key={clan.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass rounded-xl p-6 cursor-pointer hover:bg-card/70 transition-colors"
+                className={`rounded-xl border bg-card shadow-soft cursor-pointer overflow-hidden transition-all duration-150 animate-rise-in hover:-translate-y-0.5 hover:shadow-elev hover:border-graphite-300 ${
+                  selectedClan === clan.id ? 'border-primary' : 'border-border'
+                }`}
                 onClick={() => setSelectedClan(clan.id)}
-                style={{ borderLeft: `4px solid ${clan.color}` }}
+                style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold"
-                      style={{ backgroundColor: `${clan.color}20`, color: clan.color }}
-                    >
-                      {clan.name[0]}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-bold">{clan.name}</h3>
-                        {clan.is_public ? (
-                          <Globe className="w-4 h-4 text-green-400" />
-                        ) : (
-                          <Lock className="w-4 h-4 text-accent" />
-                        )}
+                <div className="h-16 bg-graphite-100" style={{ backgroundColor: `${clan.color}14` }} />
+                <div className="p-6 pt-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-4 min-w-0">
+                      <div
+                        className="w-12 h-12 -mt-6 shrink-0 rounded-lg border border-border bg-card flex items-center justify-center text-xl font-display font-bold shadow-soft"
+                        style={{ color: clan.color }}
+                      >
+                        {clan.name[0]}
                       </div>
-                      <p className="text-muted-foreground text-sm">{clan.description || 'Нет описания'}</p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Crown className="w-4 h-4 text-accent" />
-                          {clan.leader?.username || 'Неизвестно'}
+                      <div className="min-w-0 pt-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-semibold text-graphite-900 truncate">{clan.name}</h3>
+                          {clan.is_public ? (
+                            <Globe className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={1.75} />
+                          ) : (
+                            <Lock className="w-4 h-4 text-graphite-500 shrink-0" strokeWidth={1.75} />
+                          )}
                         </div>
-                        <span>{clan.total_xp.toLocaleString()} XP</span>
+                        <p className="text-muted-foreground text-sm">{clan.description || 'Нет описания'}</p>
+                        <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <Crown className="w-4 h-4 text-emerald-600" strokeWidth={1.75} />
+                            {clan.leader?.username || 'Неизвестно'}
+                          </div>
+                          <span className="font-mono text-xs">{clan.total_xp.toLocaleString()} XP</span>
+                        </div>
                       </div>
                     </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" strokeWidth={1.75} />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                </div>
 
-                {clan.is_public && (
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      joinMutation.mutate(clan.id);
-                    }}
-                    disabled={joinMutation.isPending}
-                    className="mt-4 w-full py-2 bg-primary/20 text-primary rounded-lg hover:bg-primary/30"
-                  >
-                    Вступить в клан
-                  </button>
-                )}
-              </motion.div>
+                  {clan.is_public && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        joinMutation.mutate(clan.id);
+                      }}
+                      disabled={joinMutation.isPending}
+                      className="mt-4 w-full h-9 rounded-lg border border-input bg-card text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
+                    >
+                      Вступить в клан
+                    </button>
+                  )}
+                </div>
+              </div>
             ))}
 
             {clans.length === 0 && (
-              <div className="glass rounded-xl p-12 text-center">
-                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Кланов пока нет</h3>
-                <p className="text-muted-foreground">Создайте первый клан!</p>
+              <div className="rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center animate-rise-in">
+                <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+                  <Users className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-lg font-semibold mt-4 text-graphite-900">Создайте свой клан</h3>
+                <p className="text-sm text-muted-foreground max-w-[320px] mx-auto mb-4">Создайте первый клан!</p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand transition-all duration-150 active:scale-[0.97]"
+                >
+                  <Plus className="w-4 h-4" strokeWidth={2} />
+                  Создать клан
+                </button>
               </div>
             )}
           </div>
 
           <div>
             {selectedClan ? (
-              <div className="glass rounded-xl p-6 sticky top-6">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
+              <div className="rounded-xl border border-border bg-card shadow-soft p-6 sticky top-6 animate-rise-in" key={selectedClan}>
+                <h3 className="text-lg font-semibold text-graphite-900 mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
                   Испытания клана
                 </h3>
                 <div className="space-y-3">
                   {challenges.map((challenge: ClanChallenge) => (
-                    <div key={challenge.id} className="bg-secondary/50 rounded-lg p-4">
+                    <div
+                      key={challenge.id}
+                      className={`rounded-lg border p-4 ${
+                        challenge.is_completed ? 'bg-accent/30 border-emerald-200' : 'bg-secondary border-border'
+                      }`}
+                    >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{challenge.name}</span>
+                        <span className="font-medium text-sm text-graphite-900">{challenge.name}</span>
                         {challenge.is_completed && (
-                          <span className="text-green-400 text-xs">Завершено</span>
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs font-medium">Завершено</span>
                         )}
                       </div>
                       <p className="text-muted-foreground text-sm mb-2">{challenge.description}</p>
-                      <div className="w-full bg-muted rounded-full h-2 mb-2">
+                      <div className="w-full bg-graphite-200 rounded-full h-2 mb-2 overflow-hidden">
                         <div
-                          className="bg-gradient-brand h-2 rounded-full"
+                          className="bg-primary h-2 rounded-full animate-bar-grow origin-left"
                           style={{ width: `${(challenge.progress / challenge.goal) * 100}%` }}
                         />
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>
+                        <span className="font-mono">
                           {challenge.progress}/{challenge.goal}
                         </span>
                         <span>+{challenge.reward_coins} монет, +{challenge.reward_xp} XP</span>
@@ -172,30 +201,37 @@ export default function ClansPage() {
                     </div>
                   ))}
                   {challenges.length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">Нет активных испытаний</p>
+                    <p className="text-muted-foreground text-sm text-center py-4">Нет активных испытаний</p>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="glass rounded-xl p-8 text-center sticky top-6">
-                <Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Выберите клан, чтобы увидеть испытания</p>
+              <div className="rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center sticky top-6">
+                <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+                  <Target className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+                </div>
+                <p className="text-sm text-muted-foreground mt-4 max-w-[320px] mx-auto">Выберите клан, чтобы увидеть испытания</p>
               </div>
             )}
           </div>
         </div>
 
         {showCreateModal && (
-          <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="glass-strong rounded-xl p-6 w-full max-w-md m-4"
-            >
-              <h3 className="text-xl font-bold mb-4">Создать клан</h3>
+          <div className="fixed inset-0 z-50 bg-graphite-950/40 backdrop-blur-[3px] flex items-center justify-center animate-fade-in-soft">
+            <div className="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-border bg-card p-6 shadow-pop animate-scale-in m-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-graphite-900">Создать клан</h3>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="h-8 w-8 rounded-lg grid place-items-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-150"
+                  aria-label="Закрыть"
+                >
+                  <X className="w-4 h-4" strokeWidth={1.75} />
+                </button>
+              </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Название клана</label>
+                  <label className="block text-sm font-medium mb-1.5">Название клана</label>
                   <input
                     type="text"
                     value={newClanName}
@@ -204,21 +240,21 @@ export default function ClansPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Описание</label>
+                  <label className="block text-sm font-medium mb-1.5">Описание</label>
                   <textarea
                     value={newClanDesc}
                     onChange={e => setNewClanDesc(e.target.value)}
-                    className="input-field w-full resize-none"
+                    className="input-field w-full resize-none h-auto py-2"
                     rows={3}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Цвет</label>
+                  <label className="block text-sm font-medium mb-1.5">Цвет</label>
                   <input
                     type="color"
                     value={newClanColor}
                     onChange={e => setNewClanColor(e.target.value)}
-                    className="w-full h-10 rounded-lg cursor-pointer"
+                    className="w-full h-10 rounded-lg border border-input bg-card cursor-pointer"
                   />
                 </div>
                 <label className="flex items-center gap-2">
@@ -226,27 +262,27 @@ export default function ClansPage() {
                     type="checkbox"
                     checked={newClanPublic}
                     onChange={e => setNewClanPublic(e.target.checked)}
-                    className="w-4 h-4"
+                    className="w-4 h-4 accent-emerald-700"
                   />
                   <span className="text-sm">Публичный клан (любой может вступить)</span>
                 </label>
-                <div className="flex gap-3 pt-2">
+                <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setShowCreateModal(false)}
-                    className="flex-1 py-2 bg-secondary rounded-lg hover:bg-muted"
+                    className="h-10 px-4 rounded-lg border border-input bg-card text-sm font-medium hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150 active:scale-[0.97]"
                   >
                     Отмена
                   </button>
                   <button
                     onClick={() => createMutation.mutate()}
                     disabled={!newClanName || createMutation.isPending}
-                    className="flex-1 py-2 bg-gradient-brand text-white rounded-lg font-medium shadow-soft hover:brightness-110 disabled:opacity-50 transition-all"
+                    className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
                   >
                     Создать
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
       </div>

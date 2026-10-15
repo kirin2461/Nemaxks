@@ -2,20 +2,28 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { shopAPI, currencyAPI, inventoryAPI, ShopItem, VirtualCurrency, UserInventory } from '../lib/api';
 import { Coins, Gem, ShoppingBag, Check, Palette, Frame, Image, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
-const rarityColors: Record<string, string> = {
-  common: 'border-border bg-muted/40',
-  uncommon: 'border-green-500/50 bg-green-500/10',
-  rare: 'border-accent/50 bg-accent/10 shadow-soft',
-  epic: 'border-primary/50 bg-primary/10 shadow-soft',
-  legendary: 'border-primary/60 bg-gradient-to-br from-primary/15 to-accent/15 shadow-glow',
+/* Rarity encoded by border weight + graphite→emerald scale (NO rainbow gradients) */
+const rarityBorders: Record<string, string> = {
+  common: 'border border-border',
+  uncommon: 'border border-graphite-300',
+  rare: 'border-2 border-graphite-400',
+  epic: 'border-2 border-emerald-300',
+  legendary: 'border-2 border-emerald-600 shadow-lg-brand',
+};
+
+const rarityBadges: Record<string, string> = {
+  common: 'bg-secondary text-secondary-foreground',
+  uncommon: 'bg-secondary text-secondary-foreground',
+  rare: 'border border-graphite-300 text-graphite-600',
+  epic: 'bg-emerald-100 text-emerald-800',
+  legendary: 'bg-emerald-600 text-white',
 };
 
 const categoryIcons: Record<string, React.ReactNode> = {
-  themes: <Palette className="w-5 h-5" />,
-  frames: <Frame className="w-5 h-5" />,
-  banners: <Image className="w-5 h-5" />,
+  themes: <Palette className="w-4 h-4" strokeWidth={1.75} />,
+  frames: <Frame className="w-4 h-4" strokeWidth={1.75} />,
+  banners: <Image className="w-4 h-4" strokeWidth={1.75} />,
 };
 
 export default function ShopPage() {
@@ -78,124 +86,130 @@ export default function ShopPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-primary/40 border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-background p-4 sm:p-6">
+        <div className="max-w-6xl mx-auto space-y-6 animate-fade-in-soft">
+          <div className="skeleton h-9 w-48 rounded-lg" />
+          <div className="skeleton h-10 w-96 max-w-full rounded-lg" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[0, 1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="skeleton h-64 rounded-xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-nebula p-4 sm:p-6 pb-20 lg:pb-0">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 pb-20 lg:pb-0">
+      <div className="max-w-6xl mx-auto animate-rise-in">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
           <div className="flex items-center gap-3">
-            <ShoppingBag className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl sm:text-3xl font-bold gradient-brand-text">{t('shop.title')}</h1>
+            <ShoppingBag className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
+            <h1 className="text-2xl font-display font-bold text-graphite-900">{t('shop.title')}</h1>
           </div>
-          
+
           {currency && (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-accent/15 px-4 py-2 rounded-lg">
-                <Coins className="w-5 h-5 text-accent shrink-0" />
-                <span className="text-accent font-semibold">{currency.coins}</span>
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground">
+                <Coins className="w-4 h-4 text-graphite-600 shrink-0" strokeWidth={1.75} />
+                <span className="font-mono">{currency.coins}</span>
               </div>
-              <div className="flex items-center gap-2 bg-primary/15 px-4 py-2 rounded-lg">
-                <Gem className="w-5 h-5 text-primary shrink-0" />
-                <span className="text-primary font-semibold">{currency.gems}</span>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-sm font-medium text-emerald-800">
+                <Gem className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+                <span className="font-mono">{currency.gems}</span>
               </div>
             </div>
           )}
         </div>
 
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                activeCategory === cat
-                  ? 'bg-gradient-brand text-white shadow-soft'
-                  : 'bg-card/50 text-muted-foreground hover:bg-secondary'
-              }`}
-            >
-              {categoryIcons[cat]}
-              {t(`shop.categories.${cat}`)}
-            </button>
-          ))}
+          <div className="inline-flex p-1 rounded-lg bg-secondary gap-1">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`h-8 px-3 rounded-md text-sm whitespace-nowrap transition-all duration-150 flex items-center gap-2 ${
+                  activeCategory === cat
+                    ? 'bg-card text-foreground shadow-soft font-medium'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {categoryIcons[cat]}
+                {t(`shop.categories.${cat}`)}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {items.map((item) => (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className={`relative bg-card/55 backdrop-blur-xl rounded-xl border-2 p-4 transition-shadow hover:shadow-glow ${rarityColors[item.rarity]}`}
-              >
-                <div className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium capitalize bg-background/80">
-                  {item.rarity}
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" key={activeCategory}>
+          {items.map((item, index) => (
+            <div
+              key={item.id}
+              className={`group relative rounded-xl bg-card shadow-soft overflow-hidden transition-all duration-150 animate-rise-in hover:-translate-y-0.5 hover:shadow-elev ${
+                rarityBorders[item.rarity] || rarityBorders.common
+              }`}
+              style={{ animationDelay: `${Math.min(index, 8) * 25}ms` }}
+            >
+              <div className={`absolute top-2 right-2 z-10 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${rarityBadges[item.rarity] || rarityBadges.common}`}>
+                {item.rarity}
+              </div>
 
-                <div className="h-32 bg-gradient-to-br from-secondary to-muted rounded-lg mb-4 flex items-center justify-center">
-                  <Sparkles className="w-12 h-12 text-muted-foreground" />
-                </div>
+              <div className="aspect-square max-h-48 bg-graphite-100 grid place-items-center">
+                <Sparkles className="w-12 h-12 text-graphite-400 transition-all duration-150 group-hover:text-emerald-600 group-hover:scale-110" strokeWidth={1.5} />
+              </div>
 
-                <h3 className="text-lg font-semibold text-foreground mb-1">{item.name_ru || item.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{item.description_ru || item.description}</p>
+              <div className="p-4">
+                <h3 className="text-sm font-semibold text-graphite-900 mb-1">{item.name_ru || item.name}</h3>
+                <p className="text-xs text-muted-foreground mb-4">{item.description_ru || item.description}</p>
 
                 {isOwned(item.id) ? (
-                  <button
-                    onClick={() => handleEquip(item.id)}
-                    disabled={isEquipped(item.id)}
-                    className={`w-full py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                      isEquipped(item.id)
-                        ? 'bg-green-500/20 text-green-400 cursor-default'
-                        : 'bg-gradient-brand hover:brightness-110 text-white shadow-soft'
-                    }`}
-                  >
-                    {isEquipped(item.id) ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        {t('shop.equipped')}
-                      </>
-                    ) : (
-                      t('shop.equip')
-                    )}
-                  </button>
+                  isEquipped(item.id) ? (
+                    <div className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-medium">
+                      <Check className="w-3.5 h-3.5" strokeWidth={2} />
+                      {t('shop.equipped')}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleEquip(item.id)}
+                      className="w-full h-9 rounded-lg border border-input bg-card text-sm font-medium hover:bg-accent hover:text-accent-foreground hover:border-emerald-200 transition-all duration-150 active:scale-[0.97]"
+                    >
+                      {t('shop.equip')}
+                    </button>
+                  )
                 ) : (
                   <div className="flex gap-2">
                     <button
                       onClick={() => handlePurchase(item, 'coins')}
                       disabled={!currency || currency.coins < item.price_coins || purchasing === item.id}
-                      className="flex-1 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 bg-accent/15 hover:bg-accent/30 text-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 h-9 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97] flex items-center justify-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-graphite-200 disabled:opacity-50 disabled:pointer-events-none"
                     >
-                      <Coins className="w-4 h-4" />
-                      {item.price_coins}
+                      <Coins className="w-4 h-4 text-graphite-600" strokeWidth={1.75} />
+                      <span className="font-display font-bold">{item.price_coins}</span>
                     </button>
                     {item.price_gems > 0 && (
                       <button
                         onClick={() => handlePurchase(item, 'gems')}
                         disabled={!currency || currency.gems < item.price_gems || purchasing === item.id}
-                        className="flex-1 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 bg-primary/15 hover:bg-primary/30 text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 h-9 rounded-lg text-sm font-medium transition-all duration-150 active:scale-[0.97] flex items-center justify-center gap-1.5 bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand disabled:opacity-50 disabled:pointer-events-none"
                       >
-                        <Gem className="w-4 h-4" />
-                        {item.price_gems}
+                        <Gem className="w-4 h-4" strokeWidth={1.75} />
+                        <span className="font-display font-bold">{item.price_gems}</span>
                       </button>
                     )}
                   </div>
                 )}
-              </motion.div>
-            ))}
-          </AnimatePresence>
+              </div>
+            </div>
+          ))}
         </div>
 
         {items.length === 0 && (
-          <div className="text-center py-16">
-            <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">{t('shop.noItems', 'Нет товаров в этой категории')}</p>
+          <div className="rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center animate-rise-in">
+            <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+              <ShoppingBag className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+            </div>
+            <p className="text-sm text-muted-foreground mt-4 max-w-[320px] mx-auto">{t('shop.noItems', 'Нет товаров в этой категории')}</p>
           </div>
         )}
       </div>

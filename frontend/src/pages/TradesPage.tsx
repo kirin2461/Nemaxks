@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { ArrowLeftRight, Check, X, Clock, User, Package } from 'lucide-react';
+import { ArrowLeftRight, Check, X, Clock, User } from 'lucide-react';
 import { tradesAPI, Trade } from '../lib/api';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -30,43 +29,51 @@ export default function TradesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return { text: 'Ожидает', color: 'bg-accent/15 text-accent' };
+        return { text: 'Ожидает', color: 'bg-secondary text-secondary-foreground' };
       case 'accepted':
-        return { text: 'Принят', color: 'bg-green-500/20 text-green-400' };
+        return { text: 'Принят', color: 'bg-emerald-100 text-emerald-800' };
       case 'rejected':
-        return { text: 'Отклонён', color: 'bg-red-500/20 text-red-400' };
+        return { text: 'Отклонён', color: 'bg-danger-soft text-destructive' };
       case 'cancelled':
-        return { text: 'Отменён', color: 'bg-muted/50 text-muted-foreground' };
+        return { text: 'Отменён', color: 'bg-secondary text-secondary-foreground' };
       default:
-        return { text: status, color: 'bg-muted/50 text-muted-foreground' };
+        return { text: status, color: 'bg-secondary text-secondary-foreground' };
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-nebula flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary/40" />
+      <div className="min-h-screen bg-background p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-soft">
+          <div className="skeleton h-9 w-48 rounded-lg" />
+          {[0, 1, 2].map(i => (
+            <div key={i} className="skeleton h-28 rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-nebula text-foreground p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto animate-rise-in">
         <div className="flex items-center gap-3 mb-8">
-          <ArrowLeftRight className="w-8 h-8 text-accent" />
-          <h1 className="text-3xl font-bold gradient-brand-text">Обмены</h1>
+          <ArrowLeftRight className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
+          <div>
+            <h1 className="text-2xl font-display font-bold text-graphite-900">Обмены</h1>
+            <p className="text-sm text-muted-foreground">Входящие и исходящие предложения</p>
+          </div>
         </div>
 
-        <div className="flex gap-2 mb-6">
+        <div className="inline-flex p-1 rounded-lg bg-secondary gap-1 mb-6">
           {['pending', 'accepted', 'rejected', ''].map(status => (
             <button
               key={status || 'all'}
               onClick={() => setStatusFilter(status)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`h-8 px-3 rounded-md text-sm whitespace-nowrap transition-all duration-150 ${
                 statusFilter === status
-                  ? 'bg-gradient-brand text-white shadow-soft'
-                  : 'bg-card/50 text-muted-foreground hover:bg-secondary'
+                  ? 'bg-card text-foreground shadow-soft font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {status === 'pending' ? 'Ожидающие' : status === 'accepted' ? 'Принятые' : status === 'rejected' ? 'Отклонённые' : 'Все'}
@@ -74,83 +81,88 @@ export default function TradesPage() {
           ))}
         </div>
 
-        <div className="space-y-4">
-          {trades.map((trade: Trade) => {
+        <div className="space-y-4" key={statusFilter || 'all'}>
+          {trades.map((trade: Trade, index: number) => {
             const status = getStatusBadge(trade.status);
             const isReceiver = trade.receiver_id === Number(user?.id);
             const canRespond = isReceiver && trade.status === 'pending';
 
             return (
-              <motion.div
+              <div
                 key={trade.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass rounded-xl p-6"
+                className="rounded-xl border border-border bg-card shadow-soft p-6 transition-all duration-150 animate-rise-in hover:shadow-elev"
+                style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-medium">
+                      <span className="h-8 w-8 rounded-full bg-emerald-700 text-white grid place-items-center ring-1 ring-border">
+                        <User className="w-4 h-4" strokeWidth={1.75} />
+                      </span>
+                      <span className="font-medium text-graphite-900">
                         {trade.initiator?.username || 'Пользователь'}
                       </span>
                     </div>
-                    <ArrowLeftRight className="w-4 h-4 text-muted-foreground" />
+                    <ArrowLeftRight className="w-4 h-4 text-graphite-400" strokeWidth={1.75} />
                     <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-medium">
+                      <span className="h-8 w-8 rounded-full bg-graphite-700 text-white grid place-items-center ring-1 ring-border">
+                        <User className="w-4 h-4" strokeWidth={1.75} />
+                      </span>
+                      <span className="font-medium text-graphite-900">
                         {trade.receiver?.username || 'Пользователь'}
                       </span>
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${status.color}`}>
+                  <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${status.color}`}>
                     {status.text}
                   </span>
                 </div>
 
                 {trade.initiator_note && (
-                  <p className="text-muted-foreground text-sm mb-4">
+                  <p className="text-muted-foreground text-sm italic mb-4">
                     "{trade.initiator_note}"
                   </p>
                 )}
 
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
+                <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground flex-wrap">
+                  <div className="flex items-center gap-1 text-xs">
+                    <Clock className="w-4 h-4" strokeWidth={1.75} />
                     {formatDistanceToNow(new Date(trade.created_at), { addSuffix: true, locale: ru })}
                   </div>
-                  
+
                   {canRespond && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => respondMutation.mutate({ id: trade.id, action: 'reject' })}
                         disabled={respondMutation.isPending}
-                        className="flex items-center gap-1 px-3 py-1 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30"
+                        className="inline-flex items-center gap-1 h-8 px-3 rounded-lg text-sm bg-danger-soft text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4" strokeWidth={2} />
                         Отклонить
                       </button>
                       <button
                         onClick={() => respondMutation.mutate({ id: trade.id, action: 'accept' })}
                         disabled={respondMutation.isPending}
-                        className="flex items-center gap-1 px-3 py-1 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600/30"
+                        className="inline-flex items-center gap-1 h-8 px-3 rounded-lg text-sm bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
                       >
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4" strokeWidth={2} />
                         Принять
                       </button>
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
 
         {trades.length === 0 && (
-          <div className="glass rounded-xl p-12 text-center">
-            <ArrowLeftRight className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Обменов нет</h3>
-            <p className="text-muted-foreground">Здесь появится история ваших обменов</p>
+          <div className="rounded-xl border border-border bg-card shadow-soft py-16 px-6 text-center animate-rise-in">
+            <div className="h-20 w-20 rounded-2xl bg-secondary grid place-items-center mx-auto">
+              <ArrowLeftRight className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-lg font-semibold mt-4 text-graphite-900">Обменов нет</h3>
+            <p className="text-sm text-muted-foreground max-w-[320px] mx-auto">Здесь появится история ваших обменов</p>
           </div>
         )}
       </div>
