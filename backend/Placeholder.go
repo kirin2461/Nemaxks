@@ -481,12 +481,40 @@ func createPostHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, postData)
 }
 
+// countOnlineUsers — число уникальных пользователей онлайн (BE-2):
+// last_seen за последние 5 минут + активные WebSocket- и SSE-подключения.
+// Раньше считалось только по users.last_seen, который нигде не обновлялся,
+// поэтому дашборд показывал "В сети: 0" при активных сессиях.
+func countOnlineUsers() int64 {
+	online := make(map[string]struct{})
+
+	var recentIDs []uint
+	db.Model(&User{}).Where("last_seen > ?", time.Now().Add(-5*time.Minute)).Pluck("id", &recentIDs)
+	for _, id := range recentIDs {
+		online[strconv.FormatUint(uint64(id), 10)] = struct{}{}
+	}
+
+	hub.mu.RLock()
+	for uid := range hub.clientsByUser {
+		online[uid] = struct{}{}
+	}
+	hub.mu.RUnlock()
+
+	sseHub.mu.RLock()
+	for uid := range sseHub.byUser {
+		online[uid] = struct{}{}
+	}
+	sseHub.mu.RUnlock()
+
+	return int64(len(online))
+}
+
 func getPlatformStatsHandler(c *gin.Context) {
-	var userCount, channelCount, messageCount, onlineCount int64
+	var userCount, channelCount, messageCount int64
 	db.Model(&User{}).Count(&userCount)
 	db.Model(&Channel{}).Count(&channelCount)
 	db.Model(&Message{}).Count(&messageCount)
-	db.Model(&User{}).Where("last_seen > NOW() - INTERVAL '5 minutes'").Count(&onlineCount)
+	onlineCount := countOnlineUsers()
 
 	var activeStreams int64 = 0
 

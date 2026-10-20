@@ -398,6 +398,8 @@ func main() {
 	r.GET("/api/channels/:channel_id/messages", authMiddleware(), getMessagesByChannelHandler)
 	r.POST("/api/channels/:channel_id/messages", authMiddleware(), createChannelMessageHandler)
 	r.GET("/api/channels/:channel_id/messages/:message_id/thread", authMiddleware(), getThreadRepliesHandler)
+	r.PUT("/api/channels/:channel_id/messages/:message_id", authMiddleware(), updateChannelMessageHandler)
+	r.DELETE("/api/channels/:channel_id/messages/:message_id", authMiddleware(), deleteChannelMessageHandler)
 	r.GET("/api/channels/:channel_id/permissions/me", authMiddleware(), getMyChannelPermissionsHandler)
 
 	// Voice Channel Participants

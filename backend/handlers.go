@@ -387,6 +387,13 @@ func loginHandler(c *gin.Context) {
 	// Clear failed login attempts on successful password verification
 	ClearFailedLogins(c.ClientIP())
 
+	// Enforce account block: blocked users must not get tokens (even before 2FA)
+	if user.IsBlocked {
+		log.Printf("Login blocked: user %s is blocked (reason: %s)", user.Username, user.BlockReason)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is blocked", "blocked": true, "reason": user.BlockReason})
+		return
+	}
+
 	// Check if 2FA is enabled
 	if is2FAEnabled(user.ID) {
 		c.JSON(http.StatusOK, gin.H{

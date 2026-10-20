@@ -28,26 +28,42 @@ async function request<T>(
 ): Promise<T> {
   const { data, headers, ...restOptions } = options;
 
-  const config: RequestInit = {
-    ...restOptions,
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
+  const buildConfig = (authToken: string | null): RequestInit => {
+    const config: RequestInit = {
+      ...restOptions,
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+    };
+    if (authToken) {
+      (config.headers as any)["Authorization"] = `Bearer ${authToken}`;
+    }
+    if (data) {
+      config.body = JSON.stringify(data);
+    }
+    return config;
   };
 
-  // Get token from localStorage
-  const token = localStorage.getItem("token");
-  if (token) {
-    (config.headers as any)["Authorization"] = `Bearer ${token}`;
-  }
-
-  if (data) {
-    config.body = JSON.stringify(data);
-  }
-
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    let response = await fetch(
+      `${API_BASE_URL}${endpoint}`,
+      buildConfig(localStorage.getItem("token")),
+    );
+
+    // FE-7: access token живёт ~15 минут. При 401 пробуем один раз
+    // обновить токен через refresh token и повторить запрос,
+    // вместо того чтобы возвращать пользователю шторм 401.
+    if (
+      response.status === 401 &&
+      !endpoint.startsWith("/auth/") &&
+      localStorage.getItem("refresh_token")
+    ) {
+      const freshToken = await refreshAccessToken();
+      if (freshToken) {
+        response = await fetch(`${API_BASE_URL}${endpoint}`, buildConfig(freshToken));
+      }
+    }
 
     let responseData: any;
 
@@ -79,6 +95,79 @@ async function request<T>(
       0,
     );
   }
+}
+
+// --- Token refresh (FE-7) ---
+// Access token TTL на бэкенде ~15 минут (backend/jwt_enhanced.go:
+// accessTokenExpiry = 15 * time.Minute). Клиент обновляет его через
+// POST /api/auth/refresh, иначе SSE/WS/REST получают шторм 401
+// «token is expired».
+
+// exp из JWT payload (мс) или null, если токен не парсится.
+export function getTokenExpiryMs(token: string): number | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const decoded = JSON.parse(
+      atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+    );
+    return typeof decoded.exp === "number" ? decoded.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+let refreshPromise: Promise<string | null> | null = null;
+
+// Обновляет access token по refresh token. Дедуплицирует параллельные
+// вызовы (шторм 401 от нескольких запросов = один refresh-запрос).
+// Возвращает новый access token или null (refresh невалиден — нужен перелогин).
+export function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (!refreshToken) return null;
+    try {
+      const res = await request<{
+        access_token: string;
+        refresh_token?: string;
+        expires_in: number;
+      }>("/auth/refresh", {
+        method: "POST",
+        data: { refresh_token: refreshToken },
+      });
+      if (res.access_token) {
+        localStorage.setItem("token", res.access_token);
+        if (res.refresh_token) {
+          localStorage.setItem("refresh_token", res.refresh_token);
+        }
+        return res.access_token;
+      }
+      return null;
+    } catch (e) {
+      console.warn("[api] Token refresh failed:", e);
+      return null;
+    }
+  })().finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
+}
+
+// Возвращает актуальный access token, обновив его, если до истечения
+// осталось меньше skewMs. null — токена нет или refresh не удался.
+export async function ensureFreshToken(
+  skewMs: number = 30000,
+): Promise<string | null> {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  const expMs = getTokenExpiryMs(token);
+  if (expMs !== null && expMs - Date.now() < skewMs) {
+    return refreshAccessToken();
+  }
+  return token;
 }
 
 // Authentication API
@@ -114,6 +203,16 @@ export const authAPI = {
   logout: () =>
     request<{ message: string }>("/auth/logout", {
       method: "POST",
+    }),
+
+  refresh: (refreshToken: string) =>
+    request<{
+      access_token: string;
+      refresh_token?: string;
+      expires_in: number;
+    }>("/auth/refresh", {
+      method: "POST",
+      data: { refresh_token: refreshToken },
     }),
 
   getMe: () => request<User>("/auth/me"),
@@ -1219,6 +1318,27 @@ export const channelsAPI = {
   getThread: (channelId: string, messageId: string) =>
     request<ChannelMessage[]>(
       `/channels/${channelId}/messages/${messageId}/thread`,
+    ),
+
+  // Редактирование сообщения канала (FE-8). DM-сообщения редактируются
+  // через messagesAPI.updateMessage (/messages/update/:id).
+  updateMessage: (channelId: string, messageId: string, content: string) =>
+    request<ChannelMessage>(
+      `/channels/${channelId}/messages/${encodePathSegment(messageId)}`,
+      {
+        method: "PUT",
+        data: { content },
+      },
+    ),
+
+  // Удаление сообщения канала. DM-сообщения удаляются через
+  // messagesAPI.deleteMessage (/messages/delete/:id).
+  deleteMessage: (channelId: string, messageId: string) =>
+    request<{ message: string }>(
+      `/channels/${channelId}/messages/${encodePathSegment(messageId)}`,
+      {
+        method: "DELETE",
+      },
     ),
 
   getMyPermissions: (channelId: string) =>

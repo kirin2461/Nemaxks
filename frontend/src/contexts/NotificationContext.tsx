@@ -6,6 +6,7 @@ import { OutgoingCallModal } from '@/components/OutgoingCallModal'
 import { useStore } from '@/lib/store'
 import { playNotificationSound } from '@/lib/notificationSounds'
 import { connectionManager, ConnectionType, ConnectionState } from '@/lib/connectionManager'
+import { useTranslation } from 'react-i18next'
 
 interface IncomingCall {
   callId: string
@@ -64,6 +65,7 @@ interface NotificationProviderProps {
 }
 
 export function NotificationProvider({ children }: NotificationProviderProps) {
+  const { t } = useTranslation()
   const { user } = useStore()
   const [, setLocation] = useLocation()
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -578,12 +580,38 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   }, [unreadCount])
 
   useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission()
-    }
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err))
     }
+  }, [])
+
+  // FE-9: запрос push-разрешения — только для авторизованного пользователя,
+  // с понятным UI (баннер) вместо молчаливого системного попапа при загрузке.
+  // Системный запрос вызывается по клику (user gesture), иначе браузеры
+  // его игнорируют.
+  const [showPushPrompt, setShowPushPrompt] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    if (!('Notification' in window)) return
+    if (Notification.permission !== 'default') return
+    if (sessionStorage.getItem('push_prompt_dismissed')) return
+    setShowPushPrompt(true)
+  }, [user])
+
+  const handleEnablePush = useCallback(() => {
+    setShowPushPrompt(false)
+    sessionStorage.setItem('push_prompt_dismissed', '1')
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(err =>
+        console.log('Notification permission request failed:', err)
+      )
+    }
+  }, [])
+
+  const handleDismissPushPrompt = useCallback(() => {
+    setShowPushPrompt(false)
+    sessionStorage.setItem('push_prompt_dismissed', '1')
   }, [])
 
   return (
@@ -609,6 +637,26 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       forceConnectionType
     }}>
       {children}
+      {showPushPrompt && (
+        <div className="fixed bottom-20 lg:bottom-4 right-4 z-[70] max-w-sm rounded-2xl border border-border bg-card shadow-pop p-4 animate-scale-in">
+          <p className="font-semibold text-sm mb-1">{t('notifications.promptTitle')}</p>
+          <p className="text-xs text-muted-foreground mb-3">{t('notifications.promptBody')}</p>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={handleDismissPushPrompt}
+              className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent text-xs transition-colors"
+            >
+              {t('notifications.promptLater')}
+            </button>
+            <button
+              onClick={handleEnablePush}
+              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs hover:bg-primary/90 transition-colors"
+            >
+              {t('notifications.promptEnable')}
+            </button>
+          </div>
+        </div>
+      )}
       <NotificationContainer notifications={toasts} onDismiss={dismissToast} />
       {incomingCall && (
         <IncomingCallModal

@@ -5,12 +5,28 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
+
+// bearerTokenFromHeader извлекает JWT из заголовка Authorization
+// (с префиксом "Bearer " или без). Пустая строка, если заголовка нет.
+// BE-3: предпочтительный способ передачи токена для /ws, /wstunnel,
+// /api/sse/events — в отличие от ?token= не попадает в access-логи.
+func bearerTokenFromHeader(c *gin.Context) string {
+	authHeader := strings.TrimSpace(c.GetHeader("Authorization"))
+	if authHeader == "" {
+		return ""
+	}
+	if len(authHeader) > 7 && strings.EqualFold(authHeader[:7], "Bearer ") {
+		return strings.TrimSpace(authHeader[7:])
+	}
+	return authHeader
+}
 
 type SSEClient struct {
 	UserID  string
@@ -245,8 +261,16 @@ func (pq *PollQueue) AddBroadcast(msgType string, data interface{}) {
 
 func sseEventsHandler(c *gin.Context) {
 	userID := c.GetString("userID")
+	if uid, ok := getUserIDFromContext(c); ok && userID == "" {
+		userID = fmt.Sprintf("%d", uid)
+	}
 	if userID == "" {
-		token := c.Query("token")
+		// BE-3: сначала Authorization: Bearer (не попадает в access-логи),
+		// затем ?token= — для обратной совместимости (EventSource не умеет заголовки).
+		token := bearerTokenFromHeader(c)
+		if token == "" {
+			token = c.Query("token")
+		}
 		if token != "" {
 			claims := jwt.MapClaims{}
 			parsedToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
@@ -333,7 +357,13 @@ func sseEventsHandler(c *gin.Context) {
 }
 
 func longPollHandler(c *gin.Context) {
-	userID := c.GetString("userID")
+	// user_id в контекст кладёт authMiddleware (enhancedAuthMiddleware);
+	// раньше здесь читался несуществующий ключ "userID" — long polling
+	// всегда отвечал 401 даже с валидным токеном.
+	userID := ""
+	if uid, ok := getUserIDFromContext(c); ok {
+		userID = fmt.Sprintf("%d", uid)
+	}
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
@@ -384,7 +414,10 @@ func longPollHandler(c *gin.Context) {
 }
 
 func longPollSendHandler(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := ""
+	if uid, ok := getUserIDFromContext(c); ok {
+		userID = fmt.Sprintf("%d", uid)
+	}
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
@@ -455,7 +488,10 @@ func SendToUserFallbacks(userID string, msgType string, data interface{}) {
 }
 
 func connectionStatusHandler(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID := ""
+	if uid, ok := getUserIDFromContext(c); ok {
+		userID = fmt.Sprintf("%d", uid)
+	}
 
 	hub.mu.RLock()
 	wsConnected := hub.clientsByUser[userID] != nil

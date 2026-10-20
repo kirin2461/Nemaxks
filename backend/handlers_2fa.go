@@ -6,6 +6,7 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"image/png"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -441,6 +442,13 @@ func verify2FALoginHandler(c *gin.Context) {
 	var user User
 	if err := db.First(&user, req.UserID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Enforce account block before issuing tokens
+	if user.IsBlocked {
+		log.Printf("2FA login blocked: user %s is blocked (reason: %s)", user.Username, user.BlockReason)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is blocked", "blocked": true, "reason": user.BlockReason})
 		return
 	}
 

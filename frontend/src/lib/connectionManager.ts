@@ -1,3 +1,5 @@
+import { ensureFreshToken, refreshAccessToken } from './api'
+
 export type ConnectionType = 'websocket' | 'wstunnel' | 'sse' | 'long_polling' | 'disconnected'
 
 export interface ConnectionState {
@@ -91,6 +93,22 @@ class ConnectionManager {
     this.shouldReconnect = true
     this.isConnecting = true
     this.setState({ reconnectAttempts: 0 })
+
+    // FE-7: access token живёт ~15 минут. Перед подключением обновляем
+    // его при необходимости, иначе WS/SSE сразу получат 401 и уйдут
+    // в шторм реконнектов с протухшим токеном.
+    const freshToken = await ensureFreshToken()
+    if (isStale()) {
+      this.isConnecting = false
+      return
+    }
+    if (!freshToken) {
+      console.warn('[ConnectionManager] No valid token (refresh failed), retrying with backoff')
+      this.isConnecting = false
+      this.scheduleReconnect()
+      return
+    }
+    this.token = freshToken
 
     try {
       const success = await this.tryWebSocket()
@@ -255,6 +273,10 @@ class ConnectionManager {
     return new Promise((resolve) => {
       try {
         console.log('[ConnectionManager] Trying SSE...')
+        // FE-7/BE-3: браузерный EventSource API не поддерживает кастомные
+        // HTTP-заголовки, поэтому Authorization: Bearer передать невозможно —
+        // токен передаётся в ?token= (бэкенд принимает оба способа).
+        // То же ограничение у браузерного WebSocket API выше.
         const sseUrl = `${this.baseUrl}/api/sse/events?token=${encodeURIComponent(this.token || '')}`
         
         this.sse = new EventSource(sseUrl)
@@ -331,7 +353,7 @@ class ConnectionManager {
     if (this.state.type !== 'long_polling' || !this.shouldReconnect) return
 
     try {
-      const response = await fetch(
+      const doPoll = () => fetch(
         `${this.baseUrl}/api/poll/events?since_id=${this.lastPollId}`,
         {
           headers: {
@@ -340,6 +362,17 @@ class ConnectionManager {
           }
         }
       )
+
+      let response = await doPoll()
+
+      // FE-7: при 401 обновляем access token и повторяем запрос один раз.
+      if (response.status === 401) {
+        const freshToken = await refreshAccessToken()
+        if (freshToken) {
+          this.token = freshToken
+          response = await doPoll()
+        }
+      }
 
       if (!response.ok) {
         throw new Error(`Poll failed: ${response.status}`)
@@ -377,10 +410,18 @@ class ConnectionManager {
     this.setState({ reconnectAttempts: attempts + 1 })
 
     this.reconnectTimeoutId = setTimeout(async () => {
-      if (this.token && this.shouldReconnect) {
-        this.disconnect(false)
-        await this.connect(this.token)
+      if (!this.shouldReconnect) return
+      // FE-7: перед реконнектом обновляем токен — реконнект с протухшим
+      // токеном бессмыслен и создаёт шторм 401.
+      const freshToken = await ensureFreshToken()
+      if (!this.shouldReconnect) return
+      if (!freshToken) {
+        console.warn('[ConnectionManager] Token refresh failed, retrying with backoff')
+        this.scheduleReconnect()
+        return
       }
+      this.disconnect(false)
+      await this.connect(freshToken)
     }, delay)
   }
 

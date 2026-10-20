@@ -2,6 +2,8 @@ package main
 
 import (
         "time"
+
+        "gorm.io/gorm"
 )
 
 // UserPublic represents the safe public view of a User (without password)
@@ -110,8 +112,11 @@ type Message struct {
         ReplyCount int      `json:"reply_count" gorm:"default:0"`
         CreatedAt time.Time `json:"created_at" gorm:"index:idx_messages_channel_created,priority:2,sort:desc"`
         UpdatedAt time.Time `json:"updated_at"`
-        Channel   Channel   `json:"channel,omitempty" gorm:"foreignKey:ChannelID"`
-        Author    User      `json:"author,omitempty" gorm:"foreignKey:AuthorID"`
+        // Soft delete, как у DirectMessage: DELETE ставит deleted_at,
+        // запись остаётся в БД и автоматически исключается из выборок GORM.
+        DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+        Channel   Channel        `json:"channel,omitempty" gorm:"foreignKey:ChannelID"`
+        Author    User           `json:"author,omitempty" gorm:"foreignKey:AuthorID"`
 }
 
 type Post struct {

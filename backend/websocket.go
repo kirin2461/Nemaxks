@@ -575,7 +575,12 @@ func (c *WSClient) writePump() {
 func handleWSConnection(c *gin.Context) {
 	var userID string
 
-	tokenParam := c.Query("token")
+	// BE-3: приоритет — Authorization: Bearer (не попадает в access-логи);
+	// ?token= оставлен для обратной совместимости.
+	tokenParam := bearerTokenFromHeader(c)
+	if tokenParam == "" {
+		tokenParam = c.Query("token")
+	}
 	if tokenParam == "" {
 		log.Println("WebSocket connection rejected: no token provided")
 		c.AbortWithStatus(401)
@@ -657,7 +662,12 @@ func handleWSConnection(c *gin.Context) {
 func handleWSTunnelConnection(c *gin.Context) {
 	var userID string
 
-	tokenParam := c.Query("token")
+	// BE-3: приоритет — Authorization: Bearer (не попадает в access-логи);
+	// ?token= оставлен для обратной совместимости.
+	tokenParam := bearerTokenFromHeader(c)
+	if tokenParam == "" {
+		tokenParam = c.Query("token")
+	}
 	if tokenParam == "" {
 		log.Println("WSTunnel connection rejected: no token provided")
 		c.AbortWithStatus(401)

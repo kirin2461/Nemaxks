@@ -38,7 +38,10 @@ func getFriendsHandler(c *gin.Context) {
                 CreatedAt  string  `json:"created_at"`
         }
 
-        var result []FriendInfo
+        // BE-2: make(...) вместо var — пустой список сериализуется как [],
+        // а не null. Фронтенд трактовал null как "ошибка загрузки" и показывал
+        // дефолтные "4 друга" новому пользователю.
+        result := make([]FriendInfo, 0)
 
         for _, f := range friends {
                 var friendUser User

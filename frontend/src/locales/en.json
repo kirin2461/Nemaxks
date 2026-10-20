@@ -172,7 +172,14 @@
     "unmute": "Unmute",
     "pinned": "Pinned",
     "files": "Files",
-    "search": "Search in channel"
+    "search": "Search in channel",
+    "muteChannel": "Mute Channel",
+    "invitePeople": "Invite People",
+    "leaveChannel": "Leave Channel",
+    "renameChannel": "Rename Channel",
+    "deleteChannel": "Delete Channel",
+    "welcomeTo": "Welcome to #{{name}}",
+    "channelStart": "This is the start of the channel."
   },
   "guilds": {
     "createGuild": "Create guild",
@@ -241,7 +248,10 @@
     "callSound": "Call sound",
     "interface": "Interface",
     "liteMode": "Lite Mode",
-    "liteModeDesc": "Simplified navigation with essential features only"
+    "liteModeDesc": "Simplified navigation with essential features only",
+    "enableNotificationsDesc": "Show push notifications for new messages and events",
+    "soundEffectsDesc": "Play a sound for new messages and calls",
+    "noiseReductionDesc": "Suppress microphone background noise during calls"
   },
   "jarvis": {
     "greeting": "Hello! I'm Jarvis, your AI assistant.",
@@ -527,5 +537,11 @@
       "gamification": "Gamification",
       "gamificationDesc": "Levels, achievements and rewards"
     }
+  },
+  "notifications": {
+    "promptTitle": "Enable notifications?",
+    "promptBody": "Allow notifications so you don't miss new messages and calls.",
+    "promptEnable": "Enable",
+    "promptLater": "Later"
   }
 }

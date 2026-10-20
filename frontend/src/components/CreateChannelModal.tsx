@@ -13,7 +13,9 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const [type, setType] = useState<'text' | 'voice' | 'announcement'>('text')
-  const [isPrivate, setIsPrivate] = useState(true)
+  // FE-3: приватность по умолчанию ВЫКЛ — канал создаётся публичным,
+  // приватность включается явным действием пользователя.
+  const [isPrivate, setIsPrivate] = useState(false)
   const [templates, setTemplates] = useState<any[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [isPremium, setIsPremium] = useState(false)

@@ -4,6 +4,7 @@ import (
         "crypto/rand"
         "crypto/sha256"
         "encoding/hex"
+        "log"
         "net/http"
         "sync"
         "time"
@@ -55,7 +56,11 @@ var (
 )
 
 const (
-        accessTokenExpiry  = 15 * time.Minute
+        // BE-1: access token TTL поднят с 15 минут до 24 часов — короткий TTL
+        // давал шторм 401 "token is expired" на /ws, /wstunnel, /api/sse/events,
+        // /api/poll/events, т.к. realtime-подключения не проходили refresh flow.
+        // Refresh token flow (POST /api/auth/refresh) продолжает работать как раньше.
+        accessTokenExpiry  = 24 * time.Hour
         refreshTokenExpiry = 7 * 24 * time.Hour
 )
 
@@ -234,6 +239,12 @@ func refreshTokenHandler(c *gin.Context) {
         rt.RevokedAt = &now
         db.Save(&rt)
 
+        if user.IsBlocked {
+                log.Printf("Refresh token blocked: user %s is blocked (reason: %s)", user.Username, user.BlockReason)
+                c.JSON(http.StatusForbidden, gin.H{"error": "Account is blocked", "blocked": true, "reason": user.BlockReason})
+                return
+        }
+
         deviceInfo := c.GetHeader("X-Device-Info")
         if deviceInfo == "" {
                 deviceInfo = c.GetHeader("User-Agent")
@@ -369,6 +380,14 @@ func enhancedAuthMiddleware() gin.HandlerFunc {
                                 return
                         }
 
+                        // Enforce account block: blocked users must not access the API
+                        // even with a still-valid access token.
+                        var user User
+                        if err := db.Select("id", "is_blocked", "block_reason").First(&user, claims.UserID).Error; err == nil && user.IsBlocked {
+                                c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Account is blocked", "blocked": true, "reason": user.BlockReason})
+                                return
+                        }
+
                         c.Set("user_id", float64(claims.UserID))
                         c.Set("session_id", claims.SessionID)
                         c.Set("token_id", claims.TokenID)
@@ -377,6 +396,10 @@ func enhancedAuthMiddleware() gin.HandlerFunc {
                         if claims.SessionID != "" {
                                 db.Model(&UserSession{}).Where("session_id = ?", claims.SessionID).Update("last_seen_at", time.Now())
                         }
+
+                        // BE-2: users.last_seen раньше нигде не обновлялся, из-за чего
+                        // подсчёт "online" (и isOnline в ToPublic) всегда давал 0.
+                        db.Model(&User{}).Where("id = ?", claims.UserID).Update("last_seen", time.Now())
                 } else {
                         c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
                         return

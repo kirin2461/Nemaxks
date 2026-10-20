@@ -85,3 +85,6 @@ secrets/
 # Generated proto files (keep source .proto)
 *.pb.go
 *_grpc.pb.go
+
+.env
+.env.*

@@ -172,7 +172,14 @@
     "unmute": "取消静音",
     "pinned": "置顶",
     "files": "文件",
-    "search": "频道内搜索"
+    "search": "频道内搜索",
+    "muteChannel": "静音频道",
+    "invitePeople": "邀请成员",
+    "leaveChannel": "退出频道",
+    "renameChannel": "重命名频道",
+    "deleteChannel": "删除频道",
+    "welcomeTo": "欢迎来到 #{{name}}",
+    "channelStart": "这是频道的开始。"
   },
   "guilds": {
     "createGuild": "创建公会",
@@ -241,7 +248,10 @@
     "callSound": "来电铃声",
     "interface": "界面",
     "liteMode": "精简模式",
-    "liteModeDesc": "简化导航，仅显示核心功能"
+    "liteModeDesc": "简化导航，仅显示核心功能",
+    "enableNotificationsDesc": "接收新消息和事件的推送通知",
+    "soundEffectsDesc": "收到新消息和来电时播放提示音",
+    "noiseReductionDesc": "通话时抑制麦克风背景噪音"
   },
   "jarvis": {
     "greeting": "你好！我是 Jarvis，你的 AI 助手。",
@@ -527,5 +537,11 @@
       "gamification": "游戏化",
       "gamificationDesc": "等级、成就和奖励"
     }
+  },
+  "notifications": {
+    "promptTitle": "启用通知？",
+    "promptBody": "允许通知，以免错过新消息和来电。",
+    "promptEnable": "启用",
+    "promptLater": "稍后"
   }
 }

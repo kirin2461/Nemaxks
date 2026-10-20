@@ -23,7 +23,7 @@ const content = {
 
 1.3. Платформа предназначена для лиц, достигших 18 лет. Регистрируясь, вы подтверждаете достижение указанного возраста.
 
-1.4. Используя Платформу, пользователь подтверждает своё согласие с условиями настоящей Политики. Согласие на обработку персональных данных, включая трансграничную передачу персональных данных на серверы в США (Replit), даётся пользователем при регистрации путём проставления отметки в чекбоксе.`
+1.4. Используя Платформу, пользователь подтверждает своё согласие с условиями настоящей Политики. Согласие на обработку персональных данных даётся пользователем при регистрации путём проставления отметки в чекбоксе. Данные хранятся на серверах хостинг-провайдера.`
       },
       {
         icon: Database,
@@ -83,9 +83,9 @@ const content = {
         content: `6.1. Nebula передаёт данные следующим партнёрам:
 • YooKassa — для обработки платежей (Россия)
 • LiveKit — для голосовых и видеозвонков
-• Replit Inc. — хостинг и базы данных (США)
+• Хостинг-провайдер — хостинг и базы данных
 
-6.2. ТРАНСГРАНИЧНАЯ ПЕРЕДАЧА: Данные хранятся на серверах Replit Inc. (США). Регистрируясь, вы даёте согласие на передачу данных в США в соответствии с ФЗ-152 «О персональных данных».
+6.2. ХРАНЕНИЕ ДАННЫХ: Данные хранятся на серверах хостинг-провайдера. Регистрируясь, вы даёте согласие на хранение ваших данных на серверах хостинг-провайдера в соответствии с ФЗ-152 «О персональных данных».
 
 6.3. Nebula НЕ продаёт персональные данные третьим лицам.
 
@@ -137,7 +137,7 @@ const content = {
 
 10.5. Личные сообщения защищены сквозным шифрованием (E2E) по алгоритму X25519-XSalsa20-Poly1305.
 
-10.6. Шифрование данных в покое: данные Платформы хранятся на серверах провайдера Replit (США), который обеспечивает защиту инфраструктуры, включая технические меры по защите данных в дата-центрах. Дополнительное прикладное шифрование базы данных Оператором не используется.
+10.6. Шифрование данных в покое: данные Платформы хранятся на серверах хостинг-провайдера, который обеспечивает защиту инфраструктуры, включая технические меры по защите данных в дата-центрах. Дополнительное прикладное шифрование базы данных Оператором не используется.
 
 10.7. Регулярные аудиты безопасности: специализированные внешние аудиты и penetration-testing не проводятся. Оператор по мере необходимости осуществляет внутренний пересмотр настроек безопасности и обрабатывает инциденты информационной безопасности.`
       },
@@ -197,7 +197,7 @@ Contact for personal data inquiries:
 
 1.3. The platform is intended for persons who have reached 18 years of age. By registering, you confirm that you have reached this age.
 
-1.4. By using the Platform, the user confirms their agreement to the terms of this Policy. Consent to personal data processing, including cross-border transfer to servers in the USA (Replit), is given by the user during registration by checking the checkbox.`
+1.4. By using the Platform, the user confirms their agreement to the terms of this Policy. Consent to personal data processing is given by the user during registration by checking the checkbox. Data is stored on the hosting provider's servers.`
       },
       {
         icon: Database,
@@ -257,9 +257,9 @@ Contact for personal data inquiries:
         content: `6.1. Nebula shares data with the following partners:
 • YooKassa — for payment processing (Russia)
 • LiveKit — for voice and video calls
-• Replit Inc. — hosting and databases (USA)
+• Hosting provider — hosting and databases
 
-6.2. CROSS-BORDER TRANSFER: Data is stored on Replit Inc. servers (USA). By registering, you consent to data transfer to the USA.
+6.2. DATA STORAGE: Data is stored on the hosting provider's servers. By registering, you consent to the storage of your data on the hosting provider's servers.
 
 6.3. Nebula does NOT sell personal data to third parties.
 
@@ -311,7 +311,7 @@ Request processing time: up to 10 business days.
 
 10.5. Direct messages are protected by end-to-end encryption (E2E) using X25519-XSalsa20-Poly1305 algorithm.
 
-10.6. Encryption at rest: Platform data is stored on Replit provider servers (USA), which provides infrastructure protection including technical data protection measures in data centers. Additional application-level database encryption is not used by the Operator.
+10.6. Encryption at rest: Platform data is stored on the hosting provider's servers, which provides infrastructure protection including technical data protection measures in data centers. Additional application-level database encryption is not used by the Operator.
 
 10.7. Regular security audits: Specialized external audits and penetration testing are not conducted. The Operator periodically reviews security settings as needed and handles information security incidents.`
       },

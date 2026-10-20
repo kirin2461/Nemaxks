@@ -331,7 +331,7 @@ export default function SettingsPage() {
               <SectionCard id="notifications" icon={Bell} title={t('settings.notifications')} index={2}>
                 <Row
                   label={t('settings.enableNotifications')}
-                  hint={t('settings.pushNotifications')}
+                  hint={t('settings.enableNotificationsDesc')}
                   control={
                     <Toggle
                       checked={settings.notifications_enabled}
@@ -341,7 +341,7 @@ export default function SettingsPage() {
                 />
                 <Row
                   label={t('settings.soundEffects')}
-                  hint={t('settings.messageSound')}
+                  hint={t('settings.soundEffectsDesc')}
                   control={
                     <Toggle
                       checked={settings.sound_enabled}
@@ -364,7 +364,7 @@ export default function SettingsPage() {
                 />
                 <Row
                   label={t('settings.noiseReduction')}
-                  hint={t('settings.noiseReduction')}
+                  hint={t('settings.noiseReductionDesc')}
                   control={
                     <Toggle
                       checked={settings.noise_reduction}

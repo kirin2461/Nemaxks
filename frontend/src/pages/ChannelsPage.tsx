@@ -3,6 +3,8 @@ import { Layout } from '@/components/Layout'
 import { Avatar } from '@/components/Avatar'
 import { cn } from '@/lib/utils'
 import { ContextMenu, useContextMenu, type ContextMenuItem } from '@/components/ContextMenu'
+import { MarkdownText } from '@/components/MarkdownText'
+import { useTranslation } from 'react-i18next'
 import { VoiceChannel } from '@/components/VoiceChannel'
 import { VoiceStatusBar } from '@/components/VoiceStatusBar'
 import { CreateChannelModal } from '@/components/CreateChannelModal'
@@ -88,6 +90,7 @@ type MyChannelPermissions = {
 }
 
 export default function ChannelsPage() {
+  const { t } = useTranslation()
   const { user } = useStore()
   const { subscribeToMessages } = useNotifications()
   const { state: voiceState, voiceChannelUsers, joinChannel: joinVoiceChannel, leaveChannel: leaveVoiceChannel } = useVoice()
@@ -127,6 +130,8 @@ export default function ChannelsPage() {
     confirmText?: string
   }>({ isOpen: false, title: '', message: '', onConfirm: () => {} })
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [renameDialog, setRenameDialog] = useState<{ isOpen: boolean; channelId: string; name: string }>({ isOpen: false, channelId: '', name: '' })
+  const [renameLoading, setRenameLoading] = useState(false)
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
   const [typingUsers, setTypingUsers] = useState<Map<string, { username: string; timestamp: number; status?: string }>>(new Map())
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
@@ -213,6 +218,15 @@ export default function ChannelsPage() {
       }
     }
     
+    // Удаление сообщения канала (broadcast после DELETE
+    // /api/channels/:channel_id/messages/:message_id)
+    if (data.type === 'channel-message-deleted') {
+      const messageId = String(data.message_id)
+      setMessages(prev => prev.filter(m => String(m.id) !== messageId))
+      setThreadReplies(prev => prev.filter(m => String(m.id) !== messageId))
+      setOpenThread(prev => (prev && String(prev.id) === messageId ? null : prev))
+    }
+
     if ((data.type === 'typing' || data.type === 'recording_voice') && selectedChannel && String(data.channel_id) === String(selectedChannel.id)) {
       const userId = String(data.user_id)
       const username = data.username || 'Someone'
@@ -516,8 +530,35 @@ export default function ChannelsPage() {
   const guildContextMenu = useContextMenu()
 
   // Channel actions
-  const handleEditChannel = (channel: any) => {
-    console.log('Edit channel:', channel)
+  const handleOpenRenameChannel = (channel: any) => {
+    setRenameDialog({ isOpen: true, channelId: String(channel.id), name: channel.name })
+  }
+
+  const handleRenameChannel = async () => {
+    const newName = renameDialog.name.trim()
+    if (!newName || !renameDialog.channelId) return
+    setRenameLoading(true)
+    try {
+      await channelsAPI.updateChannel(renameDialog.channelId, { name: newName })
+      if (selectedGuild) {
+        const updatedGuild = {
+          ...selectedGuild,
+          channels: selectedGuild.channels.map(c =>
+            c.id === renameDialog.channelId ? { ...c, name: newName } : c
+          )
+        }
+        setGuilds(guilds.map(g => g.id === selectedGuild.id ? updatedGuild : g))
+        setSelectedGuild(updatedGuild)
+        if (selectedChannel?.id === renameDialog.channelId) {
+          setSelectedChannel(prev => prev ? { ...prev, name: newName } : prev)
+        }
+      }
+      setRenameDialog({ isOpen: false, channelId: '', name: '' })
+    } catch (error) {
+      console.error('Failed to rename channel:', error)
+    } finally {
+      setRenameLoading(false)
+    }
   }
 
   const handleDeleteChannel = (channelId: string, channelName: string) => {
@@ -591,9 +632,12 @@ export default function ChannelsPage() {
       confirmText: 'Удалить',
       variant: 'danger',
       onConfirm: async () => {
+        if (!selectedChannel) return
         setDeleteLoading(true)
         try {
-          await messagesAPI.deleteMessage(messageId)
+          // Сообщения канала удаляются через channel-эндпоинт
+          // (/messages/delete/:id работает только для DirectMessage).
+          await channelsAPI.deleteMessage(selectedChannel.id, messageId)
           setMessages(prev => prev.filter(m => m.id !== messageId))
           setConfirmDialog(prev => ({ ...prev, isOpen: false }))
         } catch (error) {
@@ -616,13 +660,17 @@ export default function ChannelsPage() {
   }
 
   const handleSaveEditMessage = async () => {
-    if (!editingMessageId || !editingContent.trim()) return
+    if (!editingMessageId || !editingContent.trim() || !selectedChannel) return
     const msgId = editingMessageId
     const newContent = editingContent.trim()
     try {
-      await messagesAPI.updateMessage(msgId, newContent)
-      setMessages(prev => prev.map(m => 
-        m.id === msgId 
+      // FE-8: сообщения канала редактируются через channel-эндпоинт.
+      // Раньше использовался messagesAPI.updateMessage (/messages/update/:id),
+      // который обновляет только DirectMessage и для канальных сообщений
+      // молча падал с 404 — правка не сохранялась.
+      await channelsAPI.updateMessage(selectedChannel.id, msgId, newContent)
+      setMessages(prev => prev.map(m =>
+        m.id === msgId
           ? { ...m, content: newContent }
           : m
       ))
@@ -938,36 +986,36 @@ export default function ChannelsPage() {
     
     const items: ContextMenuItem[] = [
       {
-        label: 'Mute Channel',
+        label: t('channels.muteChannel'),
         icon: <BellOff className="w-4 h-4" />,
         onClick: () => handleMuteChannel(channel.id),
       },
       {
-        label: 'Invite People',
+        label: t('channels.invitePeople'),
         icon: <UserPlus className="w-4 h-4" />,
         onClick: () => handleInviteToChannel(channel.id),
       },
     ]
-    
+
     if (isGuildOwner) {
       items.push({
-        label: 'Edit Channel',
+        label: t('channels.renameChannel'),
         icon: <Edit3 className="w-4 h-4" />,
-        onClick: () => handleEditChannel(channel),
+        onClick: () => handleOpenRenameChannel(channel),
       })
     }
-    
+
     items.push({ divider: true } as ContextMenuItem)
     items.push({
-      label: 'Leave Channel',
+      label: t('channels.leaveChannel'),
       icon: <LogOut className="w-4 h-4" />,
       onClick: () => handleLeaveChannel(channel.id, channel.name),
       variant: 'danger' as const,
     })
-    
+
     if (isGuildOwner) {
       items.push({
-        label: 'Delete Channel',
+        label: t('channels.deleteChannel'),
         icon: <Trash2 className="w-4 h-4" />,
         onClick: () => handleDeleteChannel(channel.id, channel.name),
         variant: 'danger' as const,
@@ -1589,8 +1637,8 @@ export default function ChannelsPage() {
                     <div className="h-20 w-20 mx-auto mb-4 rounded-2xl bg-secondary grid place-items-center animate-rise-in">
                       <Hash className="w-12 h-12 text-graphite-300" strokeWidth={1.5} />
                     </div>
-                    <h3 className="font-semibold tracking-tight mb-2">Welcome to #{selectedChannel.name}</h3>
-                    <p className="text-sm text-muted-foreground">This is the start of the channel.</p>
+                    <h3 className="font-semibold tracking-tight mb-2">{t('channels.welcomeTo', { name: selectedChannel.name })}</h3>
+                    <p className="text-sm text-muted-foreground">{t('channels.channelStart')}</p>
                   </div>
                 ) : (
                   filteredMessages.map((message) => (
@@ -1648,7 +1696,7 @@ export default function ChannelsPage() {
                           </div>
                         ) : (
                           <>
-                            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                            <MarkdownText text={message.content} className="text-sm" />
                             {message.reactions && message.reactions.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {message.reactions.map((reaction) => {
@@ -2034,7 +2082,7 @@ export default function ChannelsPage() {
                         <span className="font-semibold text-xs truncate">{reply.author.username}</span>
                         <span className="text-[10px] text-muted-foreground shrink-0">{formatTime(reply.created_at)}</span>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap break-words">{reply.content}</p>
+                      <MarkdownText text={reply.content} className="text-sm" />
                     </div>
                   </div>
                 ))
@@ -2332,6 +2380,55 @@ export default function ChannelsPage() {
         visible={guildContextMenu.contextMenu.visible}
         onClose={guildContextMenu.hideContextMenu}
       />
+
+      {/* Rename Channel Dialog */}
+      {renameDialog.isOpen && (
+        <div className="fixed inset-0 bg-graphite-950/40 backdrop-blur-[3px] flex items-center justify-center z-50 animate-fade-in-soft">
+          <div className="rounded-2xl border border-border bg-card shadow-pop animate-scale-in w-full max-w-sm mx-4 overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <h2 className="text-lg font-bold tracking-tight">{t('channels.renameChannel')}</h2>
+              <button
+                onClick={() => setRenameDialog({ isOpen: false, channelId: '', name: '' })}
+                className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleRenameChannel()
+              }}
+              className="p-4 space-y-4"
+            >
+              <input
+                type="text"
+                value={renameDialog.name}
+                onChange={(e) => setRenameDialog(prev => ({ ...prev, name: e.target.value }))}
+                placeholder={t('channels.channelName')}
+                className="input-field"
+                autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setRenameDialog({ isOpen: false, channelId: '', name: '' })}
+                  className="px-4 py-2 rounded-lg bg-secondary hover:bg-graphite-200 transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={!renameDialog.name.trim() || renameLoading}
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand transition-all disabled:opacity-50"
+                >
+                  {t('common.save')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}

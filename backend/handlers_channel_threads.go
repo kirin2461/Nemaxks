@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // channelMessageResponse — единый формат сообщения канала (топ-левел посты и replies веток).
@@ -105,6 +106,135 @@ func getThreadRepliesHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+// updateChannelMessageHandler — PUT /api/channels/:channel_id/messages/:message_id
+// Редактирование текста сообщения канала (BE-4). Только автор сообщения;
+// выставляет edited=true. Раньше фронт отправлял редактирование канальных
+// сообщений на /api/messages/update/:id, который работает только с
+// DirectMessage и для channel-сообщений отвечал 404.
+func updateChannelMessageHandler(c *gin.Context) {
+	channelID, err := strconv.ParseUint(c.Param("channel_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+		return
+	}
+	messageID, err := strconv.ParseUint(c.Param("message_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
+
+	uid, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+		return
+	}
+
+	var req struct {
+		Content string `json:"content" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	filterResult := checkContentFilter(req.Content, uid, "edit_message")
+	if filterResult.IsForbidden {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":         "Message contains forbidden content",
+			"matched_words": filterResult.MatchedWords,
+			"blocked":       true,
+		})
+		return
+	}
+
+	// Sanitize content before storing (как в createChannelMessageHandler)
+	sanitizedContent := SanitizeMessageContent(req.Content)
+
+	// Только автор может редактировать; сообщение должно принадлежать каналу из URL
+	result := db.Model(&Message{}).
+		Where("id = ? AND channel_id = ? AND author_id = ?", messageID, channelID, uid).
+		Updates(map[string]interface{}{
+			"content":    sanitizedContent,
+			"edited":     true,
+			"updated_at": time.Now(),
+		})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update message"})
+		return
+	}
+	if result.RowsAffected == 0 {
+		// Сообщение не существует, из другого канала или чужое (IDOR-защита)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Message not found"})
+		return
+	}
+
+	var msg Message
+	db.Preload("Author").First(&msg, messageID)
+	resp := toChannelMessageResponse(msg)
+
+	// Рассылаем редактирование подписчикам канала (тот же паттерн,
+	// что у createChannelMessageHandler)
+	hub.broadcast <- map[string]interface{}{
+		"type":       "channel-message-edited",
+		"channel_id": channelID,
+		"message":    resp,
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+// deleteChannelMessageHandler — DELETE /api/channels/:channel_id/messages/:message_id
+// Удаление сообщения канала. Только автор сообщения; чужое/несуществующее —
+// 404 (IDOR-защита, как в updateChannelMessageHandler). Soft delete через
+// gorm.DeletedAt (как deleteMessageHandler для DM): запись остаётся в БД
+// и исключается из выборок автоматически.
+func deleteChannelMessageHandler(c *gin.Context) {
+	channelID, err := strconv.ParseUint(c.Param("channel_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+		return
+	}
+	messageID, err := strconv.ParseUint(c.Param("message_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
+
+	uid, ok := getUserIDFromContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+		return
+	}
+
+	// Только автор; сообщение должно принадлежать каналу из URL
+	var msg Message
+	if err := db.Where("id = ? AND channel_id = ? AND author_id = ?", messageID, channelID, uid).First(&msg).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Message not found"})
+		return
+	}
+
+	if err := db.Delete(&msg).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete message"})
+		return
+	}
+
+	// Уменьшаем счётчик ответов у родителя, если удалили reply ветки
+	// (increment — в createChannelMessageHandler)
+	if msg.ParentID != nil {
+		db.Model(&Message{}).Where("id = ?", *msg.ParentID).
+			Update("reply_count", gorm.Expr("reply_count - 1"))
+	}
+
+	// Рассылаем удаление подписчикам канала (паттерн updateChannelMessageHandler)
+	hub.broadcast <- map[string]interface{}{
+		"type":       "channel-message-deleted",
+		"channel_id": channelID,
+		"message_id": messageID,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Message deleted"})
 }
 
 // getMyChannelPermissionsHandler — GET /api/channels/:channel_id/permissions/me
