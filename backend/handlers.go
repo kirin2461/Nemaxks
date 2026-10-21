@@ -505,6 +505,8 @@ func updateMeHandler(c *gin.Context) {
 		Avatar      *string `json:"avatar"`
 		Status      *string `json:"status"`
 		DisplayName *string `json:"display_name"`
+		// Alias — синоним display_name для фронта (шлёт {alias: "..."}).
+		Alias       *string `json:"alias"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные"})
@@ -522,6 +524,9 @@ func updateMeHandler(c *gin.Context) {
 	}
 	if req.DisplayName != nil {
 		user.DisplayName = req.DisplayName
+	} else if req.Alias != nil {
+		// Приоритет у display_name, если прислали оба поля.
+		user.DisplayName = req.Alias
 	}
 
 	if err := db.Save(&user).Error; err != nil {
@@ -739,6 +744,21 @@ func createChannelHandler(c *gin.Context) {
 	isPrivate := req.IsPrivate
 	if req.Name == "Nemaks Общий" {
 		isPrivate = false
+	}
+
+	// Idempotency: повторный POST создания канала с тем же именем (без учёта
+	// регистра) в этой гильдии в течение 3 секунд (двойной клик/ретрай фронта)
+	// возвращает уже созданный канал со статусом 200, не создавая дубль.
+	// Долгосрочный unique index НЕ добавляем (риск миграций на проде).
+	// NB: модель Channel не хранит создателя, поэтому привязка к пользователю
+	// невозможна без изменения схемы — дедуп по паре (guild, lower(name)).
+	var existingChannel Channel
+	if err := db.Where(
+		"guild_id = ? AND lower(name) = lower(?) AND created_at > now() - interval '3 seconds'",
+		uint(guildID), req.Name,
+	).Order("id desc").First(&existingChannel).Error; err == nil {
+		c.JSON(http.StatusOK, existingChannel)
+		return
 	}
 
 	channel := Channel{

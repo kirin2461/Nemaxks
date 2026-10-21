@@ -20,9 +20,10 @@ type channelMessageResponse struct {
 	ParentID   *uint     `json:"parent_id,omitempty"`
 	ReplyCount int       `json:"reply_count"`
 	Author     struct {
-		ID       uint    `json:"id"`
-		Username string  `json:"username"`
-		Avatar   *string `json:"avatar"`
+		ID          uint    `json:"id"`
+		Username    string  `json:"username"`
+		DisplayName *string `json:"display_name"`
+		Avatar      *string `json:"avatar"`
 	} `json:"author"`
 }
 
@@ -39,6 +40,7 @@ func toChannelMessageResponse(msg Message) channelMessageResponse {
 	}
 	resp.Author.ID = msg.Author.ID
 	resp.Author.Username = msg.Author.Username
+	resp.Author.DisplayName = msg.Author.DisplayName
 	resp.Author.Avatar = msg.Author.Avatar
 	return resp
 }

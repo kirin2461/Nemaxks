@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
-import { Route, Switch, Redirect } from 'wouter'
+import { Route, Switch, Redirect, Link, useLocation } from 'wouter'
+import { useTranslation } from 'react-i18next'
 import { useStore } from './lib/store'
 import { JarvisVoiceProvider } from './contexts/JarvisVoiceContext'
 import { JarvisFloatingIndicator } from './components/JarvisFloatingIndicator'
@@ -103,6 +104,35 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// Normalizes trailing slash: /foo/ -> /foo (except root)
+function TrailingSlashRedirect() {
+  const [location, setLocation] = useLocation()
+
+  useEffect(() => {
+    if (location !== '/' && location.endsWith('/')) {
+      setLocation(location.slice(0, -1), { replace: true })
+    }
+  }, [location, setLocation])
+
+  return null
+}
+
+function NotFoundPage() {
+  const { t } = useTranslation()
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center">
+        <h1 className="text-6xl font-display font-extrabold text-graphite-900 mb-4">404</h1>
+        <p className="text-muted-foreground mb-6">{t('notFound.title')}</p>
+        <Link href="/" className="button-primary">
+          {t('notFound.goHome')}
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const { checkAuth } = useStore()
 
@@ -121,6 +151,7 @@ function App() {
                   <JarvisFloatingIndicator />
                   <IncomingCallNotification />
                   <ConnectionStatusIndicator />
+                  <TrailingSlashRedirect />
                   <Switch>
                 {/* Public routes */}
                 <Route path="/welcome">
@@ -221,6 +252,12 @@ function App() {
                   </ProtectedRoute>
                 </Route>
 
+                <Route path="/profile/customize">
+                  <ProtectedRoute>
+                    <ProfileCustomizationPage />
+                  </ProtectedRoute>
+                </Route>
+
                 <Route path="/profile/:userId?">
                   <ProtectedRoute>
                     <ProfilePage />
@@ -248,12 +285,6 @@ function App() {
                 <Route path="/competitions">
                   <ProtectedRoute>
                     <CompetitionsPage />
-                  </ProtectedRoute>
-                </Route>
-
-                <Route path="/profile/customize">
-                  <ProtectedRoute>
-                    <ProfileCustomizationPage />
                   </ProtectedRoute>
                 </Route>
 
@@ -324,7 +355,9 @@ function App() {
                 </Route>
 
                 <Route path="/premium">
-                  <PremiumPage />
+                  <ProtectedRoute>
+                    <PremiumPage />
+                  </ProtectedRoute>
                 </Route>
 
                 <Route path="/premium/checkout">
@@ -392,15 +425,7 @@ function App() {
 
                 {/* 404 */}
                 <Route>
-                  <div className="min-h-screen flex items-center justify-center bg-background">
-                    <div className="text-center">
-                      <h1 className="text-6xl font-display font-extrabold text-graphite-900 mb-4">404</h1>
-                      <p className="text-muted-foreground mb-6">Page not found</p>
-                      <a href="/" className="button-primary">
-                        Go Home
-                      </a>
-                    </div>
-                  </div>
+                  <NotFoundPage />
                 </Route>
                   </Switch>
                   <ToastContainer />

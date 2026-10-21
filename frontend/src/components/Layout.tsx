@@ -46,7 +46,9 @@ export function Layout({ children }: LayoutProps) {
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator'
   const isSuperAdmin = user?.role === 'super_admin'
 
-  const totalMessageBadge = Math.max(notifications.messages, unreadCount)
+  // Единый источник бейджа сообщений: unreadCount из NotificationContext
+  // (синхронизирован между вкладками через BroadcastChannel)
+  const totalMessageBadge = unreadCount
 
   // Full navigation for standard mode
   const fullNavigation = [

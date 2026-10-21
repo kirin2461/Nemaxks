@@ -74,12 +74,27 @@ type ChannelMessage = {
   id: string
   channel_id: string
   author_id: string
-  author: { id: string; username: string; avatar: string | undefined }
+  author: { id: string; username: string; avatar: string | undefined; display_name?: string | null }
   content: string
   created_at: string
   reactions?: MessageReaction[]
   parent_id?: number | null
   reply_count?: number
+}
+
+// Автор канального сообщения: прокидываем display_name (может быть null),
+// fallback для отображения — username
+const mapMessageAuthor = (
+  raw: any,
+  fallback: { id: string; username: string; avatar: string | undefined }
+): ChannelMessage['author'] => {
+  const a = raw || {}
+  return {
+    id: String(a.id ?? a.ID ?? fallback.id),
+    username: a.username ?? a.Username ?? fallback.username,
+    avatar: a.avatar ?? a.Avatar ?? fallback.avatar,
+    display_name: a.display_name ?? a.DisplayName ?? null
+  }
 }
 
 type MyChannelPermissions = {
@@ -101,6 +116,7 @@ export default function ChannelsPage() {
   const [members, setMembers] = useState<Array<{ id: string; username: string; role: string; status: string; avatar: string | null }>>([])
   const [roles, setRoles] = useState<Array<{ id: string; name: string; color: string; permissions: string[] }>>([])
   const [newMessage, setNewMessage] = useState('')
+  const [isSending, setIsSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const [replyingTo, setReplyingTo] = useState<any>(null)
   const [showMembersPanel, setShowMembersPanel] = useState(false)
@@ -184,7 +200,7 @@ export default function ChannelsPage() {
                 id: String(msg.id || msg.ID),
                 channel_id: String(msg.channel_id || msg.ChannelID),
                 author_id: String(msg.author_id || msg.AuthorID),
-                author: msg.author || msg.Author || { id: String(msg.author_id || msg.AuthorID), username: 'User', avatar: undefined },
+                author: mapMessageAuthor(msg.author || msg.Author, { id: String(msg.author_id || msg.AuthorID), username: 'User', avatar: undefined }),
                 content: msg.content || msg.Content,
                 created_at: msg.created_at || msg.CreatedAt,
                 parent_id: parentId,
@@ -205,7 +221,7 @@ export default function ChannelsPage() {
               id: String(msg.id || msg.ID),
               channel_id: String(msg.channel_id || msg.ChannelID),
               author_id: String(msg.author_id || msg.AuthorID),
-              author: msg.author || msg.Author || { id: String(msg.author_id || msg.AuthorID), username: 'User', avatar: undefined },
+              author: mapMessageAuthor(msg.author || msg.Author, { id: String(msg.author_id || msg.AuthorID), username: 'User', avatar: undefined }),
               content: msg.content || msg.Content,
               created_at: msg.created_at || msg.CreatedAt,
               parent_id: null,
@@ -302,6 +318,18 @@ export default function ChannelsPage() {
     return unsubscribe
   }, [subscribeToMessages, handleWebSocketMessage])
 
+  // Сброс бейджа непрочитанных каналов при входе на страницу каналов
+  useEffect(() => {
+    useStore.getState().clearNotification('channels')
+  }, [])
+
+  // Публикуем id открытого канала, чтобы NotificationContext не инкрементировал
+  // бейдж для канала, который пользователь сейчас просматривает
+  useEffect(() => {
+    (window as any).__nebulaOpenChannelId = selectedChannel ? String(selectedChannel.id) : null
+    return () => { (window as any).__nebulaOpenChannelId = null }
+  }, [selectedChannel])
+
   useEffect(() => {
     setOpenThread(null)
     setThreadReplies([])
@@ -369,7 +397,7 @@ export default function ChannelsPage() {
           id: String(m.id || m.ID),
           channel_id: String(m.channel_id || m.ChannelID),
           author_id: String(m.author_id || m.AuthorID),
-          author: m.author || m.Author || { id: String(m.author_id || m.AuthorID), username: 'User', avatar: undefined },
+          author: mapMessageAuthor(m.author || m.Author, { id: String(m.author_id || m.AuthorID), username: 'User', avatar: undefined }),
           content: m.content || m.Content,
           created_at: m.created_at || m.CreatedAt,
           reactions: m.reactions || m.Reactions || [],
@@ -878,8 +906,9 @@ export default function ChannelsPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedChannel) return
-    
+    if (!newMessage.trim() || !selectedChannel || isSending) return
+    setIsSending(true)
+
     const content = newMessage.trim()
     setNewMessage('')
     setReplyingTo(null)
@@ -893,7 +922,7 @@ export default function ChannelsPage() {
             id: String(response.id),
             channel_id: String(response.channel_id || selectedChannel.id),
             author_id: String(response.author_id || response.user_id || user?.id),
-            author: response.author || response.user || { id: String(user?.id), username: user?.username || 'User', avatar: user?.avatar },
+            author: mapMessageAuthor(response.author || response.user, { id: String(user?.id), username: user?.username || 'User', avatar: user?.avatar }),
             content: response.content,
             created_at: response.created_at
           }]
@@ -902,6 +931,8 @@ export default function ChannelsPage() {
     } catch (error) {
       console.error('Failed to send message:', error)
       setNewMessage(content)
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -926,7 +957,7 @@ export default function ChannelsPage() {
           id: String(m.id || m.ID),
           channel_id: String(m.channel_id || m.ChannelID || selectedChannel.id),
           author_id: String(m.author_id || m.AuthorID),
-          author: m.author || m.Author || { id: String(m.author_id || m.AuthorID), username: 'User', avatar: undefined },
+          author: mapMessageAuthor(m.author || m.Author, { id: String(m.author_id || m.AuthorID), username: 'User', avatar: undefined }),
           content: m.content || m.Content,
           created_at: m.created_at || m.CreatedAt,
           reactions: m.reactions || m.Reactions || [],
@@ -942,7 +973,8 @@ export default function ChannelsPage() {
   }
 
   const handleSendThreadReply = async () => {
-    if (!threadInput.trim() || !selectedChannel || !openThread) return
+    if (!threadInput.trim() || !selectedChannel || !openThread || isSending) return
+    setIsSending(true)
     const content = threadInput.trim()
     const threadId = String(openThread.id)
     setThreadInput('')
@@ -956,7 +988,7 @@ export default function ChannelsPage() {
             id: String(response.id),
             channel_id: String(response.channel_id || selectedChannel.id),
             author_id: String(response.author_id || response.user_id || user?.id),
-            author: response.author || response.user || { id: String(user?.id), username: user?.username || 'User', avatar: user?.avatar },
+            author: mapMessageAuthor(response.author || response.user, { id: String(user?.id), username: user?.username || 'User', avatar: user?.avatar }),
             content: response.content,
             created_at: response.created_at,
             parent_id: Number(openThread.id),
@@ -977,6 +1009,8 @@ export default function ChannelsPage() {
     } catch (error) {
       console.error('Failed to send thread reply:', error)
       setThreadInput(content)
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -1660,7 +1694,7 @@ export default function ChannelsPage() {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2 mb-1">
-                          <span className="font-semibold text-sm">{message.author.username}</span>
+                          <span className="font-semibold text-sm">{message.author.display_name || message.author.username}</span>
                           <span className="text-xs text-muted-foreground">{formatTime(message.created_at)}</span>
                         </div>
                         {editingMessageId === message.id ? (
@@ -1809,7 +1843,7 @@ export default function ChannelsPage() {
                     <div className="flex items-center gap-2 text-xs">
                       <Reply className="w-3 h-3 text-primary" />
                       <span className="text-muted-foreground">Ответ на</span>
-                      <span className="font-semibold">{replyingTo.author.username}</span>
+                      <span className="font-semibold">{replyingTo.author.display_name || replyingTo.author.username}</span>
                     </div>
                     <button onClick={() => setReplyingTo(null)} className="p-1 hover:bg-accent rounded transition-colors">
                       <X className="w-3 h-3" />
@@ -1830,7 +1864,7 @@ export default function ChannelsPage() {
                   />
                   <button
                     onClick={handleSendMessage}
-                    disabled={!newMessage.trim()}
+                    disabled={!newMessage.trim() || isSending}
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-primary text-primary-foreground shadow-soft disabled:opacity-50 disabled:pointer-events-none hover:bg-emerald-800 hover:shadow-lg-brand transition-all"
                   >
                     <Send className="w-4 h-4" />
@@ -2057,7 +2091,7 @@ export default function ChannelsPage() {
                   alt={openThread.author.username}
                   size="sm"
                 />
-                <span className="font-semibold text-sm truncate">{openThread.author.username}</span>
+                <span className="font-semibold text-sm truncate">{openThread.author.display_name || openThread.author.username}</span>
                 <span className="text-xs text-muted-foreground shrink-0">{formatTime(openThread.created_at)}</span>
               </div>
               <p className="text-sm whitespace-pre-wrap break-words">{openThread.content}</p>
@@ -2079,7 +2113,7 @@ export default function ChannelsPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2">
-                        <span className="font-semibold text-xs truncate">{reply.author.username}</span>
+                        <span className="font-semibold text-xs truncate">{reply.author.display_name || reply.author.username}</span>
                         <span className="text-[10px] text-muted-foreground shrink-0">{formatTime(reply.created_at)}</span>
                       </div>
                       <MarkdownText text={reply.content} className="text-sm" />
@@ -2102,7 +2136,7 @@ export default function ChannelsPage() {
                 />
                 <button
                   onClick={handleSendThreadReply}
-                  disabled={!threadInput.trim()}
+                  disabled={!threadInput.trim() || isSending}
                   className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-primary text-primary-foreground shadow-soft disabled:opacity-50 disabled:pointer-events-none hover:bg-emerald-800 hover:shadow-lg-brand transition-all"
                 >
                   <Send className="w-4 h-4" />

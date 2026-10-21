@@ -194,9 +194,10 @@ func deliverBridgeMessage(channelID uint, fromLabel string, text string) {
 		"parent_id":   msg.ParentID,
 		"reply_count": msg.ReplyCount,
 		"author": map[string]interface{}{
-			"id":       bridgeUser.ID,
-			"username": bridgeUser.Username,
-			"avatar":   bridgeUser.Avatar,
+			"id":           bridgeUser.ID,
+			"username":     bridgeUser.Username,
+			"display_name": bridgeUser.DisplayName,
+			"avatar":       bridgeUser.Avatar,
 		},
 	}
 

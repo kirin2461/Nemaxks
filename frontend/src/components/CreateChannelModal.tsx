@@ -19,6 +19,7 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
   const [templates, setTemplates] = useState<any[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [isPremium, setIsPremium] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -39,14 +40,19 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim()) return
-    onCreate({ 
-      name: name.trim().toLowerCase().replace(/\s+/g, '-'), 
-      type, 
-      isPrivate,
-      template: selectedTemplate || undefined
-    })
-    onClose()
+    if (!name.trim() || isCreating) return
+    setIsCreating(true)
+    try {
+      onCreate({ 
+        name: name.trim().toLowerCase().replace(/\s+/g, '-'), 
+        type, 
+        isPrivate,
+        template: selectedTemplate || undefined
+      })
+      onClose()
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
@@ -217,7 +223,7 @@ export function CreateChannelModal({ category, onClose, onCreate }: CreateChanne
             </button>
             <button
               type="submit"
-              disabled={!name.trim()}
+              disabled={!name.trim() || isCreating}
               className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {t('channels.createChannel')}

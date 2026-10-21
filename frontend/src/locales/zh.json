@@ -543,5 +543,9 @@
     "promptBody": "允许通知，以免错过新消息和来电。",
     "promptEnable": "启用",
     "promptLater": "稍后"
+  },
+  "notFound": {
+    "title": "页面未找到",
+    "goHome": "返回首页"
   }
 }

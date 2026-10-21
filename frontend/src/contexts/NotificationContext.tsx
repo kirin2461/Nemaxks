@@ -224,7 +224,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     
     const unsubscribeMsg = connectionManager.onMessage((data) => {
       console.log('[NotificationContext] Received message:', data.type)
-      handleWebSocketMessage(data)
+      handlerRef.current(data)
     })
     
     connectionManager.connect(token)
@@ -395,6 +395,26 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           }
         }
         break
+      case 'channel-message':
+        {
+          const channelId = String(data.channel_id ?? data.channelId ?? '')
+          const channelMsg = data.message
+          const authorId = channelMsg
+            ? (channelMsg.author_id ?? channelMsg.AuthorID ?? channelMsg.user_id)
+            : (data.author_id ?? data.user_id)
+          const { user: currentUser, incrementChannelUnread } = useStore.getState()
+          const isFromCurrentUser = String(authorId) === String(currentUser?.id)
+          if (channelId && !isFromCurrentUser) {
+            // Не инкрементируем бейдж, если пользователь смотрит этот канал на /channels
+            const openChannelId = (window as any).__nebulaOpenChannelId
+            const viewingThisChannel = window.location.pathname === '/channels' &&
+              String(openChannelId) === channelId
+            if (!viewingThisChannel) {
+              incrementChannelUnread(channelId)
+            }
+          }
+        }
+        break
       case 'friend_request':
         addNotification({
           type: 'friend_request',
@@ -476,6 +496,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         }
     }
   }
+
+  // Защита от устаревшего замыкания: onMessage-колбэк подписан один раз
+  // (deps [user?.id]) и всегда вызывает актуальный handleWebSocketMessage
+  const handlerRef = useRef(handleWebSocketMessage)
+  useEffect(() => {
+    handlerRef.current = handleWebSocketMessage
+  })
 
   const acceptCall = useCallback(() => {
     if (incomingCall) {
@@ -569,6 +596,36 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   }, [])
 
   const unreadCount = notifications.filter(n => !n.read).length
+
+  // Межвкладочная синхронизация счётчика непрочитанных
+  const unreadBroadcastRef = useRef<BroadcastChannel | null>(null)
+  const applyingRemoteUnreadRef = useRef(false)
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return
+    const bc = new BroadcastChannel('nebula-unread')
+    unreadBroadcastRef.current = bc
+    bc.onmessage = (event) => {
+      const data = event.data
+      if (data && data.type === 'unread' && typeof data.value === 'number') {
+        applyingRemoteUnreadRef.current = true
+        setNotifications(prev => prev.map((n, i) => ({ ...n, read: i >= data.value })))
+      }
+    }
+    return () => {
+      bc.close()
+      unreadBroadcastRef.current = null
+    }
+  }, [])
+
+  // Постим актуальный unreadCount (в т.ч. обнуление после markAsRead/открытия чата)
+  useEffect(() => {
+    if (applyingRemoteUnreadRef.current) {
+      applyingRemoteUnreadRef.current = false
+      return
+    }
+    unreadBroadcastRef.current?.postMessage({ type: 'unread', value: unreadCount })
+  }, [unreadCount])
 
   useEffect(() => {
     const baseTitle = 'Nebula'

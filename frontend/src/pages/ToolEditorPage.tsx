@@ -355,7 +355,8 @@ export default function ToolEditorPage() {
         .catch(() => {})
     }
     fetchUsers()
-    const interval = setInterval(fetchUsers, 15000)
+    // TODO: перейти на collab-WS presence
+    const interval = setInterval(fetchUsers, 30000)
     return () => clearInterval(interval)
   }, [tool, toolId])
 

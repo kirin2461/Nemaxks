@@ -10,11 +10,17 @@ import (
 type UserPublic struct {
         ID          uint       `json:"id"`
         Username    string     `json:"username"`
-        DisplayName *string    `json:"display_name,omitempty"`
+        // display_name/avatar/bio отдаём всегда (null, если не заданы),
+        // чтобы /api/auth/me и прочие ответы с ToPublic содержали
+        // профильные поля явно, а не опускали их через omitempty.
+        DisplayName *string    `json:"display_name"`
+        // Alias — дубль DisplayName для фронта, который читает user.alias
+        // (ProfilePage/Layout/DM/Feed). Всегда присутствует (null, если не задан).
+        Alias       *string    `json:"alias"`
         Email       *string    `json:"email,omitempty"`
-        Avatar      *string    `json:"avatar,omitempty"`
+        Avatar      *string    `json:"avatar"`
         Status      string     `json:"status"`
-        Bio         *string    `json:"bio,omitempty"`
+        Bio         *string    `json:"bio"`
         CreatedAt   time.Time  `json:"created_at"`
         UpdatedAt   time.Time  `json:"updated_at"`
         Role        string       `json:"role"`
@@ -29,6 +35,9 @@ type User struct {
         ID                  uint       `json:"id" gorm:"primaryKey"`
         Username            string     `json:"username" gorm:"unique;not null"`
         DisplayName         *string    `json:"display_name,omitempty"`
+        // Alias — JSON-only дубль DisplayName для фронта (читает user.alias).
+        // Не колонка БД (gorm:"-"); заполняется хуком AfterFind = DisplayName.
+        Alias               *string    `json:"alias" gorm:"-"`
         Email               *string    `json:"email,omitempty" gorm:"unique"`
         Password            string     `json:"-" gorm:"not null"` // Hidden from JSON responses
         Avatar              *string    `json:"avatar,omitempty"`
@@ -48,6 +57,15 @@ type User struct {
         StoryPrivacyMode    string     `json:"-" gorm:"size:20;default:'everyone'"`
 }
 
+// AfterFind — GORM-хук: после каждой загрузки User из БД (включая Preload)
+// заполняем JSON-only поле Alias из DisplayName, чтобы сырой User в ответах
+// (Post.Author в ленте, ConversationResponse.user, QR-login user и т.п.)
+// всегда содержал alias для фронта.
+func (u *User) AfterFind(tx *gorm.DB) error {
+        u.Alias = u.DisplayName
+        return nil
+}
+
 // ToPublic converts User to a safe public representation
 func (u *User) ToPublic() UserPublic {
         isOnline := false
@@ -58,6 +76,7 @@ func (u *User) ToPublic() UserPublic {
                 ID:          u.ID,
                 Username:    u.Username,
                 DisplayName: u.DisplayName,
+                Alias:       u.DisplayName,
                 Email:       u.Email,
                 Avatar:      u.Avatar,
                 Status:      u.Status,

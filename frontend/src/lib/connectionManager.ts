@@ -16,7 +16,8 @@ const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000]
 const WEBSOCKET_TIMEOUT = 5000
 const WSTUNNEL_TIMEOUT = 8000
 const SSE_TIMEOUT = 5000
-const POLL_INTERVAL = 500
+const POLL_INTERVAL_MIN = 1000
+const POLL_INTERVAL_MAX = 5000
 
 class ConnectionManager {
   private ws: WebSocket | null = null
@@ -24,6 +25,7 @@ class ConnectionManager {
   private pollTimeoutId: ReturnType<typeof setTimeout> | null = null
   private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null
   private lastPollId: number = 0
+  private pollInterval: number = POLL_INTERVAL_MIN
   private token: string | null = null
   private baseUrl: string = ''
   private wsUrl: string = ''
@@ -346,6 +348,7 @@ class ConnectionManager {
       lastError: null,
       reconnectAttempts: 0
     })
+    this.pollInterval = POLL_INTERVAL_MIN
     this.poll()
   }
 
@@ -379,7 +382,8 @@ class ConnectionManager {
       }
 
       const data = await response.json()
-      
+
+      let receivedEvents = false
       if (data.messages && Array.isArray(data.messages)) {
         for (const msg of data.messages) {
           if (msg.id > this.lastPollId) {
@@ -387,9 +391,18 @@ class ConnectionManager {
           }
           this.handleMessage(msg.data || msg)
         }
+        receivedEvents = data.messages.length > 0
       }
 
-      this.pollTimeoutId = setTimeout(() => this.poll(), POLL_INTERVAL)
+      // Backoff для long-poll: пустые поллы увеличивают интервал (x1.5, max 5s),
+      // при получении событий интервал сбрасывается на 1s
+      if (receivedEvents) {
+        this.pollInterval = POLL_INTERVAL_MIN
+      } else {
+        this.pollInterval = Math.min(Math.round(this.pollInterval * 1.5), POLL_INTERVAL_MAX)
+      }
+
+      this.pollTimeoutId = setTimeout(() => this.poll(), this.pollInterval)
     } catch (e) {
       console.error('[ConnectionManager] Long polling error:', e)
       this.setState({

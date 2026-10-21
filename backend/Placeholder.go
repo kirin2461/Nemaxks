@@ -162,6 +162,34 @@ func createChannelMessageHandler(c *gin.Context) {
 	// Sanitize content before storing
 	sanitizedContent := SanitizeMessageContent(req.Content)
 
+	// Idempotency: повторный POST того же контента от того же автора в этот
+	// же канал в течение 2 секунд (двойной клик/ретрай фронта) возвращает
+	// уже созданное сообщение со статусом 200, не создавая дубль.
+	var existingMsg Message
+	if err := db.Where(
+		"channel_id = ? AND author_id = ? AND content = ? AND created_at > now() - interval '2 seconds'",
+		uint(channelID), userID, sanitizedContent,
+	).Order("id desc").First(&existingMsg).Error; err == nil {
+		var existingAuthor User
+		db.First(&existingAuthor, existingMsg.AuthorID)
+		c.JSON(http.StatusOK, gin.H{
+			"id":          existingMsg.ID,
+			"channel_id":  existingMsg.ChannelID,
+			"author_id":   existingMsg.AuthorID,
+			"content":     existingMsg.Content,
+			"created_at":  existingMsg.CreatedAt,
+			"parent_id":   existingMsg.ParentID,
+			"reply_count": existingMsg.ReplyCount,
+			"author": gin.H{
+				"id":           existingAuthor.ID,
+				"username":     existingAuthor.Username,
+				"display_name": existingAuthor.DisplayName,
+				"avatar":       existingAuthor.Avatar,
+			},
+		})
+		return
+	}
+
 	msg := Message{
 		ChannelID: uint(channelID),
 		AuthorID:  userID,
@@ -192,9 +220,10 @@ func createChannelMessageHandler(c *gin.Context) {
 		"parent_id":   msg.ParentID,
 		"reply_count": msg.ReplyCount,
 		"author": gin.H{
-			"id":       author.ID,
-			"username": author.Username,
-			"avatar":   author.Avatar,
+			"id":           author.ID,
+			"username":     author.Username,
+			"display_name": author.DisplayName,
+			"avatar":       author.Avatar,
 		},
 	}
 
@@ -465,9 +494,11 @@ func createPostHandler(c *gin.Context) {
 		"shares":     0,
 		"created_at": post.CreatedAt,
 		"author": gin.H{
-			"id":       author.ID,
-			"username": author.Username,
-			"avatar":   author.Avatar,
+			"id":           author.ID,
+			"username":     author.Username,
+			"display_name": author.DisplayName,
+			"alias":        author.DisplayName,
+			"avatar":       author.Avatar,
 		},
 	}
 
@@ -833,9 +864,11 @@ func updatePostHandler(c *gin.Context) {
 		"tags":       post.Tags,
 		"updated_at": post.UpdatedAt,
 		"author": gin.H{
-			"id":       author.ID,
-			"username": author.Username,
-			"avatar":   author.Avatar,
+			"id":           author.ID,
+			"username":     author.Username,
+			"display_name": author.DisplayName,
+			"alias":        author.DisplayName,
+			"avatar":       author.Avatar,
 		},
 	})
 }

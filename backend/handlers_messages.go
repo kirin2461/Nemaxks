@@ -60,6 +60,21 @@ func createMessageHandler(c *gin.Context) {
 		messageType = "voice"
 	}
 
+	// Idempotency: дедуп только для текстовых сообщений — голосовые
+	// (voice_url) не трогаем. Повторный POST того же текста тому же
+	// получателю в течение 2 секунд возвращает уже созданное сообщение
+	// со статусом 200, не создавая дубль.
+	if messageType == "text" {
+		var existingMsg DirectMessage
+		if err := db.Where(
+			"sender_id = ? AND receiver_id = ? AND content = ? AND created_at > now() - interval '2 seconds'",
+			senderID, uint(receiverID), sanitizedContent,
+		).Order("id desc").First(&existingMsg).Error; err == nil {
+			c.JSON(http.StatusOK, existingMsg)
+			return
+		}
+	}
+
 	message := DirectMessage{
 		SenderID:        senderID,
 		ReceiverID:      uint(receiverID),

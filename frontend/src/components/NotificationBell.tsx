@@ -17,7 +17,8 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
 
   useEffect(() => {
     loadUnreadCount()
-    const interval = setInterval(loadUnreadCount, 30000)
+    // Safety-net поллинг: основной канал обновлений — WebSocket
+    const interval = setInterval(loadUnreadCount, 120000)
     return () => clearInterval(interval)
   }, [])
 

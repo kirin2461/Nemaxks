@@ -543,5 +543,9 @@
     "promptBody": "Allow notifications so you don't miss new messages and calls.",
     "promptEnable": "Enable",
     "promptLater": "Later"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "goHome": "Go Home"
   }
 }

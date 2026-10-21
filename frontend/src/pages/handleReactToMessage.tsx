@@ -51,6 +51,7 @@ export default function MessagesPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
+  const [isSending, setIsSending] = useState(false)
   const [loading, setLoading] = useState(false)
   const [replyingTo, setReplyingTo] = useState<Message | null>(null)
   const [editingMessage, setEditingMessage] = useState<Message | null>(null)
@@ -528,7 +529,8 @@ export default function MessagesPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedUser) return
+    if (!newMessage.trim() || !selectedUser || isSending) return
+    setIsSending(true)
 
     try {
       if (editingMessage) {
@@ -545,6 +547,8 @@ export default function MessagesPage() {
       setEditingMessage(null)
     } catch (error) {
       console.error('Failed to send message:', error)
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -969,11 +973,11 @@ export default function MessagesPage() {
                 {groupMessages.map((msg: any) => (
                   <div key={msg.id} className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-graphite-700 flex items-center justify-center text-white text-xs font-semibold shrink-0">
-                      {msg.sender?.username?.charAt(0)?.toUpperCase() || msg.sender_username?.charAt(0)?.toUpperCase() || '?'}
+                      {(msg.sender?.display_name || msg.sender?.username || msg.sender_username)?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{msg.sender?.username || msg.sender_username}</span>
+                        <span className="font-medium text-sm">{msg.sender?.display_name || msg.sender?.username || msg.sender_username}</span>
                         <span className="text-xs text-muted-foreground">{formatTime(msg.created_at)}</span>
                       </div>
                       <p className="text-sm text-foreground/90 mt-0.5 break-words">{msg.content}</p>
@@ -1378,7 +1382,7 @@ export default function MessagesPage() {
                       />
                       <button
                         onClick={handleSendMessage}
-                        disabled={!newMessage.trim()}
+                        disabled={!newMessage.trim() || isSending}
                         className="bg-primary text-primary-foreground rounded-lg font-medium shadow-soft hover:bg-emerald-800 hover:shadow-lg-brand active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none px-6 py-2.5"
                       >
                         <Send className="w-5 h-5" />

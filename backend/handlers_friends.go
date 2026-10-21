@@ -26,10 +26,13 @@ func getFriendsHandler(c *gin.Context) {
         db.Where("requester_id = ? AND status = ?", uid, "pending").Find(&outgoingRequests)
 
         type FriendInfo struct {
-                ID         uint    `json:"id"`
-                RequestID  uint    `json:"request_id,omitempty"`
-                Username   string  `json:"username"`
-                Avatar     *string `json:"avatar"`
+                ID          uint    `json:"id"`
+                RequestID   uint    `json:"request_id,omitempty"`
+                Username    string  `json:"username"`
+                // DisplayName/Alias — фронт читает friend.alias для отображения.
+                DisplayName *string `json:"display_name"`
+                Alias       *string `json:"alias"`
+                Avatar      *string `json:"avatar"`
                 Status     string  `json:"status"`
                 Bio        *string `json:"bio"`
                 IsFriend   bool    `json:"isFriend"`
@@ -51,7 +54,9 @@ func getFriendsHandler(c *gin.Context) {
                 }
                 if err := db.First(&friendUser, friendUID).Error; err == nil {
                         result = append(result, FriendInfo{
-                                ID:        friendUser.ID,
+                                ID:          friendUser.ID,
+                                DisplayName: friendUser.DisplayName,
+                                Alias:       friendUser.DisplayName,
                                 Username:  friendUser.Username,
                                 Avatar:    friendUser.Avatar,
                                 Status:    friendUser.Status,
@@ -67,8 +72,10 @@ func getFriendsHandler(c *gin.Context) {
                 var requester User
                 if err := db.First(&requester, req.RequesterID).Error; err == nil {
                         result = append(result, FriendInfo{
-                                ID:         requester.ID,
-                                RequestID:  req.ID,
+                                ID:          requester.ID,
+                                RequestID:   req.ID,
+                                DisplayName: requester.DisplayName,
+                                Alias:       requester.DisplayName,
                                 Username:   requester.Username,
                                 Avatar:     requester.Avatar,
                                 Status:     requester.Status,
@@ -85,8 +92,10 @@ func getFriendsHandler(c *gin.Context) {
                 var addressee User
                 if err := db.First(&addressee, req.AddresseeID).Error; err == nil {
                         result = append(result, FriendInfo{
-                                ID:         addressee.ID,
-                                RequestID:  req.ID,
+                                ID:          addressee.ID,
+                                RequestID:   req.ID,
+                                DisplayName: addressee.DisplayName,
+                                Alias:       addressee.DisplayName,
                                 Username:   addressee.Username,
                                 Avatar:     addressee.Avatar,
                                 Status:     addressee.Status,
