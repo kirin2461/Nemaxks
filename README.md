@@ -7,9 +7,9 @@
 ### Modern Discord-like Communication Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-67.4%25-blue)](https://github.com/kirin2461/654911)
-[![Go](https://img.shields.io/badge/Go-23.5%25-00ADD8)](https://github.com/kirin2461/654911)
-[![Rust](https://img.shields.io/badge/Rust-2.3%25-orange)](https://github.com/kirin2461/654911)
+[![TypeScript](https://img.shields.io/badge/TypeScript-67.4%25-blue)](https://github.com/kirin2461/Nemaxks)
+[![Go](https://img.shields.io/badge/Go-23.5%25-00ADD8)](https://github.com/kirin2461/Nemaxks)
+[![Rust](https://img.shields.io/badge/Rust-2.3%25-orange)](https://github.com/kirin2461/Nemaxks)
 
 *A self-hosted, full-featured communication platform with real-time messaging, voice/video calls, and moderation tools*
 
@@ -21,7 +21,7 @@
 
 ## 💫 Live Demo
 
-_(Deployment link not available yet)_
+**https://82.114.226.204.sslip.io** — production (VDSina, Docker Compose, Caddy TLS)
 
 ---
 
@@ -156,7 +156,7 @@ Unlike end-to-end encrypted platforms, Nebula intentionally enables server-side 
 
 ```bash
 # jarvis/ — git submodule, поэтому нужен --recurse-submodules
-git clone --recurse-submodules https://github.com/kirin2461/654911.git
+git clone --recurse-submodules https://github.com/kirin2461/Nemaxks.git
 cd 654911
 
 # Если уже склонировали без submodules:
@@ -584,6 +584,20 @@ Absolutely! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines. We 
 
 ---
 
+## ✅ QA Status (2026-10-21)
+
+Пройдено 9 этапов независимого QA (AI-agent: браузер + API + серверные логи + статический аудит):
+
+| Этап | Скоуп | Результат |
+|---|---|---|
+| 1-7 | Функционал, i18n, realtime, модерация, контент-фильтр | Все баги исправлены (кроме Jarvis — по требованию владельца) |
+| 8 | Архитектурные UI-баги: роутинг, дубли UI, синхронизация состояния, REST-спам | 7 багов найдено и исправлено: idempotency (double-post, дубли каналов), display_name E2E, затенённый маршрут /profile/customize, бейджи непрочитанного, WS stale closure, backoff поллинга |
+| 9 | Загрузка файлов: лимиты (50MB медиа / 500MB видео), асинхронность, мультизагрузка x12, обрыв сети | PASS; исправлен критичный nginx-баг недоступности /uploads |
+
+Последний QA-коммит: `c7ed734` (main). Анти-фрод контент-фильтр с авто-баном покрыт регрессионными тестами (`backend/fraud_keywords_test.go`).
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](./CONTRIBUTING.md) for details on:
@@ -626,7 +640,7 @@ See [LICENSE](./LICENSE) file for full details.
 **kirin2461**
 
 - GitHub: [@kirin2461](https://github.com/kirin2461)
-- Repository: [github.com/kirin2461/654911](https://github.com/kirin2461/654911)
+- Repository: [github.com/kirin2461/654911](https://github.com/kirin2461/Nemaxks)
 
 ---
 
@@ -642,9 +656,9 @@ See [LICENSE](./LICENSE) file for full details.
 
 For questions, issues, or discussions:
 
-- 🐛 [Report bugs](https://github.com/kirin2461/654911/issues)
-- 💡 [Request features](https://github.com/kirin2461/654911/issues)
-- 💬 [Start discussions](https://github.com/kirin2461/654911/discussions)
+- 🐛 [Report bugs](https://github.com/kirin2461/Nemaxks/issues)
+- 💡 [Request features](https://github.com/kirin2461/Nemaxks/issues)
+- 💬 [Start discussions](https://github.com/kirin2461/Nemaxks/discussions)
 
 ---
 
