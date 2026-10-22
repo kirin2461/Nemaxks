@@ -10,10 +10,11 @@ import { VoiceStatusBar } from '@/components/VoiceStatusBar'
 import { CreateChannelModal } from '@/components/CreateChannelModal'
 import { InviteModal } from '@/components/InviteModal'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { useToast } from '@/components/Toast'
 import { useStore } from '@/lib/store'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { useVoice } from '@/contexts/VoiceContext'
-import { guildsAPI, channelsAPI, presenceAPI, messagesAPI, toolsAPI, type ChannelTool } from '@/lib/api'
+import { guildsAPI, channelsAPI, presenceAPI, messagesAPI, toolsAPI, APIError, type ChannelTool } from '@/lib/api'
 import { useLocation } from 'wouter'
 import { formatTime } from '@/lib/utils'
 import {
@@ -162,6 +163,7 @@ export default function ChannelsPage() {
   const [newToolType, setNewToolType] = useState<'board' | 'notebook'>('board')
   const [toolCreating, setToolCreating] = useState(false)
   const [, navigate] = useLocation()
+  const toast = useToast()
   const [openThread, setOpenThread] = useState<ChannelMessage | null>(null)
   const [threadReplies, setThreadReplies] = useState<ChannelMessage[]>([])
   const [threadInput, setThreadInput] = useState('')
@@ -1136,6 +1138,18 @@ export default function ChannelsPage() {
       navigate(`/tools/${tool.id}`)
     } catch (error) {
       console.error('Failed to create tool:', error)
+      if (error instanceof APIError && error.status === 403 && error.data?.required_plan) {
+        const planName = error.data.required_plan === 'premium' ? 'Premium' : 'Pro'
+        const toolName = newToolType === 'board' ? 'доски' : 'блокнота'
+        toast.show({
+          type: 'warning',
+          title: `Для создания ${toolName} нужен тариф ${planName}`,
+          action: { label: 'Подробнее', onClick: () => navigate('/premium') },
+          duration: 8000,
+        })
+      } else {
+        toast.error('Не удалось создать инструмент')
+      }
     } finally {
       setToolCreating(false)
     }
@@ -2003,13 +2017,15 @@ export default function ChannelsPage() {
             <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
               {toolsLoading ? (
                 <p className="text-xs text-muted-foreground text-center py-6">Загрузка...</p>
-              ) : channelTools.length === 0 ? (
+              ) : channelTools.filter(t => t.tool_type === newToolType).length === 0 ? (
                 <div className="text-center py-8 px-3">
                   <Presentation className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
-                  <p className="text-xs text-muted-foreground">В этом канале пока нет досок или блокнотов</p>
+                  <p className="text-xs text-muted-foreground">
+                    {newToolType === 'board' ? 'В этом канале пока нет досок' : 'В этом канале пока нет блокнотов'}
+                  </p>
                 </div>
               ) : (
-                channelTools.map((tool) => {
+                channelTools.filter(t => t.tool_type === newToolType).map((tool) => {
                   const isOwner = user && String(tool.owner_id) === String(user.id)
                   return (
                     <div
