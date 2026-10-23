@@ -153,8 +153,22 @@ func (s *CollaborativeSession) BroadcastOps(ops []CRDTOp) {
         }
 }
 
+// toolMergeLocks - per-tool мьютексы: сериализация read-modify-write (db.First -> ApplyCRDTOps -> db.Save),
+// иначе два одновременных merge перезаписывают ops друг друга (lost update в обход CRDT tie-break).
+var toolMergeLocks sync.Map // uint(toolID) -> *sync.Mutex
+
+func lockToolMerge(toolID uint) func() {
+        m, _ := toolMergeLocks.LoadOrStore(toolID, &sync.Mutex{})
+        mu := m.(*sync.Mutex)
+        mu.Lock()
+        return mu.Unlock
+}
+
 // MergeOpsToTool - применить CRDT-операции к содержимому инструмента и сохранить
 func MergeOpsToTool(toolID uint, ops []CRDTOp, userID uint) error {
+        unlock := lockToolMerge(toolID)
+        defer unlock()
+
         var tool ChannelTool
         if err := db.First(&tool, toolID).Error; err != nil {
                 return err
@@ -439,6 +453,9 @@ func handleCollaborationSync(c *gin.Context) {
                         c.JSON(http.StatusBadRequest, gin.H{"error": "tool_id is required"})
                         return
                 }
+
+                unlock := lockToolMerge(req.ToolID)
+                defer unlock()
 
                 userID, _ := getUserIDFromContext(c)
 
