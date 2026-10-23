@@ -1,21 +1,62 @@
-MIT License
+PROPRIETARY LICENSE — ALL RIGHTS RESERVED
 
+Nebula (formerly Nemaxks)
 Copyright (c) 2026 kirin2461
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. DEFINITIONS
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+"Software" means the source code, object code, documentation, and all other
+files contained in this repository, in whole or in part.
+"Owner" means kirin2461, the copyright holder of the Software.
+
+2. GRANT OF LIMITED RIGHTS
+
+The Owner grants you a limited, non-exclusive, non-transferable,
+non-sublicensable, revocable right to view and audit the source code of the
+Software solely for the purposes of evaluation, security review, and
+interoperability assessment.
+
+3. RESTRICTIONS
+
+Except as expressly permitted in Section 2, you may NOT, without the prior
+explicit written permission of the Owner:
+
+a) copy, reproduce, or duplicate the Software, in whole or in part;
+b) modify, adapt, translate, or create derivative works based on the Software;
+c) redistribute, publish, republish, upload, transmit, sell, rent, lease,
+   lend, sublicense, or otherwise distribute or make the Software available
+   to any third party;
+d) use the Software, or any part of it, for any commercial purpose or in any
+   production environment, whether internal or external;
+e) remove, alter, or obscure any copyright, license, or attribution notices
+   contained in the Software.
+
+Any use beyond viewing and auditing requires a separate written license
+agreement with the Owner.
+
+4. RESERVATION OF RIGHTS
+
+All rights not expressly granted in this license are reserved by the Owner.
+This license does not grant you any rights to patents, trademarks, trade
+names, logos, or any other intellectual property of the Owner, including the
+names "Nebula" and "Nemaxks" and any associated branding.
+
+5. TERMINATION
+
+Any breach of this license automatically terminates the limited rights granted
+herein. Upon termination you must immediately cease all use of the Software
+and destroy any copies in your possession or control.
+
+6. NO WARRANTY
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+OWNER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+7. CONTACT
+
+For licensing inquiries, contact the Owner via the repository:
+https://github.com/kirin2461/Nemaxks
