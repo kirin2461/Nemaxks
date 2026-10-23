@@ -7,8 +7,10 @@ import (
         "net/http"
         "strconv"
         "sync"
+        "time"
 
         "github.com/gin-gonic/gin"
+        "github.com/google/uuid"
         "github.com/golang-jwt/jwt/v5"
         "github.com/gorilla/websocket"
 )
@@ -16,13 +18,14 @@ import (
 // CollaborativeSession определяет сессию совместного редактирования
 type CollaborativeSession struct {
         ToolID       uint
-        Connections  map[uint]*UserConnection // UserID -> Connection
+        Connections  map[string]*UserConnection // ConnID -> Connection (несколько вкладок одного юзера)
         Mutex        sync.RWMutex
         CurrentState interface{} // Текущее состояние доски
 }
 
 // UserConnection представляет пользователя в сессии
 type UserConnection struct {
+        ConnID     string
         UserID     uint
         Username   string
         Chan       chan interface{} // чанал для рассылки исправлений
@@ -75,7 +78,7 @@ func GetOrCreateSession(toolID uint) *CollaborativeSession {
 
         session := &CollaborativeSession{
                 ToolID:      toolID,
-                Connections: make(map[uint]*UserConnection),
+                Connections: make(map[string]*UserConnection),
         }
         Sessions[toolID] = session
         return session
@@ -87,24 +90,25 @@ func (s *CollaborativeSession) AddUser(userID uint, username string) *UserConnec
         defer s.Mutex.Unlock()
 
         conn := &UserConnection{
+                ConnID:     uuid.NewString(),
                 UserID:     userID,
                 Username:   username,
                 Chan:       make(chan interface{}, 100),
                 LastSeenAt: GetCurrentTimestamp(),
         }
 
-        s.Connections[userID] = conn
+        s.Connections[conn.ConnID] = conn
         return conn
 }
 
-// RemoveUser - удалить пользователя
-func (s *CollaborativeSession) RemoveUser(userID uint) {
+// RemoveUser - удалить конкретное соединение по ConnID (не трогает другие вкладки юзера)
+func (s *CollaborativeSession) RemoveUser(connID string) {
         s.Mutex.Lock()
         defer s.Mutex.Unlock()
 
-        if conn, ok := s.Connections[userID]; ok {
+        if conn, ok := s.Connections[connID]; ok {
                 close(conn.Chan)
-                delete(s.Connections, userID)
+                delete(s.Connections, connID)
         }
 }
 
@@ -215,9 +219,14 @@ func (s *CollaborativeSession) GetConnectedUsers() []map[string]interface{} {
         defer s.Mutex.RUnlock()
 
         var users []map[string]interface{}
-        for userID, conn := range s.Connections {
+        seen := make(map[uint]bool)
+        for _, conn := range s.Connections {
+                if seen[conn.UserID] {
+                        continue // один юзер = одна запись (несколько вкладок)
+                }
+                seen[conn.UserID] = true
                 users = append(users, map[string]interface{}{
-                        "user_id":   userID,
+                        "user_id":   conn.UserID,
                         "username":  conn.Username,
                         "last_seen": conn.LastSeenAt,
                 })
@@ -320,15 +329,68 @@ func handleRealtimeCollaboration(c *gin.Context) {
                 return
         }
 
+        // R1: проверка доступа к каналу инструмента
+        var tool ChannelTool
+        if err := db.First(&tool, uint(toolID)).Error; err != nil {
+                ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(4404, "tool not found"))
+                return
+        }
+        channelIDStr := c.Param("channel_id")
+        channelID, errChannel := strconv.ParseUint(channelIDStr, 10, 32)
+        if errChannel != nil || uint(channelID) != tool.ChannelID {
+                log.Printf("Collab WebSocket rejected: channel_id %s does not match tool %d channel %d", channelIDStr, toolID, tool.ChannelID)
+                ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(4403, "forbidden"))
+                return
+        }
+        var channel Channel
+        if err := db.First(&channel, tool.ChannelID).Error; err != nil || !hasChannelAccess(userID, channel) {
+                log.Printf("Collab WebSocket rejected: user %d has no access to channel %d", userID, tool.ChannelID)
+                ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(4403, "forbidden"))
+                return
+        }
+
         session := GetOrCreateSession(uint(toolID))
         conn := session.AddUser(userID, username)
-        defer session.RemoveUser(userID)
+        defer session.RemoveUser(conn.ConnID)
+
+        // R3: keepalive — read deadline продлевается pong'ами, ping каждые 30s
+        ws.SetReadDeadline(time.Now().Add(70 * time.Second))
+        ws.SetPongHandler(func(string) error {
+                ws.SetReadDeadline(time.Now().Add(70 * time.Second))
+                return nil
+        })
+
+        var writeMu sync.Mutex
+        done := make(chan struct{})
+        defer close(done)
 
         // Write pump: доставка broadcast-сообщений из сессии клиенту
         go func() {
                 for msg := range conn.Chan {
-                        if err := ws.WriteJSON(msg); err != nil {
+                        writeMu.Lock()
+                        err := ws.WriteJSON(msg)
+                        writeMu.Unlock()
+                        if err != nil {
                                 return
+                        }
+                }
+        }()
+
+        // Ping-горутина: раз в 30s шлёт ping, чтобы соединение не висело мёртвым
+        go func() {
+                ticker := time.NewTicker(30 * time.Second)
+                defer ticker.Stop()
+                for {
+                        select {
+                        case <-done:
+                                return
+                        case <-ticker.C:
+                                writeMu.Lock()
+                                err := ws.WriteMessage(websocket.PingMessage, nil)
+                                writeMu.Unlock()
+                                if err != nil {
+                                        return
+                                }
                         }
                 }
         }()
@@ -386,6 +448,13 @@ func handleCollaborationSync(c *gin.Context) {
                         return
                 }
 
+                // R1: проверка доступа к каналу инструмента
+                var channel Channel
+                if err := db.First(&channel, tool.ChannelID).Error; err != nil || !hasChannelAccess(userID, channel) {
+                        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+                        return
+                }
+
                 newContent, applied := ApplyCRDTOps(tool.Content, req.Ops)
 
                 tool.Content = newContent
@@ -430,6 +499,17 @@ func handleCollaborationSync(c *gin.Context) {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "either ops or update is required"})
                 return
         }
+        var tool ChannelTool
+        if err := db.First(&tool, req.ToolID).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Tool not found"})
+                return
+        }
+        userID, _ := getUserIDFromContext(c)
+        var channel Channel
+        if err := db.First(&channel, tool.ChannelID).Error; err != nil || !hasChannelAccess(userID, channel) {
+                c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+                return
+        }
         if err := HandleToolUpdate(req.Update, req.ToolID); err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
                 return
@@ -443,6 +523,22 @@ func handleGetCollaborationUsers(c *gin.Context) {
         toolID, err := strconv.ParseUint(toolIDStr, 10, 32)
         if err != nil {
                 c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tool ID"})
+                return
+        }
+        var tool ChannelTool
+        if err := db.First(&tool, uint(toolID)).Error; err != nil {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Tool not found"})
+                return
+        }
+        channelID, errChannel := strconv.ParseUint(c.Param("channel_id"), 10, 32)
+        if errChannel != nil || uint(channelID) != tool.ChannelID {
+                c.JSON(http.StatusNotFound, gin.H{"error": "Tool not found"})
+                return
+        }
+        userID, _ := getUserIDFromContext(c)
+        var channel Channel
+        if err := db.First(&channel, tool.ChannelID).Error; err != nil || !hasChannelAccess(userID, channel) {
+                c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
                 return
         }
         session := GetOrCreateSession(uint(toolID))
@@ -462,6 +558,17 @@ func handleUpdateCursorPosition(c *gin.Context) {
                 toolID, errParse := strconv.ParseUint(toolIDStr, 10, 32)
                 if errParse != nil {
                         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tool ID"})
+                        return
+                }
+                var tool ChannelTool
+                if err := db.First(&tool, uint(toolID)).Error; err != nil {
+                        c.JSON(http.StatusNotFound, gin.H{"error": "Tool not found"})
+                        return
+                }
+                userID, _ := getUserIDFromContext(c)
+                var channel Channel
+                if err := db.First(&channel, tool.ChannelID).Error; err != nil || !hasChannelAccess(userID, channel) {
+                        c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
                         return
                 }
                 session := GetOrCreateSession(uint(toolID))
