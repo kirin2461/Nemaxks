@@ -1,6 +1,6 @@
-import { ensureFreshToken, refreshAccessToken } from './api'
+import { ensureFreshToken } from './api'
 
-export type ConnectionType = 'websocket' | 'wstunnel' | 'sse' | 'long_polling' | 'disconnected'
+export type ConnectionType = 'websocket' | 'wstunnel' | 'sse' | 'disconnected'
 
 export interface ConnectionState {
   type: ConnectionType
@@ -16,16 +16,11 @@ const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000]
 const WEBSOCKET_TIMEOUT = 5000
 const WSTUNNEL_TIMEOUT = 8000
 const SSE_TIMEOUT = 5000
-const POLL_INTERVAL_MIN = 1000
-const POLL_INTERVAL_MAX = 5000
 
 class ConnectionManager {
   private ws: WebSocket | null = null
   private sse: EventSource | null = null
-  private pollTimeoutId: ReturnType<typeof setTimeout> | null = null
   private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null
-  private lastPollId: number = 0
-  private pollInterval: number = POLL_INTERVAL_MIN
   private token: string | null = null
   private baseUrl: string = ''
   private wsUrl: string = ''
@@ -124,7 +119,11 @@ class ConnectionManager {
           const sseSuccess = await this.trySSE()
           if (isStale()) return
           if (!sseSuccess) {
-            this.startLongPolling()
+            // Цепочка fallback: websocket → wstunnel → sse → disconnected.
+            // long_polling убран: все транспорты недоступны — уходим в reconnect-цикл.
+            console.log('[ConnectionManager] All transports failed, scheduling reconnect')
+            this.setState({ type: 'disconnected', isConnected: false })
+            this.scheduleReconnect()
           }
         }
       }
@@ -340,79 +339,6 @@ class ConnectionManager {
     })
   }
 
-  private startLongPolling() {
-    console.log('[ConnectionManager] Starting long polling...')
-    this.setState({
-      type: 'long_polling',
-      isConnected: true,
-      lastError: null,
-      reconnectAttempts: 0
-    })
-    this.pollInterval = POLL_INTERVAL_MIN
-    this.poll()
-  }
-
-  private async poll() {
-    if (this.state.type !== 'long_polling' || !this.shouldReconnect) return
-
-    try {
-      const doPoll = () => fetch(
-        `${this.baseUrl}/api/poll/events?since_id=${this.lastPollId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-
-      let response = await doPoll()
-
-      // FE-7: при 401 обновляем access token и повторяем запрос один раз.
-      if (response.status === 401) {
-        const freshToken = await refreshAccessToken()
-        if (freshToken) {
-          this.token = freshToken
-          response = await doPoll()
-        }
-      }
-
-      if (!response.ok) {
-        throw new Error(`Poll failed: ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      let receivedEvents = false
-      if (data.messages && Array.isArray(data.messages)) {
-        for (const msg of data.messages) {
-          if (msg.id > this.lastPollId) {
-            this.lastPollId = msg.id
-          }
-          this.handleMessage(msg.data || msg)
-        }
-        receivedEvents = data.messages.length > 0
-      }
-
-      // Backoff для long-poll: пустые поллы увеличивают интервал (x1.5, max 5s),
-      // при получении событий интервал сбрасывается на 1s
-      if (receivedEvents) {
-        this.pollInterval = POLL_INTERVAL_MIN
-      } else {
-        this.pollInterval = Math.min(Math.round(this.pollInterval * 1.5), POLL_INTERVAL_MAX)
-      }
-
-      this.pollTimeoutId = setTimeout(() => this.poll(), this.pollInterval)
-    } catch (e) {
-      console.error('[ConnectionManager] Long polling error:', e)
-      this.setState({
-        isConnected: false,
-        lastError: String(e)
-      })
-      this.scheduleReconnect()
-    }
-  }
-
   private scheduleReconnect() {
     if (!this.shouldReconnect) return
 
@@ -444,7 +370,7 @@ class ConnectionManager {
       return true
     }
     
-    if (this.state.type === 'sse' || this.state.type === 'long_polling') {
+    if (this.state.type === 'sse') {
       fetch(`${this.baseUrl}/api/poll/send`, {
         method: 'POST',
         headers: {
@@ -478,11 +404,6 @@ class ConnectionManager {
       this.sse = null
     }
 
-    if (this.pollTimeoutId) {
-      clearTimeout(this.pollTimeoutId)
-      this.pollTimeoutId = null
-    }
-
     if (this.reconnectTimeoutId) {
       clearTimeout(this.reconnectTimeoutId)
       this.reconnectTimeoutId = null
@@ -494,11 +415,11 @@ class ConnectionManager {
     })
   }
 
-  forceConnectionType(type: 'websocket' | 'wstunnel' | 'sse' | 'long_polling'): void {
+  forceConnectionType(type: 'websocket' | 'wstunnel' | 'sse'): void {
     if (!this.token) return
 
     this.disconnect(false)
-    
+
     switch (type) {
       case 'websocket':
         this.tryWebSocket()
@@ -508,9 +429,6 @@ class ConnectionManager {
         break
       case 'sse':
         this.trySSE()
-        break
-      case 'long_polling':
-        this.startLongPolling()
         break
     }
   }

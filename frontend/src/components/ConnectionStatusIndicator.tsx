@@ -10,7 +10,7 @@ export function ConnectionStatusIndicator() {
   let color = 'bg-destructive'
   
   if (connectionStatus === 'connected') {
-    if (connectionType === 'sse' || connectionType === 'long_polling') {
+    if (connectionType === 'sse') {
       color = 'bg-warning'
     } else {
       color = 'bg-emerald-500'

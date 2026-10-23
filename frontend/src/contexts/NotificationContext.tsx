@@ -47,7 +47,7 @@ interface NotificationContextType {
   sendWebSocketMessage: (message: any) => void
   connectionStatus: ConnectionStatus
   connectionType: ConnectionType
-  forceConnectionType: (type: 'websocket' | 'sse' | 'long_polling') => void
+  forceConnectionType: (type: 'websocket' | 'sse') => void
 }
 
 const NotificationContext = createContext<NotificationContextType | null>(null)
@@ -591,7 +591,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     connectionManager.send(message)
   }, [])
 
-  const forceConnectionType = useCallback((type: 'websocket' | 'sse' | 'long_polling') => {
+  const forceConnectionType = useCallback((type: 'websocket' | 'sse') => {
     connectionManager.forceConnectionType(type)
   }, [])
 

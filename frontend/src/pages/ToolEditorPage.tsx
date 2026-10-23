@@ -130,6 +130,10 @@ export default function ToolEditorPage() {
   const unmountedRef = useRef(false)
   const boardRef = useRef<HTMLDivElement | null>(null)
   const lastCursorSentRef = useRef(0)
+  // SSE-резерв для входящих collab-сообщений, когда WS недоступен
+  const sseRef = useRef<EventSource | null>(null)
+  const wsFailCountRef = useRef(0)
+  const [sseConnected, setSseConnected] = useState(false)
 
   const bumpElements = useCallback(() => setElementsVersion((v) => v + 1), [])
 
@@ -278,6 +282,49 @@ export default function ToolEditorPage() {
     [userId, bumpElements],
   )
 
+  // --- SSE-резерв для ВХОДЯЩИХ: открывается, когда WS упал и reconnect не удался ---
+  const closeCollabSse = useCallback(() => {
+    if (sseRef.current) {
+      sseRef.current.close()
+      sseRef.current = null
+    }
+    setSseConnected(false)
+  }, [])
+
+  const openCollabSse = useCallback(() => {
+    if (!tool || !toolId) return
+    if (sseRef.current) return // уже открыт (EventSource сам реконнектится)
+    const token = localStorage.getItem('token')
+    if (!token) return
+    // EventSource не умеет заголовки — токен в ?token= (бэкенд принимает оба способа)
+    const sseUrl = `/api/sse/collab/${tool.channel_id}/${toolId}?token=${encodeURIComponent(token)}`
+    try {
+      const es = new EventSource(sseUrl)
+      sseRef.current = es
+      es.onopen = () => {
+        if (unmountedRef.current) return
+        setSseConnected(true)
+      }
+      es.onmessage = (event) => {
+        try {
+          // Тот же ToolSyncMessage, что и по WS — общий обработчик.
+          // Эхо собственных ops идемпотентно: CRDT applyOp той же op
+          // (равные lamport+user_id) — no-op.
+          handleWsMessage(JSON.parse(event.data))
+        } catch {
+          // игнорируем битые сообщения
+        }
+      }
+      es.onerror = () => {
+        // EventSource реконнектится сам; статус сбрасываем — покажем офлайн,
+        // если и WS мёртв
+        setSseConnected(false)
+      }
+    } catch (err) {
+      console.error('Collab SSE connect failed:', err)
+    }
+  }, [tool, toolId, handleWsMessage])
+
   // --- WebSocket подключение с reconnect ---
   const connectWs = useCallback(() => {
     if (!tool || !toolId) return
@@ -295,6 +342,9 @@ export default function ToolEditorPage() {
 
       ws.onopen = () => {
         if (unmountedRef.current) return
+        wsFailCountRef.current = 0
+        // Handover SSE→WS: WS восстановился — SSE-резерв больше не нужен
+        closeCollabSse()
         setConnected(true)
         flushQueue()
         collabAPI
@@ -315,6 +365,11 @@ export default function ToolEditorPage() {
         if (unmountedRef.current) return
         setConnected(false)
         wsRef.current = null
+        // После 2 неудачных попыток WS — включаем SSE-резерв для входящих
+        wsFailCountRef.current += 1
+        if (wsFailCountRef.current >= 2) {
+          openCollabSse()
+        }
         if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
         reconnectTimerRef.current = setTimeout(() => {
           if (!unmountedRef.current) connectWs()
@@ -328,7 +383,7 @@ export default function ToolEditorPage() {
       console.error('WebSocket connect failed:', err)
       setConnected(false)
     }
-  }, [tool, toolId, flushQueue, handleWsMessage])
+  }, [tool, toolId, flushQueue, handleWsMessage, openCollabSse, closeCollabSse])
 
   useEffect(() => {
     if (!tool) return
@@ -340,8 +395,9 @@ export default function ToolEditorPage() {
         wsRef.current.close()
         wsRef.current = null
       }
+      closeCollabSse()
     }
-  }, [tool, connectWs])
+  }, [tool, connectWs, closeCollabSse])
 
   // --- Список онлайн-пользователей: первичная загрузка + polling ---
   useEffect(() => {
@@ -659,19 +715,19 @@ export default function ToolEditorPage() {
             <p className="text-[11px] text-muted-foreground">{isBoard ? 'Доска' : 'Блокнот'}</p>
           </div>
           <div className="flex items-center gap-1 md:gap-3">
-            {/* Индикатор соединения */}
+            {/* Индикатор соединения: онлайн, если жив WS или SSE-резерв */}
             <div
               className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-secondary"
-              title={connected ? 'Подключено' : 'Нет соединения'}
+              title={connected || sseConnected ? 'Подключено' : 'Нет соединения'}
             >
               <span
                 className={cn(
                   'w-2.5 h-2.5 rounded-full',
-                  connected ? 'bg-emerald-500' : 'bg-destructive',
+                  connected || sseConnected ? 'bg-emerald-500' : 'bg-destructive',
                 )}
               />
               <span className="text-xs text-muted-foreground hidden md:inline">
-                {connected ? 'Онлайн' : 'Офлайн'}
+                {connected || sseConnected ? 'Онлайн' : 'Офлайн'}
               </span>
             </div>
             {/* Онлайн-пользователи */}
@@ -697,7 +753,7 @@ export default function ToolEditorPage() {
         </div>
 
         {/* Офлайн-баннер */}
-        {(!connected || queueCount > 0) && (
+        {((!connected && !sseConnected) || queueCount > 0) && (
           <div className="px-4 py-2 bg-warning-soft border-b border-warning/30 flex items-center gap-2 text-sm text-[hsl(32_95%_30%)] shrink-0">
             <WifiOff className="w-4 h-4 shrink-0" />
             <span>
