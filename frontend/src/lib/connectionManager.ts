@@ -1,6 +1,7 @@
 import { ensureFreshToken } from './api'
+import { NspClient } from './nspClient'
 
-export type ConnectionType = 'websocket' | 'wstunnel' | 'sse' | 'disconnected'
+export type ConnectionType = 'websocket' | 'wstunnel' | 'sse' | 'nsp' | 'disconnected'
 
 export interface ConnectionState {
   type: ConnectionType
@@ -16,10 +17,12 @@ const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000]
 const WEBSOCKET_TIMEOUT = 5000
 const WSTUNNEL_TIMEOUT = 8000
 const SSE_TIMEOUT = 5000
+const NSP_TIMEOUT = 8000
 
 class ConnectionManager {
   private ws: WebSocket | null = null
   private sse: EventSource | null = null
+  private nsp: NspClient | null = null
   private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null
   private token: string | null = null
   private baseUrl: string = ''
@@ -119,11 +122,16 @@ class ConnectionManager {
           const sseSuccess = await this.trySSE()
           if (isStale()) return
           if (!sseSuccess) {
-            // Цепочка fallback: websocket → wstunnel → sse → disconnected.
-            // long_polling убран: все транспорты недоступны — уходим в reconnect-цикл.
-            console.log('[ConnectionManager] All transports failed, scheduling reconnect')
-            this.setState({ type: 'disconnected', isConnected: false })
-            this.scheduleReconnect()
+            console.log('[ConnectionManager] SSE failed, trying NSP...')
+            const nspSuccess = await this.tryNSP()
+            if (isStale()) return
+            if (!nspSuccess) {
+              // Цепочка fallback: websocket → wstunnel → sse → nsp → disconnected.
+              // long_polling убран: все транспорты недоступны — уходим в reconnect-цикл.
+              console.log('[ConnectionManager] All transports failed, scheduling reconnect')
+              this.setState({ type: 'disconnected', isConnected: false })
+              this.scheduleReconnect()
+            }
           }
         }
       }
@@ -339,6 +347,82 @@ class ConnectionManager {
     })
   }
 
+  /**
+   * NSP v2.1 «RU-Lite» — последний транспорт цепочки (chunked HTTPS,
+   * проходит там, где заблокированы WebSocket/SSE). EVENT-фреймы несут
+   * тот же payload, что SSE-hub ({type, data, ...}) → общий handleMessage.
+   * Внутренний авто-reconnect NspClient выключен: reconnect-циклом
+   * управляет сам менеджер (полный проход цепочки — WS мог восстановиться).
+   */
+  private async tryNSP(): Promise<boolean> {
+    return new Promise((resolve) => {
+      let settled = false
+      const settle = (ok: boolean) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeout)
+        resolve(ok)
+      }
+      let client: NspClient
+      try {
+        console.log('[ConnectionManager] Trying NSP (chunked HTTPS)...')
+        if (!this.token) {
+          resolve(false)
+          return
+        }
+        client = new NspClient({
+          storageNS: 'nsp_msg',
+          getToken: () => this.token,
+          autoReconnect: false,
+          onOpen: () => {
+            if (this.nsp !== client || !this.shouldReconnect) {
+              console.log('[ConnectionManager] NSP opened after disconnect, closing')
+              client.close()
+              settle(false)
+              return
+            }
+            console.log('[ConnectionManager] NSP connected')
+            this.setState({
+              type: 'nsp',
+              isConnected: true,
+              lastError: null,
+              reconnectAttempts: 0
+            })
+            settle(true)
+          },
+          onEvent: (data) => this.handleMessage(data),
+          onClose: () => {
+            console.log('[ConnectionManager] NSP closed')
+            if (this.nsp === client) {
+              this.nsp = null
+              if (this.state.type === 'nsp') {
+                this.setState({ isConnected: false })
+                this.scheduleReconnect()
+              }
+            }
+            settle(false)
+          },
+          onError: (code, message) => {
+            console.warn('[ConnectionManager] NSP error:', code, message)
+            if (this.state.type === 'nsp') this.setState({ lastError: `nsp ${code}: ${message}` })
+          },
+        })
+        this.nsp = client
+      } catch (e) {
+        console.error('[ConnectionManager] NSP exception:', e)
+        resolve(false)
+        return
+      }
+      const timeout = setTimeout(() => {
+        console.log('[ConnectionManager] NSP timeout')
+        if (this.nsp === client) this.nsp = null
+        client.close()
+        settle(false)
+      }, NSP_TIMEOUT)
+      client.connect()
+    })
+  }
+
   private scheduleReconnect() {
     if (!this.shouldReconnect) return
 
@@ -370,7 +454,9 @@ class ConnectionManager {
       return true
     }
     
-    if (this.state.type === 'sse') {
+    if (this.state.type === 'sse' || this.state.type === 'nsp') {
+      // У NSP нет C→S канала для сообщений мессенджера (NSP несёт ops/курсоры/
+      // события); отправка сообщений идёт тем же REST-путём, что и при SSE.
       fetch(`${this.baseUrl}/api/poll/send`, {
         method: 'POST',
         headers: {
@@ -404,6 +490,11 @@ class ConnectionManager {
       this.sse = null
     }
 
+    if (this.nsp) {
+      this.nsp.close()
+      this.nsp = null
+    }
+
     if (this.reconnectTimeoutId) {
       clearTimeout(this.reconnectTimeoutId)
       this.reconnectTimeoutId = null
@@ -415,7 +506,7 @@ class ConnectionManager {
     })
   }
 
-  forceConnectionType(type: 'websocket' | 'wstunnel' | 'sse'): void {
+  forceConnectionType(type: 'websocket' | 'wstunnel' | 'sse' | 'nsp'): void {
     if (!this.token) return
 
     this.disconnect(false)
@@ -429,6 +520,9 @@ class ConnectionManager {
         break
       case 'sse':
         this.trySSE()
+        break
+      case 'nsp':
+        this.tryNSP()
         break
     }
   }

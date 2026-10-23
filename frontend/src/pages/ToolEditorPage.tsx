@@ -12,6 +12,7 @@ import {
   generateElementId,
   type CRDTOp,
 } from '@/lib/crdt'
+import { NspClient } from '@/lib/nspClient'
 import { cn } from '@/lib/utils'
 import {
   ArrowLeft,
@@ -134,6 +135,10 @@ export default function ToolEditorPage() {
   const sseRef = useRef<EventSource | null>(null)
   const wsFailCountRef = useRef(0)
   const [sseConnected, setSseConnected] = useState(false)
+  // NSP — третий транспорт ПОСЛЕ SSE (NSP v2.1 RU-Lite, chunked HTTPS)
+  const nspRef = useRef<NspClient | null>(null)
+  const nspStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [nspConnected, setNspConnected] = useState(false)
 
   const bumpElements = useCallback(() => setElementsVersion((v) => v + 1), [])
 
@@ -325,6 +330,59 @@ export default function ToolEditorPage() {
     }
   }, [tool, toolId, handleWsMessage])
 
+  // --- NSP: третий транспорт после WS и SSE (спека NSP v2.1 §2) ---
+  const closeNsp = useCallback(() => {
+    if (nspStartTimerRef.current) {
+      clearTimeout(nspStartTimerRef.current)
+      nspStartTimerRef.current = null
+    }
+    if (nspRef.current) {
+      nspRef.current.close()
+      nspRef.current = null
+    }
+    setNspConnected(false)
+  }, [])
+
+  const openNsp = useCallback(() => {
+    if (!tool || !toolId) return
+    if (nspRef.current) return // уже поднят (внутри — свой reconnect с backoff)
+    const client = new NspClient({
+      storageNS: 'nsp_collab',
+      getToken: () => localStorage.getItem('token'),
+      onOpen: () => {
+        if (unmountedRef.current) return
+        setNspConnected(true)
+        // Подписка + полная синхронизация: после падения WS/SSE локальный
+        // state мог пропустить ops — STATE переписывает (спека §4)
+        client.subscribe(tool.channel_id, Number(toolId))
+        client.requestState(Number(toolId))
+        flushQueue() // офлайн-очередь уходит через REST-sync, как раньше
+        collabAPI
+          .users(tool.channel_id, toolId)
+          .then(setOnlineUsers)
+          .catch(() => {})
+      },
+      // Входящие — в те же handler'ы, что и WS/SSE (форматы сведены к ToolSyncMessage)
+      onOps: (_toolId, ops) => {
+        handleWsMessage({ type: 'update', tool_id: Number(toolId), ops })
+      },
+      onCursor: (c) => {
+        handleWsMessage({
+          type: 'cursor',
+          tool_id: c.tool_id,
+          cursor: { user_id: c.user_id, x: c.x, y: c.y, color: c.color },
+        })
+      },
+      onState: (_toolId, state) => {
+        handleWsMessage({ type: 'sync_state', state })
+      },
+      onClose: () => setNspConnected(false),
+      onError: (code, message) => console.warn('[NSP collab] error', code, message),
+    })
+    nspRef.current = client
+    client.connect()
+  }, [tool, toolId, handleWsMessage, flushQueue])
+
   // --- WebSocket подключение с reconnect ---
   const connectWs = useCallback(() => {
     if (!tool || !toolId) return
@@ -343,8 +401,9 @@ export default function ToolEditorPage() {
       ws.onopen = () => {
         if (unmountedRef.current) return
         wsFailCountRef.current = 0
-        // Handover SSE→WS: WS восстановился — SSE-резерв больше не нужен
+        // Handover SSE→WS и NSP→WS: WS восстановился — резервы больше не нужны
         closeCollabSse()
+        closeNsp()
         setConnected(true)
         flushQueue()
         collabAPI
@@ -369,6 +428,15 @@ export default function ToolEditorPage() {
         wsFailCountRef.current += 1
         if (wsFailCountRef.current >= 2) {
           openCollabSse()
+          // NSP — третий транспорт: поднимаем, если и SSE не открылся за 6s
+          if (nspStartTimerRef.current) clearTimeout(nspStartTimerRef.current)
+          nspStartTimerRef.current = setTimeout(() => {
+            nspStartTimerRef.current = null
+            if (unmountedRef.current) return
+            const wsAlive = wsRef.current && wsRef.current.readyState === WebSocket.OPEN
+            const sseAlive = sseRef.current && sseRef.current.readyState === EventSource.OPEN
+            if (!wsAlive && !sseAlive) openNsp()
+          }, 6000)
         }
         if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
         reconnectTimerRef.current = setTimeout(() => {
@@ -383,7 +451,7 @@ export default function ToolEditorPage() {
       console.error('WebSocket connect failed:', err)
       setConnected(false)
     }
-  }, [tool, toolId, flushQueue, handleWsMessage, openCollabSse, closeCollabSse])
+  }, [tool, toolId, flushQueue, handleWsMessage, openCollabSse, closeCollabSse, openNsp, closeNsp])
 
   useEffect(() => {
     if (!tool) return
@@ -396,8 +464,9 @@ export default function ToolEditorPage() {
         wsRef.current = null
       }
       closeCollabSse()
+      closeNsp()
     }
-  }, [tool, connectWs, closeCollabSse])
+  }, [tool, connectWs, closeCollabSse, closeNsp])
 
   // --- Список онлайн-пользователей: первичная загрузка + polling ---
   useEffect(() => {
@@ -451,17 +520,23 @@ export default function ToolEditorPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // --- Отправка операции: по WS или в офлайн-очередь ---
+  // --- Отправка операции: WS → NSP → офлайн-очередь (localStorage — только полный offline) ---
   const commitOp = useCallback(
     (op: CRDTOp) => {
       bumpElements()
       const ws = wsRef.current
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'update', tool_id: Number(toolId), ops: [op] }))
-      } else {
-        enqueueOp(toolId, op)
-        syncQueueCount()
+        return
       }
+      const nsp = nspRef.current
+      if (nsp && nsp.isOpen()) {
+        // ACK уберёт op_id из pending-set внутри клиента; дубли идемпотентны (LWW)
+        nsp.sendOps(Number(toolId), [op])
+        return
+      }
+      enqueueOp(toolId, op)
+      syncQueueCount()
     },
     [toolId, bumpElements, syncQueueCount],
   )
@@ -541,8 +616,9 @@ export default function ToolEditorPage() {
 
     // Курсор: throttle ~80ms
     const now = Date.now()
+    if (now - lastCursorSentRef.current <= 80) return
     const ws = wsRef.current
-    if (ws && ws.readyState === WebSocket.OPEN && now - lastCursorSentRef.current > 80) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
       lastCursorSentRef.current = now
       ws.send(
         JSON.stringify({
@@ -551,6 +627,12 @@ export default function ToolEditorPage() {
           cursor: { user_id: userId, username, x, y, color: cursorColor(userId) },
         }),
       )
+      return
+    }
+    const nsp = nspRef.current
+    if (nsp && nsp.isOpen()) {
+      lastCursorSentRef.current = now
+      nsp.sendCursor(Number(toolId), x, y, cursorColor(userId))
     }
   }
 
@@ -715,19 +797,19 @@ export default function ToolEditorPage() {
             <p className="text-[11px] text-muted-foreground">{isBoard ? 'Доска' : 'Блокнот'}</p>
           </div>
           <div className="flex items-center gap-1 md:gap-3">
-            {/* Индикатор соединения: онлайн, если жив WS или SSE-резерв */}
+            {/* Индикатор соединения: онлайн, если жив WS, SSE-резерв или NSP */}
             <div
               className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-secondary"
-              title={connected || sseConnected ? 'Подключено' : 'Нет соединения'}
+              title={connected || sseConnected || nspConnected ? 'Подключено' : 'Нет соединения'}
             >
               <span
                 className={cn(
                   'w-2.5 h-2.5 rounded-full',
-                  connected || sseConnected ? 'bg-emerald-500' : 'bg-destructive',
+                  connected || sseConnected || nspConnected ? 'bg-emerald-500' : 'bg-destructive',
                 )}
               />
               <span className="text-xs text-muted-foreground hidden md:inline">
-                {connected || sseConnected ? 'Онлайн' : 'Офлайн'}
+                {connected || sseConnected ? 'Онлайн' : nspConnected ? 'NSP' : 'Офлайн'}
               </span>
             </div>
             {/* Онлайн-пользователи */}
@@ -753,7 +835,7 @@ export default function ToolEditorPage() {
         </div>
 
         {/* Офлайн-баннер */}
-        {((!connected && !sseConnected) || queueCount > 0) && (
+        {((!connected && !sseConnected && !nspConnected) || queueCount > 0) && (
           <div className="px-4 py-2 bg-warning-soft border-b border-warning/30 flex items-center gap-2 text-sm text-[hsl(32_95%_30%)] shrink-0">
             <WifiOff className="w-4 h-4 shrink-0" />
             <span>
