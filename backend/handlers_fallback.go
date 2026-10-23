@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // bearerTokenFromHeader извлекает JWT из заголовка Authorization
@@ -80,6 +82,78 @@ var pollQueue = &PollQueue{
 	lastID:          0,
 }
 
+// --- Collab SSE hub: scoped рассылка ToolSyncMessage по tool_id ---
+// Отдельный от sseHub (/api/sse/events): здесь подписчики группируются
+// по toolID, а не по userID. Используется как резервный транспорт для
+// входящих collab-сообщений, когда WebSocket недоступен.
+
+type collabSSESubscriber struct {
+	ID     string
+	ToolID uint
+	UserID uint
+	Ch     chan ToolSyncMessage
+}
+
+type collabSSEHubType struct {
+	subs       map[uint]map[string]*collabSSESubscriber // toolID -> subscriberID -> subscriber
+	register   chan *collabSSESubscriber
+	unregister chan *collabSSESubscriber
+	mu         sync.RWMutex
+}
+
+var collabSSEHub = &collabSSEHubType{
+	subs:       make(map[uint]map[string]*collabSSESubscriber),
+	register:   make(chan *collabSSESubscriber),
+	unregister: make(chan *collabSSESubscriber),
+}
+
+func (h *collabSSEHubType) run() {
+	for {
+		select {
+		case sub := <-h.register:
+			h.mu.Lock()
+			if h.subs[sub.ToolID] == nil {
+				h.subs[sub.ToolID] = make(map[string]*collabSSESubscriber)
+			}
+			h.subs[sub.ToolID][sub.ID] = sub
+			h.mu.Unlock()
+			log.Printf("[CollabSSE] Subscriber user=%d tool=%d connected (tool subs: %d)", sub.UserID, sub.ToolID, len(h.subs[sub.ToolID]))
+
+		case sub := <-h.unregister:
+			h.mu.Lock()
+			if subs, ok := h.subs[sub.ToolID]; ok {
+				if _, ok := subs[sub.ID]; ok {
+					delete(subs, sub.ID)
+					close(sub.Ch)
+				}
+				if len(subs) == 0 {
+					delete(h.subs, sub.ToolID)
+				}
+			}
+			h.mu.Unlock()
+			log.Printf("[CollabSSE] Subscriber user=%d tool=%d disconnected", sub.UserID, sub.ToolID)
+		}
+	}
+}
+
+// publish дублирует ToolSyncMessage всем SSE-подписчикам tool_id.
+// excludeUserID != 0 — не отправлять этому пользователю (эхо собственного курсора).
+// Non-blocking send с drop при переполнении буфера (как в SSEHub.broadcast).
+func (h *collabSSEHubType) publish(toolID uint, msg ToolSyncMessage, excludeUserID uint) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for _, sub := range h.subs[toolID] {
+		if excludeUserID != 0 && sub.UserID == excludeUserID {
+			continue
+		}
+		select {
+		case sub.Ch <- msg:
+		default:
+			// буфер подписчика полон — дропаем, не блокируя рассылку
+		}
+	}
+}
+
 const (
 	pollMessageTTL     = 5 * time.Minute
 	pollMaxMessages    = 100
@@ -89,6 +163,7 @@ const (
 
 func init() {
 	go sseHub.run()
+	go collabSSEHub.run()
 	go pollQueue.cleanup()
 }
 
@@ -259,6 +334,21 @@ func (pq *PollQueue) AddBroadcast(msgType string, data interface{}) {
 	}
 }
 
+// sseWriteFrame пишет SSE-фрейм, предварительно продлевая write deadline.
+// Глобальный srv.WriteTimeout (15s) выставляет дедлайн на весь ответ при
+// старте запроса и убивает долгоживущий SSE-поток ровно на 15-й секунде —
+// поэтому дедлайн продлевается на каждой записи.
+func sseWriteFrame(c *gin.Context, rc *http.ResponseController, frame string) bool {
+	if err := rc.SetWriteDeadline(time.Now().Add(60 * time.Second)); err != nil {
+		return false
+	}
+	if _, err := c.Writer.WriteString(frame); err != nil {
+		return false
+	}
+	c.Writer.Flush()
+	return true
+}
+
 func sseEventsHandler(c *gin.Context) {
 	userID := c.GetString("userID")
 	if uid, ok := getUserIDFromContext(c); ok && userID == "" {
@@ -329,9 +419,10 @@ func sseEventsHandler(c *gin.Context) {
 		sseHub.unregister <- client
 	}()
 
-	c.Writer.WriteString("event: connected\n")
-	c.Writer.WriteString(fmt.Sprintf("data: {\"user_id\":\"%s\",\"connection_type\":\"sse\"}\n\n", userID))
-	c.Writer.Flush()
+	rc := http.NewResponseController(c.Writer)
+	if !sseWriteFrame(c, rc, fmt.Sprintf("event: connected\ndata: {\"user_id\":\"%s\",\"connection_type\":\"sse\"}\n\n", userID)) {
+		return
+	}
 
 	heartbeatTicker := time.NewTicker(sseHeartbeatPeriod)
 	defer heartbeatTicker.Stop()
@@ -343,15 +434,121 @@ func sseEventsHandler(c *gin.Context) {
 		case <-notify:
 			return
 		case <-heartbeatTicker.C:
-			c.Writer.WriteString(": heartbeat\n\n")
-			c.Writer.Flush()
+			if !sseWriteFrame(c, rc, ": heartbeat\n\n") {
+				return
+			}
 		case msg, ok := <-client.Channel:
 			if !ok {
 				return
 			}
-			c.Writer.WriteString("event: message\n")
-			c.Writer.WriteString(fmt.Sprintf("data: %s\n\n", string(msg)))
-			c.Writer.Flush()
+			if !sseWriteFrame(c, rc, fmt.Sprintf("event: message\ndata: %s\n\n", string(msg))) {
+				return
+			}
+		}
+	}
+}
+
+// sseCollabEventsHandler — scoped SSE-поток ToolSyncMessage для collab-сессии
+// инструмента. Резервный транспорт для входящих ops/presence, когда collab-WS
+// недоступен. Access-проверки повторяют семантику handleRealtimeCollaboration
+// (R1): там WS close 4404/4403, здесь HTTP 404/403 JSON.
+func sseCollabEventsHandler(c *gin.Context) {
+	// JWT: сначала Authorization: Bearer (не попадает в access-логи),
+	// затем ?token= — EventSource не умеет кастомные заголовки.
+	token := bearerTokenFromHeader(c)
+	if token == "" {
+		token = c.Query("token")
+	}
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID, _, authErr := parseCollabToken(token)
+	if authErr != nil {
+		log.Printf("[CollabSSE] rejected: %v", authErr)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	toolIDStr := c.Param("tool_id")
+	toolID, errParse := strconv.ParseUint(toolIDStr, 10, 32)
+	if errParse != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tool ID"})
+		return
+	}
+
+	// R1: те же access-проверки, что и у WS-эндпоинта
+	var tool ChannelTool
+	if err := db.First(&tool, uint(toolID)).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "tool not found"})
+		return
+	}
+	channelIDStr := c.Param("channel_id")
+	channelID, errChannel := strconv.ParseUint(channelIDStr, 10, 32)
+	if errChannel != nil || uint(channelID) != tool.ChannelID {
+		log.Printf("[CollabSSE] rejected: channel_id %s does not match tool %d channel %d", channelIDStr, toolID, tool.ChannelID)
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+	var channel Channel
+	if err := db.First(&channel, tool.ChannelID).Error; err != nil || !hasChannelAccess(userID, channel) {
+		log.Printf("[CollabSSE] rejected: user %d has no access to channel %d", userID, tool.ChannelID)
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	origin := c.GetHeader("Origin")
+	if origin != "" && isOriginAllowed(origin) {
+		c.Header("Access-Control-Allow-Origin", origin)
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Header("Vary", "Origin")
+	}
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("X-Accel-Buffering", "no")
+
+	sub := &collabSSESubscriber{
+		ID:     uuid.NewString(),
+		ToolID: uint(toolID),
+		UserID: userID,
+		Ch:     make(chan ToolSyncMessage, 100),
+	}
+
+	collabSSEHub.register <- sub
+	defer func() {
+		collabSSEHub.unregister <- sub
+	}()
+
+	rc := http.NewResponseController(c.Writer)
+	if !sseWriteFrame(c, rc, ": connected\n\n") {
+		return
+	}
+
+	heartbeatTicker := time.NewTicker(sseHeartbeatPeriod)
+	defer heartbeatTicker.Stop()
+
+	notify := c.Request.Context().Done()
+
+	for {
+		select {
+		case <-notify:
+			return
+		case <-heartbeatTicker.C:
+			if !sseWriteFrame(c, rc, ": ping\n\n") {
+				return
+			}
+		case msg, ok := <-sub.Ch:
+			if !ok {
+				return
+			}
+			data, err := json.Marshal(msg)
+			if err != nil {
+				continue
+			}
+			if !sseWriteFrame(c, rc, fmt.Sprintf("data: %s\n\n", string(data))) {
+				return
+			}
 		}
 	}
 }

@@ -734,6 +734,8 @@ func main() {
 
 	// Real-time Collaborative Editing (WebSocket)
 	r.GET("/ws/collab/:channel_id/:tool_id", handleRealtimeCollaboration)
+	// Scoped SSE-резерв для collab (JWT сам валидирует: Authorization header или ?token=)
+	r.GET("/api/sse/collab/:channel_id/:tool_id", sseCollabEventsHandler)
 	r.POST("/api/collab/sync", authMiddleware(), handleCollaborationSync)
 	r.GET("/api/collab/users/:channel_id/:tool_id", authMiddleware(), handleGetCollaborationUsers)
 	r.POST("/api/collab/cursor", authMiddleware(), handleUpdateCursorPosition)

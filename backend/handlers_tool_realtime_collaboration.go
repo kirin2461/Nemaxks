@@ -151,6 +151,9 @@ func (s *CollaborativeSession) BroadcastOps(ops []CRDTOp) {
                 default:
                 }
         }
+
+        // Дублируем в collab-SSE hub (резервный транспорт для клиентов без WS)
+        collabSSEHub.publish(s.ToolID, msg, 0)
 }
 
 // toolMergeLocks - per-tool мьютексы: сериализация read-modify-write (db.First -> ApplyCRDTOps -> db.Save),
@@ -205,6 +208,9 @@ func (s *CollaborativeSession) BroadcastCursor(cursor *CursorPos) {
                         }
                 }
         }
+
+        // Дублируем в collab-SSE hub; автор курсора своё эхо не получает
+        collabSSEHub.publish(s.ToolID, msg, cursor.UserID)
 }
 
 // BroadcastState - рассылает полное состояние (sync_state) всем в сессии
@@ -225,6 +231,9 @@ func (s *CollaborativeSession) BroadcastState(state interface{}) {
                 default:
                 }
         }
+
+        // Дублируем в collab-SSE hub (резервный транспорт для клиентов без WS)
+        collabSSEHub.publish(s.ToolID, msg, 0)
 }
 
 // GetConnectedUsers - получить подключенных пользователей
@@ -269,7 +278,12 @@ func authenticateCollabWS(c *gin.Context) (uint, string, error) {
         if tokenParam == "" {
                 return 0, "", fmt.Errorf("no token provided")
         }
+        return parseCollabToken(tokenParam)
+}
 
+// parseCollabToken валидирует JWT и извлекает userID/username.
+// Общая логика для collab WS (?token=) и collab SSE (Authorization header или ?token=).
+func parseCollabToken(tokenParam string) (uint, string, error) {
         token, err := jwt.ParseWithClaims(tokenParam, &jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
                 if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
                         return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
