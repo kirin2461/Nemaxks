@@ -349,6 +349,13 @@ func handleRealtimeCollaboration(c *gin.Context) {
                 return
         }
 
+        // Рубильник (NSP spec §8): после auth — kill switch → close 4600,
+        // транспорт ws выключен → close 4503
+        if !enforceCollabWSTransport(ws, "ws") {
+                log.Printf("Collab WebSocket rejected: transport disabled (user %d)", userID)
+                return
+        }
+
         toolIDStr := c.Param("tool_id")
         toolID, errParse := strconv.ParseUint(toolIDStr, 10, 32)
         if errParse != nil {
@@ -451,6 +458,12 @@ func handleRealtimeCollaboration(c *gin.Context) {
 // сохранение, SaveToolSnapshot(changeType="sync"), broadcast, ответ {state, acked, applied}.
 // Старый формат {tool_id, update} оставлен рабочим.
 func handleCollaborationSync(c *gin.Context) {
+        // kill_all: collab-запись глушится, REST read-only жив (NSP spec §8)
+        if IsTransportEnabled("kill_all") {
+                c.JSON(http.StatusServiceUnavailable, gin.H{"error": "kill switch active"})
+                return
+        }
+
         var req struct {
                 ToolID uint        `json:"tool_id"`
                 Update *ToolUpdate `json:"update"`

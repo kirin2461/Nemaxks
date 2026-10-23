@@ -639,6 +639,13 @@ func handleWSConnection(c *gin.Context) {
 
 	userID = strconv.Itoa(int(uid))
 
+	// Рубильник (NSP spec §8): после auth — kill switch → close 4600,
+	// транспорт ws выключен → close 4503
+	if !enforceMessengerWSTransport(c, "ws") {
+		log.Printf("WebSocket rejected: transport disabled (user %s)", userID)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("WebSocket upgrade error: %v", err)
@@ -723,6 +730,13 @@ func handleWSTunnelConnection(c *gin.Context) {
 	}
 
 	userID = strconv.Itoa(int(uid))
+
+	// Рубильник (NSP spec §8): после auth — kill switch → close 4600,
+	// транспорт wstunnel выключен → close 4503
+	if !enforceMessengerWSTransport(c, "wstunnel") {
+		log.Printf("WSTunnel rejected: transport disabled (user %s)", userID)
+		return
+	}
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {

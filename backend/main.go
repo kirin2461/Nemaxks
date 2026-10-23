@@ -611,6 +611,8 @@ func main() {
 	r.POST("/api/super-admin/banners", authMiddleware(), superAdminMiddleware(), createNotificationBannerHandler)
 	r.PUT("/api/super-admin/banners/:id", authMiddleware(), superAdminMiddleware(), updateNotificationBannerHandler)
 	r.DELETE("/api/super-admin/banners/:id", authMiddleware(), superAdminMiddleware(), deleteNotificationBannerHandler)
+	r.GET("/api/super-admin/sync-transports", authMiddleware(), superAdminMiddleware(), getSyncTransportsHandler)
+	r.PUT("/api/super-admin/sync-transports", authMiddleware(), superAdminMiddleware(), putSyncTransportHandler)
 	r.GET("/api/banners/active", getActiveBannersHandler)
 
 	// Admin Panel

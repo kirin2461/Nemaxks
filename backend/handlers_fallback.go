@@ -395,6 +395,11 @@ func sseEventsHandler(c *gin.Context) {
 		return
 	}
 
+	// Рубильник (NSP spec §8): kill switch / SSE выключен → 503
+	if !enforceSyncTransportHTTP(c, "sse") {
+		return
+	}
+
 	// CORS: только origins из allowlist (см. isOriginAllowed в main.go),
 	// никакого отражения произвольного Origin.
 	origin := c.GetHeader("Origin")
@@ -467,6 +472,11 @@ func sseCollabEventsHandler(c *gin.Context) {
 	if authErr != nil {
 		log.Printf("[CollabSSE] rejected: %v", authErr)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Рубильник (NSP spec §8): kill switch / SSE выключен → 503
+	if !enforceSyncTransportHTTP(c, "sse") {
 		return
 	}
 

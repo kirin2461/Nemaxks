@@ -155,10 +155,14 @@ func initDB() {
 		&DMAccessSanction{},
 		&ExtendedAuditLog{},
 		&ToolSnapshot{},
+		// Рубильник транспортов синхронизации (NSP spec §8)
+		&SyncTransportSetting{},
+		&SyncTransportAudit{},
 	)
 	log.Println("DB connected")
 
 	initDefaultForbiddenWords()
+	seedSyncTransports()
 	ensureGlobalGuild()
 	ensureBridgeInfrastructure()
 	seedPremiumPlans()

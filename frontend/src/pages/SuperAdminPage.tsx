@@ -15,7 +15,8 @@ import {
   type JarvisStats,
   type AuditLog,
   type AbuseReport,
-  type NotificationBanner
+  type NotificationBanner,
+  type SyncTransportSetting
 } from '@/lib/api'
 import {
   Users,
@@ -59,7 +60,7 @@ import {
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 
-type TabType = 'dashboard' | 'users' | 'guilds' | 'moderation' | 'monitoring' | 'jarvis' | 'banners'
+type TabType = 'dashboard' | 'users' | 'guilds' | 'moderation' | 'monitoring' | 'jarvis' | 'banners' | 'sync'
 
 export default function SuperAdminPage() {
   const { user } = useStore()
@@ -93,6 +94,8 @@ export default function SuperAdminPage() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [tempPassword, setTempPassword] = useState<string | null>(null)
+  const [syncTransports, setSyncTransports] = useState<SyncTransportSetting[]>([])
+  const [killConfirmText, setKillConfirmText] = useState('')
 
   const loadSeqRef = useRef(0)
 
@@ -100,6 +103,61 @@ export default function SuperAdminPage() {
   useEffect(() => {
     return () => { loadSeqRef.current++ }
   }, [])
+
+  // Состояние рубильников при монтировании — чтобы баннер kill switch
+  // был виден на любой вкладке панели
+  useEffect(() => {
+    superAdminAPI.getSyncTransports()
+      .then(data => setSyncTransports(data || []))
+      .catch(() => {})
+  }, [])
+
+  const killSwitchActive = syncTransports.some(t => t.key === 'kill_all' && t.enabled)
+
+  const refreshSyncTransports = async () => {
+    const data = await superAdminAPI.getSyncTransports()
+    setSyncTransports(data || [])
+  }
+
+  const handleToggleTransport = async (key: string, enabled: boolean) => {
+    setActionLoading(true)
+    try {
+      await superAdminAPI.setSyncTransport(key, enabled)
+      await refreshSyncTransports()
+      toast.success(enabled ? 'Транспорт включён' : 'Транспорт выключен')
+    } catch (error) {
+      toast.error('Не удалось изменить настройку транспорта')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleKillSwitchOn = async () => {
+    setActionLoading(true)
+    try {
+      await superAdminAPI.setSyncTransport('kill_all', true)
+      await refreshSyncTransports()
+      setKillConfirmText('')
+      toast.success('Kill switch активирован: realtime-синхронизация отключена')
+    } catch (error) {
+      toast.error('Не удалось активировать kill switch')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleKillSwitchOff = async () => {
+    setActionLoading(true)
+    try {
+      await superAdminAPI.setSyncTransport('kill_all', false)
+      await refreshSyncTransports()
+      toast.success('Kill switch деактивирован')
+    } catch (error) {
+      toast.error('Не удалось деактивировать kill switch')
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   useEffect(() => {
     loadData()
@@ -154,6 +212,11 @@ export default function SuperAdminPage() {
           const bannersData = await superAdminAPI.getBanners()
           if (stale()) return
           setBanners(bannersData.banners || [])
+          break
+        case 'sync':
+          const transportsData = await superAdminAPI.getSyncTransports()
+          if (stale()) return
+          setSyncTransports(transportsData || [])
           break
       }
     } catch (error) {
@@ -391,6 +454,7 @@ export default function SuperAdminPage() {
     { id: 'monitoring', label: 'Мониторинг', icon: Activity },
     { id: 'jarvis', label: 'JARVIS', icon: Bot },
     { id: 'banners', label: 'Уведомления', icon: Bell },
+    { id: 'sync', label: 'Синхронизация', icon: Wifi },
   ] as const
 
   return (
@@ -400,6 +464,18 @@ export default function SuperAdminPage() {
           <Crown className="w-7 h-7 text-emerald-700" />
           <h1 className="text-2xl font-display font-bold text-graphite-900">Панель супер-администратора</h1>
         </div>
+
+        {killSwitchActive && (
+          <div className="mb-6 rounded-xl border border-destructive bg-destructive/10 p-4 flex items-center gap-3">
+            <AlertTriangle className="w-6 h-6 text-destructive flex-shrink-0" />
+            <div>
+              <div className="font-semibold text-destructive">Realtime отключён</div>
+              <div className="text-sm text-muted-foreground">
+                Активен аварийный kill switch: WebSocket, SSE и collab-запись заблокированы. REST API работает в read-only режиме.
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-4 mb-6 border-b border-border overflow-x-auto">
           {tabs.map(tab => (
@@ -1079,6 +1155,105 @@ export default function SuperAdminPage() {
                         </div>
                       </div>
                     ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'sync' && (
+              <div className="space-y-6">
+                <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
+                  <h3 className="text-lg font-semibold mb-1 flex items-center gap-2">
+                    <Wifi className="w-5 h-5" /> Транспорты синхронизации
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Рубильники realtime-транспортов. Изменения применяются мгновенно (до 5 секунд из-за кэша), без редеплоя.
+                  </p>
+                  <div className="space-y-3">
+                    {(['ws', 'wstunnel', 'sse', 'nsp'] as const).map(key => {
+                      const t = syncTransports.find(x => x.key === key)
+                      const enabled = t?.enabled ?? false
+                      const labels: Record<string, { name: string; desc: string }> = {
+                        ws: { name: 'WebSocket', desc: 'Collab-доски и мессенджер (/ws)' },
+                        wstunnel: { name: 'WS Tunnel', desc: 'Резервный WS-туннель мессенджера (/wstunnel)' },
+                        sse: { name: 'SSE', desc: 'Server-Sent Events (/api/sse/events, /api/sse/collab)' },
+                        nsp: { name: 'NSP', desc: 'Nebula Sync Protocol (в разработке, эндпоинтов пока нет)' },
+                      }
+                      return (
+                        <div key={key} className="flex items-center justify-between p-4 bg-graphite-100 border border-border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            {enabled
+                              ? <Wifi className="w-5 h-5 text-emerald-600" />
+                              : <WifiOff className="w-5 h-5 text-destructive" />}
+                            <div>
+                              <div className="font-medium text-sm">{labels[key].name} <span className="font-mono text-xs text-muted-foreground">({key})</span></div>
+                              <div className="text-xs text-muted-foreground">{labels[key].desc}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                Активных соединений: {t && t.active_connections >= 0 ? t.active_connections : 'н/д'}
+                                {t?.updated_at ? ` · изменено ${format(new Date(t.updated_at), 'MMM d, HH:mm')}` : ''}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            disabled={actionLoading || !t}
+                            onClick={() => handleToggleTransport(key, !enabled)}
+                            className={cn(
+                              "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-150 disabled:opacity-50",
+                              enabled ? "bg-emerald-600" : "bg-graphite-300"
+                            )}
+                          >
+                            <span className={cn(
+                              "inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-150",
+                              enabled ? "translate-x-6" : "translate-x-1"
+                            )} />
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border-2 border-destructive bg-destructive/5 p-6 shadow-soft">
+                  <h3 className="text-lg font-semibold mb-1 flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="w-5 h-5" /> Аварийный kill switch
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Полностью отключает realtime-синхронизацию (WebSocket, WS Tunnel, SSE, NSP) и collab-запись.
+                    Обычные REST-запросы и чтение продолжают работать — продукт деградирует до read-mostly режима.
+                  </p>
+                  {killSwitchActive ? (
+                    <div className="flex items-center justify-between p-4 bg-destructive/10 border border-destructive rounded-lg">
+                      <div className="font-medium text-sm text-destructive">Kill switch активен — realtime отключён</div>
+                      <button
+                        disabled={actionLoading}
+                        onClick={handleKillSwitchOff}
+                        className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors duration-150 disabled:opacity-50"
+                      >
+                        Восстановить realtime
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="text-sm">
+                        Для активации введите <span className="font-mono font-bold text-destructive">ОТКЛЮЧИТЬ</span>:
+                      </div>
+                      <div className="flex gap-3">
+                        <input
+                          type="text"
+                          value={killConfirmText}
+                          onChange={e => setKillConfirmText(e.target.value)}
+                          placeholder="ОТКЛЮЧИТЬ"
+                          className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-destructive/50"
+                        />
+                        <button
+                          disabled={actionLoading || killConfirmText !== 'ОТКЛЮЧИТЬ'}
+                          onClick={handleKillSwitchOn}
+                          className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors duration-150 disabled:opacity-50"
+                        >
+                          Активировать kill switch
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

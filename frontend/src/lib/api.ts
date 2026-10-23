@@ -988,7 +988,24 @@ export const superAdminAPI = {
     request<{ message: string }>(`/super-admin/banners/${bannerId}`, {
       method: "DELETE",
     }),
+
+  getSyncTransports: () =>
+    request<SyncTransportSetting[]>("/super-admin/sync-transports"),
+
+  setSyncTransport: (key: string, enabled: boolean) =>
+    request<SyncTransportSetting>("/super-admin/sync-transports", {
+      method: "PUT",
+      data: { key, enabled },
+    }),
 };
+
+export interface SyncTransportSetting {
+  key: 'ws' | 'wstunnel' | 'sse' | 'nsp' | 'kill_all' | string;
+  enabled: boolean;
+  updated_by: number;
+  updated_at: string;
+  active_connections: number;
+}
 
 export interface NotificationBanner {
   id: number;

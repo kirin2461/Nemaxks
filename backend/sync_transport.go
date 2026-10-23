@@ -1,0 +1,280 @@
+package main
+
+import (
+	"log"
+	"net/http"
+	"sync"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"gorm.io/gorm/clause"
+)
+
+// SyncTransportSetting — рубильник транспорта синхронизации (NSP spec §8).
+// key: ws | wstunnel | sse | nsp | kill_all.
+// Для транспортов enabled=true = транспорт работает; kill_all=true = аварийное
+// глушение всей realtime-синхронизации.
+type SyncTransportSetting struct {
+	Key       string    `gorm:"primaryKey;column:key" json:"key"`
+	Enabled   bool      `gorm:"column:enabled" json:"enabled"`
+	UpdatedBy uint      `gorm:"column:updated_by" json:"updated_by"`
+	UpdatedAt time.Time `gorm:"column:updated_at" json:"updated_at"`
+}
+
+func (SyncTransportSetting) TableName() string { return "sync_transport_settings" }
+
+// SyncTransportAudit — журнал каждого движения рубильника.
+type SyncTransportAudit struct {
+	ID        uint      `gorm:"primaryKey;column:id" json:"id"`
+	Key       string    `gorm:"column:key;index" json:"key"`
+	OldValue  bool      `gorm:"column:old_value" json:"old_value"`
+	NewValue  bool      `gorm:"column:new_value" json:"new_value"`
+	ChangedBy uint      `gorm:"column:changed_by" json:"changed_by"`
+	ChangedAt time.Time `gorm:"column:changed_at" json:"changed_at"`
+}
+
+func (SyncTransportAudit) TableName() string { return "sync_transport_audit" }
+
+// syncTransportKeys — whitelist допустимых ключей рубильника.
+var syncTransportKeys = map[string]bool{
+	"ws":       true,
+	"wstunnel": true,
+	"sse":      true,
+	"nsp":      true,
+	"kill_all": true,
+}
+
+// Дефолты при отсутствии записи/ошибке БД: транспорты включены, kill switch выключен.
+func syncTransportDefault(key string) bool { return key != "kill_all" }
+
+// --- Кэш: sync.Map + TTL 5s. Горячий путь не ходит в БД; инвалидация при PUT.
+
+const syncTransportCacheTTL = 5 * time.Second
+
+type syncTransportCacheEntry struct {
+	value    bool
+	loadedAt time.Time
+}
+
+var syncTransportCache sync.Map // key -> syncTransportCacheEntry
+
+// IsTransportEnabled возвращает состояние рубильника.
+// Семантика: для ws/wstunnel/sse/nsp true = транспорт работает;
+// для kill_all true = kill switch активен (всё realtime глушится).
+func IsTransportEnabled(key string) bool {
+	if v, ok := syncTransportCache.Load(key); ok {
+		if e, ok := v.(syncTransportCacheEntry); ok && time.Since(e.loadedAt) < syncTransportCacheTTL {
+			return e.value
+		}
+	}
+	var s SyncTransportSetting
+	if err := db.Where("key = ?", key).First(&s).Error; err != nil {
+		// БД недоступна/записи нет — stale-значение или дефолт
+		if v, ok := syncTransportCache.Load(key); ok {
+			if e, ok := v.(syncTransportCacheEntry); ok {
+				return e.value
+			}
+		}
+		return syncTransportDefault(key)
+	}
+	syncTransportCache.Store(key, syncTransportCacheEntry{value: s.Enabled, loadedAt: time.Now()})
+	return s.Enabled
+}
+
+// seedSyncTransports — upsert дефолтных ключей при старте (не затирает существующие).
+func seedSyncTransports() {
+	seeds := []SyncTransportSetting{
+		{Key: "ws", Enabled: true},
+		{Key: "wstunnel", Enabled: true},
+		{Key: "sse", Enabled: true},
+		{Key: "nsp", Enabled: true},
+		{Key: "kill_all", Enabled: false},
+	}
+	for i := range seeds {
+		seeds[i].UpdatedAt = time.Now()
+		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&seeds[i]).Error; err != nil {
+			log.Printf("sync-transports seed %s: %v", seeds[i].Key, err)
+		}
+	}
+}
+
+// --- Счётчики активных соединений по транспортам (для админки).
+// -1 = точный счёт недоступен/неприменим.
+
+func countCollabWSConnections() int {
+	total := 0
+	SessionMu.RLock()
+	sessions := make([]*CollaborativeSession, 0, len(Sessions))
+	for _, s := range Sessions {
+		sessions = append(sessions, s)
+	}
+	SessionMu.RUnlock()
+	for _, s := range sessions {
+		s.Mutex.RLock()
+		total += len(s.Connections)
+		s.Mutex.RUnlock()
+	}
+	return total
+}
+
+func countMessengerWSConnections() int {
+	hub.mu.RLock()
+	defer hub.mu.RUnlock()
+	return len(hub.clients)
+}
+
+func countSSEConnections() int {
+	sseHub.mu.RLock()
+	total := len(sseHub.clients)
+	sseHub.mu.RUnlock()
+	collabSSEHub.mu.RLock()
+	for _, subs := range collabSSEHub.subs {
+		total += len(subs)
+	}
+	collabSSEHub.mu.RUnlock()
+	return total
+}
+
+func syncTransportConnectionCounts() map[string]int {
+	return map[string]int{
+		// ws: мессенджер /ws + collab WS (wstunnel делит hub с /ws, разделить нельзя)
+		"ws":       countMessengerWSConnections() + countCollabWSConnections(),
+		"wstunnel": -1, // соединения /wstunnel неотличимы от /ws в общем hub
+		"sse":      countSSEConnections(),
+		"nsp":      -1, // эндпоинтов NSP пока нет (протокол отложен)
+		"kill_all": -1,
+	}
+}
+
+// --- Enforcement helpers (матрица из NSP spec §8)
+
+// enforceSyncTransportHTTP — для SSE/REST: 503 {"error":...} при выключенном
+// транспорте или активном kill switch. Возвращает false, если запрос отклонён.
+func enforceSyncTransportHTTP(c *gin.Context, transportKey string) bool {
+	if IsTransportEnabled("kill_all") {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "kill switch active"})
+		return false
+	}
+	if !IsTransportEnabled(transportKey) {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "transport disabled"})
+		return false
+	}
+	return true
+}
+
+// enforceCollabWSTransport — для уже поднятого collab WS: close 4600 (kill switch)
+// или 4503 (транспорт выкл). Вызывать ПОСЛЕ auth. false = соединение закрыто.
+func enforceCollabWSTransport(ws *websocket.Conn, transportKey string) bool {
+	if IsTransportEnabled("kill_all") {
+		ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(4600, "kill switch active"))
+		return false
+	}
+	if !IsTransportEnabled(transportKey) {
+		ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(4503, "transport disabled"))
+		return false
+	}
+	return true
+}
+
+// rejectMessengerWS — для messenger /ws и /wstunnel: upgrade + close с кодом,
+// чтобы клиент получил осмысленный close code (4503/4600), а не HTTP-ошибку.
+func rejectMessengerWS(c *gin.Context, code int, reason string) {
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+	conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(code, reason))
+}
+
+// enforceMessengerWSTransport — после успешной auth, до регистрации в hub.
+// false = соединение отклонено (ответ уже отправлен).
+func enforceMessengerWSTransport(c *gin.Context, transportKey string) bool {
+	if IsTransportEnabled("kill_all") {
+		rejectMessengerWS(c, 4600, "kill switch active")
+		return false
+	}
+	if !IsTransportEnabled(transportKey) {
+		rejectMessengerWS(c, 4503, "transport disabled")
+		return false
+	}
+	return true
+}
+
+// --- Handlers (за authMiddleware + superAdminMiddleware)
+
+// GET /api/super-admin/sync-transports → [{key, enabled, updated_by, updated_at, active_connections}]
+func getSyncTransportsHandler(c *gin.Context) {
+	var settings []SyncTransportSetting
+	if err := db.Order("key").Find(&settings).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load sync transport settings"})
+		return
+	}
+	counts := syncTransportConnectionCounts()
+	out := make([]gin.H, 0, len(settings))
+	for _, s := range settings {
+		out = append(out, gin.H{
+			"key":                s.Key,
+			"enabled":            s.Enabled,
+			"updated_by":         s.UpdatedBy,
+			"updated_at":         s.UpdatedAt,
+			"active_connections": counts[s.Key],
+		})
+	}
+	c.JSON(http.StatusOK, out)
+}
+
+// PUT /api/super-admin/sync-transports {key, enabled} → обновление + аудит
+func putSyncTransportHandler(c *gin.Context) {
+	var req struct {
+		Key     string `json:"key"`
+		Enabled *bool  `json:"enabled"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.Enabled == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "key and enabled are required"})
+		return
+	}
+	if !syncTransportKeys[req.Key] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown transport key"})
+		return
+	}
+
+	changedBy, _ := getUserIDFromContext(c)
+
+	var s SyncTransportSetting
+	if err := db.Where("key = ?", req.Key).First(&s).Error; err != nil {
+		// Записи нет (не засидена) — создаём с дефолтом, затем применяем
+		s = SyncTransportSetting{Key: req.Key, Enabled: syncTransportDefault(req.Key)}
+	}
+	oldValue := s.Enabled
+	s.Enabled = *req.Enabled
+	s.UpdatedBy = changedBy
+	s.UpdatedAt = time.Now()
+	if err := db.Save(&s).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update setting"})
+		return
+	}
+
+	audit := SyncTransportAudit{
+		Key:       req.Key,
+		OldValue:  oldValue,
+		NewValue:  *req.Enabled,
+		ChangedBy: changedBy,
+		ChangedAt: time.Now(),
+	}
+	if err := db.Create(&audit).Error; err != nil {
+		log.Printf("sync-transports audit write failed: %v", err)
+	}
+
+	// Инвалидация кэша: сразу кладём новое значение
+	syncTransportCache.Store(req.Key, syncTransportCacheEntry{value: s.Enabled, loadedAt: time.Now()})
+
+	log.Printf("sync-transports: %s %v -> %v by user %d", req.Key, oldValue, s.Enabled, changedBy)
+	c.JSON(http.StatusOK, gin.H{
+		"key":        s.Key,
+		"enabled":    s.Enabled,
+		"updated_by": s.UpdatedBy,
+		"updated_at": s.UpdatedAt,
+	})
+}
