@@ -584,7 +584,7 @@ Absolutely! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines. We 
 
 ---
 
-## ✅ QA Status (2026-10-22)
+## ✅ QA Status (2026-10-23)
 
 Пройдено 10 этапов независимого QA (AI-agent: браузер + API + серверные логи + статический аудит):
 
@@ -594,8 +594,9 @@ Absolutely! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines. We 
 | 8 | Архитектурные UI-баги: роутинг, дубли UI, синхронизация состояния, REST-спам | 7 багов найдено и исправлено: idempotency (double-post, дубли каналов), display_name E2E, затенённый маршрут /profile/customize, бейджи непрочитанного, WS stale closure, backoff поллинга |
 | 9 | Загрузка файлов: лимиты (50MB медиа / 500MB видео), асинхронность, мультизагрузка x12, обрыв сети | PASS; исправлен критичный nginx-баг недоступности /uploads |
 | 10 | Инструменты канала (Доска/Блокнот) + real-time collab-редактор | Исправлено: молчаливый 403 пейволла (toast с тарифом), недостижимый тариф Premium (data-фикс tier), фильтрация списка по вкладкам. Collab: CRDT LWW, avg 11.7ms, reconnect без потерь, presence с курсорами — PASS |
+| 11 | Харднинг collab-бэкенда (по рискам этапа 10) | Закрыта уязвимость доступа: WS/REST collab-эндпоинты теперь проверяют права на канал (WS close 4403/4404, REST 403/404 — эксплойт воспроизводился до фикса, после — отклонён). Сессии per-connection (гонка reconnect устранена), WS ping/pong keepalive (30s/70s), сериализация CRDT-merge per-tool (устранён lost update при одновременной записи). Регрессия C1–C4: PASS |
 
-Последний QA-коммит: `207dec9` (main). Анти-фрод контент-фильтр с авто-баном покрыт регрессионными тестами (`backend/fraud_keywords_test.go`).
+Последний QA-коммит: `1120050` (main). Анти-фрод контент-фильтр с авто-баном покрыт регрессионными тестами (`backend/fraud_keywords_test.go`).
 
 ---
 
