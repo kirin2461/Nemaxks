@@ -738,6 +738,11 @@ func main() {
 	r.GET("/ws/collab/:channel_id/:tool_id", handleRealtimeCollaboration)
 	// Scoped SSE-резерв для collab (JWT сам валидирует: Authorization header или ?token=)
 	r.GET("/api/sse/collab/:channel_id/:tool_id", sseCollabEventsHandler)
+	// NSP v2.1 «RU-Lite»: dual-HTTPS транспорт для collab (спека §2).
+	// authMiddleware НЕ используется — JWT внутри AUTH-фрейма (спека §5).
+	r.POST("/api/nsp/v2/up", nspUpHandler)
+	r.GET("/api/nsp/v2/down", nspDownHandler)
+	r.POST("/api/nsp/v2/send", nspSendHandler)
 	r.POST("/api/collab/sync", authMiddleware(), handleCollaborationSync)
 	r.GET("/api/collab/users/:channel_id/:tool_id", authMiddleware(), handleGetCollaborationUsers)
 	r.POST("/api/collab/cursor", authMiddleware(), handleUpdateCursorPosition)

@@ -142,7 +142,7 @@ func syncTransportConnectionCounts() map[string]int {
 		"ws":       countMessengerWSConnections() + countCollabWSConnections(),
 		"wstunnel": -1, // соединения /wstunnel неотличимы от /ws в общем hub
 		"sse":      countSSEConnections(),
-		"nsp":      -1, // эндпоинтов NSP пока нет (протокол отложен)
+		"nsp":      countNSPConnections(),
 		"kill_all": -1,
 	}
 }
@@ -301,6 +301,7 @@ func forceCloseForSwitch(key string, enabled bool) {
 		n := forceCloseCollabWS(4600, "kill switch active")
 		n += forceCloseMessengerWS(4600, "kill switch active")
 		n += forceCloseSSE()
+		n += forceCloseNSP()
 		log.Printf("sync-transports: kill_all on — force-closed %d active connections", n)
 		return
 	}
@@ -320,7 +321,8 @@ func forceCloseForSwitch(key string, enabled bool) {
 		// активные не закрываем, действует только на новые подключения.
 		log.Printf("sync-transports: wstunnel off — active connections left open (shared hub with /ws)")
 	case "nsp":
-		// Эндпоинтов NSP пока нет — закрывать нечего.
+		n := forceCloseNSP()
+		log.Printf("sync-transports: nsp off — force-closed %d active connections", n)
 	}
 }
 

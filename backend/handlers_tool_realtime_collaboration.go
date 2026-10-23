@@ -155,6 +155,8 @@ func (s *CollaborativeSession) BroadcastOps(ops []CRDTOp) {
 
         // Дублируем в collab-SSE hub (резервный транспорт для клиентов без WS)
         collabSSEHub.publish(s.ToolID, msg, 0)
+        // Дублируем в NSP hub (dual-HTTPS транспорт, NSP spec v2.1)
+        nspPublish(s.ToolID, msg, 0)
 }
 
 // toolMergeLocks - per-tool мьютексы: сериализация read-modify-write (db.First -> ApplyCRDTOps -> db.Save),
@@ -168,25 +170,26 @@ func lockToolMerge(toolID uint) func() {
         return mu.Unlock
 }
 
-// MergeOpsToTool - применить CRDT-операции к содержимому инструмента и сохранить
-func MergeOpsToTool(toolID uint, ops []CRDTOp, userID uint) error {
+// MergeOpsToTool - применить CRDT-операции к содержимому инструмента и сохранить.
+// Возвращает количество реально применённых операций (для NSP ACK, спека §3.5).
+func MergeOpsToTool(toolID uint, ops []CRDTOp, userID uint) (int, error) {
         unlock := lockToolMerge(toolID)
         defer unlock()
 
         var tool ChannelTool
         if err := db.First(&tool, toolID).Error; err != nil {
-                return err
+                return 0, err
         }
-        newContent, _ := ApplyCRDTOps(tool.Content, ops)
+        newContent, applied := ApplyCRDTOps(tool.Content, ops)
         tool.Content = newContent
         tool.UpdatedAt = GetCurrentTimestamp()
         if err := db.Save(&tool).Error; err != nil {
-                return err
+                return 0, err
         }
         if err := SaveToolSnapshot(toolID, "", "", userID, "sync"); err != nil {
                 log.Printf("Failed to save sync snapshot for tool %d: %v", toolID, err)
         }
-        return nil
+        return applied, nil
 }
 
 // BroadcastCursor - рассылают курсоры
@@ -212,6 +215,8 @@ func (s *CollaborativeSession) BroadcastCursor(cursor *CursorPos) {
 
         // Дублируем в collab-SSE hub; автор курсора своё эхо не получает
         collabSSEHub.publish(s.ToolID, msg, cursor.UserID)
+        // Дублируем в NSP hub (dual-HTTPS транспорт, NSP spec v2.1)
+        nspPublish(s.ToolID, msg, cursor.UserID)
 }
 
 // BroadcastState - рассылает полное состояние (sync_state) всем в сессии
@@ -235,6 +240,8 @@ func (s *CollaborativeSession) BroadcastState(state interface{}) {
 
         // Дублируем в collab-SSE hub (резервный транспорт для клиентов без WS)
         collabSSEHub.publish(s.ToolID, msg, 0)
+        // Дублируем в NSP hub (dual-HTTPS транспорт, NSP spec v2.1)
+        nspPublish(s.ToolID, msg, 0)
 }
 
 // GetConnectedUsers - получить подключенных пользователей
@@ -444,7 +451,7 @@ func handleRealtimeCollaboration(c *gin.Context) {
                 }
                 if len(msg.Ops) > 0 {
                         // CRDT-операции от клиента: merge в БД + broadcast остальным
-                        if err := MergeOpsToTool(uint(toolID), msg.Ops, userID); err != nil {
+                        if _, err := MergeOpsToTool(uint(toolID), msg.Ops, userID); err != nil {
                                 log.Printf("WS collab: failed to merge ops for tool %d: %v", toolID, err)
                                 continue
                         }
