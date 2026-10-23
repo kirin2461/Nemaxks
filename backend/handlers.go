@@ -158,6 +158,9 @@ func initDB() {
 		// Рубильник транспортов синхронизации (NSP spec §8)
 		&SyncTransportSetting{},
 		&SyncTransportAudit{},
+		// SPA-подпись админ-действий рубильника (NSP spec §6)
+		&AdminSPAKey{},
+		&AdminSPANonce{},
 	)
 	log.Println("DB connected")
 

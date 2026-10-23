@@ -613,6 +613,9 @@ func main() {
 	r.DELETE("/api/super-admin/banners/:id", authMiddleware(), superAdminMiddleware(), deleteNotificationBannerHandler)
 	r.GET("/api/super-admin/sync-transports", authMiddleware(), superAdminMiddleware(), getSyncTransportsHandler)
 	r.PUT("/api/super-admin/sync-transports", authMiddleware(), superAdminMiddleware(), putSyncTransportHandler)
+	r.POST("/api/super-admin/spa-keys", authMiddleware(), superAdminMiddleware(), registerSPAKeyHandler)
+	r.GET("/api/super-admin/spa-keys", authMiddleware(), superAdminMiddleware(), listSPAKeysHandler)
+	r.DELETE("/api/super-admin/spa-keys/:key_id", authMiddleware(), superAdminMiddleware(), revokeSPAKeyHandler)
 	r.GET("/api/banners/active", getActiveBannersHandler)
 
 	// Admin Panel

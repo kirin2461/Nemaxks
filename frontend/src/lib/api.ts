@@ -992,12 +992,36 @@ export const superAdminAPI = {
   getSyncTransports: () =>
     request<SyncTransportSetting[]>("/super-admin/sync-transports"),
 
-  setSyncTransport: (key: string, enabled: boolean) =>
+  setSyncTransport: (key: string, enabled: boolean, headers?: Record<string, string>) =>
     request<SyncTransportSetting>("/super-admin/sync-transports", {
       method: "PUT",
       data: { key, enabled },
+      headers,
+    }),
+
+  // SPA-ключи (NSP spec §6): регистрация/список/отзыв Ed25519 pubkey
+  getSPAKeys: () =>
+    request<AdminSPAKey[]>("/super-admin/spa-keys"),
+
+  registerSPAKey: (pubkey: string) =>
+    request<AdminSPAKey>("/super-admin/spa-keys", {
+      method: "POST",
+      data: { pubkey },
+    }),
+
+  revokeSPAKey: (keyId: string) =>
+    request<{ key_id: string; revoked: boolean }>(`/super-admin/spa-keys/${encodeURIComponent(keyId)}`, {
+      method: "DELETE",
     }),
 };
+
+export interface AdminSPAKey {
+  key_id: string;
+  pubkey: string;
+  created_by: number;
+  created_at: string;
+  revoked: boolean;
+}
 
 export interface SyncTransportSetting {
   key: 'ws' | 'wstunnel' | 'sse' | 'nsp' | 'kill_all' | string;

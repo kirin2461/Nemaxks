@@ -16,8 +16,10 @@ import {
   type AuditLog,
   type AbuseReport,
   type NotificationBanner,
-  type SyncTransportSetting
+  type SyncTransportSetting,
+  type AdminSPAKey
 } from '@/lib/api'
+import { generateSPAKeyPair, signSPARequest, getSPAKey, saveSPAKey, deleteSPAKey } from '@/lib/spaKeys'
 import {
   Users,
   Shield,
@@ -96,6 +98,8 @@ export default function SuperAdminPage() {
   const [tempPassword, setTempPassword] = useState<string | null>(null)
   const [syncTransports, setSyncTransports] = useState<SyncTransportSetting[]>([])
   const [killConfirmText, setKillConfirmText] = useState('')
+  const [spaKeys, setSpaKeys] = useState<AdminSPAKey[]>([])
+  const [spaLocalKeyId, setSpaLocalKeyId] = useState<string | null>(null)
 
   const loadSeqRef = useRef(0)
 
@@ -110,6 +114,10 @@ export default function SuperAdminPage() {
     superAdminAPI.getSyncTransports()
       .then(data => setSyncTransports(data || []))
       .catch(() => {})
+    superAdminAPI.getSPAKeys()
+      .then(data => setSpaKeys(data || []))
+      .catch(() => {})
+    getSPAKey().then(k => setSpaLocalKeyId(k?.keyId ?? null)).catch(() => {})
   }, [])
 
   const killSwitchActive = syncTransports.some(t => t.key === 'kill_all' && t.enabled)
@@ -119,14 +127,72 @@ export default function SuperAdminPage() {
     setSyncTransports(data || [])
   }
 
+  const refreshSPAKeys = async () => {
+    const data = await superAdminAPI.getSPAKeys()
+    setSpaKeys(data || [])
+  }
+
+  // PUT рубильника; при 403 spa_required — автоматически подписываем
+  // запрос локальным Ed25519-ключом из IndexedDB и повторяем (NSP spec §6)
+  const setTransportSigned = async (key: string, enabled: boolean) => {
+    try {
+      return await superAdminAPI.setSyncTransport(key, enabled)
+    } catch (err: any) {
+      if (err?.status !== 403 || err?.data?.error !== 'spa_required') throw err
+      const headers = await signSPARequest(key, enabled)
+      if (!headers) {
+        throw new Error('no_spa_key')
+      }
+      return await superAdminAPI.setSyncTransport(key, enabled, headers)
+    }
+  }
+
+  const handleRegisterSPAKey = async () => {
+    setActionLoading(true)
+    try {
+      const { pubkeyB64, pkcs8B64 } = await generateSPAKeyPair()
+      const rec = await superAdminAPI.registerSPAKey(pubkeyB64)
+      await saveSPAKey({ keyId: rec.key_id, pkcs8: pkcs8B64, createdAt: Date.now() })
+      setSpaLocalKeyId(rec.key_id)
+      await refreshSPAKeys()
+      toast.success(`SPA-ключ зарегистрирован: ${rec.key_id}`)
+    } catch (err) {
+      console.error('SPA key registration failed:', err)
+      toast.error('Не удалось зарегистрировать SPA-ключ (нужен браузер с WebCrypto Ed25519)')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleRevokeSPAKey = async (keyId: string) => {
+    setActionLoading(true)
+    try {
+      await superAdminAPI.revokeSPAKey(keyId)
+      if (spaLocalKeyId === keyId) {
+        await deleteSPAKey()
+        setSpaLocalKeyId(null)
+      }
+      await refreshSPAKeys()
+      toast.success('SPA-ключ отозван')
+    } catch (err) {
+      toast.error('Не удалось отозвать SPA-ключ')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   const handleToggleTransport = async (key: string, enabled: boolean) => {
     setActionLoading(true)
     try {
-      await superAdminAPI.setSyncTransport(key, enabled)
+      await setTransportSigned(key, enabled)
       await refreshSyncTransports()
       toast.success(enabled ? 'Транспорт включён' : 'Транспорт выключен')
-    } catch (error) {
-      toast.error('Не удалось изменить настройку транспорта')
+    } catch (error: any) {
+      if (error?.message === 'no_spa_key') {
+        toast.error('Требуется SPA-подпись: зарегистрируйте SPA-ключ ниже')
+      } else {
+        toast.error('Не удалось изменить настройку транспорта')
+      }
     } finally {
       setActionLoading(false)
     }
@@ -135,12 +201,16 @@ export default function SuperAdminPage() {
   const handleKillSwitchOn = async () => {
     setActionLoading(true)
     try {
-      await superAdminAPI.setSyncTransport('kill_all', true)
+      await setTransportSigned('kill_all', true)
       await refreshSyncTransports()
       setKillConfirmText('')
       toast.success('Kill switch активирован: realtime-синхронизация отключена')
-    } catch (error) {
-      toast.error('Не удалось активировать kill switch')
+    } catch (error: any) {
+      if (error?.message === 'no_spa_key') {
+        toast.error('Требуется SPA-подпись: зарегистрируйте SPA-ключ ниже')
+      } else {
+        toast.error('Не удалось активировать kill switch')
+      }
     } finally {
       setActionLoading(false)
     }
@@ -149,11 +219,15 @@ export default function SuperAdminPage() {
   const handleKillSwitchOff = async () => {
     setActionLoading(true)
     try {
-      await superAdminAPI.setSyncTransport('kill_all', false)
+      await setTransportSigned('kill_all', false)
       await refreshSyncTransports()
       toast.success('Kill switch деактивирован')
-    } catch (error) {
-      toast.error('Не удалось деактивировать kill switch')
+    } catch (error: any) {
+      if (error?.message === 'no_spa_key') {
+        toast.error('Требуется SPA-подпись: зарегистрируйте SPA-ключ ниже')
+      } else {
+        toast.error('Не удалось деактивировать kill switch')
+      }
     } finally {
       setActionLoading(false)
     }
@@ -1177,7 +1251,7 @@ export default function SuperAdminPage() {
                         ws: { name: 'WebSocket', desc: 'Collab-доски и мессенджер (/ws)' },
                         wstunnel: { name: 'WS Tunnel', desc: 'Резервный WS-туннель мессенджера (/wstunnel)' },
                         sse: { name: 'SSE', desc: 'Server-Sent Events (/api/sse/events, /api/sse/collab)' },
-                        nsp: { name: 'NSP', desc: 'Nebula Sync Protocol (в разработке, эндпоинтов пока нет)' },
+                        nsp: { name: 'NSP', desc: 'Nebula Sync Protocol (/api/nsp/v2, chunked HTTPS fallback)' },
                       }
                       return (
                         <div key={key} className="flex items-center justify-between p-4 bg-graphite-100 border border-border rounded-lg">
@@ -1253,6 +1327,74 @@ export default function SuperAdminPage() {
                           Активировать kill switch
                         </button>
                       </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* SPA-подпись админ-действий (NSP spec §6): защита kill switch от угона JWT */}
+                <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
+                  <h3 className="text-lg font-semibold mb-1 flex items-center gap-2">
+                    <Key className="w-5 h-5" /> SPA-подпись админ-действий
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Ed25519-ключ генерируется в браузере (WebCrypto), приватный ключ хранится только в IndexedDB
+                    этого браузера и никогда не отправляется на сервер. После регистрации первого ключа
+                    kill switch требует подписи в обе стороны — угнанный JWT не сможет ни включить, ни выключить его.
+                  </p>
+                  {spaKeys.filter(k => !k.revoked).length === 0 ? (
+                    <div className="flex items-center justify-between gap-3 p-4 bg-graphite-100 border border-border rounded-lg">
+                      <div className="text-sm text-muted-foreground">
+                        {spaLocalKeyId
+                          ? 'Локальный ключ есть в этом браузере, но на сервере активных ключей нет.'
+                          : 'SPA-ключ не зарегистрирован — kill switch пока работает по JWT. Зарегистрируйте ключ для защиты от угона токена.'}
+                      </div>
+                      <button
+                        onClick={handleRegisterSPAKey}
+                        disabled={actionLoading}
+                        className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-emerald-800 transition-colors duration-150 disabled:opacity-50 shrink-0"
+                      >
+                        Зарегистрировать SPA-ключ
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {spaKeys.map(k => (
+                        <div key={k.key_id} className="flex items-center justify-between p-4 bg-graphite-100 border border-border rounded-lg">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {k.revoked
+                              ? <XCircle className="w-5 h-5 text-destructive shrink-0" />
+                              : <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />}
+                            <div className="min-w-0">
+                              <div className="font-medium text-sm font-mono truncate">
+                                {k.key_id}
+                                {spaLocalKeyId === k.key_id && !k.revoked && (
+                                  <span className="ml-2 text-xs text-emerald-600 font-sans">(локальный ключ этого браузера)</span>
+                                )}
+                                {k.revoked && <span className="ml-2 text-xs text-destructive font-sans">(отозван)</span>}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                зарегистрирован {format(new Date(k.created_at), 'MMM d, HH:mm')}
+                              </div>
+                            </div>
+                          </div>
+                          {!k.revoked && (
+                            <button
+                              onClick={() => handleRevokeSPAKey(k.key_id)}
+                              disabled={actionLoading}
+                              className="px-3 py-1.5 rounded-lg text-sm text-destructive hover:bg-danger-soft transition-colors duration-150 disabled:opacity-50 shrink-0"
+                            >
+                              Отозвать
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        onClick={handleRegisterSPAKey}
+                        disabled={actionLoading}
+                        className="px-4 py-2 rounded-lg bg-secondary text-sm font-medium hover:bg-graphite-200 transition-colors duration-150 disabled:opacity-50"
+                      >
+                        Зарегистрировать новый ключ (этот браузер)
+                      </button>
                     </div>
                   )}
                 </div>

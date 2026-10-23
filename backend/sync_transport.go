@@ -32,21 +32,28 @@ type SyncTransportAudit struct {
 	NewValue  bool      `gorm:"column:new_value" json:"new_value"`
 	ChangedBy uint      `gorm:"column:changed_by" json:"changed_by"`
 	ChangedAt time.Time `gorm:"column:changed_at" json:"changed_at"`
+	SpaKeyID  string    `gorm:"column:spa_key_id" json:"spa_key_id"` // SPA-подпись (NSP spec §6), "" если не требовалась
 }
 
 func (SyncTransportAudit) TableName() string { return "sync_transport_audit" }
 
 // syncTransportKeys — whitelist допустимых ключей рубильника.
+// spa_required_for_all — не транспорт, а настройка SPA (NSP spec §6):
+// true = SPA-подпись требуется для ВСЕХ ключей, не только kill_all.
 var syncTransportKeys = map[string]bool{
-	"ws":       true,
-	"wstunnel": true,
-	"sse":      true,
-	"nsp":      true,
-	"kill_all": true,
+	"ws":                   true,
+	"wstunnel":             true,
+	"sse":                  true,
+	"nsp":                  true,
+	"kill_all":             true,
+	"spa_required_for_all": true,
 }
 
-// Дефолты при отсутствии записи/ошибке БД: транспорты включены, kill switch выключен.
-func syncTransportDefault(key string) bool { return key != "kill_all" }
+// Дефолты при отсутствии записи/ошибке БД: транспорты включены,
+// kill switch выключен, SPA-for-all выключен.
+func syncTransportDefault(key string) bool {
+	return key != "kill_all" && key != "spa_required_for_all"
+}
 
 // --- Кэш: sync.Map + TTL 5s. Горячий путь не ходит в БД; инвалидация при PUT.
 
@@ -90,6 +97,7 @@ func seedSyncTransports() {
 		{Key: "sse", Enabled: true},
 		{Key: "nsp", Enabled: true},
 		{Key: "kill_all", Enabled: false},
+		{Key: "spa_required_for_all", Enabled: false}, // NSP spec §6: SPA по дефолту только для kill_all
 	}
 	for i := range seeds {
 		seeds[i].UpdatedAt = time.Now()
@@ -139,11 +147,12 @@ func countSSEConnections() int {
 func syncTransportConnectionCounts() map[string]int {
 	return map[string]int{
 		// ws: мессенджер /ws + collab WS (wstunnel делит hub с /ws, разделить нельзя)
-		"ws":       countMessengerWSConnections() + countCollabWSConnections(),
-		"wstunnel": -1, // соединения /wstunnel неотличимы от /ws в общем hub
-		"sse":      countSSEConnections(),
-		"nsp":      countNSPConnections(),
-		"kill_all": -1,
+		"ws":                   countMessengerWSConnections() + countCollabWSConnections(),
+		"wstunnel":             -1, // соединения /wstunnel неотличимы от /ws в общем hub
+		"sse":                  countSSEConnections(),
+		"nsp":                  countNSPConnections(),
+		"kill_all":             -1,
+		"spa_required_for_all": -1,
 	}
 }
 
@@ -366,6 +375,19 @@ func putSyncTransportHandler(c *gin.Context) {
 
 	changedBy, _ := getUserIDFromContext(c)
 
+	// SPA-подпись (NSP spec §6): kill_all в обе стороны (+ все ключи при
+	// spa_required_for_all=true) требуют Ed25519-подписи, если у админа
+	// есть зарегистрированный ключ. Без ключа — JWT достаточно (backward compat).
+	spaKeyID := ""
+	if spaRequired(changedBy, req.Key) {
+		code, kid := verifySPA(c, changedBy, req.Key, *req.Enabled)
+		if code != "" {
+			c.JSON(http.StatusForbidden, gin.H{"error": code})
+			return
+		}
+		spaKeyID = kid
+	}
+
 	var s SyncTransportSetting
 	if err := db.Where("key = ?", req.Key).First(&s).Error; err != nil {
 		// Записи нет (не засидена) — создаём с дефолтом, затем применяем
@@ -386,6 +408,7 @@ func putSyncTransportHandler(c *gin.Context) {
 		NewValue:  *req.Enabled,
 		ChangedBy: changedBy,
 		ChangedAt: time.Now(),
+		SpaKeyID:  spaKeyID,
 	}
 	if err := db.Create(&audit).Error; err != nil {
 		log.Printf("sync-transports audit write failed: %v", err)
