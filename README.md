@@ -595,8 +595,9 @@ Absolutely! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines. We 
 | 9 | Загрузка файлов: лимиты (50MB медиа / 500MB видео), асинхронность, мультизагрузка x12, обрыв сети | PASS; исправлен критичный nginx-баг недоступности /uploads |
 | 10 | Инструменты канала (Доска/Блокнот) + real-time collab-редактор | Исправлено: молчаливый 403 пейволла (toast с тарифом), недостижимый тариф Premium (data-фикс tier), фильтрация списка по вкладкам. Collab: CRDT LWW, avg 11.7ms, reconnect без потерь, presence с курсорами — PASS |
 | 11 | Харднинг collab-бэкенда (по рискам этапа 10) | Закрыта уязвимость доступа: WS/REST collab-эндпоинты теперь проверяют права на канал (WS close 4403/4404, REST 403/404 — эксплойт воспроизводился до фикса, после — отклонён). Сессии per-connection (гонка reconnect устранена), WS ping/pong keepalive (30s/70s), сериализация CRDT-merge per-tool (устранён lost update при одновременной записи). Регрессия C1–C4: PASS |
+| 12 | Трёхуровневая синхронизация, этап 1: WS → SSE (long_polling вырезан) | Backend: scoped SSE `GET /api/sse/collab/:channel_id/:tool_id` (JWT header или ?token=, те же R1 access-проверки 403/404, heartbeat 15s), collabSSEHub дублирует BroadcastOps/Cursor/State (cursor-эхо автору не уходит). Починен глобальный WriteTimeout 15s, убивавший любой SSE-поток на 15-й секунде (deadline продлевается на каждый фрейм). Frontend: connectionManager без long_polling (websocket → wstunnel → sse → disconnected); ToolEditorPage после 2 неудачных WS-reconnect открывает EventSource для входящих (общий handleWsMessage, эхо своих ops идемпотентно по lamport), handover SSE→WS при восстановлении. Тесты T1–T6: PASS (SSE heartbeat, ops/cursor доставка, R1-негативы 403/404, регрессия WS, bundle без long_polling) |
 
-Последний QA-коммит: `1120050` (main). Анти-фрод контент-фильтр с авто-баном покрыт регрессионными тестами (`backend/fraud_keywords_test.go`).
+Последний QA-коммит: `GIT_HASH_PLACEHOLDER` (main). Анти-фрод контент-фильтр с авто-баном покрыт регрессионными тестами (`backend/fraud_keywords_test.go`).
 
 ---
 
