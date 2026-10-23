@@ -202,6 +202,128 @@ func enforceMessengerWSTransport(c *gin.Context, transportKey string) bool {
 	return true
 }
 
+// --- Force-close активных соединений (рубильник гасит мгновенно, NSP spec §8).
+// Паттерн: собираем цели под локом, закрываем вне лока (избегаем deadlock).
+// Close-фрейм шлём через WriteControl — единственный метод gorilla/websocket,
+// безопасный для конкурентного вызова параллельно с write-pump'ами.
+
+// forceCloseCollabWS закрывает все активные collab WS-соединения с кодом/reason.
+func forceCloseCollabWS(code int, reason string) int {
+	type target struct {
+		s      *CollaborativeSession
+		connID string
+		ws     *websocket.Conn
+	}
+	var targets []target
+
+	SessionMu.RLock()
+	sessions := make([]*CollaborativeSession, 0, len(Sessions))
+	for _, s := range Sessions {
+		sessions = append(sessions, s)
+	}
+	SessionMu.RUnlock()
+
+	for _, s := range sessions {
+		s.Mutex.RLock()
+		for connID, conn := range s.Connections {
+			if conn.WS != nil {
+				targets = append(targets, target{s, connID, conn.WS})
+			}
+		}
+		s.Mutex.RUnlock()
+	}
+
+	for _, t := range targets {
+		// Close-фрейм (клиент получит код), затем TCP-close → read-loop обрывается
+		t.ws.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(code, reason), time.Now().Add(5*time.Second))
+		t.ws.Close()
+		// RemoveUser закрывает conn.Chan → write-pump выходит; повторный defer RemoveUser в handler — no-op
+		t.s.RemoveUser(t.connID)
+	}
+	return len(targets)
+}
+
+// forceCloseMessengerWS закрывает все клиентские соединения messenger hub
+// (/ws и /wstunnel в общем hub неразличимы — закрываются вместе).
+func forceCloseMessengerWS(code int, reason string) int {
+	hub.mu.RLock()
+	clients := make([]*WSClient, 0, len(hub.clients))
+	for c := range hub.clients {
+		clients = append(clients, c)
+	}
+	hub.mu.RUnlock()
+
+	for _, c := range clients {
+		c.Conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(code, reason), time.Now().Add(5*time.Second))
+		c.Conn.Close()
+	}
+	return len(clients)
+}
+
+// forceCloseSSE обрывает все SSE-стримы (мессенджер /api/sse/events + collab /api/sse/collab/*)
+// через Done-каналы; хендлеры выходят по select и соединение закрывается.
+func forceCloseSSE() int {
+	n := 0
+	sseHub.mu.RLock()
+	clients := make([]*SSEClient, 0, len(sseHub.clients))
+	for c := range sseHub.clients {
+		clients = append(clients, c)
+	}
+	sseHub.mu.RUnlock()
+	for _, c := range clients {
+		c.terminate()
+		n++
+	}
+
+	collabSSEHub.mu.RLock()
+	var subs []*collabSSESubscriber
+	for _, byID := range collabSSEHub.subs {
+		for _, sub := range byID {
+			subs = append(subs, sub)
+		}
+	}
+	collabSSEHub.mu.RUnlock()
+	for _, sub := range subs {
+		sub.terminate()
+		n++
+	}
+	return n
+}
+
+// forceCloseForSwitch вызывается из PUT-хендлера после обновления настройки.
+// enabled=false для транспорта → глушим его активные соединения;
+// kill_all=true → глушим всё. enabled=true / kill_all=false → ничего не закрываем.
+func forceCloseForSwitch(key string, enabled bool) {
+	if key == "kill_all" {
+		if !enabled {
+			return
+		}
+		n := forceCloseCollabWS(4600, "kill switch active")
+		n += forceCloseMessengerWS(4600, "kill switch active")
+		n += forceCloseSSE()
+		log.Printf("sync-transports: kill_all on — force-closed %d active connections", n)
+		return
+	}
+	if enabled {
+		return
+	}
+	switch key {
+	case "ws":
+		n := forceCloseCollabWS(4503, "transport disabled")
+		n += forceCloseMessengerWS(4503, "transport disabled")
+		log.Printf("sync-transports: ws off — force-closed %d active connections", n)
+	case "sse":
+		n := forceCloseSSE()
+		log.Printf("sync-transports: sse off — force-closed %d active connections", n)
+	case "wstunnel":
+		// Активные /wstunnel неотличимы от /ws в общем messenger hub —
+		// активные не закрываем, действует только на новые подключения.
+		log.Printf("sync-transports: wstunnel off — active connections left open (shared hub with /ws)")
+	case "nsp":
+		// Эндпоинтов NSP пока нет — закрывать нечего.
+	}
+}
+
 // --- Handlers (за authMiddleware + superAdminMiddleware)
 
 // GET /api/super-admin/sync-transports → [{key, enabled, updated_by, updated_at, active_connections}]
@@ -269,6 +391,9 @@ func putSyncTransportHandler(c *gin.Context) {
 
 	// Инвалидация кэша: сразу кладём новое значение
 	syncTransportCache.Store(req.Key, syncTransportCacheEntry{value: s.Enabled, loadedAt: time.Now()})
+
+	// Мгновенное глушение: принудительно закрываем активные соединения
+	forceCloseForSwitch(req.Key, *req.Enabled)
 
 	log.Printf("sync-transports: %s %v -> %v by user %d", req.Key, oldValue, s.Enabled, changedBy)
 	c.JSON(http.StatusOK, gin.H{

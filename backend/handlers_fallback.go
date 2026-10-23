@@ -31,9 +31,15 @@ func bearerTokenFromHeader(c *gin.Context) string {
 }
 
 type SSEClient struct {
-	UserID  string
-	Channel chan []byte
-	Done    chan struct{}
+	UserID    string
+	Channel   chan []byte
+	Done      chan struct{}
+	closeOnce sync.Once // защита Done от двойного close при force-close рубильником
+}
+
+// terminate закрывает Done ровно один раз (идемпотентный force-close)
+func (c *SSEClient) terminate() {
+	c.closeOnce.Do(func() { close(c.Done) })
 }
 
 type SSEHub struct {
@@ -88,10 +94,17 @@ var pollQueue = &PollQueue{
 // входящих collab-сообщений, когда WebSocket недоступен.
 
 type collabSSESubscriber struct {
-	ID     string
-	ToolID uint
-	UserID uint
-	Ch     chan ToolSyncMessage
+	ID        string
+	ToolID    uint
+	UserID    uint
+	Ch        chan ToolSyncMessage
+	Done      chan struct{} // force-close рубильником (NSP spec §8)
+	closeOnce sync.Once
+}
+
+// terminate закрывает Done ровно один раз (идемпотентный force-close)
+func (s *collabSSESubscriber) terminate() {
+	s.closeOnce.Do(func() { close(s.Done) })
 }
 
 type collabSSEHubType struct {
@@ -438,6 +451,8 @@ func sseEventsHandler(c *gin.Context) {
 		select {
 		case <-notify:
 			return
+		case <-client.Done: // force-close рубильником
+			return
 		case <-heartbeatTicker.C:
 			if !sseWriteFrame(c, rc, ": heartbeat\n\n") {
 				return
@@ -523,6 +538,7 @@ func sseCollabEventsHandler(c *gin.Context) {
 		ToolID: uint(toolID),
 		UserID: userID,
 		Ch:     make(chan ToolSyncMessage, 100),
+		Done:   make(chan struct{}),
 	}
 
 	collabSSEHub.register <- sub
@@ -543,6 +559,8 @@ func sseCollabEventsHandler(c *gin.Context) {
 	for {
 		select {
 		case <-notify:
+			return
+		case <-sub.Done: // force-close рубильником
 			return
 		case <-heartbeatTicker.C:
 			if !sseWriteFrame(c, rc, ": ping\n\n") {

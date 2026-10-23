@@ -30,6 +30,7 @@ type UserConnection struct {
         Username   string
         Chan       chan interface{} // чанал для рассылки исправлений
         LastSeenAt int64
+        WS         *websocket.Conn // активное соединение (для force-close рубильником, NSP spec §8)
 }
 
 // ToolUpdate определяет исправление
@@ -387,6 +388,11 @@ func handleRealtimeCollaboration(c *gin.Context) {
         session := GetOrCreateSession(uint(toolID))
         conn := session.AddUser(userID, username)
         defer session.RemoveUser(conn.ConnID)
+
+        // Публикуем ws-указатель для force-close рубильником (читается извне → под локом)
+        session.Mutex.Lock()
+        conn.WS = ws
+        session.Mutex.Unlock()
 
         // R3: keepalive — read deadline продлевается pong'ами, ping каждые 30s
         ws.SetReadDeadline(time.Now().Add(70 * time.Second))
